@@ -17,6 +17,13 @@ pnpm test
 pnpm test:coverage
 ```
 
+For demo-level visual checks:
+
+```bash
+pnpm examples:build
+pnpm examples:screenshots
+```
+
 See also:
 
 - `docs/accessibility.md` for manual a11y verification contracts

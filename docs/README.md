@@ -1,6 +1,14 @@
-# @fictjs/ui-primitives docs
+# Documentation Index
 
-This folder contains per-category docs:
+Start here for all package documentation.
+
+## Getting Started
+
+- `README.md`: package overview, install, quick start, and command map
+- `docs/examples.md`: copyable composition snippets
+- `examples/README.md`: executable demo app and screenshot baseline workflow
+
+## Component Documentation
 
 - `docs/components/core`
 - `docs/components/interaction`
@@ -10,9 +18,22 @@ This folder contains per-category docs:
 - `docs/components/disclosure`
 - `docs/components/form`
 - `docs/components/layout`
-- `docs/testing.md`
-- `docs/accessibility.md`
-- `docs/examples.md`
-- `examples/README.md` (executable demo app + screenshot baseline flow)
 
-`ui-primitives.md` is the source planning document used for scope and API direction.
+Each component file includes:
+
+- minimal example
+- accessibility notes
+- behavior/API summary
+
+## Engineering and Quality Docs
+
+- `docs/api-reference.md`: full export index
+- `docs/architecture.md`: implementation design and internal patterns
+- `docs/testing.md`: testing strategy and expectations
+- `docs/accessibility.md`: accessibility verification checklist
+- `docs/release.md`: release and publish checklist
+- `CONTRIBUTING.md`: contributor workflow and PR quality expectations
+
+## Source Planning
+
+- `ui-primitives.md`: source planning/scope document used during implementation

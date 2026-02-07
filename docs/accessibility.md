@@ -47,3 +47,4 @@ Use this checklist when building or reviewing primitives.
 1. Run `pnpm test` to verify behavioral and semantic assertions.
 2. Run through keyboard-only flows for each updated primitive.
 3. Validate screen-reader announcements for dialogs, form errors, and toasts.
+4. Use the runnable demo (`pnpm examples:dev`) for manual interaction walkthroughs.

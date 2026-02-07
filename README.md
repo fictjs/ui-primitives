@@ -4,105 +4,158 @@ Official headless UI primitives for Fict.
 
 This repository provides unstyled, composable primitives focused on accessibility, interaction semantics, and controlled/uncontrolled APIs.
 
-## Install
+## Who This Is For
+
+- Teams building design systems on top of `@fictjs/runtime`
+- App developers who want accessible primitives without pre-baked styles
+- Contributors working on interaction, focus, overlay, and form behaviors
+
+## Package Highlights
+
+- Headless component primitives with composable parts
+- Controlled + uncontrolled state APIs across core components
+- Built-in accessibility semantics (`role`, `aria-*`, keyboard interactions)
+- Strong behavior tests (Vitest + JSDOM)
+- Executable demo app + screenshot baseline workflow
+
+## Installation
 
 ```bash
 pnpm add @fictjs/ui-primitives @fictjs/runtime
 # or npm / yarn
 ```
 
-## Development
+Node version: `>=18`
 
-```bash
-pnpm install --ignore-workspace
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
+## Quick Start
+
+```tsx
+import { render } from '@fictjs/runtime'
+import {
+  DialogRoot,
+  DialogTrigger,
+  DialogOverlay,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@fictjs/ui-primitives'
+
+const app = document.querySelector('#app')
+if (!(app instanceof HTMLElement)) throw new Error('Missing #app')
+
+render(
+  () => (
+    <DialogRoot>
+      <DialogTrigger>Open dialog</DialogTrigger>
+      <DialogOverlay />
+      <DialogContent>
+        <DialogTitle>Settings</DialogTitle>
+        <DialogDescription>Update your preferences.</DialogDescription>
+        <DialogClose>Close</DialogClose>
+      </DialogContent>
+    </DialogRoot>
+  ),
+  app,
+)
 ```
 
+## API Surface
+
+All exports are available from the root entry:
+
+```ts
+import { DialogRoot, TabsRoot, ToastProvider } from '@fictjs/ui-primitives'
+```
+
+Export groups:
+
+- Core: `Primitive`, `Slot`, `Presence`, `Portal`, `VisuallyHidden`, etc.
+- Interaction: `FocusScope`, `DismissableLayer`, `RovingFocusGroup`, `Popper`, etc.
+- Overlay: `Dialog*`, `AlertDialog*`, `Popover*`, `Tooltip*`, `HoverCard*`
+- Menu: `DropdownMenu*`, `ContextMenu*`, `Menubar*`
+- Feedback: `ToastProvider`, `ToastViewport`, `Toast*`, `useToast`
+- Disclosure: `Tabs*`, `Accordion*`, `Collapsible*`, `NavigationMenu*`
+- Form: `Label`, `Checkbox`, `RadioGroup`, `Switch`, `Toggle`, `Select`, `Combobox`, `Form*`
+- Layout: `ScrollArea*`, `Resizable*`, `AspectRatio`, `Progress`, `Skeleton`, `FocusVisible`
+
+For detailed symbol-by-symbol reference, see `docs/api-reference.md`.
+
+## Documentation Map
+
+- `docs/README.md`: documentation index
+- `docs/components/*`: per-component behavior, minimal examples, and a11y notes
+- `docs/api-reference.md`: full export index
+- `docs/architecture.md`: design and implementation structure
+- `docs/testing.md`: testing strategy and expectations
+- `docs/accessibility.md`: accessibility review checklist
+- `docs/examples.md`: copyable composition snippets
+- `examples/README.md`: executable demo app + screenshot workflow
+- `docs/release.md`: release and publish checklist
+
 ## Demo App
+
+Run local demo app:
 
 ```bash
 pnpm examples:dev
 ```
 
-Additional commands:
+Open `http://127.0.0.1:4173`.
 
-- `pnpm examples:build` to build the demo app
-- `pnpm examples:preview` to preview the built demo
-- `pnpm examples:screenshots` to regenerate screenshot baselines in `examples/screenshots/baseline`
+Build and preview:
 
-## Component Coverage
+```bash
+pnpm examples:build
+pnpm examples:preview
+```
 
-### Core
+## Screenshot Baselines
 
-- `Primitive`, `PrimitiveElements`
-- `Slot`
-- `Presence`
-- `Portal`, `PortalHost`
-- `VisuallyHidden`
-- `Separator`
-- `AccessibleIcon`
+Install browser binary once:
 
-### Interaction Primitives
+```bash
+pnpm examples:screenshots:install
+```
 
-- `FocusScope`, `FocusTrap`
-- `DismissableLayer`
-- `RovingFocusGroup`, `RovingFocusItem`
-- `ScrollLock`
-- `LiveRegionProvider`, `Announce`, `useAnnouncer`
-- `PopperRoot`, `PopperAnchor`, `PopperContent`, `PopperArrow`
+Regenerate baseline screenshots:
 
-### Overlay
+```bash
+pnpm examples:screenshots
+```
 
-- `Dialog*`
-- `AlertDialog*`
-- `Popover*`
-- `Tooltip*`
-- `HoverCard*`
+Outputs: `examples/screenshots/baseline`
 
-### Menu / Feedback
+## Development
 
-- `DropdownMenu*`
-- `ContextMenu*`
-- `Menubar*`
-- `ToastProvider`, `ToastViewport`, `Toast*`, `useToast`
+Install dependencies:
 
-### Disclosure / Navigation
+```bash
+pnpm install --ignore-workspace
+```
 
-- `Tabs*`
-- `Accordion*`
-- `Collapsible*`
-- `NavigationMenu*`
+Common commands:
 
-### Form & Inputs
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm test:coverage`
+- `pnpm build`
+- `pnpm clean`
 
-- `Label`
-- `Checkbox`
-- `RadioGroup`, `RadioItem`
-- `Switch`, `SwitchThumb`
-- `Toggle`, `ToggleGroup`, `ToggleGroupItem`
-- `Slider`, `RangeSlider`
-- `Select*`
-- `Combobox*`
-- `Form`, `FormField`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage`
+## Contribution Workflow
 
-### Layout / P2
+1. Create a focused branch.
+2. Make small, reviewable commits.
+3. Keep docs and tests updated with behavior changes.
+4. Run quality gates before opening a PR.
 
-- `ScrollArea*`
-- `ResizablePanelGroup`, `ResizablePanel`, `ResizableHandle`
-- `AspectRatio`
-- `Progress`, `Meter`
-- `Skeleton`
-- `KeyboardModeProvider`, `FocusVisible`, `useKeyboardMode`
+Detailed guide: `CONTRIBUTING.md`
 
-## Docs
+## Release Workflow
 
-See:
+Use the checklist in `docs/release.md` before publishing.
 
-- `docs/components/*` for component-level API notes
-- `docs/testing.md` for testing strategy
-- `docs/accessibility.md` for accessibility review checklist
-- `docs/examples.md` for composition examples
-- `examples/README.md` for executable demo and screenshot workflow
+## License
+
+MIT, see `LICENSE`.

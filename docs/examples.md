@@ -2,6 +2,8 @@
 
 Examples below use TSX syntax with `@fictjs/ui-primitives`.
 
+For a runnable end-to-end demo, see `examples/README.md`.
+
 ## Dialog (controlled)
 
 ```tsx
