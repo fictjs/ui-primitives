@@ -4,4 +4,4 @@
  * Official headless UI primitives for Fict.
  */
 
-export {}
+export * from './components/core'
