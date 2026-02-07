@@ -13,5 +13,6 @@ This folder contains per-category docs:
 - `docs/testing.md`
 - `docs/accessibility.md`
 - `docs/examples.md`
+- `examples/README.md` (executable demo app + screenshot baseline flow)
 
 `ui-primitives.md` is the source planning document used for scope and API direction.

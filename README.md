@@ -21,6 +21,18 @@ pnpm test
 pnpm build
 ```
 
+## Demo App
+
+```bash
+pnpm examples:dev
+```
+
+Additional commands:
+
+- `pnpm examples:build` to build the demo app
+- `pnpm examples:preview` to preview the built demo
+- `pnpm examples:screenshots` to regenerate screenshot baselines in `examples/screenshots/baseline`
+
 ## Component Coverage
 
 ### Core
@@ -93,3 +105,4 @@ See:
 - `docs/testing.md` for testing strategy
 - `docs/accessibility.md` for accessibility review checklist
 - `docs/examples.md` for composition examples
+- `examples/README.md` for executable demo and screenshot workflow
