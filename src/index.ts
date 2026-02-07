@@ -6,6 +6,7 @@
 
 export * from './components/core'
 export * from './components/disclosure'
+export * from './components/form'
 export * from './components/interaction'
 export * from './components/overlay'
 export * from './components/menu'
