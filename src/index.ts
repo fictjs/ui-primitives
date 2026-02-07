@@ -6,3 +6,4 @@
 
 export * from './components/core'
 export * from './components/interaction'
+export * from './components/overlay'
