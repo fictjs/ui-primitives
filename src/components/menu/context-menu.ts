@@ -1,0 +1,202 @@
+import { createContext, useContext, type FictNode } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
+
+import { createControllableState } from '../../internal/state'
+import { Portal } from '../core/portal'
+import { DismissableLayer } from '../interaction/dismissable-layer'
+import { RovingFocusGroup } from '../interaction/roving-focus'
+
+export interface ContextMenuRootProps {
+  open?: boolean | (() => boolean)
+  defaultOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  children?: FictNode
+}
+
+export interface ContextMenuTriggerProps {
+  as?: string
+  children?: FictNode
+  [key: string]: unknown
+}
+
+type TriggerRefProp = ((node: HTMLElement | null) => void) | { current: HTMLElement | null } | undefined
+
+export interface ContextMenuContentProps {
+  forceMount?: boolean
+  portal?: boolean
+  children?: FictNode
+  [key: string]: unknown
+}
+
+export interface ContextMenuItemProps {
+  as?: string
+  keepOpen?: boolean
+  onSelect?: (event: MouseEvent) => void
+  children?: FictNode
+  [key: string]: unknown
+}
+
+interface ContextMenuContextValue {
+  open: () => boolean
+  setOpen: (open: boolean) => void
+  x: () => number
+  y: () => number
+  setPosition: (x: number, y: number) => void
+}
+
+const ContextMenuContext = createContext<ContextMenuContextValue | null>(null)
+
+function useContextMenuContext(component: string): ContextMenuContextValue {
+  const context = useContext(ContextMenuContext)
+  if (!context) {
+    throw new Error(`${component} must be used inside ContextMenuRoot`)
+  }
+  return context
+}
+
+export function ContextMenuRoot(props: ContextMenuRootProps): FictNode {
+  const state = createControllableState<boolean>({
+    value: props.open,
+    defaultValue: props.defaultOpen ?? false,
+    onChange: props.onOpenChange,
+  })
+
+  const position = createSignal({ x: 0, y: 0 })
+
+  const context: ContextMenuContextValue = {
+    open: () => state.get(),
+    setOpen: open => state.set(open),
+    x: () => position().x,
+    y: () => position().y,
+    setPosition: (x, y) => position({ x, y }),
+  }
+
+  return {
+    type: ContextMenuContext.Provider,
+    props: {
+      value: context,
+      children: props.children,
+    },
+  } as unknown as FictNode
+}
+
+export function ContextMenuTrigger(props: ContextMenuTriggerProps): FictNode {
+  const context = useContextMenuContext('ContextMenuTrigger')
+  const tag = props.as ?? 'div'
+  const refProp = props.ref as TriggerRefProp
+  let removeListener: (() => void) | null = null
+
+  const handleContextMenu = (event: MouseEvent) => {
+    ;(props.onContextMenu as ((event: MouseEvent) => void) | undefined)?.(event)
+    if (event.defaultPrevented) return
+    event.preventDefault()
+    context.setPosition(event.clientX, event.clientY)
+    context.setOpen(true)
+  }
+
+  const registerRef = (node: HTMLElement | null) => {
+    removeListener?.()
+    removeListener = null
+
+    if (typeof refProp === 'function') {
+      refProp(node)
+    } else if (refProp) {
+      refProp.current = node
+    }
+
+    if (!node) return
+
+    const nativeHandler = (event: Event) => handleContextMenu(event as MouseEvent)
+    node.addEventListener('contextmenu', nativeHandler)
+    removeListener = () => node.removeEventListener('contextmenu', nativeHandler)
+  }
+
+  return {
+    type: tag,
+    props: {
+      ...props,
+      as: undefined,
+      ref: registerRef,
+      onContextMenu: handleContextMenu,
+      children: props.children,
+    },
+  }
+}
+
+export function ContextMenuContent(props: ContextMenuContentProps): FictNode {
+  const context = useContextMenuContext('ContextMenuContent')
+
+  const content = {
+    type: DismissableLayer,
+    props: {
+      onDismiss: () => context.setOpen(false),
+      children: {
+        type: 'div',
+        props: {
+          ...props,
+          forceMount: undefined,
+          portal: undefined,
+          role: 'menu',
+          'data-context-menu-content': '',
+          style: {
+            position: 'fixed',
+            left: `${context.x()}px`,
+            top: `${context.y()}px`,
+          },
+          children: {
+            type: RovingFocusGroup,
+            props: {
+              orientation: 'vertical',
+              loop: true,
+              children: props.children,
+            },
+          },
+        },
+      },
+    },
+  }
+
+  const child = () => ((context.open() || props.forceMount) ? content : null)
+
+  if (props.portal ?? true) {
+    return {
+      type: Portal,
+      props: {
+        children: child,
+      },
+    }
+  }
+
+  return {
+    type: 'div',
+    props: {
+      'data-context-menu-inline-container': '',
+      children: child,
+    },
+  }
+}
+
+export function ContextMenuItem(props: ContextMenuItemProps): FictNode {
+  const context = useContextMenuContext('ContextMenuItem')
+  const tag = props.as ?? 'button'
+
+  return {
+    type: tag,
+    props: {
+      ...props,
+      as: undefined,
+      type: tag === 'button' ? (props.type ?? 'button') : props.type,
+      role: props.role ?? 'menuitem',
+      'data-context-menu-item': '',
+      onClick: (event: MouseEvent) => {
+        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+        props.onSelect?.(event)
+        if (event.defaultPrevented) return
+        if (!props.keepOpen) {
+          context.setOpen(false)
+        }
+      },
+      children: props.children,
+    },
+  }
+}

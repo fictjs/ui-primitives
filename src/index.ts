@@ -7,3 +7,5 @@
 export * from './components/core'
 export * from './components/interaction'
 export * from './components/overlay'
+export * from './components/menu'
+export * from './components/feedback'
