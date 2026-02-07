@@ -36,3 +36,27 @@ Supports controlled/uncontrolled state via `open/defaultOpen/onOpenChange`.
 - Trigger exposes `aria-haspopup="dialog"` and `aria-controls`
 - Content wires `aria-labelledby` and `aria-describedby` to `DialogTitle` / `DialogDescription`
 - `DialogClose` emits close semantics through `onOpenChange`
+
+## Minimal Example
+
+```tsx
+import {
+  DialogRoot,
+  DialogTrigger,
+  DialogOverlay,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@fictjs/ui-primitives'
+
+<DialogRoot>
+  <DialogTrigger>Open settings</DialogTrigger>
+  <DialogOverlay />
+  <DialogContent>
+    <DialogTitle>Settings</DialogTitle>
+    <DialogDescription>Update your preferences.</DialogDescription>
+    <DialogClose>Done</DialogClose>
+  </DialogContent>
+</DialogRoot>
+```

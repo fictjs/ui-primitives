@@ -30,3 +30,29 @@ Compound dropdown menu built on Popover + roving focus.
 
 - `DropdownMenuContent` renders as `role="menu"` with vertical roving focus
 - Supports `portal?: boolean` through inherited popover content props
+
+## Minimal Example
+
+```tsx
+import {
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@fictjs/ui-primitives'
+
+<DropdownMenuRoot>
+  <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+  <DropdownMenuContent side="bottom" align="end">
+    <DropdownMenuItem>Edit</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem>Archive</DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenuRoot>
+```
+
+## Accessibility Notes
+
+- Keep menu item roles aligned with behavior (`menuitem`, `menuitemcheckbox`, `menuitemradio`).
+- Use roving focus with visible focus styles so keyboard users can track current item.

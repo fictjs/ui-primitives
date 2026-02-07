@@ -30,3 +30,31 @@ Queued toast primitives with provider-managed lifecycle.
 - `ToastRoot` renders title/description and default close action
 - `ToastAction` requires `altText` and maps it to accessible label
 - `ToastClose` is a plain close button primitive for custom templates
+
+## Minimal Example
+
+```tsx
+import { ToastProvider, ToastViewport, useToast } from '@fictjs/ui-primitives'
+
+function SaveButton() {
+  const toast = useToast()
+  return (
+    <button
+      type="button"
+      onClick={() => toast.show({ title: 'Saved', description: 'Changes synced.' })}
+    >
+      Save
+    </button>
+  )
+}
+
+<ToastProvider duration={3000}>
+  <SaveButton />
+  <ToastViewport />
+</ToastProvider>
+```
+
+## Accessibility Notes
+
+- Keep toast title/description concise so live-region announcements stay scannable.
+- `ToastAction` must include meaningful `altText` for assistive technologies.
