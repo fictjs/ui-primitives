@@ -87,4 +87,9 @@ pnpm build
 
 ## Docs
 
-See `docs/components/*` for component-level notes and API summaries.
+See:
+
+- `docs/components/*` for component-level API notes
+- `docs/testing.md` for testing strategy
+- `docs/accessibility.md` for accessibility review checklist
+- `docs/examples.md` for composition examples

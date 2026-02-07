@@ -61,4 +61,66 @@ describe('NavigationMenu', () => {
     dispose()
     container.remove()
   })
+
+  it('toggles trigger aria-expanded and content state', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: NavigationMenuRoot,
+        props: {
+          children: {
+            type: NavigationMenuList,
+            props: {
+              children: {
+                type: NavigationMenuItem,
+                props: {
+                  value: 'guides',
+                  children: [
+                    {
+                      type: NavigationMenuTrigger,
+                      props: {
+                        'data-testid': 'trigger-guides',
+                        children: 'Guides',
+                      },
+                    },
+                    {
+                      type: NavigationMenuContent,
+                      props: {
+                        forceMount: true,
+                        children: 'Guides content',
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      }),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger-guides"]') as HTMLElement
+    const getContent = () => container.querySelector('[data-navigation-menu-content="guides"]')
+
+    expect(trigger.getAttribute('data-state')).toBe('closed')
+    expect(getContent()?.getAttribute('data-state')).toBe('closed')
+
+    fireEvent.click(trigger)
+    await Promise.resolve()
+
+    expect(trigger.getAttribute('data-state')).toBe('open')
+    expect(getContent()?.getAttribute('data-state')).toBe('open')
+
+    fireEvent.click(trigger)
+    await Promise.resolve()
+
+    expect(trigger.getAttribute('data-state')).toBe('closed')
+    expect(getContent()?.getAttribute('data-state')).toBe('closed')
+
+    dispose()
+    container.remove()
+  })
 })

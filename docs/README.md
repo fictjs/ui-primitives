@@ -11,5 +11,7 @@ This folder contains per-category docs:
 - `docs/components/form`
 - `docs/components/layout`
 - `docs/testing.md`
+- `docs/accessibility.md`
+- `docs/examples.md`
 
 `ui-primitives.md` is the source planning document used for scope and API direction.

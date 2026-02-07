@@ -17,6 +17,11 @@ pnpm test
 pnpm test:coverage
 ```
 
+See also:
+
+- `docs/accessibility.md` for manual a11y verification contracts
+- `docs/examples.md` for copyable composition patterns
+
 ## When adding components
 
 1. Add at least one uncontrolled test and one controlled test.
