@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { fireEvent } from '@testing-library/dom'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import {
   ComboboxInput,
@@ -88,6 +89,86 @@ describe('Advanced inputs', () => {
     container.remove()
   })
 
+  it('supports controlled select value and emits onValueChange', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const value = createSignal('a')
+    const changes: string[] = []
+
+    const dispose = render(
+      () => ({
+        type: SelectRoot,
+        props: {
+          value: () => value(),
+          onValueChange: (next: string) => changes.push(next),
+          defaultOpen: true,
+          children: [
+            {
+              type: SelectTrigger,
+              props: {
+                'data-testid': 'controlled-trigger',
+                children: { type: SelectValue, props: { placeholder: 'Pick one' } },
+              },
+            },
+            {
+              type: SelectContent,
+              props: {
+                forceMount: true,
+                children: [
+                  { type: SelectItem, props: { value: 'a', children: 'A' } },
+                  { type: SelectItem, props: { value: 'b', 'data-testid': 'controlled-b', children: 'B' } },
+                ],
+              },
+            },
+          ],
+        },
+      }),
+      container,
+    )
+
+    fireEvent.click(container.querySelector('[data-testid="controlled-b"]') as HTMLElement)
+    await Promise.resolve()
+
+    expect(changes).toEqual(['b'])
+    expect(container.querySelector('[data-select-value]')?.textContent).toContain('a')
+
+    value('b')
+    await Promise.resolve()
+    expect(container.querySelector('[data-select-value]')?.textContent).toContain('b')
+
+    dispose()
+    container.remove()
+  })
+
+  it('supports select forceMount while closed', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: SelectRoot,
+        props: {
+          defaultOpen: false,
+          children: {
+            type: SelectContent,
+            props: {
+              forceMount: true,
+              children: 'Mounted while closed',
+            },
+          },
+        },
+      }),
+      container,
+    )
+
+    await Promise.resolve()
+    expect(container.querySelector('[data-select-content]')).not.toBeNull()
+
+    dispose()
+    container.remove()
+  })
+
   it('selects value from combobox item', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
@@ -118,6 +199,45 @@ describe('Advanced inputs', () => {
     await Promise.resolve()
 
     expect((container.querySelector('[data-testid="input"]') as HTMLInputElement).value).toBe('Banana')
+
+    dispose()
+    container.remove()
+  })
+
+  it('filters combobox items by input query', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: ComboboxRoot,
+        props: {
+          defaultOpen: true,
+          children: [
+            { type: ComboboxInput, props: { 'data-testid': 'filter-input' } },
+            {
+              type: ComboboxList,
+              props: {
+                forceMount: true,
+                children: [
+                  { type: ComboboxItem, props: { value: 'Apple', children: 'Apple' } },
+                  { type: ComboboxItem, props: { value: 'Banana', children: 'Banana' } },
+                ],
+              },
+            },
+          ],
+        },
+      }),
+      container,
+    )
+
+    const input = container.querySelector('[data-testid="filter-input"]') as HTMLInputElement
+    input.value = 'ban'
+    fireEvent.input(input)
+    await Promise.resolve()
+
+    expect(container.querySelector('[data-combobox-item="Banana"]')).not.toBeNull()
+    expect(container.querySelector('[data-combobox-item="Apple"]')).toBeNull()
 
     dispose()
     container.remove()

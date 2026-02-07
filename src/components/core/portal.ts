@@ -5,6 +5,7 @@ import {
   type FictNode,
   useContext,
   createMemo,
+  onMount,
 } from '@fictjs/runtime'
 
 import { read } from '../../internal/accessor'
@@ -52,13 +53,19 @@ export function Portal(props: PortalProps): FictNode {
   }
 
   const hostContainerAccessor = useContext(PortalContainerContext)
-  const container =
-    (props.container !== undefined ? resolveContainer(props.container) : hostContainerAccessor()) ??
-    (typeof document !== 'undefined' ? document.body : null)
+  onMount(() => {
+    const container =
+      (props.container !== undefined ? resolveContainer(props.container) : hostContainerAccessor()) ??
+      (typeof document !== 'undefined' ? document.body : null)
 
-  if (!container) {
-    return null
-  }
+    if (!container) return
 
-  return createPortal(container, () => props.children ?? null, createElement) as unknown as FictNode
+    createPortal(
+      container,
+      () => (typeof props.children === 'function' ? (props.children as () => FictNode)() : props.children ?? null),
+      createElement,
+    )
+  })
+
+  return null
 }

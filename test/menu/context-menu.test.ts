@@ -46,7 +46,10 @@ describe('ContextMenu', () => {
     })
     await Promise.resolve()
 
-    expect(container.querySelector('[data-context-menu-content]')).not.toBeNull()
+    const content = container.querySelector('[data-context-menu-content]') as HTMLElement | null
+    expect(content).not.toBeNull()
+    expect(content?.style.left).toBe('120px')
+    expect(content?.style.top).toBe('80px')
 
     dispose()
     container.remove()

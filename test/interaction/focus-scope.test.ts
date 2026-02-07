@@ -60,4 +60,40 @@ describe('FocusScope', () => {
     dispose()
     container.remove()
   })
+
+  it('fires unmount autofocus hook when scope is disposed', () => {
+    const outside = document.createElement('button')
+    outside.textContent = 'outside'
+    document.body.appendChild(outside)
+    outside.focus()
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    let unmountHookCalled = false
+
+    const dispose = render(
+      () => ({
+        type: FocusScope,
+        props: {
+          autoFocus: true,
+          restoreFocus: true,
+          onUnmountAutoFocus: () => {
+            unmountHookCalled = true
+          },
+          children: [{ type: 'button', props: { 'data-testid': 'inside', children: 'inside' } }],
+        },
+      }),
+      container,
+    )
+
+    const inside = container.querySelector('[data-testid="inside"]') as HTMLButtonElement
+    expect(document.activeElement).toBe(inside)
+
+    dispose()
+    expect(unmountHookCalled).toBe(true)
+
+    outside.remove()
+    container.remove()
+  })
 })

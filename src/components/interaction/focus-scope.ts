@@ -18,6 +18,7 @@ export interface FocusScopeProps {
 export function FocusScope(props: FocusScopeProps): FictNode {
   let node: HTMLElement | null = null
   let previousFocused: Element | null = null
+  let scopeDocument: Document | null = null
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key !== 'Tab') return
@@ -58,6 +59,7 @@ export function FocusScope(props: FocusScopeProps): FictNode {
     if (!node) return
 
     const doc = node.ownerDocument ?? document
+    scopeDocument = doc
     previousFocused = doc.activeElement
 
     doc.addEventListener('keydown', onKeyDown, true)
@@ -72,9 +74,7 @@ export function FocusScope(props: FocusScopeProps): FictNode {
   })
 
   onDestroy(() => {
-    if (!node) return
-
-    const doc = node.ownerDocument ?? document
+    const doc = scopeDocument ?? node?.ownerDocument ?? document
     doc.removeEventListener('keydown', onKeyDown, true)
 
     if (read(props.restoreFocus, true) && previousFocused instanceof HTMLElement) {

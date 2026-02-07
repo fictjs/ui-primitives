@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Portal, PortalHost } from '../../src/components/core/portal'
 
@@ -52,6 +53,36 @@ describe('Portal', () => {
     )
 
     expect(target.textContent).toContain('from-host')
+
+    dispose()
+    root.remove()
+    target.remove()
+  })
+
+  it('supports function children accessors', async () => {
+    const root = document.createElement('div')
+    const target = document.createElement('div')
+    document.body.appendChild(root)
+    document.body.appendChild(target)
+
+    const open = createSignal(false)
+
+    const dispose = render(
+      () => ({
+        type: Portal,
+        props: {
+          container: target,
+          children: () => (open() ? { type: 'span', props: { children: 'visible' } } : null),
+        },
+      }),
+      root,
+    )
+
+    expect(target.textContent).toBe('')
+
+    open(true)
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(target.textContent).toContain('visible')
 
     dispose()
     root.remove()
