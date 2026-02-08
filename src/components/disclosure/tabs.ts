@@ -1,10 +1,12 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
-import { createId } from '../../internal/ids'
+import { useId } from '../../internal/ids'
+import { Primitive } from '../core/primitive'
 import { RovingFocusGroup } from '../interaction/roving-focus'
 
 export interface TabsRootProps {
+  id?: string
   value?: string | (() => string)
   defaultValue?: string
   onValueChange?: (value: string) => void
@@ -20,6 +22,7 @@ export interface TabsListProps {
 export interface TabsTriggerProps {
   value: string
   as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -54,12 +57,13 @@ export function TabsRoot(props: TabsRootProps): FictNode {
     defaultValue: props.defaultValue ?? '',
     onChange: props.onValueChange,
   })
+  const baseId = useId(props.id, 'tabs')
 
   const context: TabsContextValue = {
     value: () => valueState.get(),
     setValue: value => valueState.set(value),
     orientation: () => props.orientation ?? 'horizontal',
-    baseId: createId('tabs'),
+    baseId,
   }
 
   return {
@@ -99,27 +103,24 @@ export function TabsTrigger(props: TabsTriggerProps): FictNode {
 
   const selected = () => context.value() === props.value
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      value: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      role: 'tab',
-      id: `${context.baseId}-trigger-${props.value}`,
-      'aria-controls': `${context.baseId}-content-${props.value}`,
-      'aria-selected': selected,
-      'data-state': () => (selected() ? 'active' : 'inactive'),
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (!event.defaultPrevented) {
-          context.setValue(props.value)
-        }
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    value: undefined,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    role: 'tab',
+    id: `${context.baseId}-trigger-${props.value}`,
+    'aria-controls': `${context.baseId}-content-${props.value}`,
+    'aria-selected': selected,
+    'data-state': () => (selected() ? 'active' : 'inactive'),
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      if (!event.defaultPrevented) {
+        context.setValue(props.value)
+      }
     },
-  }
+    children: props.children,
+  })
 }
 
 export function TabsContent(props: TabsContentProps): FictNode {

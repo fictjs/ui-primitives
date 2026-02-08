@@ -2,13 +2,15 @@ import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 import { createRef } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
-import { createId } from '../../internal/ids'
+import { useId } from '../../internal/ids'
 import { composeRefs } from '../../internal/ref'
+import { Primitive } from '../core/primitive'
 import { Portal } from '../core/portal'
 import { DismissableLayer } from '../interaction/dismissable-layer'
 import { PopperAnchor, PopperContent, PopperRoot, type PopperContentProps } from '../interaction/popper'
 
 export interface PopoverRootProps {
+  id?: string
   open?: boolean | (() => boolean)
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -17,6 +19,7 @@ export interface PopoverRootProps {
 
 export interface PopoverTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   onClick?: (event: MouseEvent) => void
   [key: string]: unknown
@@ -25,7 +28,20 @@ export interface PopoverTriggerProps {
 export interface PopoverContentPropsExt extends PopperContentProps {
   forceMount?: boolean
   portal?: boolean
+  onDismiss?: () => void
+  onEscapeKeyDown?: (event: KeyboardEvent) => void
+  onInteractOutside?: (event: PointerEvent | FocusEvent) => void
+  onPointerDownOutside?: (event: PointerEvent) => void
+  onFocusOutside?: (event: FocusEvent) => void
   children?: FictNode
+  [key: string]: unknown
+}
+
+export interface PopoverCloseProps {
+  as?: string
+  asChild?: boolean
+  children?: FictNode
+  onClick?: (event: MouseEvent) => void
   [key: string]: unknown
 }
 
@@ -54,11 +70,12 @@ export function PopoverRoot(props: PopoverRootProps): FictNode {
     defaultValue: props.defaultOpen ?? false,
     onChange: props.onOpenChange,
   })
+  const baseId = useId(props.id, 'popover')
 
   const context: PopoverContextValue = {
     open: () => openState.get(),
     setOpen: value => openState.set(value),
-    contentId: createId('popover-content'),
+    contentId: `${baseId}-content`,
     triggerRef: createRef<HTMLElement>(),
   }
 
@@ -84,25 +101,22 @@ export function PopoverTrigger(props: PopoverTriggerProps): FictNode {
   return {
     type: PopperAnchor,
     props: {
-      children: {
-        type: tag,
-        props: {
-          ...props,
-          as: undefined,
-          type: tag === 'button' ? (props.type ?? 'button') : props.type,
-          ref: composeRefs(context.triggerRef, refProp),
-          'aria-haspopup': 'dialog',
-          'aria-expanded': () => context.open(),
-          'aria-controls': context.contentId,
-          'data-state': () => (context.open() ? 'open' : 'closed'),
-          onClick: (event: MouseEvent) => {
-            props.onClick?.(event)
-            if (event.defaultPrevented) return
-            context.setOpen(!context.open())
-          },
-          children: props.children,
+      children: Primitive({
+        ...props,
+        as: tag,
+        type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+        ref: composeRefs(context.triggerRef, refProp),
+        'aria-haspopup': 'dialog',
+        'aria-expanded': () => context.open(),
+        'aria-controls': context.contentId,
+        'data-state': () => (context.open() ? 'open' : 'closed'),
+        onClick: (event: MouseEvent) => {
+          props.onClick?.(event)
+          if (event.defaultPrevented) return
+          context.setOpen(!context.open())
         },
-      },
+        children: props.children,
+      }),
     },
   }
 }
@@ -111,13 +125,25 @@ function buildPopoverContent(context: PopoverContextValue, props: PopoverContent
   return {
     type: DismissableLayer,
     props: {
-      onDismiss: () => context.setOpen(false),
+      onEscapeKeyDown: props.onEscapeKeyDown,
+      onInteractOutside: props.onInteractOutside,
+      onPointerDownOutside: props.onPointerDownOutside,
+      onFocusOutside: props.onFocusOutside,
+      onDismiss: () => {
+        props.onDismiss?.()
+        context.setOpen(false)
+      },
       children: {
         type: PopperContent,
         props: {
           ...props,
           portal: undefined,
           forceMount: undefined,
+          onDismiss: undefined,
+          onEscapeKeyDown: undefined,
+          onInteractOutside: undefined,
+          onPointerDownOutside: undefined,
+          onFocusOutside: undefined,
           id: props.id ?? context.contentId,
           role: props.role ?? 'dialog',
           'data-popover-content': '',
@@ -153,22 +179,19 @@ export function PopoverContent(props: PopoverContentPropsExt): FictNode {
   }
 }
 
-export function PopoverClose(props: Record<string, unknown> & { children?: FictNode }): FictNode {
+export function PopoverClose(props: PopoverCloseProps): FictNode {
   const context = usePopoverContext('PopoverClose')
-  const tag = (props.as as string | undefined) ?? 'button'
+  const tag = props.as ?? 'button'
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? ((props.type as string | undefined) ?? 'button') : props.type,
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (event.defaultPrevented) return
-        context.setOpen(false)
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? ((props.type as string | undefined) ?? 'button') : props.type,
+    onClick: (event: MouseEvent) => {
+      props.onClick?.(event)
+      if (event.defaultPrevented) return
+      context.setOpen(false)
     },
-  }
+    children: props.children,
+  })
 }

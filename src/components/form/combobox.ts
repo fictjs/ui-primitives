@@ -2,6 +2,7 @@ import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { createControllableState } from '../../internal/state'
+import { Primitive } from '../core/primitive'
 
 export interface ComboboxRootProps {
   value?: string | (() => string)
@@ -26,6 +27,8 @@ export interface ComboboxListProps {
 
 export interface ComboboxItemProps {
   value: string
+  as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -136,6 +139,7 @@ export function ComboboxList(props: ComboboxListProps): FictNode {
 
 export function ComboboxItem(props: ComboboxItemProps): FictNode {
   const context = useComboboxContext('ComboboxItem')
+  const tag = props.as ?? 'button'
 
   const matches = () => {
     const query = context.query().trim().toLowerCase()
@@ -157,23 +161,21 @@ export function ComboboxItem(props: ComboboxItemProps): FictNode {
       'data-combobox-item-wrapper': props.value,
       children: () =>
         matches()
-          ? {
-              type: 'button',
-              props: {
-                ...props,
-                type: 'button',
-                role: 'option',
-                'data-combobox-item': props.value,
-                onClick: (event: MouseEvent) => {
-                  ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-                  if (event.defaultPrevented) return
-                  context.setValue(props.value)
-                  context.setQuery(props.value)
-                  context.setOpen(false)
-                },
-                children: props.children,
+          ? Primitive({
+              ...props,
+              as: tag,
+              type: !props.asChild && tag === 'button' ? 'button' : props.type,
+              role: 'option',
+              'data-combobox-item': props.value,
+              onClick: (event: MouseEvent) => {
+                ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+                if (event.defaultPrevented) return
+                context.setValue(props.value)
+                context.setQuery(props.value)
+                context.setOpen(false)
               },
-            }
+              children: props.children,
+            })
           : null,
     },
   }

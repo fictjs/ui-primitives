@@ -1,11 +1,13 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
-import { createId } from '../../internal/ids'
+import { useId } from '../../internal/ids'
+import { Primitive } from '../core/primitive'
 import { Portal } from '../core/portal'
 import { PopperAnchor, PopperContent, PopperRoot, type PopperContentProps } from '../interaction/popper'
 
 export interface HoverCardRootProps {
+  id?: string
   open?: boolean | (() => boolean)
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -16,6 +18,7 @@ export interface HoverCardRootProps {
 
 export interface HoverCardTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   onPointerEnter?: (event: PointerEvent) => void
   onPointerLeave?: (event: PointerEvent) => void
@@ -68,6 +71,7 @@ export function HoverCardRoot(props: HoverCardRootProps): FictNode {
     defaultValue: props.defaultOpen ?? false,
     onChange: props.onOpenChange,
   })
+  const baseId = useId(props.id, 'hover-card')
 
   let openTimer: ReturnType<typeof setTimeout> | null = null
   let closeTimer: ReturnType<typeof setTimeout> | null = null
@@ -102,7 +106,7 @@ export function HoverCardRoot(props: HoverCardRootProps): FictNode {
   const context: HoverCardContextValue = {
     open: () => openState.get(),
     setOpen: value => openState.set(value),
-    contentId: createId('hover-card-content'),
+    contentId: `${baseId}-content`,
     scheduleOpen,
     scheduleClose,
     clearTimers,
@@ -188,18 +192,15 @@ export function HoverCardTrigger(props: HoverCardTriggerProps): FictNode {
   return {
     type: PopperAnchor,
     props: {
-      children: {
-        type: tag,
-        props: {
-          ...props,
-          as: undefined,
-          type: tag === 'button' ? (props.type ?? 'button') : props.type,
-          ref: registerRef,
-          'aria-describedby': () => (context.open() ? context.contentId : undefined),
-          'data-state': () => (context.open() ? 'open' : 'closed'),
-          children: props.children,
-        },
-      },
+      children: Primitive({
+        ...props,
+        as: tag,
+        type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+        ref: registerRef,
+        'aria-describedby': () => (context.open() ? context.contentId : undefined),
+        'data-state': () => (context.open() ? 'open' : 'closed'),
+        children: props.children,
+      }),
     },
   }
 }

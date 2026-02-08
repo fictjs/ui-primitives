@@ -2,14 +2,16 @@ import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 import { createRef } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
-import { createId } from '../../internal/ids'
+import { useId } from '../../internal/ids'
 import { composeRefs } from '../../internal/ref'
+import { Primitive } from '../core/primitive'
 import { Portal } from '../core/portal'
 import { DismissableLayer } from '../interaction/dismissable-layer'
 import { FocusScope } from '../interaction/focus-scope'
 import { ScrollLock } from '../interaction/scroll-lock'
 
 export interface DialogRootProps {
+  id?: string
   open?: boolean | (() => boolean)
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -25,6 +27,7 @@ export interface DialogPortalProps {
 
 export interface DialogTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   onClick?: (event: MouseEvent) => void
   [key: string]: unknown
@@ -40,12 +43,18 @@ export interface DialogOverlayProps {
 export interface DialogContentProps {
   forceMount?: boolean
   portal?: boolean
+  onDismiss?: () => void
+  onEscapeKeyDown?: (event: KeyboardEvent) => void
+  onInteractOutside?: (event: PointerEvent | FocusEvent) => void
+  onPointerDownOutside?: (event: PointerEvent) => void
+  onFocusOutside?: (event: FocusEvent) => void
   children?: FictNode
   [key: string]: unknown
 }
 
 export interface DialogCloseProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   onClick?: (event: MouseEvent) => void
   [key: string]: unknown
@@ -84,14 +93,15 @@ export function DialogRoot(props: DialogRootProps): FictNode {
     defaultValue: props.defaultOpen ?? false,
     onChange: props.onOpenChange,
   })
+  const baseId = useId(props.id, 'dialog')
 
   const context: DialogContextValue = {
     open: () => openState.get(),
     setOpen: value => openState.set(value),
     modal: () => props.modal ?? true,
-    contentId: createId('dialog-content'),
-    titleId: createId('dialog-title'),
-    descriptionId: createId('dialog-description'),
+    contentId: `${baseId}-content`,
+    titleId: `${baseId}-title`,
+    descriptionId: `${baseId}-description`,
     triggerRef: createRef<HTMLElement>(),
     contentRef: createRef<HTMLElement>(),
   }
@@ -128,21 +138,18 @@ export function DialogTrigger(props: DialogTriggerProps): FictNode {
     context.setOpen(!context.open())
   }
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      ref: composeRefs(context.triggerRef, refProp),
-      'aria-haspopup': 'dialog',
-      'aria-expanded': () => context.open(),
-      'aria-controls': context.contentId,
-      'data-state': () => (context.open() ? 'open' : 'closed'),
-      onClick,
-      children: props.children,
-    },
-  }
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    ref: composeRefs(context.triggerRef, refProp),
+    'aria-haspopup': 'dialog',
+    'aria-expanded': () => context.open(),
+    'aria-controls': context.contentId,
+    'data-state': () => (context.open() ? 'open' : 'closed'),
+    onClick,
+    children: props.children,
+  })
 }
 
 export function DialogOverlay(props: DialogOverlayProps): FictNode {
@@ -180,7 +187,14 @@ function buildDialogContentNode(context: DialogContextValue, props: DialogConten
   return {
     type: DismissableLayer,
     props: {
-      onDismiss: () => context.setOpen(false),
+      onEscapeKeyDown: props.onEscapeKeyDown,
+      onInteractOutside: props.onInteractOutside,
+      onPointerDownOutside: props.onPointerDownOutside,
+      onFocusOutside: props.onFocusOutside,
+      onDismiss: () => {
+        props.onDismiss?.()
+        context.setOpen(false)
+      },
       children: {
         type: FocusScope,
         props: {
@@ -196,6 +210,11 @@ function buildDialogContentNode(context: DialogContextValue, props: DialogConten
                 ...props,
                 portal: undefined,
                 forceMount: undefined,
+                onDismiss: undefined,
+                onEscapeKeyDown: undefined,
+                onInteractOutside: undefined,
+                onPointerDownOutside: undefined,
+                onFocusOutside: undefined,
                 ref: composeRefs(context.contentRef, refProp),
                 id: props.id ?? context.contentId,
                 role: props.role ?? 'dialog',
@@ -241,20 +260,17 @@ export function DialogClose(props: DialogCloseProps): FictNode {
   const context = useDialogContext('DialogClose')
   const tag = props.as ?? 'button'
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      onClick: (event: MouseEvent) => {
-        props.onClick?.(event)
-        if (event.defaultPrevented) return
-        context.setOpen(false)
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    onClick: (event: MouseEvent) => {
+      props.onClick?.(event)
+      if (event.defaultPrevented) return
+      context.setOpen(false)
     },
-  }
+    children: props.children,
+  })
 }
 
 export function DialogTitle(props: Record<string, unknown> & { children?: FictNode }): FictNode {

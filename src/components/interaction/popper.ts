@@ -1,6 +1,6 @@
 import { createContext, createEffect, useContext, type FictNode } from '@fictjs/runtime'
 
-import { createId } from '../../internal/ids'
+import { useId } from '../../internal/ids'
 
 export type PopperPlacement =
   | 'top'
@@ -162,7 +162,7 @@ export function PopperContent(props: PopperContentProps): FictNode {
   const sideOffset = props.sideOffset ?? 8
   const alignOffset = props.alignOffset ?? 0
   const strategy = props.strategy ?? 'absolute'
-  const contentId = createId('popper-content')
+  const contentId = useId(props.id as string | undefined, 'popper-content')
 
   const update = () => {
     const anchor = context.anchor()
@@ -213,7 +213,7 @@ export function PopperContent(props: PopperContentProps): FictNode {
       sideOffset: undefined,
       alignOffset: undefined,
       strategy: undefined,
-      id: props.id ?? contentId,
+      id: contentId,
       ref: (node: HTMLElement | null) => {
         context.setContent(node)
         if (typeof props.ref === 'function') {

@@ -1,6 +1,7 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
+import { Primitive } from '../core/primitive'
 
 export interface CollapsibleRootProps {
   open?: boolean | (() => boolean)
@@ -12,6 +13,7 @@ export interface CollapsibleRootProps {
 
 export interface CollapsibleTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -64,24 +66,21 @@ export function CollapsibleTrigger(props: CollapsibleTriggerProps): FictNode {
   const context = useCollapsibleContext('CollapsibleTrigger')
   const tag = props.as ?? 'button'
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      disabled: () => context.disabled(),
-      'aria-expanded': () => context.open(),
-      'data-state': () => (context.open() ? 'open' : 'closed'),
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (event.defaultPrevented) return
-        if (context.disabled()) return
-        context.setOpen(!context.open())
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    disabled: () => context.disabled(),
+    'aria-expanded': () => context.open(),
+    'data-state': () => (context.open() ? 'open' : 'closed'),
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      if (event.defaultPrevented) return
+      if (context.disabled()) return
+      context.setOpen(!context.open())
     },
-  }
+    children: props.children,
+  })
 }
 
 export function CollapsibleContent(props: CollapsibleContentProps): FictNode {

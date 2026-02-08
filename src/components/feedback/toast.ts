@@ -2,6 +2,7 @@ import { createContext, onDestroy, useContext, type FictNode } from '@fictjs/run
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { createId } from '../../internal/ids'
+import { Primitive } from '../core/primitive'
 import { VisuallyHidden } from '../core/visually-hidden'
 
 export interface ToastProviderProps {
@@ -33,6 +34,8 @@ export interface ToastActionProps {
 }
 
 export interface ToastCloseProps {
+  as?: string
+  asChild?: boolean
   onClick?: (event: MouseEvent) => void
   children?: FictNode
   [key: string]: unknown
@@ -225,16 +228,16 @@ export function ToastAction(props: ToastActionProps): FictNode {
 }
 
 export function ToastClose(props: ToastCloseProps): FictNode {
-  return {
-    type: 'button',
-    props: {
-      ...props,
-      type: 'button',
-      'data-toast-close': '',
-      onClick: (event: MouseEvent) => {
-        props.onClick?.(event)
-      },
-      children: props.children ?? 'Close',
+  const tag = props.as ?? 'button'
+
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? 'button' : props.type,
+    'data-toast-close': '',
+    onClick: (event: MouseEvent) => {
+      props.onClick?.(event)
     },
-  }
+    children: props.children ?? 'Close',
+  })
 }

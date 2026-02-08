@@ -2,7 +2,10 @@ import { createContext, onDestroy, onMount, useContext, type FictNode } from '@f
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { read } from '../../internal/accessor'
+import { useId } from '../../internal/ids'
+import { composeRefs } from '../../internal/ref'
 import type { MaybeAccessor } from '../../internal/types'
+import { Primitive } from '../core/primitive'
 
 export interface RovingFocusGroupProps {
   orientation?: MaybeAccessor<'horizontal' | 'vertical'>
@@ -15,6 +18,7 @@ export interface RovingFocusItemProps {
   disabled?: MaybeAccessor<boolean>
   children?: FictNode
   as?: string
+  asChild?: boolean
   onFocus?: (event: FocusEvent) => void
   onKeyDown?: (event: KeyboardEvent) => void
   [key: string]: unknown
@@ -39,12 +43,6 @@ interface RovingContextValue {
 }
 
 const RovingContext = createContext<RovingContextValue | null>(null)
-
-let nextItemId = 0
-function createItemId(): string {
-  nextItemId += 1
-  return `rf-item-${nextItemId}`
-}
 
 export function RovingFocusGroup(props: RovingFocusGroupProps): FictNode {
   const currentIdSignal = createSignal<string | null>(null)
@@ -228,7 +226,7 @@ export function RovingFocusItem(props: RovingFocusItemProps): FictNode {
     throw new Error('RovingFocusItem must be used inside RovingFocusGroup')
   }
 
-  const id = createItemId()
+  const id = useId(props.id as string | undefined, 'rf-item')
   const tag = props.as ?? 'button'
   let cleanup: (() => void) | null = null
   let removeKeydownListener: (() => void) | null = null
@@ -291,17 +289,14 @@ export function RovingFocusItem(props: RovingFocusItemProps): FictNode {
     }
   }
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      disabled: read(props.disabled, false),
-      ref: register,
-      tabIndex: -1,
-      'data-roving-focus-item': '',
-      onFocus,
-      children: props.children,
-    },
-  }
+  return Primitive({
+    ...props,
+    as: tag,
+    disabled: read(props.disabled, false),
+    ref: composeRefs(props.ref as ((node: HTMLElement | null) => void) | { current: HTMLElement | null }, register),
+    tabIndex: -1,
+    'data-roving-focus-item': '',
+    onFocus,
+    children: props.children,
+  })
 }

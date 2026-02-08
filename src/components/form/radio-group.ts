@@ -1,6 +1,7 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
+import { Primitive } from '../core/primitive'
 
 export interface RadioGroupProps {
   value?: string | (() => string)
@@ -13,6 +14,8 @@ export interface RadioGroupProps {
 
 export interface RadioItemProps {
   value: string
+  as?: string
+  asChild?: boolean
   disabled?: boolean
   children?: FictNode
   [key: string]: unknown
@@ -67,39 +70,58 @@ export function RadioGroup(props: RadioGroupProps): FictNode {
 export function RadioItem(props: RadioItemProps): FictNode {
   const group = useRadioGroupContext('RadioItem')
   const checked = () => group.value() === props.value
+  const tag = props.as ?? 'button'
+  const hiddenInput = group.name
+    ? {
+        type: 'input',
+        props: {
+          type: 'radio',
+          hidden: true,
+          tabIndex: -1,
+          name: group.name,
+          checked,
+          value: props.value,
+          readOnly: true,
+        },
+      }
+    : null
 
-  return {
-    type: 'button',
-    props: {
-      ...props,
-      type: 'button',
-      role: 'radio',
-      disabled: props.disabled,
-      'aria-checked': checked,
-      'data-state': () => (checked() ? 'checked' : 'unchecked'),
-      'data-radio-item': '',
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (event.defaultPrevented || props.disabled) return
-        group.setValue(props.value)
-      },
-      children: [
-        props.children,
-        group.name
-          ? {
-              type: 'input',
-              props: {
-                type: 'radio',
-                hidden: true,
-                tabIndex: -1,
-                name: group.name,
-                checked,
-                value: props.value,
-                readOnly: true,
-              },
-            }
-          : null,
-      ],
-    },
+  if (props.asChild) {
+    return [
+      Primitive({
+        ...props,
+        as: tag,
+        type: props.type,
+        role: 'radio',
+        disabled: props.disabled,
+        'aria-checked': checked,
+        'data-state': () => (checked() ? 'checked' : 'unchecked'),
+        'data-radio-item': '',
+        onClick: (event: MouseEvent) => {
+          ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+          if (event.defaultPrevented || props.disabled) return
+          group.setValue(props.value)
+        },
+        children: props.children,
+      }),
+      hiddenInput,
+    ]
   }
+
+  return Primitive({
+    ...props,
+    as: tag,
+    type: tag === 'button' ? 'button' : props.type,
+    role: 'radio',
+    disabled: props.disabled,
+    'aria-checked': checked,
+    'data-state': () => (checked() ? 'checked' : 'unchecked'),
+    'data-radio-item': '',
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      if (event.defaultPrevented || props.disabled) return
+      group.setValue(props.value)
+    },
+    children: [props.children, hiddenInput],
+  })
 }

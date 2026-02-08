@@ -1,7 +1,8 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
-import { createId } from '../../internal/ids'
+import { useId } from '../../internal/ids'
+import { Primitive } from '../core/primitive'
 import { Portal } from '../core/portal'
 import { PopperAnchor, PopperContent, PopperRoot, type PopperContentProps } from '../interaction/popper'
 
@@ -11,6 +12,7 @@ export interface TooltipProviderProps {
 }
 
 export interface TooltipRootProps {
+  id?: string
   open?: boolean | (() => boolean)
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -20,6 +22,7 @@ export interface TooltipRootProps {
 
 export interface TooltipTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   onPointerEnter?: (event: PointerEvent) => void
   onPointerLeave?: (event: PointerEvent) => void
@@ -93,6 +96,7 @@ export function TooltipRoot(props: TooltipRootProps): FictNode {
     defaultValue: props.defaultOpen ?? false,
     onChange: props.onOpenChange,
   })
+  const baseId = useId(props.id, 'tooltip')
 
   let timer: ReturnType<typeof setTimeout> | null = null
 
@@ -115,7 +119,7 @@ export function TooltipRoot(props: TooltipRootProps): FictNode {
     open: () => openState.get(),
     setOpen: value => openState.set(value),
     delayDuration: () => props.delayDuration ?? provider.delayDuration,
-    contentId: createId('tooltip-content'),
+    contentId: `${baseId}-content`,
     scheduleOpen,
     clearSchedule,
   }
@@ -202,18 +206,15 @@ export function TooltipTrigger(props: TooltipTriggerProps): FictNode {
   return {
     type: PopperAnchor,
     props: {
-      children: {
-        type: tag,
-        props: {
-          ...props,
-          as: undefined,
-          type: tag === 'button' ? (props.type ?? 'button') : props.type,
-          ref: registerRef,
-          'aria-describedby': () => (context.open() ? context.contentId : undefined),
-          'data-state': () => (context.open() ? 'open' : 'closed'),
-          children: props.children,
-        },
-      },
+      children: Primitive({
+        ...props,
+        as: tag,
+        type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+        ref: registerRef,
+        'aria-describedby': () => (context.open() ? context.contentId : undefined),
+        'data-state': () => (context.open() ? 'open' : 'closed'),
+        children: props.children,
+      }),
     },
   }
 }

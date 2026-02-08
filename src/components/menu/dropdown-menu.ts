@@ -1,6 +1,7 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
+import { Primitive } from '../core/primitive'
 import { PopoverContent, PopoverRoot, PopoverTrigger, type PopoverContentPropsExt } from '../overlay/popover'
 import { RovingFocusGroup } from '../interaction/roving-focus'
 import { Separator } from '../core/separator'
@@ -14,6 +15,7 @@ export interface DropdownMenuRootProps {
 
 export interface DropdownMenuTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -24,6 +26,7 @@ export interface DropdownMenuContentProps extends Omit<PopoverContentPropsExt, '
 
 export interface DropdownMenuItemProps {
   as?: string
+  asChild?: boolean
   keepOpen?: boolean
   onSelect?: (event: MouseEvent) => void
   children?: FictNode
@@ -127,25 +130,22 @@ export function DropdownMenuItem(props: DropdownMenuItemProps): FictNode {
   const context = useDropdownMenuContext('DropdownMenuItem')
   const tag = props.as ?? 'button'
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      role: props.role ?? 'menuitem',
-      'data-dropdown-menu-item': '',
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        props.onSelect?.(event)
-        if (event.defaultPrevented) return
-        if (!props.keepOpen) {
-          context.setOpen(false)
-        }
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    role: props.role ?? 'menuitem',
+    'data-dropdown-menu-item': '',
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      props.onSelect?.(event)
+      if (event.defaultPrevented) return
+      if (!props.keepOpen) {
+        context.setOpen(false)
+      }
     },
-  }
+    children: props.children,
+  })
 }
 
 export function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): FictNode {

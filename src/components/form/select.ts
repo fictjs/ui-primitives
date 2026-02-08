@@ -1,6 +1,7 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
+import { Primitive } from '../core/primitive'
 
 export interface SelectRootProps {
   value?: string | (() => string)
@@ -15,6 +16,7 @@ export interface SelectRootProps {
 
 export interface SelectTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -27,6 +29,8 @@ export interface SelectContentProps {
 
 export interface SelectItemProps {
   value: string
+  as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -83,25 +87,22 @@ export function SelectTrigger(props: SelectTriggerProps): FictNode {
   const context = useSelectContext('SelectTrigger')
   const tag = props.as ?? 'button'
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      disabled: () => context.disabled(),
-      'aria-haspopup': 'listbox',
-      'aria-expanded': () => context.open(),
-      'data-state': () => (context.open() ? 'open' : 'closed'),
-      'data-select-trigger': '',
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (event.defaultPrevented || context.disabled()) return
-        context.setOpen(!context.open())
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    disabled: () => context.disabled(),
+    'aria-haspopup': 'listbox',
+    'aria-expanded': () => context.open(),
+    'data-state': () => (context.open() ? 'open' : 'closed'),
+    'data-select-trigger': '',
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      if (event.defaultPrevented || context.disabled()) return
+      context.setOpen(!context.open())
     },
-  }
+    children: props.children,
+  })
 }
 
 export function SelectValue(props: Record<string, unknown> & { placeholder?: string }): FictNode {
@@ -144,23 +145,22 @@ export function SelectContent(props: SelectContentProps): FictNode {
 export function SelectItem(props: SelectItemProps): FictNode {
   const context = useSelectContext('SelectItem')
   const selected = () => context.value() === props.value
+  const tag = props.as ?? 'button'
 
-  return {
-    type: 'button',
-    props: {
-      ...props,
-      type: 'button',
-      role: 'option',
-      'aria-selected': selected,
-      'data-state': () => (selected() ? 'checked' : 'unchecked'),
-      'data-select-item': props.value,
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (event.defaultPrevented) return
-        context.setValue(props.value)
-        context.setOpen(false)
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? 'button' : props.type,
+    role: 'option',
+    'aria-selected': selected,
+    'data-state': () => (selected() ? 'checked' : 'unchecked'),
+    'data-select-item': props.value,
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      if (event.defaultPrevented) return
+      context.setValue(props.value)
+      context.setOpen(false)
     },
-  }
+    children: props.children,
+  })
 }

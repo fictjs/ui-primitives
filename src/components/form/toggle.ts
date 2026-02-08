@@ -1,6 +1,7 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
+import { Primitive } from '../core/primitive'
 
 export interface ToggleProps {
   pressed?: boolean | (() => boolean)
@@ -22,6 +23,8 @@ export interface ToggleGroupProps {
 
 export interface ToggleGroupItemProps {
   value: string
+  as?: string
+  asChild?: boolean
   disabled?: boolean
   children?: FictNode
   [key: string]: unknown
@@ -125,22 +128,21 @@ export function ToggleGroupItem(props: ToggleGroupItemProps): FictNode {
   }
 
   const pressed = () => group.values().includes(props.value)
+  const tag = props.as ?? 'button'
 
-  return {
-    type: 'button',
-    props: {
-      ...props,
-      type: 'button',
-      disabled: props.disabled,
-      'aria-pressed': pressed,
-      'data-state': () => (pressed() ? 'on' : 'off'),
-      'data-toggle-group-item': '',
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (event.defaultPrevented || props.disabled) return
-        group.toggle(props.value)
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? 'button' : props.type,
+    disabled: props.disabled,
+    'aria-pressed': pressed,
+    'data-state': () => (pressed() ? 'on' : 'off'),
+    'data-toggle-group-item': '',
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      if (event.defaultPrevented || props.disabled) return
+      group.toggle(props.value)
     },
-  }
+    children: props.children,
+  })
 }

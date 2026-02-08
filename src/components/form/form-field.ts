@@ -1,6 +1,6 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
-import { createId } from '../../internal/ids'
+import { useId } from '../../internal/ids'
 import { Label } from './label'
 
 export interface FormProps {
@@ -9,6 +9,7 @@ export interface FormProps {
 }
 
 export interface FormFieldProps {
+  id?: string
   name?: string
   children?: FictNode
 }
@@ -57,7 +58,7 @@ export function Form(props: FormProps): FictNode {
 }
 
 export function FormField(props: FormFieldProps): FictNode {
-  const fieldId = props.name ? `field-${props.name}` : createId('field')
+  const fieldId = useId(props.id ?? (props.name ? `field-${props.name}` : undefined), 'field')
 
   const context: FieldContextValue = {
     controlId: fieldId,

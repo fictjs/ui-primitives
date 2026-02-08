@@ -2,6 +2,7 @@ import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { createControllableState } from '../../internal/state'
+import { Primitive } from '../core/primitive'
 import { Portal } from '../core/portal'
 import { DismissableLayer } from '../interaction/dismissable-layer'
 import { RovingFocusGroup } from '../interaction/roving-focus'
@@ -15,6 +16,7 @@ export interface ContextMenuRootProps {
 
 export interface ContextMenuTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -24,12 +26,18 @@ type TriggerRefProp = ((node: HTMLElement | null) => void) | { current: HTMLElem
 export interface ContextMenuContentProps {
   forceMount?: boolean
   portal?: boolean
+  onDismiss?: () => void
+  onEscapeKeyDown?: (event: KeyboardEvent) => void
+  onInteractOutside?: (event: PointerEvent | FocusEvent) => void
+  onPointerDownOutside?: (event: PointerEvent) => void
+  onFocusOutside?: (event: FocusEvent) => void
   children?: FictNode
   [key: string]: unknown
 }
 
 export interface ContextMenuItemProps {
   as?: string
+  asChild?: boolean
   keepOpen?: boolean
   onSelect?: (event: MouseEvent) => void
   children?: FictNode
@@ -111,16 +119,13 @@ export function ContextMenuTrigger(props: ContextMenuTriggerProps): FictNode {
     removeListener = () => node.removeEventListener('contextmenu', nativeHandler)
   }
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      ref: registerRef,
-      onContextMenu: handleContextMenu,
-      children: props.children,
-    },
-  }
+  return Primitive({
+    ...props,
+    as: tag,
+    ref: registerRef,
+    onContextMenu: handleContextMenu,
+    children: props.children,
+  })
 }
 
 export function ContextMenuContent(props: ContextMenuContentProps): FictNode {
@@ -129,13 +134,25 @@ export function ContextMenuContent(props: ContextMenuContentProps): FictNode {
   const content = {
     type: DismissableLayer,
     props: {
-      onDismiss: () => context.setOpen(false),
+      onEscapeKeyDown: props.onEscapeKeyDown,
+      onInteractOutside: props.onInteractOutside,
+      onPointerDownOutside: props.onPointerDownOutside,
+      onFocusOutside: props.onFocusOutside,
+      onDismiss: () => {
+        props.onDismiss?.()
+        context.setOpen(false)
+      },
       children: {
         type: 'div',
         props: {
           ...props,
           forceMount: undefined,
           portal: undefined,
+          onDismiss: undefined,
+          onEscapeKeyDown: undefined,
+          onInteractOutside: undefined,
+          onPointerDownOutside: undefined,
+          onFocusOutside: undefined,
           role: 'menu',
           'data-context-menu-content': '',
           style: {
@@ -180,23 +197,20 @@ export function ContextMenuItem(props: ContextMenuItemProps): FictNode {
   const context = useContextMenuContext('ContextMenuItem')
   const tag = props.as ?? 'button'
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      role: props.role ?? 'menuitem',
-      'data-context-menu-item': '',
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        props.onSelect?.(event)
-        if (event.defaultPrevented) return
-        if (!props.keepOpen) {
-          context.setOpen(false)
-        }
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    role: props.role ?? 'menuitem',
+    'data-context-menu-item': '',
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      props.onSelect?.(event)
+      if (event.defaultPrevented) return
+      if (!props.keepOpen) {
+        context.setOpen(false)
+      }
     },
-  }
+    children: props.children,
+  })
 }

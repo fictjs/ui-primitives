@@ -3,10 +3,13 @@ import { onDestroy, onMount, type FictNode } from '@fictjs/runtime'
 import { read } from '../../internal/accessor'
 import type { MaybeAccessor } from '../../internal/types'
 
+export type DismissableLayerOutsideEvent = PointerEvent | FocusEvent
+
 export interface DismissableLayerProps {
   disabled?: MaybeAccessor<boolean>
   onDismiss?: () => void
   onEscapeKeyDown?: (event: KeyboardEvent) => void
+  onInteractOutside?: (event: DismissableLayerOutsideEvent) => void
   onPointerDownOutside?: (event: PointerEvent) => void
   onFocusOutside?: (event: FocusEvent) => void
   children?: FictNode
@@ -45,6 +48,7 @@ export function DismissableLayer(props: DismissableLayerProps): FictNode {
     const isOutside = !target || !node.contains(target)
     if (!isOutside) return
 
+    props.onInteractOutside?.(event)
     props.onPointerDownOutside?.(event)
     if (!event.defaultPrevented) {
       dismiss()
@@ -58,6 +62,7 @@ export function DismissableLayer(props: DismissableLayerProps): FictNode {
     const isOutside = !target || !node.contains(target)
     if (!isOutside) return
 
+    props.onInteractOutside?.(event)
     props.onFocusOutside?.(event)
     if (!event.defaultPrevented) {
       dismiss()
@@ -97,6 +102,7 @@ export function DismissableLayer(props: DismissableLayerProps): FictNode {
       disabled: undefined,
       onDismiss: undefined,
       onEscapeKeyDown: undefined,
+      onInteractOutside: undefined,
       onPointerDownOutside: undefined,
       onFocusOutside: undefined,
       ref: (el: HTMLElement | null) => {

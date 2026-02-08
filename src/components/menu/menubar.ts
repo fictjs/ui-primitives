@@ -1,6 +1,8 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
+import { useId } from '../../internal/ids'
+import { Primitive } from '../core/primitive'
 import { RovingFocusGroup } from '../interaction/roving-focus'
 
 export interface MenubarRootProps {
@@ -15,6 +17,7 @@ export interface MenubarMenuProps {
 
 export interface MenubarTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -27,6 +30,7 @@ export interface MenubarContentProps {
 
 export interface MenubarItemProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   onSelect?: (event: MouseEvent) => void
   [key: string]: unknown
@@ -43,12 +47,6 @@ interface MenubarMenuContextValue {
 
 const MenubarRootContext = createContext<MenubarRootContextValue | null>(null)
 const MenubarMenuContext = createContext<MenubarMenuContextValue | null>(null)
-
-let nextMenuId = 0
-function createMenuId(): string {
-  nextMenuId += 1
-  return `menubar-menu-${nextMenuId}`
-}
 
 function useMenubarRootContext(component: string): MenubarRootContextValue {
   const context = useContext(MenubarRootContext)
@@ -99,7 +97,7 @@ export function MenubarRoot(props: MenubarRootProps): FictNode {
 }
 
 export function MenubarMenu(props: MenubarMenuProps): FictNode {
-  const id = props.value ?? createMenuId()
+  const id = useId(props.value, 'menubar-menu')
 
   return {
     type: MenubarMenuContext.Provider,
@@ -123,30 +121,27 @@ export function MenubarTrigger(props: MenubarTriggerProps): FictNode {
 
   const open = () => root.activeMenu() === menu.id
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      role: 'menuitem',
-      'aria-haspopup': 'menu',
-      'aria-expanded': open,
-      'data-state': () => (open() ? 'open' : 'closed'),
-      'data-menubar-trigger': menu.id,
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (event.defaultPrevented) return
-        root.setActiveMenu(open() ? null : menu.id)
-      },
-      onMouseOver: (event: MouseEvent) => {
-        ;(props.onMouseOver as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (event.defaultPrevented) return
-        root.setActiveMenu(menu.id)
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    role: 'menuitem',
+    'aria-haspopup': 'menu',
+    'aria-expanded': open,
+    'data-state': () => (open() ? 'open' : 'closed'),
+    'data-menubar-trigger': menu.id,
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      if (event.defaultPrevented) return
+      root.setActiveMenu(open() ? null : menu.id)
     },
-  }
+    onMouseOver: (event: MouseEvent) => {
+      ;(props.onMouseOver as ((event: MouseEvent) => void) | undefined)?.(event)
+      if (event.defaultPrevented) return
+      root.setActiveMenu(menu.id)
+    },
+    children: props.children,
+  })
 }
 
 export function MenubarContent(props: MenubarContentProps): FictNode {
@@ -180,22 +175,19 @@ export function MenubarItem(props: MenubarItemProps): FictNode {
   const root = useMenubarRootContext('MenubarItem')
   const tag = props.as ?? 'button'
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      role: props.role ?? 'menuitem',
-      'data-menubar-item': '',
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        props.onSelect?.(event)
-        if (!event.defaultPrevented) {
-          root.setActiveMenu(null)
-        }
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    role: props.role ?? 'menuitem',
+    'data-menubar-item': '',
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      props.onSelect?.(event)
+      if (!event.defaultPrevented) {
+        root.setActiveMenu(null)
+      }
     },
-  }
+    children: props.children,
+  })
 }

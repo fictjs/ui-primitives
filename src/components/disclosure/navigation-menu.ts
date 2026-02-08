@@ -1,6 +1,9 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
+import { useId } from '../../internal/ids'
+import { Primitive } from '../core/primitive'
+
 export interface NavigationMenuRootProps {
   children?: FictNode
   [key: string]: unknown
@@ -13,11 +16,15 @@ export interface NavigationMenuListProps {
 
 export interface NavigationMenuItemProps {
   value?: string
+  as?: string
+  asChild?: boolean
   children?: FictNode
+  [key: string]: unknown
 }
 
 export interface NavigationMenuTriggerProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -30,6 +37,7 @@ export interface NavigationMenuContentProps {
 
 export interface NavigationMenuLinkProps {
   as?: string
+  asChild?: boolean
   children?: FictNode
   [key: string]: unknown
 }
@@ -45,12 +53,6 @@ interface NavigationMenuItemContextValue {
 
 const NavigationMenuRootContext = createContext<NavigationMenuRootContextValue | null>(null)
 const NavigationMenuItemContext = createContext<NavigationMenuItemContextValue | null>(null)
-
-let nextItemId = 0
-function createItemId(): string {
-  nextItemId += 1
-  return `nav-item-${nextItemId}`
-}
 
 function useNavigationRootContext(component: string): NavigationMenuRootContextValue {
   const context = useContext(NavigationMenuRootContext)
@@ -104,19 +106,20 @@ export function NavigationMenuList(props: NavigationMenuListProps): FictNode {
 }
 
 export function NavigationMenuItem(props: NavigationMenuItemProps): FictNode {
-  const value = props.value ?? createItemId()
+  const value = useId(props.value, 'navigation-menu-item')
+  const tag = props.as ?? 'li'
 
   return {
     type: NavigationMenuItemContext.Provider,
     props: {
       value: { value },
-      children: {
-        type: 'li',
-        props: {
-          'data-navigation-menu-item': value,
-          children: props.children,
-        },
-      },
+      children: Primitive({
+        ...props,
+        value: undefined,
+        as: tag,
+        'data-navigation-menu-item': value,
+        children: props.children,
+      }),
     },
   } as unknown as FictNode
 }
@@ -128,23 +131,20 @@ export function NavigationMenuTrigger(props: NavigationMenuTriggerProps): FictNo
 
   const open = () => root.activeItem() === item.value
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      type: tag === 'button' ? (props.type ?? 'button') : props.type,
-      'aria-expanded': open,
-      'aria-haspopup': 'menu',
-      'data-state': () => (open() ? 'open' : 'closed'),
-      onClick: (event: MouseEvent) => {
-        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
-        if (event.defaultPrevented) return
-        root.setActiveItem(open() ? null : item.value)
-      },
-      children: props.children,
+  return Primitive({
+    ...props,
+    as: tag,
+    type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
+    'aria-expanded': open,
+    'aria-haspopup': 'menu',
+    'data-state': () => (open() ? 'open' : 'closed'),
+    onClick: (event: MouseEvent) => {
+      ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+      if (event.defaultPrevented) return
+      root.setActiveItem(open() ? null : item.value)
     },
-  }
+    children: props.children,
+  })
 }
 
 export function NavigationMenuContent(props: NavigationMenuContentProps): FictNode {
@@ -178,15 +178,12 @@ export function NavigationMenuContent(props: NavigationMenuContentProps): FictNo
 export function NavigationMenuLink(props: NavigationMenuLinkProps): FictNode {
   const tag = props.as ?? 'a'
 
-  return {
-    type: tag,
-    props: {
-      ...props,
-      as: undefined,
-      'data-navigation-menu-link': '',
-      children: props.children,
-    },
-  }
+  return Primitive({
+    ...props,
+    as: tag,
+    'data-navigation-menu-link': '',
+    children: props.children,
+  })
 }
 
 export function NavigationMenuIndicator(props: Record<string, unknown> & { children?: FictNode }): FictNode {

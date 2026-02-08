@@ -1,6 +1,7 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 
 import { createControllableState } from '../../internal/state'
+import { Primitive } from '../core/primitive'
 import {
   CollapsibleContent,
   CollapsibleRoot,
@@ -20,7 +21,10 @@ export interface AccordionRootProps {
 
 export interface AccordionItemProps {
   value: string
+  as?: string
+  asChild?: boolean
   children?: FictNode
+  [key: string]: unknown
 }
 
 interface AccordionContextValue {
@@ -112,6 +116,7 @@ export function AccordionRoot(props: AccordionRootProps): FictNode {
 
 export function AccordionItem(props: AccordionItemProps): FictNode {
   const accordion = useAccordionContext('AccordionItem')
+  const tag = props.as ?? 'div'
 
   const itemContext: AccordionItemContextValue = {
     value: props.value,
@@ -132,14 +137,14 @@ export function AccordionItem(props: AccordionItemProps): FictNode {
               accordion.toggle(props.value)
             }
           },
-          children: {
-            type: 'div',
-            props: {
-              'data-accordion-item': props.value,
-              'data-state': () => (itemContext.open() ? 'open' : 'closed'),
-              children: props.children,
-            },
-          },
+          children: Primitive({
+            ...props,
+            value: undefined,
+            as: tag,
+            'data-accordion-item': props.value,
+            'data-state': () => (itemContext.open() ? 'open' : 'closed'),
+            children: props.children,
+          }),
         },
       },
     },
