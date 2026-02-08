@@ -92,4 +92,62 @@ describe('Menubar', () => {
     dispose()
     container.remove()
   })
+
+  it('supports asChild on trigger and item', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: MenubarRoot,
+        props: {
+          children: {
+            type: MenubarMenu,
+            props: {
+              value: 'view',
+              children: [
+                {
+                  type: MenubarTrigger,
+                  props: {
+                    asChild: true,
+                    children: {
+                      type: 'span',
+                      props: { role: 'menuitem', 'data-testid': 'trigger-as-child', children: 'View' },
+                    },
+                  },
+                },
+                {
+                  type: MenubarContent,
+                  props: {
+                    children: {
+                      type: MenubarItem,
+                      props: {
+                        asChild: true,
+                        children: {
+                          type: 'a',
+                          props: { href: '#', 'data-testid': 'item-as-child', children: 'Zoom' },
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      container,
+    )
+
+    fireEvent.click(container.querySelector('[data-testid="trigger-as-child"]') as HTMLElement)
+    await Promise.resolve()
+    expect(container.querySelector('[data-menubar-content="view"]')).not.toBeNull()
+
+    fireEvent.click(container.querySelector('[data-testid="item-as-child"]') as HTMLElement)
+    await Promise.resolve()
+    expect(container.querySelector('[data-menubar-content="view"]')).toBeNull()
+
+    dispose()
+    container.remove()
+  })
 })

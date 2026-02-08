@@ -3,6 +3,7 @@ import { onMount, type FictNode, render } from '@fictjs/runtime'
 
 import {
   ToastAction,
+  ToastClose,
   ToastProvider,
   ToastRoot,
   ToastViewport,
@@ -149,6 +150,41 @@ describe('Toast', () => {
     const action = container.querySelector('[data-testid="action"]')
     expect(action?.getAttribute('aria-label')).toBe('Undo change')
     expect(action?.textContent).toContain('Undo')
+
+    dispose()
+    container.remove()
+  })
+
+  it('supports asChild on toast close control', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const onClick = vi.fn()
+
+    const dispose = render(
+      () => ({
+        type: ToastClose,
+        props: {
+          asChild: true,
+          onClick,
+          children: {
+            type: 'span',
+            props: {
+              role: 'button',
+              'data-testid': 'toast-close-child',
+              children: 'Close',
+            },
+          },
+        },
+      }),
+      container,
+    )
+
+    const close = container.querySelector('[data-testid="toast-close-child"]') as HTMLElement
+    close.click()
+    await Promise.resolve()
+
+    expect(onClick).toHaveBeenCalledTimes(1)
+    expect(close.getAttribute('data-toast-close')).toBe('')
 
     dispose()
     container.remove()

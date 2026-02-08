@@ -98,4 +98,77 @@ describe('Form controls', () => {
     dispose()
     container.remove()
   })
+
+  it('supports asChild for radio and toggle group items', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: 'div',
+        props: {
+          children: [
+            {
+              type: RadioGroup,
+              props: {
+                defaultValue: 'a',
+                children: [
+                  {
+                    type: RadioItem,
+                    props: {
+                      value: 'a',
+                      asChild: true,
+                      children: {
+                        type: 'span',
+                        props: { role: 'radio', 'data-testid': 'radio-a-child', children: 'A' },
+                      },
+                    },
+                  },
+                  {
+                    type: RadioItem,
+                    props: {
+                      value: 'b',
+                      asChild: true,
+                      children: {
+                        type: 'span',
+                        props: { role: 'radio', 'data-testid': 'radio-b-child', children: 'B' },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              type: ToggleGroup,
+              props: {
+                type: 'single',
+                children: {
+                  type: ToggleGroupItem,
+                  props: {
+                    value: 'x',
+                    asChild: true,
+                    children: {
+                      type: 'div',
+                      props: { role: 'button', 'data-testid': 'toggle-child', children: 'Toggle' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      }),
+      container,
+    )
+
+    fireEvent.click(container.querySelector('[data-testid="radio-b-child"]') as HTMLElement)
+    fireEvent.click(container.querySelector('[data-testid="toggle-child"]') as HTMLElement)
+    await Promise.resolve()
+
+    expect(container.querySelector('[data-testid="radio-b-child"]')?.getAttribute('data-state')).toBe('checked')
+    expect(container.querySelector('[data-testid="toggle-child"]')?.getAttribute('data-state')).toBe('on')
+
+    dispose()
+    container.remove()
+  })
 })

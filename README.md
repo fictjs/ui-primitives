@@ -14,6 +14,8 @@ This repository provides unstyled, composable primitives focused on accessibilit
 
 - Headless component primitives with composable parts
 - Controlled + uncontrolled state APIs across core components
+- Consistent `asChild` support across `Trigger` / `Close` / `Item` parts
+- Deterministic id strategy via `id` injection and `useId` / `IdProvider`
 - Built-in accessibility semantics (`role`, `aria-*`, keyboard interactions)
 - Strong behavior tests (Vitest + JSDOM)
 - Executable demo app + screenshot baseline workflow
@@ -71,6 +73,7 @@ import { DialogRoot, TabsRoot, ToastProvider } from '@fictjs/ui-primitives'
 Export groups:
 
 - Core: `Primitive`, `Slot`, `Presence`, `Portal`, `VisuallyHidden`, etc.
+- Core id primitives: `IdProvider`, `useId`
 - Interaction: `FocusScope`, `DismissableLayer`, `RovingFocusGroup`, `Popper`, etc.
 - Overlay: `Dialog*`, `AlertDialog*`, `Popover*`, `Tooltip*`, `HoverCard*`
 - Menu: `DropdownMenu*`, `ContextMenu*`, `Menubar*`
@@ -80,6 +83,13 @@ Export groups:
 - Layout: `ScrollArea*`, `Resizable*`, `AspectRatio`, `Progress`, `Skeleton`, `FocusVisible`
 
 For detailed symbol-by-symbol reference, see `docs/api-reference.md`.
+
+## Design Contracts
+
+- Controlled/uncontrolled parity: `open/defaultOpen/onOpenChange` and `value/defaultValue/onValueChange`
+- `asChild` parity: `Trigger`, `Close`, and `Item` parts support Slot composition
+- Stable id wiring: prefer explicit `id` for deterministic SSR, otherwise use built-in id generation
+- Interceptable outside interactions: overlay content parts expose escape and outside interaction hooks
 
 ## Documentation Map
 

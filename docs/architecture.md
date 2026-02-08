@@ -52,8 +52,10 @@ This unifies plain values and accessor functions (`T | () => T`) across props.
 
 Shared helpers:
 
-- `src/internal/ids.ts` -> deterministic ids for aria wiring
+- `src/internal/ids.ts` -> `createId`, `useId`, and `IdProvider` for deterministic aria wiring
 - `src/internal/ref.ts` -> composed refs across parent and child consumers
+
+Most root primitives accept explicit `id` props so teams can force stable SSR/hydration wiring.
 
 ## Interaction Stack Design
 
@@ -66,6 +68,7 @@ Shared helpers:
 
 - `DismissableLayer` centralizes Escape, outside pointer, and outside focus dismissal.
 - Only the top-most active layer can dismiss to avoid nested-layer conflicts.
+- Outside interactions are interceptable (`onEscapeKeyDown`, `onPointerDownOutside`, `onFocusOutside`, `onInteractOutside`).
 
 ### Positioning
 
@@ -83,6 +86,7 @@ Shared helpers:
 - Maintain explicit state attributes (`aria-*`, `data-state`) for testability.
 - Include keyboard/pointer parity for open/close and navigation behavior.
 - Use live regions for async feedback (`Toast`, `LiveRegionProvider`).
+- Ensure `asChild` composition keeps semantics explicit at call sites.
 
 See `docs/accessibility.md` for review checklist details.
 

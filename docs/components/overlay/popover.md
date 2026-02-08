@@ -9,6 +9,13 @@ Floating, dismissable content anchored to a trigger.
 - `PopoverContent`
 - `PopoverClose`
 
+## Key APIs
+
+- `PopoverRoot` accepts `id?: string` for deterministic trigger/content aria wiring
+- `PopoverTrigger` and `PopoverClose` support `asChild`
+- `PopoverContent` supports `onEscapeKeyDown`, `onPointerDownOutside`, `onFocusOutside`, `onInteractOutside`
+- Outside handlers are interceptable: calling `event.preventDefault()` blocks dismissal
+
 ## Minimal Example
 
 ```tsx

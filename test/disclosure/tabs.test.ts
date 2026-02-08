@@ -141,4 +141,99 @@ describe('Tabs', () => {
     dispose()
     container.remove()
   })
+
+  it('supports asChild trigger composition', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: TabsRoot,
+        props: {
+          defaultValue: 'tab-a',
+          children: [
+            {
+              type: TabsList,
+              props: {
+                children: [
+                  {
+                    type: TabsTrigger,
+                    props: {
+                      value: 'tab-a',
+                      asChild: true,
+                      children: {
+                        type: 'span',
+                        props: { role: 'tab', 'data-testid': 'tab-a-child', children: 'A' },
+                      },
+                    },
+                  },
+                  {
+                    type: TabsTrigger,
+                    props: {
+                      value: 'tab-b',
+                      asChild: true,
+                      children: {
+                        type: 'span',
+                        props: { role: 'tab', 'data-testid': 'tab-b-child', children: 'B' },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+            { type: TabsContent, props: { value: 'tab-a', children: 'Panel A' } },
+            { type: TabsContent, props: { value: 'tab-b', children: 'Panel B' } },
+          ],
+        },
+      }),
+      container,
+    )
+
+    fireEvent.click(container.querySelector('[data-testid="tab-b-child"]') as HTMLElement)
+    await Promise.resolve()
+    expect(container.textContent).toContain('Panel B')
+
+    dispose()
+    container.remove()
+  })
+
+  it('supports explicit root id for deterministic aria mapping', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: TabsRoot,
+        props: {
+          id: 'settings-tabs',
+          defaultValue: 'tab-a',
+          children: [
+            {
+              type: TabsList,
+              props: {
+                children: [
+                  { type: TabsTrigger, props: { value: 'tab-a', 'data-testid': 'id-tab-a', children: 'A' } },
+                  { type: TabsTrigger, props: { value: 'tab-b', children: 'B' } },
+                ],
+              },
+            },
+            { type: TabsContent, props: { value: 'tab-a', children: 'Panel A' } },
+            { type: TabsContent, props: { value: 'tab-b', children: 'Panel B' } },
+          ],
+        },
+      }),
+      container,
+    )
+
+    await Promise.resolve()
+
+    const trigger = container.querySelector('[data-testid="id-tab-a"]') as HTMLElement
+    const panel = container.querySelector('[data-tabs-content="tab-a"]') as HTMLElement
+    expect(trigger.id).toBe('settings-tabs-trigger-tab-a')
+    expect(panel.id).toBe('settings-tabs-content-tab-a')
+    expect(trigger.getAttribute('aria-controls')).toBe('settings-tabs-content-tab-a')
+
+    dispose()
+    container.remove()
+  })
 })

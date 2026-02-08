@@ -18,10 +18,17 @@ Supports controlled/uncontrolled state via `open/defaultOpen/onOpenChange`.
 ## Root API
 
 - `DialogRoot`
+- `id?: string` optional deterministic base id for content/title/description wiring
 - `open?: boolean | () => boolean` controlled state
 - `defaultOpen?: boolean` uncontrolled initial state
 - `onOpenChange?: (open: boolean) => void`
 - `modal?: boolean` default `true`
+
+## Composition API
+
+- `DialogTrigger` / `DialogClose` support `asChild`
+- `DialogContent` supports `onEscapeKeyDown`, `onPointerDownOutside`, `onFocusOutside`, `onInteractOutside`
+- Outside handlers are interceptable: calling `event.preventDefault()` blocks dismissal
 
 ## Content Behavior
 

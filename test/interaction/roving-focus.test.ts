@@ -35,4 +35,50 @@ describe('RovingFocusGroup', () => {
     dispose()
     container.remove()
   })
+
+  it('supports asChild composition for roving items', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: RovingFocusGroup,
+        props: {
+          children: [
+            {
+              type: RovingFocusItem,
+              props: {
+                asChild: true,
+                children: {
+                  type: 'span',
+                  props: { role: 'button', 'data-testid': 'roving-a', children: 'A' },
+                },
+              },
+            },
+            {
+              type: RovingFocusItem,
+              props: {
+                asChild: true,
+                children: {
+                  type: 'span',
+                  props: { role: 'button', 'data-testid': 'roving-b', children: 'B' },
+                },
+              },
+            },
+          ],
+        },
+      }),
+      container,
+    )
+
+    const first = container.querySelector('[data-testid="roving-a"]') as HTMLElement
+    const second = container.querySelector('[data-testid="roving-b"]') as HTMLElement
+
+    await Promise.resolve()
+    expect(first.tabIndex).toBe(0)
+    expect(second.tabIndex).toBe(-1)
+
+    dispose()
+    container.remove()
+  })
 })

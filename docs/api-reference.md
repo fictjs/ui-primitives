@@ -15,6 +15,8 @@ Note: each module also exports related TypeScript interfaces/types for props.
 - `VisuallyHidden`
 - `Separator`
 - `AccessibleIcon`
+- `IdProvider`
+- `useId`
 
 ## Interaction
 

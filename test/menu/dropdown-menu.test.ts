@@ -138,4 +138,47 @@ describe('DropdownMenu', () => {
     dispose()
     container.remove()
   })
+
+  it('supports asChild on menu item', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: DropdownMenuRoot,
+        props: {
+          defaultOpen: true,
+          children: {
+            type: DropdownMenuContent,
+            props: {
+              portal: false,
+              children: {
+                type: DropdownMenuItem,
+                props: {
+                  asChild: true,
+                  children: {
+                    type: 'a',
+                    props: {
+                      href: '#',
+                      'data-testid': 'as-child-item',
+                      children: 'Item A',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      container,
+    )
+
+    fireEvent.click(container.querySelector('[data-testid="as-child-item"]') as HTMLElement)
+    await Promise.resolve()
+
+    expect(container.querySelector('[data-dropdown-menu-content]')).toBeNull()
+
+    dispose()
+    container.remove()
+  })
 })

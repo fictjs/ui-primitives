@@ -5,6 +5,7 @@ Provides common dismissal semantics used by overlays.
 ## Events
 
 - `onEscapeKeyDown`
+- `onInteractOutside`
 - `onPointerDownOutside`
 - `onFocusOutside`
 - `onDismiss`

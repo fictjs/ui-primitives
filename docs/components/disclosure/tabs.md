@@ -9,6 +9,11 @@ Accessible tabs primitives with roving focus tab list.
 - `TabsTrigger`
 - `TabsContent`
 
+## Key APIs
+
+- `TabsRoot` accepts `id?: string` to stabilize trigger/content id mapping
+- `TabsTrigger` supports `asChild`
+
 ## Minimal Example
 
 ```tsx

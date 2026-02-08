@@ -169,6 +169,65 @@ describe('Advanced inputs', () => {
     container.remove()
   })
 
+  it('supports asChild on select trigger and item', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: SelectRoot,
+        props: {
+          defaultValue: 'a',
+          children: [
+            {
+              type: SelectTrigger,
+              props: {
+                asChild: true,
+                children: {
+                  type: 'div',
+                  props: {
+                    role: 'button',
+                    'data-testid': 'trigger-as-child',
+                    children: { type: SelectValue, props: { placeholder: 'Pick one' } },
+                  },
+                },
+              },
+            },
+            {
+              type: SelectContent,
+              props: {
+                children: [
+                  { type: SelectItem, props: { value: 'a', children: 'A' } },
+                  {
+                    type: SelectItem,
+                    props: {
+                      value: 'b',
+                      asChild: true,
+                      children: {
+                        type: 'span',
+                        props: { role: 'option', 'data-testid': 'item-b-as-child', children: 'B' },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      }),
+      container,
+    )
+
+    fireEvent.click(container.querySelector('[data-testid="trigger-as-child"]') as HTMLElement)
+    fireEvent.click(container.querySelector('[data-testid="item-b-as-child"]') as HTMLElement)
+    await Promise.resolve()
+
+    expect(container.querySelector('[data-select-value]')?.textContent).toContain('b')
+
+    dispose()
+    container.remove()
+  })
+
   it('selects value from combobox item', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
@@ -238,6 +297,48 @@ describe('Advanced inputs', () => {
 
     expect(container.querySelector('[data-combobox-item="Banana"]')).not.toBeNull()
     expect(container.querySelector('[data-combobox-item="Apple"]')).toBeNull()
+
+    dispose()
+    container.remove()
+  })
+
+  it('supports asChild on combobox item', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: ComboboxRoot,
+        props: {
+          defaultOpen: true,
+          children: [
+            { type: ComboboxInput, props: { 'data-testid': 'combo-input-as-child' } },
+            {
+              type: ComboboxList,
+              props: {
+                children: {
+                  type: ComboboxItem,
+                  props: {
+                    value: 'Banana',
+                    asChild: true,
+                    children: {
+                      type: 'div',
+                      props: { role: 'option', 'data-testid': 'banana-as-child', children: 'Banana' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      }),
+      container,
+    )
+
+    fireEvent.click(container.querySelector('[data-testid="banana-as-child"]') as HTMLElement)
+    await Promise.resolve()
+
+    expect((container.querySelector('[data-testid="combo-input-as-child"]') as HTMLInputElement).value).toBe('Banana')
 
     dispose()
     container.remove()
