@@ -59,8 +59,8 @@ function computePosition(
   sideOffset: number,
   alignOffset: number,
 ): { x: number; y: number; placement: PopperPlacement } {
-  let x = 0
-  let y = 0
+  let x: number
+  let y: number
 
   if (side === 'bottom') {
     y = anchorRect.bottom + sideOffset
