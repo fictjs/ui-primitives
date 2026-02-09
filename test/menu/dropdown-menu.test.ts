@@ -10,6 +10,9 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuRoot,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../../src/components/menu/dropdown-menu'
 
@@ -176,6 +179,65 @@ describe('DropdownMenu', () => {
     fireEvent.click(container.querySelector('[data-testid="as-child-item"]') as HTMLElement)
     await Promise.resolve()
 
+    expect(container.querySelector('[data-dropdown-menu-content]')).toBeNull()
+
+    dispose()
+    container.remove()
+  })
+
+  it('supports nested submenu interactions', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: DropdownMenuRoot,
+        props: {
+          defaultOpen: true,
+          children: {
+            type: DropdownMenuContent,
+            props: {
+              portal: false,
+              children: {
+                type: DropdownMenuSub,
+                props: {
+                  children: [
+                    {
+                      type: DropdownMenuSubTrigger,
+                      props: {
+                        'data-testid': 'submenu-trigger',
+                        children: 'More',
+                      },
+                    },
+                    {
+                      type: DropdownMenuSubContent,
+                      props: {
+                        portal: false,
+                        children: {
+                          type: DropdownMenuItem,
+                          props: {
+                            'data-testid': 'submenu-item',
+                            children: 'Duplicate',
+                          },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      }),
+      container,
+    )
+
+    fireEvent.click(container.querySelector('[data-testid="submenu-trigger"]') as HTMLElement)
+    await Promise.resolve()
+    expect(container.querySelector('[data-dropdown-menu-sub-content]')).not.toBeNull()
+
+    fireEvent.click(container.querySelector('[data-testid="submenu-item"]') as HTMLElement)
+    await Promise.resolve()
     expect(container.querySelector('[data-dropdown-menu-content]')).toBeNull()
 
     dispose()

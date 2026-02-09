@@ -11,6 +11,9 @@ Compound dropdown menu built on Popover + roving focus.
 - `DropdownMenuCheckboxItem`
 - `DropdownMenuRadioGroup`
 - `DropdownMenuRadioItem`
+- `DropdownMenuSub`
+- `DropdownMenuSubTrigger`
+- `DropdownMenuSubContent`
 - `DropdownMenuLabel`
 - `DropdownMenuSeparator`
 
@@ -30,6 +33,7 @@ Compound dropdown menu built on Popover + roving focus.
 
 - `DropdownMenuContent` renders as `role="menu"` with vertical roving focus
 - Supports `portal?: boolean` through inherited popover content props
+- `DropdownMenuSub*` composes nested menus with side positioning (`right/start` by default)
 
 ## Minimal Example
 

@@ -106,7 +106,7 @@ export function PopoverTrigger(props: PopoverTriggerProps): FictNode {
         as: tag,
         type: !props.asChild && tag === 'button' ? (props.type ?? 'button') : props.type,
         ref: composeRefs(context.triggerRef, refProp),
-        'aria-haspopup': 'dialog',
+        'aria-haspopup': (props['aria-haspopup'] as string | undefined) ?? 'dialog',
         'aria-expanded': () => context.open(),
         'aria-controls': context.contentId,
         'data-state': () => (context.open() ? 'open' : 'closed'),

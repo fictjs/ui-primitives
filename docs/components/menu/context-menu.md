@@ -8,12 +8,16 @@ Context menu primitives opened from right-click position.
 - `ContextMenuTrigger`
 - `ContextMenuContent`
 - `ContextMenuItem`
+- `ContextMenuSub`
+- `ContextMenuSubTrigger`
+- `ContextMenuSubContent`
 
 ## Key APIs
 
 - `ContextMenuTrigger` and `ContextMenuItem` support `asChild`
 - `ContextMenuContent` supports `onEscapeKeyDown`, `onPointerDownOutside`, `onFocusOutside`, `onInteractOutside`
 - Outside handlers are interceptable: calling `event.preventDefault()` blocks dismissal
+- `ContextMenuSub*` composes nested menus with side positioning (`right/start` by default)
 
 ## Minimal Example
 

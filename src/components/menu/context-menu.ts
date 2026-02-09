@@ -6,6 +6,7 @@ import { Primitive } from '../core/primitive'
 import { Portal } from '../core/portal'
 import { DismissableLayer } from '../interaction/dismissable-layer'
 import { RovingFocusGroup } from '../interaction/roving-focus'
+import { PopoverContent, PopoverRoot, PopoverTrigger, type PopoverContentPropsExt } from '../overlay/popover'
 
 export interface ContextMenuRootProps {
   open?: boolean | (() => boolean)
@@ -42,6 +43,19 @@ export interface ContextMenuItemProps {
   onSelect?: (event: MouseEvent) => void
   children?: FictNode
   [key: string]: unknown
+}
+
+export interface ContextMenuSubProps {
+  open?: boolean | (() => boolean)
+  defaultOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  children?: FictNode
+}
+
+export type ContextMenuSubTriggerProps = Omit<ContextMenuItemProps, 'keepOpen'>
+
+export interface ContextMenuSubContentProps extends Omit<PopoverContentPropsExt, 'role'> {
+  children?: FictNode
 }
 
 interface ContextMenuContextValue {
@@ -213,4 +227,64 @@ export function ContextMenuItem(props: ContextMenuItemProps): FictNode {
     },
     children: props.children,
   })
+}
+
+export function ContextMenuSub(props: ContextMenuSubProps): FictNode {
+  const state = createControllableState<boolean>({
+    value: props.open,
+    defaultValue: props.defaultOpen ?? false,
+    onChange: props.onOpenChange,
+  })
+
+  return {
+    type: PopoverRoot,
+    props: {
+      open: () => state.get(),
+      onOpenChange: (open: boolean) => state.set(open),
+      children: props.children,
+    },
+  }
+}
+
+export function ContextMenuSubTrigger(props: ContextMenuSubTriggerProps): FictNode {
+  return {
+    type: PopoverTrigger,
+    props: {
+      asChild: true,
+      'aria-haspopup': 'menu',
+      children: {
+        type: ContextMenuItem,
+        props: {
+          ...props,
+          keepOpen: true,
+          'aria-haspopup': props['aria-haspopup'] ?? 'menu',
+          'aria-expanded': props['aria-expanded'],
+          'data-context-menu-sub-trigger': '',
+          children: props.children,
+        },
+      },
+    },
+  }
+}
+
+export function ContextMenuSubContent(props: ContextMenuSubContentProps): FictNode {
+  return {
+    type: PopoverContent,
+    props: {
+      ...props,
+      role: 'menu',
+      side: props.side ?? 'right',
+      align: props.align ?? 'start',
+      'aria-orientation': 'vertical',
+      'data-context-menu-sub-content': '',
+      children: {
+        type: RovingFocusGroup,
+        props: {
+          orientation: 'vertical',
+          loop: true,
+          children: props.children,
+        },
+      },
+    },
+  }
 }

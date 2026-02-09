@@ -50,6 +50,19 @@ export interface DropdownMenuRadioItemProps extends DropdownMenuItemProps {
   value: string
 }
 
+export interface DropdownMenuSubProps {
+  open?: boolean | (() => boolean)
+  defaultOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  children?: FictNode
+}
+
+export type DropdownMenuSubTriggerProps = Omit<DropdownMenuItemProps, 'keepOpen'>
+
+export interface DropdownMenuSubContentProps extends Omit<DropdownMenuContentProps, 'role'> {
+  children?: FictNode
+}
+
 interface DropdownMenuContextValue {
   open: () => boolean
   setOpen: (open: boolean) => void
@@ -214,6 +227,66 @@ export function DropdownMenuRadioItem(props: DropdownMenuRadioItemProps): FictNo
         radio.setValue(props.value)
       },
       children: props.children,
+    },
+  }
+}
+
+export function DropdownMenuSub(props: DropdownMenuSubProps): FictNode {
+  const state = createControllableState<boolean>({
+    value: props.open,
+    defaultValue: props.defaultOpen ?? false,
+    onChange: props.onOpenChange,
+  })
+
+  return {
+    type: PopoverRoot,
+    props: {
+      open: () => state.get(),
+      onOpenChange: (open: boolean) => state.set(open),
+      children: props.children,
+    },
+  }
+}
+
+export function DropdownMenuSubTrigger(props: DropdownMenuSubTriggerProps): FictNode {
+  return {
+    type: PopoverTrigger,
+    props: {
+      asChild: true,
+      'aria-haspopup': 'menu',
+      children: {
+        type: DropdownMenuItem,
+        props: {
+          ...props,
+          keepOpen: true,
+          'aria-haspopup': props['aria-haspopup'] ?? 'menu',
+          'aria-expanded': props['aria-expanded'],
+          'data-dropdown-menu-sub-trigger': '',
+          children: props.children,
+        },
+      },
+    },
+  }
+}
+
+export function DropdownMenuSubContent(props: DropdownMenuSubContentProps): FictNode {
+  return {
+    type: PopoverContent,
+    props: {
+      ...props,
+      role: 'menu',
+      side: props.side ?? 'right',
+      align: props.align ?? 'start',
+      'aria-orientation': 'vertical',
+      'data-dropdown-menu-sub-content': '',
+      children: {
+        type: RovingFocusGroup,
+        props: {
+          orientation: 'vertical',
+          loop: true,
+          children: props.children,
+        },
+      },
     },
   }
 }
