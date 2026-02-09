@@ -17,17 +17,23 @@ This repository provides unstyled, composable primitives focused on accessibilit
 - Consistent `asChild` support across `Trigger` / `Close` / `Item` parts
 - Deterministic id strategy via `id` injection and `useId` / `IdProvider`
 - Built-in accessibility semantics (`role`, `aria-*`, keyboard interactions)
+- Shared behavior utilities via `@fictjs/hooks` (event listeners, timers, lifecycle cleanup)
 - Strong behavior tests (Vitest + JSDOM)
 - Executable demo app + screenshot baseline workflow
 
 ## Installation
 
 ```bash
-pnpm add @fictjs/ui-primitives @fictjs/runtime
+pnpm add @fictjs/ui-primitives @fictjs/runtime @fictjs/hooks
 # or npm / yarn
 ```
 
 Node version: `>=18`
+
+Peer dependencies:
+
+- `@fictjs/runtime@^0.9.0`
+- `@fictjs/hooks@^0.2.0`
 
 ## Quick Start
 

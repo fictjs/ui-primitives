@@ -7,7 +7,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   target: 'es2020',
-  external: ['@fictjs/runtime', '@fictjs/runtime/advanced', 'fict'],
+  external: ['@fictjs/runtime', '@fictjs/runtime/advanced', '@fictjs/hooks', 'fict'],
   esbuildOptions(options) {
     options.jsx = 'automatic'
     options.jsxImportSource = '@fictjs/runtime'

@@ -22,6 +22,12 @@ This document describes the design and implementation structure of `@fictjs/ui-p
 
 ## Core Implementation Patterns
 
+### Runtime and hooks foundation
+
+- Components are built on top of `@fictjs/runtime` signals/effects/context.
+- Cross-cutting event and timing behavior is standardized with `@fictjs/hooks` (for example `useEventListener` and `useDebounceFn`).
+- This keeps lifecycle cleanup centralized and reduces duplicated low-level DOM/timer logic.
+
 ### Compound component + context
 
 Many features are implemented as root + parts using context.
