@@ -1,5 +1,6 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
+import { useEventListener } from '@fictjs/hooks'
 
 import { createControllableState } from '../../internal/state'
 import { Primitive } from '../core/primitive'
@@ -106,7 +107,7 @@ export function ContextMenuTrigger(props: ContextMenuTriggerProps): FictNode {
   const context = useContextMenuContext('ContextMenuTrigger')
   const tag = props.as ?? 'div'
   const refProp = props.ref as TriggerRefProp
-  let removeListener: (() => void) | null = null
+  const triggerNode = createSignal<HTMLElement | null>(null)
 
   const handleContextMenu = (event: MouseEvent) => {
     ;(props.onContextMenu as ((event: MouseEvent) => void) | undefined)?.(event)
@@ -116,21 +117,25 @@ export function ContextMenuTrigger(props: ContextMenuTriggerProps): FictNode {
     context.setOpen(true)
   }
 
+  const contextMenuListener = useEventListener<MouseEvent>(
+    () => triggerNode(),
+    'contextmenu',
+    handleContextMenu,
+    { immediate: false },
+  )
+
   const registerRef = (node: HTMLElement | null) => {
-    removeListener?.()
-    removeListener = null
+    contextMenuListener.stop()
 
     if (typeof refProp === 'function') {
       refProp(node)
     } else if (refProp) {
       refProp.current = node
     }
-
-    if (!node) return
-
-    const nativeHandler = (event: Event) => handleContextMenu(event as MouseEvent)
-    node.addEventListener('contextmenu', nativeHandler)
-    removeListener = () => node.removeEventListener('contextmenu', nativeHandler)
+    triggerNode(node)
+    if (node) {
+      contextMenuListener.start()
+    }
   }
 
   return Primitive({

@@ -1,4 +1,6 @@
 import { createContext, createEffect, useContext, type FictNode } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
+import { useEventListener } from '@fictjs/hooks'
 
 import { useId } from '../../internal/ids'
 
@@ -101,22 +103,22 @@ function computePosition(
 }
 
 export function PopperRoot(props: PopperRootProps): FictNode {
-  let anchorNode: HTMLElement | null = null
-  let contentNode: HTMLElement | null = null
-  let currentPlacement: PopperPlacement = 'bottom'
+  const anchorNode = createSignal<HTMLElement | null>(null)
+  const contentNode = createSignal<HTMLElement | null>(null)
+  const currentPlacement = createSignal<PopperPlacement>('bottom')
 
   const context: PopperContextValue = {
-    anchor: () => anchorNode,
+    anchor: () => anchorNode(),
     setAnchor: node => {
-      anchorNode = node
+      anchorNode(node)
     },
-    content: () => contentNode,
+    content: () => contentNode(),
     setContent: node => {
-      contentNode = node
+      contentNode(node)
     },
-    placement: () => currentPlacement,
+    placement: () => currentPlacement(),
     setPlacement: placement => {
-      currentPlacement = placement
+      currentPlacement(placement)
     },
   }
 
@@ -188,21 +190,18 @@ export function PopperContent(props: PopperContentProps): FictNode {
   }
 
   createEffect(() => {
+    context.anchor()
+    context.content()
     update()
-    const anchor = context.anchor()
-    if (!anchor) return
-
-    const doc = anchor.ownerDocument ?? document
-    const onWindowUpdate = () => update()
-
-    doc.defaultView?.addEventListener('resize', onWindowUpdate)
-    doc.addEventListener('scroll', onWindowUpdate, true)
-
-    return () => {
-      doc.defaultView?.removeEventListener('resize', onWindowUpdate)
-      doc.removeEventListener('scroll', onWindowUpdate, true)
-    }
   })
+
+  const onWindowUpdate = () => update()
+  const targetDocument = () =>
+    context.anchor()?.ownerDocument ?? (typeof document !== 'undefined' ? document : null)
+  const targetWindow = () => targetDocument()?.defaultView ?? null
+
+  useEventListener(targetWindow, 'resize', onWindowUpdate)
+  useEventListener(targetDocument, 'scroll', onWindowUpdate, { capture: true })
 
   return {
     type: 'div',

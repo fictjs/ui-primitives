@@ -1,5 +1,6 @@
-import { createContext, onDestroy, onMount, useContext, type FictNode } from '@fictjs/runtime'
+import { createContext, createEffect, onCleanup, useContext, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
+import { useEventListener } from '@fictjs/hooks'
 
 import { read } from '../../internal/accessor'
 import { useId } from '../../internal/ids'
@@ -47,7 +48,7 @@ const RovingContext = createContext<RovingContextValue | null>(null)
 export function RovingFocusGroup(props: RovingFocusGroupProps): FictNode {
   const currentIdSignal = createSignal<string | null>(null)
   const items: ItemRecord[] = []
-  let groupNode: HTMLElement | null = null
+  const groupNode = createSignal<HTMLElement | null>(null)
 
   const syncDomState = (activeId: string | null) => {
     for (const item of items) {
@@ -171,22 +172,14 @@ export function RovingFocusGroup(props: RovingFocusGroupProps): FictNode {
 
   const onDocumentKeyDown = (event: KeyboardEvent) => {
     const target = event.target
-    if (!groupNode || !(target instanceof Node)) return
-    if (!groupNode.contains(target)) return
+    const group = groupNode()
+    if (!group || !(target instanceof Node)) return
+    if (!group.contains(target)) return
     onKeyDown(event)
   }
 
-  onMount(() => {
-    const doc = groupNode?.ownerDocument ?? (typeof document !== 'undefined' ? document : null)
-    if (!doc) return
-    doc.addEventListener('keydown', onDocumentKeyDown, true)
-  })
-
-  onDestroy(() => {
-    const doc = groupNode?.ownerDocument ?? (typeof document !== 'undefined' ? document : null)
-    if (!doc) return
-    doc.removeEventListener('keydown', onDocumentKeyDown, true)
-  })
+  const targetDocument = () => groupNode()?.ownerDocument ?? (typeof document !== 'undefined' ? document : null)
+  useEventListener<KeyboardEvent>(targetDocument, 'keydown', onDocumentKeyDown, { capture: true })
 
   return {
     type: RovingContext.Provider,
@@ -201,7 +194,7 @@ export function RovingFocusGroup(props: RovingFocusGroupProps): FictNode {
           role: 'group',
           'data-roving-focus-group': '',
           ref: (node: HTMLElement | null) => {
-            groupNode = node
+            groupNode(node)
             const refProp = props.ref as
               | ((el: HTMLElement | null) => void)
               | { current: HTMLElement | null }
@@ -228,28 +221,8 @@ export function RovingFocusItem(props: RovingFocusItemProps): FictNode {
 
   const id = useId(props.id as string | undefined, 'rf-item')
   const tag = props.as ?? 'button'
+  const itemNode = createSignal<HTMLElement | null>(null)
   let cleanup: (() => void) | null = null
-  let removeKeydownListener: (() => void) | null = null
-
-  const register = (node: HTMLElement | null) => {
-    cleanup?.()
-    removeKeydownListener?.()
-    cleanup = null
-    removeKeydownListener = null
-
-    if (!node) return
-
-    node.addEventListener('keydown', onKeyDown)
-    removeKeydownListener = () => {
-      node.removeEventListener('keydown', onKeyDown)
-    }
-
-    cleanup = context.register({
-      id,
-      element: node,
-      disabled: read(props.disabled, false),
-    })
-  }
 
   const onFocus = (event: FocusEvent) => {
     props.onFocus?.(event)
@@ -287,6 +260,30 @@ export function RovingFocusItem(props: RovingFocusItemProps): FictNode {
       event.preventDefault()
       context.focusLast()
     }
+  }
+
+  useEventListener<KeyboardEvent>(() => itemNode(), 'keydown', onKeyDown)
+
+  createEffect(() => {
+    const node = itemNode()
+    cleanup?.()
+    cleanup = null
+    if (!node) return
+
+    cleanup = context.register({
+      id,
+      element: node,
+      disabled: read(props.disabled, false),
+    })
+
+    onCleanup(() => {
+      cleanup?.()
+      cleanup = null
+    })
+  })
+
+  const register = (node: HTMLElement | null) => {
+    itemNode(node)
   }
 
   return Primitive({

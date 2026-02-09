@@ -1,4 +1,6 @@
 import { onDestroy, onMount, type FictNode } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
+import { useEventListener } from '@fictjs/hooks'
 
 import { read } from '../../internal/accessor'
 import { focusFirst, getFocusableCandidates } from '../../internal/dom'
@@ -16,18 +18,18 @@ export interface FocusScopeProps {
 }
 
 export function FocusScope(props: FocusScopeProps): FictNode {
-  let node: HTMLElement | null = null
+  const node = createSignal<HTMLElement | null>(null)
   let previousFocused: Element | null = null
-  let scopeDocument: Document | null = null
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key !== 'Tab') return
-    if (!node) return
+    const scope = node()
+    if (!scope) return
 
     const trapped = read(props.trapped, true)
     if (!trapped) return
 
-    const candidates = getFocusableCandidates(node)
+    const candidates = getFocusableCandidates(scope)
     if (candidates.length === 0) {
       event.preventDefault()
       return
@@ -35,10 +37,10 @@ export function FocusScope(props: FocusScopeProps): FictNode {
 
     const first = candidates[0]!
     const last = candidates[candidates.length - 1]!
-    const active = (node.ownerDocument ?? document).activeElement
+    const active = (scope.ownerDocument ?? document).activeElement
 
     if (event.shiftKey) {
-      if (active === first || !node.contains(active)) {
+      if (active === first || !scope.contains(active)) {
         if (read(props.loop, true)) {
           event.preventDefault()
           last.focus()
@@ -55,28 +57,26 @@ export function FocusScope(props: FocusScopeProps): FictNode {
     }
   }
 
+  const targetDocument = () => node()?.ownerDocument ?? (typeof document !== 'undefined' ? document : null)
+  useEventListener<KeyboardEvent>(targetDocument, 'keydown', onKeyDown, { capture: true })
+
   onMount(() => {
-    if (!node) return
-
-    const doc = node.ownerDocument ?? document
-    scopeDocument = doc
+    const scope = node()
+    if (!scope) return
+    const doc = targetDocument()
+    if (!doc) return
     previousFocused = doc.activeElement
-
-    doc.addEventListener('keydown', onKeyDown, true)
 
     if (read(props.autoFocus, true)) {
       const mountEvent = new CustomEvent('fict-focus-scope.mount')
       props.onMountAutoFocus?.(mountEvent)
       if (!mountEvent.defaultPrevented) {
-        focusFirst(node)
+        focusFirst(scope)
       }
     }
   })
 
   onDestroy(() => {
-    const doc = scopeDocument ?? node?.ownerDocument ?? document
-    doc.removeEventListener('keydown', onKeyDown, true)
-
     if (read(props.restoreFocus, true) && previousFocused instanceof HTMLElement) {
       const unmountEvent = new CustomEvent('fict-focus-scope.unmount')
       props.onUnmountAutoFocus?.(unmountEvent)
@@ -97,7 +97,7 @@ export function FocusScope(props: FocusScopeProps): FictNode {
       onMountAutoFocus: undefined,
       onUnmountAutoFocus: undefined,
       ref: (el: HTMLElement | null) => {
-        node = el
+        node(el)
       },
       'data-focus-scope': '',
       children: props.children,

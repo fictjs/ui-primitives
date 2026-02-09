@@ -1,4 +1,6 @@
 import { onDestroy, onMount, type FictNode } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
+import { useEventListener } from '@fictjs/hooks'
 
 import { read } from '../../internal/accessor'
 import type { MaybeAccessor } from '../../internal/types'
@@ -24,7 +26,7 @@ function isTopLayer(node: HTMLElement | null): boolean {
 }
 
 export function DismissableLayer(props: DismissableLayerProps): FictNode {
-  let node: HTMLElement | null = null
+  const node = createSignal<HTMLElement | null>(null)
 
   const dismiss = () => {
     if (read(props.disabled, false)) return
@@ -32,7 +34,7 @@ export function DismissableLayer(props: DismissableLayerProps): FictNode {
   }
 
   const onKeyDown = (event: KeyboardEvent) => {
-    if (!isTopLayer(node)) return
+    if (!isTopLayer(node())) return
     if (event.key !== 'Escape') return
 
     props.onEscapeKeyDown?.(event)
@@ -42,10 +44,11 @@ export function DismissableLayer(props: DismissableLayerProps): FictNode {
   }
 
   const onPointerDown = (event: PointerEvent) => {
-    if (!node || !isTopLayer(node)) return
+    const layer = node()
+    if (!layer || !isTopLayer(layer)) return
 
     const target = event.target as Node | null
-    const isOutside = !target || !node.contains(target)
+    const isOutside = !target || !layer.contains(target)
     if (!isOutside) return
 
     props.onInteractOutside?.(event)
@@ -56,10 +59,11 @@ export function DismissableLayer(props: DismissableLayerProps): FictNode {
   }
 
   const onFocusIn = (event: FocusEvent) => {
-    if (!node || !isTopLayer(node)) return
+    const layer = node()
+    if (!layer || !isTopLayer(layer)) return
 
     const target = event.target as Node | null
-    const isOutside = !target || !node.contains(target)
+    const isOutside = !target || !layer.contains(target)
     if (!isOutside) return
 
     props.onInteractOutside?.(event)
@@ -69,27 +73,38 @@ export function DismissableLayer(props: DismissableLayerProps): FictNode {
     }
   }
 
+  const targetDocument = () => node()?.ownerDocument ?? (typeof document !== 'undefined' ? document : null)
+
+  const keydownListener = useEventListener<KeyboardEvent>(targetDocument, 'keydown', onKeyDown, {
+    capture: true,
+    immediate: false,
+  })
+  const pointerDownListener = useEventListener<PointerEvent>(targetDocument, 'pointerdown', onPointerDown, {
+    capture: true,
+    immediate: false,
+  })
+  const focusInListener = useEventListener<FocusEvent>(targetDocument, 'focusin', onFocusIn, {
+    capture: true,
+    immediate: false,
+  })
+
   onMount(() => {
-    if (!node) return
-
-    const doc = node.ownerDocument ?? document
-    activeLayers.push(node)
-
-    doc.addEventListener('keydown', onKeyDown, true)
-    doc.addEventListener('pointerdown', onPointerDown, true)
-    doc.addEventListener('focusin', onFocusIn, true)
+    const layer = node()
+    if (!layer) return
+    activeLayers.push(layer)
+    keydownListener.start()
+    pointerDownListener.start()
+    focusInListener.start()
   })
 
   onDestroy(() => {
-    if (!node) return
+    keydownListener.stop()
+    pointerDownListener.stop()
+    focusInListener.stop()
 
-    const doc = node.ownerDocument ?? document
-
-    doc.removeEventListener('keydown', onKeyDown, true)
-    doc.removeEventListener('pointerdown', onPointerDown, true)
-    doc.removeEventListener('focusin', onFocusIn, true)
-
-    const index = activeLayers.indexOf(node)
+    const layer = node()
+    if (!layer) return
+    const index = activeLayers.indexOf(layer)
     if (index >= 0) {
       activeLayers.splice(index, 1)
     }
@@ -106,7 +121,7 @@ export function DismissableLayer(props: DismissableLayerProps): FictNode {
       onPointerDownOutside: undefined,
       onFocusOutside: undefined,
       ref: (el: HTMLElement | null) => {
-        node = el
+        node(el)
       },
       'data-dismissable-layer': '',
       children: props.children,
