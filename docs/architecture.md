@@ -13,10 +13,10 @@ This document describes the design and implementation structure of `@fictjs/ui-p
 
 - `src/components/core`: foundational composition primitives
 - `src/components/interaction`: focus, dismissal, positioning, live regions
-- `src/components/overlay`: dialog/popover/tooltip/hover-card
+- `src/components/overlay`: dialog/popover/tooltip/hover-card/command-palette
 - `src/components/menu`: dropdown/context/menubar patterns
 - `src/components/disclosure`: tabs/accordion/collapsible/navigation menu
-- `src/components/form`: form controls and structured field helpers
+- `src/components/form`: form controls, calendar/date-picker, and structured field helpers
 - `src/components/layout`: layout and visual utility primitives
 - `src/internal`: shared internals used across components
 

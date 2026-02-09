@@ -75,11 +75,11 @@ Export groups:
 - Core: `Primitive`, `Slot`, `Presence`, `Portal`, `VisuallyHidden`, etc.
 - Core id primitives: `IdProvider`, `useId`
 - Interaction: `FocusScope`, `DismissableLayer`, `RovingFocusGroup`, `Popper`, etc.
-- Overlay: `Dialog*`, `AlertDialog*`, `Popover*`, `Tooltip*`, `HoverCard*`
-- Menu: `DropdownMenu*`, `ContextMenu*`, `Menubar*`
+- Overlay: `Dialog*`, `AlertDialog*`, `Popover*`, `Tooltip*`, `HoverCard*`, `CommandPalette*`
+- Menu: `DropdownMenu*`, `ContextMenu*`, `Menubar*` (including submenu parts)
 - Feedback: `ToastProvider`, `ToastViewport`, `Toast*`, `useToast`
 - Disclosure: `Tabs*`, `Accordion*`, `Collapsible*`, `NavigationMenu*`
-- Form: `Label`, `Checkbox`, `RadioGroup`, `Switch`, `Toggle`, `Select`, `Combobox`, `Form*`
+- Form: `Label`, `Checkbox`, `RadioGroup`, `Switch`, `Toggle`, `Slider`, `RangeSlider`, `Calendar`, `DatePicker`, `Select`, `Combobox`, `Form*`
 - Layout: `ScrollArea*`, `Resizable*`, `AspectRatio`, `Progress`, `Skeleton`, `FocusVisible`
 
 For detailed symbol-by-symbol reference, see `docs/api-reference.md`.

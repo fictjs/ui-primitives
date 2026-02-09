@@ -64,6 +64,16 @@ Note: each module also exports related TypeScript interfaces/types for props.
 - `HoverCardRoot`
 - `HoverCardTrigger`
 - `HoverCardContent`
+- `CommandPaletteRoot`
+- `CommandPaletteTrigger`
+- `CommandPaletteContent`
+- `CommandPaletteInput`
+- `CommandPaletteList`
+- `CommandPaletteItem`
+- `CommandPaletteEmpty`
+- `CommandPaletteGroup`
+- `CommandPaletteSeparator`
+- `CommandPaletteClose`
 
 ## Menu
 
@@ -74,12 +84,18 @@ Note: each module also exports related TypeScript interfaces/types for props.
 - `DropdownMenuCheckboxItem`
 - `DropdownMenuRadioGroup`
 - `DropdownMenuRadioItem`
+- `DropdownMenuSub`
+- `DropdownMenuSubTrigger`
+- `DropdownMenuSubContent`
 - `DropdownMenuLabel`
 - `DropdownMenuSeparator`
 - `ContextMenuRoot`
 - `ContextMenuTrigger`
 - `ContextMenuContent`
 - `ContextMenuItem`
+- `ContextMenuSub`
+- `ContextMenuSubTrigger`
+- `ContextMenuSubContent`
 - `MenubarRoot`
 - `MenubarMenu`
 - `MenubarTrigger`
@@ -132,6 +148,18 @@ Note: each module also exports related TypeScript interfaces/types for props.
 - `ToggleGroupItem`
 - `Slider`
 - `RangeSlider`
+- `CalendarRoot`
+- `Calendar`
+- `CalendarHeader`
+- `CalendarTitle`
+- `CalendarPrevButton`
+- `CalendarNextButton`
+- `CalendarGrid`
+- `DatePickerRoot`
+- `DatePickerTrigger`
+- `DatePickerValue`
+- `DatePickerContent`
+- `DatePickerCalendar`
 - `SelectRoot`
 - `SelectTrigger`
 - `SelectValue`
