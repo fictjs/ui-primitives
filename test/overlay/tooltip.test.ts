@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { fireEvent } from '@testing-library/dom'
 
 import { render } from '@fictjs/runtime'
@@ -90,5 +90,48 @@ describe('Tooltip', () => {
 
     dispose()
     container.remove()
+  })
+
+  it('cancels delayed open when pointer leaves before timer', async () => {
+    vi.useFakeTimers()
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: TooltipProvider,
+        props: {
+          delayDuration: 30,
+          children: {
+            type: TooltipRoot,
+            props: {
+              children: [
+                { type: TooltipTrigger, props: { 'data-testid': 'trigger-delay', children: 'Info' } },
+                {
+                  type: TooltipContent,
+                  props: {
+                    portal: false,
+                    children: 'Tooltip delayed content',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger-delay"]') as HTMLElement
+    fireEvent.pointerEnter(trigger)
+    await vi.advanceTimersByTimeAsync(10)
+    fireEvent.pointerLeave(trigger)
+    await vi.advanceTimersByTimeAsync(30)
+
+    expect(container.querySelector('[data-tooltip-content]')).toBeNull()
+
+    dispose()
+    container.remove()
+    vi.useRealTimers()
   })
 })

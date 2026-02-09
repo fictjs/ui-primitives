@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent } from '@testing-library/dom'
 
 import { render } from '@fictjs/runtime'
 
@@ -39,5 +40,48 @@ describe('HoverCard', () => {
 
     dispose()
     container.remove()
+  })
+
+  it('opens and closes with configured hover delays', async () => {
+    vi.useFakeTimers()
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: HoverCardRoot,
+        props: {
+          openDelay: 20,
+          closeDelay: 20,
+          children: [
+            { type: HoverCardTrigger, props: { 'data-testid': 'trigger-delay', children: 'Profile' } },
+            {
+              type: HoverCardContent,
+              props: {
+                portal: false,
+                children: 'Hover profile',
+              },
+            },
+          ],
+        },
+      }),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger-delay"]') as HTMLElement
+
+    fireEvent.pointerEnter(trigger)
+    await vi.advanceTimersByTimeAsync(19)
+    expect(container.querySelector('[data-hover-card-content]')).toBeNull()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(container.querySelector('[data-hover-card-content]')).not.toBeNull()
+
+    fireEvent.pointerLeave(trigger)
+    await vi.advanceTimersByTimeAsync(20)
+    expect(container.querySelector('[data-hover-card-content]')).toBeNull()
+
+    dispose()
+    container.remove()
+    vi.useRealTimers()
   })
 })

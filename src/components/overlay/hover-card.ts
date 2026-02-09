@@ -1,4 +1,5 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
+import { useDebounceFn } from '@fictjs/hooks'
 
 import { createControllableState } from '../../internal/state'
 import { useId } from '../../internal/ids'
@@ -72,35 +73,32 @@ export function HoverCardRoot(props: HoverCardRootProps): FictNode {
     onChange: props.onOpenChange,
   })
   const baseId = useId(props.id, 'hover-card')
-
-  let openTimer: ReturnType<typeof setTimeout> | null = null
-  let closeTimer: ReturnType<typeof setTimeout> | null = null
+  const openDebounced = useDebounceFn(
+    () => {
+      openState.set(true)
+    },
+    props.openDelay ?? 200,
+  )
+  const closeDebounced = useDebounceFn(
+    () => {
+      openState.set(false)
+    },
+    props.closeDelay ?? 200,
+  )
 
   const clearTimers = () => {
-    if (openTimer) {
-      clearTimeout(openTimer)
-      openTimer = null
-    }
-    if (closeTimer) {
-      clearTimeout(closeTimer)
-      closeTimer = null
-    }
+    openDebounced.cancel()
+    closeDebounced.cancel()
   }
 
   const scheduleOpen = () => {
-    clearTimers()
-    openTimer = setTimeout(() => {
-      openState.set(true)
-      openTimer = null
-    }, props.openDelay ?? 200)
+    closeDebounced.cancel()
+    openDebounced.run()
   }
 
   const scheduleClose = () => {
-    clearTimers()
-    closeTimer = setTimeout(() => {
-      openState.set(false)
-      closeTimer = null
-    }, props.closeDelay ?? 200)
+    openDebounced.cancel()
+    closeDebounced.run()
   }
 
   const context: HoverCardContextValue = {
@@ -132,6 +130,34 @@ export function HoverCardTrigger(props: HoverCardTriggerProps): FictNode {
   const refProp = props.ref as TriggerElementRef
   let cleanupListeners: (() => void) | null = null
 
+  const open = (event: Event) => {
+    context.scheduleOpen()
+    if (event instanceof PointerEvent) props.onPointerEnter?.(event)
+    if (event instanceof MouseEvent) {
+      props.onMouseEnter?.(event)
+      props.onMouseOver?.(event)
+    }
+  }
+
+  const close = (event: Event) => {
+    context.scheduleClose()
+    if (event instanceof PointerEvent) props.onPointerLeave?.(event)
+    if (event instanceof MouseEvent) {
+      props.onMouseLeave?.(event)
+      props.onMouseOut?.(event)
+    }
+  }
+
+  const onFocus = (event: FocusEvent) => {
+    props.onFocus?.(event)
+    context.scheduleOpen()
+  }
+
+  const onBlur = (event: FocusEvent) => {
+    props.onBlur?.(event)
+    context.scheduleClose()
+  }
+
   const registerRef = (node: HTMLElement | null) => {
     cleanupListeners?.()
     cleanupListeners = null
@@ -143,34 +169,6 @@ export function HoverCardTrigger(props: HoverCardTriggerProps): FictNode {
     }
 
     if (!node) return
-
-    const open = (event: Event) => {
-      context.scheduleOpen()
-      if (event instanceof PointerEvent) props.onPointerEnter?.(event)
-      if (event instanceof MouseEvent) {
-        props.onMouseEnter?.(event)
-        props.onMouseOver?.(event)
-      }
-    }
-
-    const close = (event: Event) => {
-      context.scheduleClose()
-      if (event instanceof PointerEvent) props.onPointerLeave?.(event)
-      if (event instanceof MouseEvent) {
-        props.onMouseLeave?.(event)
-        props.onMouseOut?.(event)
-      }
-    }
-
-    const onFocus = (event: FocusEvent) => {
-      props.onFocus?.(event)
-      context.scheduleOpen()
-    }
-
-    const onBlur = (event: FocusEvent) => {
-      props.onBlur?.(event)
-      context.scheduleClose()
-    }
 
     node.addEventListener('pointerenter', open)
     node.addEventListener('pointerleave', close)

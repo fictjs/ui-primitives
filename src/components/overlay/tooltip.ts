@@ -1,4 +1,5 @@
 import { createContext, useContext, type FictNode } from '@fictjs/runtime'
+import { useDebounceFn } from '@fictjs/hooks'
 
 import { createControllableState } from '../../internal/state'
 import { useId } from '../../internal/ids'
@@ -97,23 +98,15 @@ export function TooltipRoot(props: TooltipRootProps): FictNode {
     onChange: props.onOpenChange,
   })
   const baseId = useId(props.id, 'tooltip')
-
-  let timer: ReturnType<typeof setTimeout> | null = null
-
-  const clearSchedule = () => {
-    if (timer) {
-      clearTimeout(timer)
-      timer = null
-    }
-  }
-
-  const scheduleOpen = () => {
-    clearSchedule()
-    timer = setTimeout(() => {
+  const openDebounced = useDebounceFn(
+    () => {
       openState.set(true)
-      timer = null
-    }, props.delayDuration ?? provider.delayDuration)
-  }
+    },
+    props.delayDuration ?? provider.delayDuration,
+  )
+
+  const clearSchedule = () => openDebounced.cancel()
+  const scheduleOpen = () => openDebounced.run()
 
   const context: TooltipRootContextValue = {
     open: () => openState.get(),
@@ -144,6 +137,36 @@ export function TooltipTrigger(props: TooltipTriggerProps): FictNode {
   const refProp = props.ref as TriggerElementRef
   let cleanupListeners: (() => void) | null = null
 
+  const open = (event: Event) => {
+    context.scheduleOpen()
+    if (event instanceof PointerEvent) props.onPointerEnter?.(event)
+    if (event instanceof MouseEvent) {
+      props.onMouseEnter?.(event)
+      props.onMouseOver?.(event)
+    }
+  }
+
+  const close = (event: Event) => {
+    context.clearSchedule()
+    context.setOpen(false)
+    if (event instanceof PointerEvent) props.onPointerLeave?.(event)
+    if (event instanceof MouseEvent) {
+      props.onMouseLeave?.(event)
+      props.onMouseOut?.(event)
+    }
+  }
+
+  const onFocus = (event: FocusEvent) => {
+    props.onFocus?.(event)
+    context.scheduleOpen()
+  }
+
+  const onBlur = (event: FocusEvent) => {
+    props.onBlur?.(event)
+    context.clearSchedule()
+    context.setOpen(false)
+  }
+
   const registerRef = (node: HTMLElement | null) => {
     cleanupListeners?.()
     cleanupListeners = null
@@ -155,36 +178,6 @@ export function TooltipTrigger(props: TooltipTriggerProps): FictNode {
     }
 
     if (!node) return
-
-    const open = (event: Event) => {
-      context.scheduleOpen()
-      if (event instanceof PointerEvent) props.onPointerEnter?.(event)
-      if (event instanceof MouseEvent) {
-        props.onMouseEnter?.(event)
-        props.onMouseOver?.(event)
-      }
-    }
-
-    const close = (event: Event) => {
-      context.clearSchedule()
-      context.setOpen(false)
-      if (event instanceof PointerEvent) props.onPointerLeave?.(event)
-      if (event instanceof MouseEvent) {
-        props.onMouseLeave?.(event)
-        props.onMouseOut?.(event)
-      }
-    }
-
-    const onFocus = (event: FocusEvent) => {
-      props.onFocus?.(event)
-      context.scheduleOpen()
-    }
-
-    const onBlur = (event: FocusEvent) => {
-      props.onBlur?.(event)
-      context.clearSchedule()
-      context.setOpen(false)
-    }
 
     node.addEventListener('pointerenter', open)
     node.addEventListener('pointerleave', close)
