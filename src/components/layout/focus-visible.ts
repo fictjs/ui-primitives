@@ -1,5 +1,6 @@
-import { createContext, onDestroy, useContext, type FictNode } from '@fictjs/runtime'
+import { createContext, useContext, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
+import { useEventListener } from '@fictjs/hooks'
 
 export interface KeyboardModeProviderProps {
   children?: FictNode
@@ -21,25 +22,10 @@ const KeyboardModeContext = createContext<KeyboardModeContextValue>({
 
 export function KeyboardModeProvider(props: KeyboardModeProviderProps): FictNode {
   const keyboardModeSignal = createSignal(false)
-  let cleanup: (() => void) | null = null
+  const targetDocument = () => (typeof document !== 'undefined' ? document : null)
 
-  if (typeof document !== 'undefined') {
-    const onKeyDown = () => keyboardModeSignal(true)
-    const onPointerDown = () => keyboardModeSignal(false)
-
-    document.addEventListener('keydown', onKeyDown, true)
-    document.addEventListener('pointerdown', onPointerDown, true)
-
-    cleanup = () => {
-      document.removeEventListener('keydown', onKeyDown, true)
-      document.removeEventListener('pointerdown', onPointerDown, true)
-    }
-  }
-
-  onDestroy(() => {
-    cleanup?.()
-    cleanup = null
-  })
+  useEventListener(targetDocument, 'keydown', () => keyboardModeSignal(true), { capture: true })
+  useEventListener(targetDocument, 'pointerdown', () => keyboardModeSignal(false), { capture: true })
 
   const context: KeyboardModeContextValue = {
     isKeyboardMode: () => keyboardModeSignal(),

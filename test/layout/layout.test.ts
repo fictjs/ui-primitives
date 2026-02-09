@@ -84,6 +84,53 @@ describe('Layout primitives', () => {
     container.remove()
   })
 
+  it('updates panel sizes during handle drag', () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(
+      () => ({
+        type: ResizablePanelGroup,
+        props: {
+          'data-testid': 'group',
+          children: [
+            { type: ResizablePanel, props: { 'data-testid': 'prev', children: 'Left' } },
+            { type: ResizableHandle, props: { 'data-testid': 'handle', withHandle: true } },
+            { type: ResizablePanel, props: { 'data-testid': 'next', children: 'Right' } },
+          ],
+        },
+      }),
+      container,
+    )
+
+    const group = container.querySelector('[data-testid="group"]') as HTMLElement
+    const prev = container.querySelector('[data-testid="prev"]') as HTMLElement
+    const next = container.querySelector('[data-testid="next"]') as HTMLElement
+    const handle = container.querySelector('[data-testid="handle"]') as HTMLElement
+
+    group.getBoundingClientRect = () =>
+      ({ width: 400, height: 200 } as DOMRect)
+    prev.getBoundingClientRect = () =>
+      ({ width: 200, height: 200 } as DOMRect)
+    next.getBoundingClientRect = () =>
+      ({ width: 200, height: 200 } as DOMRect)
+
+    fireEvent.pointerDown(handle, { clientX: 200, clientY: 20 })
+    fireEvent.pointerMove(window, { clientX: 240, clientY: 20 })
+
+    expect(prev.style.flexBasis).toBe('60%')
+    expect(next.style.flexBasis).toBe('40%')
+
+    fireEvent.pointerUp(window)
+    fireEvent.pointerMove(window, { clientX: 300, clientY: 20 })
+
+    expect(prev.style.flexBasis).toBe('60%')
+    expect(next.style.flexBasis).toBe('40%')
+
+    dispose()
+    container.remove()
+  })
+
   it('renders progress meter skeleton and focus-visible state', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)

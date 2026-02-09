@@ -1,5 +1,6 @@
 import { createContext, onDestroy, useContext, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
+import { useDebounceFn } from '@fictjs/hooks'
 
 import { createId } from '../../internal/ids'
 import { Primitive } from '../core/primitive'
@@ -55,6 +56,11 @@ interface ToastContextValue {
   duration: () => number
 }
 
+interface ToastTimerController {
+  run: () => void
+  cancel: () => void
+}
+
 const ToastContext = createContext<ToastContextValue | null>(null)
 
 function useToastContext(component: string): ToastContextValue {
@@ -67,19 +73,22 @@ function useToastContext(component: string): ToastContextValue {
 
 export function ToastProvider(props: ToastProviderProps): FictNode {
   const toastsSignal = createSignal<ToastRecord[]>([])
-  const timers = new Map<string, ReturnType<typeof setTimeout>>()
+  const timers = new Map<string, ToastTimerController>()
 
   const dismiss = (id: string) => {
     toastsSignal(toastsSignal().filter(toast => toast.id !== id))
     const timer = timers.get(id)
     if (timer) {
-      clearTimeout(timer)
+      timer.cancel()
       timers.delete(id)
     }
   }
 
   const show = (toast: Omit<ToastRecord, 'id'> & { id?: string }): string => {
     const id = toast.id ?? createId('toast')
+    const existingTimer = timers.get(id)
+    existingTimer?.cancel()
+    timers.delete(id)
     const nextToast: ToastRecord = {
       id,
       title: toast.title,
@@ -89,15 +98,21 @@ export function ToastProvider(props: ToastProviderProps): FictNode {
 
     toastsSignal([...toastsSignal(), nextToast])
 
-    const timeout = setTimeout(() => dismiss(id), toast.duration ?? props.duration ?? 5000)
-    timers.set(id, timeout)
+    const timer = useDebounceFn(
+      () => {
+        dismiss(id)
+      },
+      toast.duration ?? props.duration ?? 5000,
+    )
+    timer.run()
+    timers.set(id, timer)
 
     return id
   }
 
   onDestroy(() => {
     for (const timer of timers.values()) {
-      clearTimeout(timer)
+      timer.cancel()
     }
     timers.clear()
   })

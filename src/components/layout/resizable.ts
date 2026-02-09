@@ -1,4 +1,6 @@
 import type { FictNode } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
+import { useEventListener } from '@fictjs/hooks'
 
 export interface ResizablePanelGroupProps {
   direction?: 'horizontal' | 'vertical'
@@ -17,6 +19,20 @@ export interface ResizablePanelProps {
 export interface ResizableHandleProps {
   withHandle?: boolean
   [key: string]: unknown
+}
+
+interface ResizeDragState {
+  direction: 'horizontal' | 'vertical'
+  startPos: number
+  prevStart: number
+  nextStart: number
+  groupSize: number
+  minPrev: number
+  minNext: number
+  maxPrev: number
+  maxNext: number
+  prev: HTMLElement
+  next: HTMLElement
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -72,6 +88,39 @@ export function ResizablePanel(props: ResizablePanelProps): FictNode {
 
 export function ResizableHandle(props: ResizableHandleProps): FictNode {
   let node: HTMLElement | null = null
+  const dragState = createSignal<ResizeDragState | null>(null)
+  const targetWindow = () => (typeof window !== 'undefined' ? window : null)
+
+  const onMove = (moveEvent: PointerEvent) => {
+    const state = dragState()
+    if (!state) return
+
+    const currentPos = state.direction === 'horizontal' ? moveEvent.clientX : moveEvent.clientY
+    const delta = currentPos - state.startPos
+
+    const nextPrevPx = state.prevStart + delta
+    const nextNextPx = state.nextStart - delta
+
+    const nextPrevPercent = clamp((nextPrevPx / state.groupSize) * 100, state.minPrev, state.maxPrev)
+    const nextNextPercent = clamp((nextNextPx / state.groupSize) * 100, state.minNext, state.maxNext)
+
+    state.prev.style.flexBasis = `${nextPrevPercent}%`
+    state.next.style.flexBasis = `${nextNextPercent}%`
+  }
+
+  const moveListener = useEventListener<PointerEvent>(targetWindow, 'pointermove', onMove, {
+    immediate: false,
+  })
+  const upListener = useEventListener<PointerEvent>(
+    targetWindow,
+    'pointerup',
+    () => {
+      dragState(null)
+      moveListener.stop()
+      upListener.stop()
+    },
+    { immediate: false },
+  )
 
   const onPointerDown = (event: PointerEvent) => {
     if (!node) return
@@ -97,28 +146,21 @@ export function ResizableHandle(props: ResizableHandleProps): FictNode {
     const minNext = Number(next.getAttribute('data-min-size') ?? '5')
     const maxPrev = Number(prev.getAttribute('data-max-size') ?? '95')
     const maxNext = Number(next.getAttribute('data-max-size') ?? '95')
-
-    const onMove = (moveEvent: PointerEvent) => {
-      const currentPos = direction === 'horizontal' ? moveEvent.clientX : moveEvent.clientY
-      const delta = currentPos - startPos
-
-      const nextPrevPx = prevStart + delta
-      const nextNextPx = nextStart - delta
-
-      const nextPrevPercent = clamp((nextPrevPx / groupSize) * 100, minPrev, maxPrev)
-      const nextNextPercent = clamp((nextNextPx / groupSize) * 100, minNext, maxNext)
-
-      prev.style.flexBasis = `${nextPrevPercent}%`
-      next.style.flexBasis = `${nextNextPercent}%`
-    }
-
-    const stop = () => {
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup', stop)
-    }
-
-    window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup', stop)
+    dragState({
+      direction,
+      startPos,
+      prevStart,
+      nextStart,
+      groupSize,
+      minPrev,
+      minNext,
+      maxPrev,
+      maxNext,
+      prev,
+      next,
+    })
+    moveListener.start()
+    upListener.start()
   }
 
   return {
