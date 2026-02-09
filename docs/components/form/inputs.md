@@ -6,6 +6,8 @@ Interactive input primitives.
 
 - `Slider`
 - `RangeSlider`
+- `CalendarRoot` / `Calendar*`
+- `DatePickerRoot` / `DatePicker*`
 - `SelectRoot` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem`
 - `ComboboxRoot` / `ComboboxInput` / `ComboboxList` / `ComboboxItem`
 
@@ -28,6 +30,12 @@ Interactive input primitives.
 - `ComboboxItem` performs simple text filtering against current query
 - Selecting an item commits value, syncs query, and closes list
 
+## Calendar / DatePicker
+
+- `CalendarRoot` manages selected date and visible month state
+- `DatePickerRoot` composes popover trigger/content around calendar interactions
+- `DatePickerCalendar` closes picker on selection by default (`closeOnSelect=true`)
+
 ## Minimal Example
 
 ```tsx
@@ -43,6 +51,12 @@ import {
   ComboboxInput,
   ComboboxList,
   ComboboxItem,
+  CalendarRoot,
+  DatePickerRoot,
+  DatePickerTrigger,
+  DatePickerValue,
+  DatePickerContent,
+  DatePickerCalendar,
 } from '@fictjs/ui-primitives'
 
 <Slider min={0} max={100} defaultValue={40} />
@@ -65,6 +79,17 @@ import {
     <ComboboxItem value="bob">Bob</ComboboxItem>
   </ComboboxList>
 </ComboboxRoot>
+
+<CalendarRoot defaultMonth={new Date(2026, 0, 1)} />
+
+<DatePickerRoot>
+  <DatePickerTrigger>
+    <DatePickerValue placeholder="Pick a date" />
+  </DatePickerTrigger>
+  <DatePickerContent>
+    <DatePickerCalendar />
+  </DatePickerContent>
+</DatePickerRoot>
 ```
 
 ## Accessibility Notes
