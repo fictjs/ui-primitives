@@ -12,11 +12,11 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.0.0)
       '@fictjs/hooks':
-        specifier: ^0.2.0
-        version: 0.2.0(@fictjs/runtime@0.9.0)
+        specifier: ^0.3.0
+        version: 0.3.0(@fictjs/runtime@0.10.0)
       '@fictjs/runtime':
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^0.10.0
+        version: 0.10.0
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -335,14 +335,14 @@ packages:
       '@noble/hashes':
         optional: true
 
-  '@fictjs/hooks@0.2.0':
-    resolution: {integrity: sha512-brEoUqiFG9JI1fJ4tK09e312dsUeXnIyqNkKADnw/cV00ewFmTCdsYJk4rPrSubrEh+PDsEd1c9ubE6fuEmKfQ==}
+  '@fictjs/hooks@0.3.0':
+    resolution: {integrity: sha512-RMVVbV0Six+90g4qyWTm3OhgGvEdnxUW9VwMGIdceQadTdP9WX+ABhM4Fpk3U3TL89lQqbI4G0BPrLDluphVcA==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@fictjs/runtime': ^0.9.0
+      '@fictjs/runtime': ^0.10.0
 
-  '@fictjs/runtime@0.9.0':
-    resolution: {integrity: sha512-VBEX2xWreed+nUTsEUm/MZ9Ba0KQoNeyi6aq2LOa/j1Vb4zwFV42P0M4cNinNxRXbv0FdL6o8dmdirJUkdrjYA==}
+  '@fictjs/runtime@0.10.0':
+    resolution: {integrity: sha512-tgYx1jUNOFwyZjf7kErYo1mgipN1p1jlnh9OZTbcRE58dFnEQUZfK13VB8pjz5m/VBhzsXzo7uWC8ZENurRKeQ==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1596,11 +1596,11 @@ snapshots:
 
   '@exodus/bytes@1.11.0': {}
 
-  '@fictjs/hooks@0.2.0(@fictjs/runtime@0.9.0)':
+  '@fictjs/hooks@0.3.0(@fictjs/runtime@0.10.0)':
     dependencies:
-      '@fictjs/runtime': 0.9.0
+      '@fictjs/runtime': 0.10.0
 
-  '@fictjs/runtime@0.9.0': {}
+  '@fictjs/runtime@0.10.0': {}
 
   '@humanfs/core@0.19.1': {}
 

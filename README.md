@@ -32,8 +32,8 @@ Node version: `>=18`
 
 Peer dependencies:
 
-- `@fictjs/runtime@^0.9.0`
-- `@fictjs/hooks@^0.2.0`
+- `@fictjs/hooks@^0.3.0`
+- `@fictjs/runtime@^0.10.0`
 
 ## Quick Start
 
