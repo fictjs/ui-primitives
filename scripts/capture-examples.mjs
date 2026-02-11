@@ -44,6 +44,52 @@ async function waitForServer(url, timeoutMs = 30000) {
   throw new Error(`Timed out waiting for ${url}`)
 }
 
+async function waitForFrames(page, count = 2) {
+  await page.evaluate(async frameCount => {
+    for (let i = 0; i < frameCount; i += 1) {
+      await new Promise(resolveFrame => globalThis.requestAnimationFrame(() => resolveFrame()))
+    }
+  }, count)
+}
+
+async function stabilizePage(page) {
+  await page.addStyleTag({
+    content: `
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    `,
+  })
+
+  await page.evaluate(async () => {
+    if ('document' in globalThis && 'fonts' in globalThis.document) {
+      await globalThis.document.fonts.ready
+    }
+  })
+
+  await waitForFrames(page, 3)
+  await page.waitForTimeout(40)
+}
+
+async function waitForMenuPlacement(page) {
+  await page.waitForFunction(() => {
+    const trigger = globalThis.document.querySelector('[data-testid="menu-trigger"]')
+    const content = globalThis.document.querySelector('[data-testid="menu-content"]')
+    if (!(trigger instanceof globalThis.HTMLElement) || !(content instanceof globalThis.HTMLElement)) {
+      return false
+    }
+
+    const triggerRect = trigger.getBoundingClientRect()
+    const contentRect = content.getBoundingClientRect()
+    const horizontalAligned = Math.abs(contentRect.left - triggerRect.left) <= 24
+    const verticalAligned = contentRect.top >= triggerRect.bottom - 8
+
+    return horizontalAligned && verticalAligned
+  })
+  await waitForFrames(page, 2)
+}
+
 async function main() {
   await rm(outputDir, { recursive: true, force: true })
   await mkdir(outputDir, { recursive: true })
@@ -72,30 +118,42 @@ async function main() {
     await waitForServer(baseUrl)
 
     browser = await chromium.launch()
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1024 } })
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 1024 },
+      deviceScaleFactor: 1,
+      colorScheme: 'light',
+      reducedMotion: 'reduce',
+    })
+    const page = await context.newPage()
     await page.goto(baseUrl, { waitUntil: 'networkidle' })
     await page.waitForSelector('[data-testid="demo-ready"]')
+    await stabilizePage(page)
 
     await page.screenshot({ path: join(outputDir, '01-home.png'), fullPage: true })
 
     await page.click('[data-testid="dialog-trigger"]')
     await page.waitForSelector('[data-testid="dialog-content"]', { state: 'visible' })
+    await waitForFrames(page, 2)
     await page.screenshot({ path: join(outputDir, '02-dialog-open.png'), fullPage: true })
 
     await page.keyboard.press('Escape')
     await page.waitForSelector('[data-testid="dialog-content"]', { state: 'detached' })
+    await waitForFrames(page, 2)
 
     await page.click('[data-testid="menu-trigger"]')
     await page.waitForSelector('[data-testid="menu-content"]', { state: 'visible' })
+    await waitForMenuPlacement(page)
     await page.screenshot({ path: join(outputDir, '03-menu-open.png'), fullPage: true })
 
     await page.keyboard.press('Escape')
+    await waitForFrames(page, 2)
     await page.click('[data-testid="tab-qa-trigger"]')
     await page.waitForTimeout(120)
     await page.screenshot({ path: join(outputDir, '04-tabs-qa.png'), fullPage: true })
 
     await page.click('[data-testid="toast-trigger"]')
     await page.waitForSelector('[data-toast-root]', { state: 'visible' })
+    await waitForFrames(page, 2)
     await page.screenshot({ path: join(outputDir, '05-toast-open.png'), fullPage: true })
 
     proc.stdout.write(`Saved screenshots to ${outputDir}\n`)
