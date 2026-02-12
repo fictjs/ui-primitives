@@ -92,7 +92,7 @@ Export groups:
 - Form: `Label`, `Checkbox`, `RadioGroup`, `Switch`, `Toggle`, `Slider`, `RangeSlider`, `Calendar`, `DatePicker`, `Select`, `Combobox`, `Form*`
 - Layout: `ScrollArea*`, `Resizable*`, `AspectRatio`, `Progress`, `Skeleton`, `FocusVisible`
 
-For detailed symbol-by-symbol reference, see `docs/api-reference.md`.
+For detailed symbol-by-symbol reference, see [API Reference](docs/api-reference.md).
 
 ## Design Contracts
 
@@ -103,15 +103,15 @@ For detailed symbol-by-symbol reference, see `docs/api-reference.md`.
 
 ## Documentation Map
 
-- `docs/README.md`: documentation index
-- `docs/components/*`: per-component behavior, minimal examples, and a11y notes
-- `docs/api-reference.md`: full export index
-- `docs/architecture.md`: design and implementation structure
-- `docs/testing.md`: testing strategy and expectations
-- `docs/accessibility.md`: accessibility review checklist
-- `docs/examples.md`: copyable composition snippets
-- `examples/README.md`: executable demo app + screenshot workflow
-- `docs/release.md`: release and publish checklist
+- [Documentation Index](docs/README.md): documentation index
+- [Component Docs](docs/components): per-component behavior, minimal examples, and a11y notes
+- [API Reference](docs/api-reference.md): full export index
+- [Architecture](docs/architecture.md): design and implementation structure
+- [Testing](docs/testing.md): testing strategy and expectations
+- [Accessibility](docs/accessibility.md): accessibility review checklist
+- [Examples Guide](docs/examples.md): copyable composition snippets
+- [Demo Workflow](examples/README.md): executable demo app + screenshot workflow
+- [Release Checklist](docs/release.md): release and publish checklist
 
 ## Demo App
 
@@ -121,7 +121,7 @@ Run local demo app:
 pnpm examples:dev
 ```
 
-Open `http://127.0.0.1:4173`.
+Open [http://127.0.0.1:4173](http://127.0.0.1:4173).
 
 Build and preview:
 
@@ -144,7 +144,7 @@ Regenerate baseline screenshots:
 pnpm examples:screenshots
 ```
 
-Outputs: `examples/screenshots/baseline`
+Outputs: [examples/screenshots/baseline](examples/screenshots/baseline)
 
 ## Development
 
@@ -170,12 +170,12 @@ Common commands:
 3. Keep docs and tests updated with behavior changes.
 4. Run quality gates before opening a PR.
 
-Detailed guide: `CONTRIBUTING.md`
+Detailed guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Release Workflow
 
-Use the checklist in `docs/release.md` before publishing.
+Use the checklist in [docs/release.md](docs/release.md) before publishing.
 
 ## License
 
-MIT, see `LICENSE`.
+MIT, see [LICENSE](LICENSE).
