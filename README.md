@@ -1,5 +1,9 @@
 # @fictjs/ui-primitives
 
+[![Node CI](https://github.com/fictjs/ui-primitives/actions/workflows/nodejs.yml/badge.svg)](https://github.com/fictjs/ui-primitives/actions/workflows/nodejs.yml)
+[![npm](https://img.shields.io/npm/v/@fictjs/ui-primitives.svg)](https://www.npmjs.com/package/@fictjs/ui-primitives)
+![license](https://img.shields.io/npm/l/@fictjs/ui-primitives)
+
 Official headless UI primitives for Fict.
 
 This repository provides unstyled, composable primitives focused on accessibility, interaction semantics, and controlled/uncontrolled APIs.
