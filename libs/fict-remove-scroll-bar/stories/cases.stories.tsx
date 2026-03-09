@@ -9,9 +9,9 @@ function Locker() {
 
   return (
     <div style={{ display: 'grid', gap: '0.75rem' }}>
-      {() => (locked() ? <RemoveScrollBar /> : null)}
-      <button onClick={() => locked(!locked())}>{() => (locked() ? 'Restore' : 'Remove')}</button>
-      <div>{() => `gap: ${JSON.stringify(getGapWidth('margin'))}`}</div>
+      {locked() ? <RemoveScrollBar /> : null}
+      <button onClick={() => locked(!locked())}>{locked() ? 'Restore' : 'Remove'}</button>
+      <div>{`gap: ${JSON.stringify(getGapWidth('margin'))}`}</div>
     </div>
   )
 }
@@ -56,7 +56,7 @@ function Fixed() {
           display: 'flex',
           'justify-content': 'space-between',
         }}
-        className={zeroRightClassName}
+        class={zeroRightClassName}
       >
         <div>position fixed+</div>
         <div>+position fixed</div>

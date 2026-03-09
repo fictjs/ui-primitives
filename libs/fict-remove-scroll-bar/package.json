@@ -46,8 +46,11 @@
   },
   "scripts": {
     "build": "tsup",
-    "clean": "rimraf coverage dist",
+    "clean": "rimraf coverage dist example-dist",
     "dev": "tsup --watch",
+    "example:build": "vite build --config ./vite.config.ts",
+    "example:dev": "vite --config ./vite.config.ts",
+    "example:preview": "vite preview --config ./vite.config.ts",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "test": "vitest run --config ./vitest.config.ts",
@@ -62,9 +65,12 @@
     "fict": "^0.17.0"
   },
   "devDependencies": {
+    "@fictjs/runtime": "^0.17.0",
+    "@fictjs/vite-plugin": "^0.17.0",
     "@fictjs/eslint-config": "workspace:*",
     "@fictjs/tsconfig": "workspace:*",
     "fict": "^0.17.0",
-    "jsdom": "^28.1.0"
+    "jsdom": "^28.1.0",
+    "vite": "^7.3.1"
   }
 }

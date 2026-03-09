@@ -1,7 +1,7 @@
 /** @jsxImportSource fict */
 
 import type { Component } from 'fict'
-import { onMount } from 'fict'
+import { onMount, untrack } from 'fict'
 import { styleSingleton } from '@fictjs/fict-style-singleton'
 
 import {
@@ -130,9 +130,11 @@ export function useLockAttribute(): void {
  * instance wins for the injected stylesheet, while lock counting remains nested.
  */
 export const RemoveScrollBar: Component<BodyScroll> = (props: BodyScroll) => {
-  const gapMode = props.gapMode ?? 'margin'
+  const gapMode = untrack(() => (props.gapMode ?? 'margin') as GapMode)
+  const allowRelative = untrack(() => !props.noRelative)
+  const important = untrack(() => (!props.noImportant ? '!important' : ''))
   const gap = getGapWidth(gapMode)
-  const styles = getStyles(gap, !props.noRelative, gapMode, !props.noImportant ? '!important' : '')
+  const styles = getStyles(gap, allowRelative, gapMode, important)
 
   useLockAttribute()
 

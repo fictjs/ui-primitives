@@ -12,6 +12,18 @@ The package is DOM-oriented. During SSR or other non-DOM execution it becomes a 
 pnpm add @fictjs/fict-remove-scroll-bar fict
 ```
 
+## Local demo
+
+Inside this package directory you can run the bundled Vite demo:
+
+```bash
+pnpm example:dev
+pnpm example:build
+pnpm example:preview
+```
+
+The demo source lives in `example/` and uses the package source directly.
+
 ## Usage
 
 ```tsx

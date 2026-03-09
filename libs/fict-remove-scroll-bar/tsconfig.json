@@ -6,6 +6,7 @@
     "jsxImportSource": "fict",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "paths": {
+      "@fictjs/fict-remove-scroll-bar": ["./src/index.ts"],
       "fict": ["../../../packages/fict/dist/index.d.ts"],
       "fict/jsx-runtime": ["../../../packages/fict/dist/jsx-runtime.d.ts"],
       "fict/jsx-dev-runtime": ["../../../packages/fict/dist/jsx-dev-runtime.d.ts"],
@@ -15,11 +16,14 @@
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
   "include": [
+    "example/**/*.ts",
+    "example/**/*.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
     "test/**/*.ts",
     "test/**/*.tsx",
     "tsup.config.ts",
+    "vite.config.ts",
     "vitest.config.ts"
   ],
   "exclude": ["coverage", "dist"]

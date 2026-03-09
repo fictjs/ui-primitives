@@ -1,5 +1,6 @@
 /** @jsxImportSource fict */
 
+import type { FictNode } from 'fict'
 import { createSignal } from 'fict/advanced'
 
 import {
@@ -8,13 +9,13 @@ import {
   getGapWidth,
   noScrollbarsClassName,
   zeroRightClassName,
-} from '../src/index.js'
+} from '@fictjs/fict-remove-scroll-bar'
 
 function fill(count: number, label: string): string[] {
   return Array.from({ length: count }, (_, index) => `${label} ${index + 1}`)
 }
 
-function Locker(props: { label: string }) {
+function Locker(props: { label: string }): FictNode {
   const locked = createSignal(false)
 
   return (
@@ -27,12 +28,10 @@ function Locker(props: { label: string }) {
         background: '#faf7f2',
       }}
     >
-      {() => (locked() ? <RemoveScrollBar /> : null)}
+      {locked() ? <RemoveScrollBar /> : null}
       <div style={{ display: 'flex', gap: '0.75rem', 'align-items': 'center', 'flex-wrap': 'wrap' }}>
-        <button onClick={() => locked(!locked())}>
-          {() => `${props.label}: ${locked() ? 'restore scroll' : 'remove scroll'}`}
-        </button>
-        <code>{() => JSON.stringify(getGapWidth())}</code>
+        <button onClick={() => locked(!locked())}>{`${props.label}: ${locked() ? 'restore scroll' : 'remove scroll'}`}</button>
+        <code>{JSON.stringify(getGapWidth())}</code>
       </div>
       <div style={{ color: '#5c5750' }}>
         Toggle the lock and inspect the fixed bars at the top of the page.
@@ -41,7 +40,7 @@ function Locker(props: { label: string }) {
   )
 }
 
-function FixedBars() {
+function FixedBars(): FictNode {
   return (
     <>
       <div
@@ -62,7 +61,7 @@ function FixedBars() {
         <span>no compensation</span>
       </div>
       <div
-        className={zeroRightClassName}
+        class={zeroRightClassName}
         style={{
           position: 'fixed',
           left: 0,
@@ -83,7 +82,7 @@ function FixedBars() {
   )
 }
 
-export default function App() {
+export default function App(): FictNode {
   const rows = fill(80, 'Scrollable row')
 
   return (
@@ -94,7 +93,7 @@ export default function App() {
         <Locker label="Nested lock" />
 
         <section
-          className={fullWidthClassName}
+          class={fullWidthClassName}
           style={{
             position: 'fixed',
             left: 0,
@@ -110,7 +109,7 @@ export default function App() {
         </section>
 
         <section
-          className={noScrollbarsClassName}
+          class={noScrollbarsClassName}
           style={{
             height: '10rem',
             overflow: 'auto',
