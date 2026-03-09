@@ -72,9 +72,7 @@
     "fict": "^0.17.0"
   },
   "devDependencies": {
-    "@fictjs/eslint-config": "workspace:*",
-    "@fictjs/runtime": "link:../../../packages/runtime",
-    "@fictjs/tsconfig": "workspace:*",
+    "@fictjs/runtime": "catalog:",
     "fict": "^0.17.0",
     "jsdom": "^28.1.0"
   }

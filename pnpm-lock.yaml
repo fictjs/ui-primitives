@@ -132,6 +132,31 @@ importers:
         specifier: 'catalog:'
         version: 4.0.18(@types/node@25.3.5)(jiti@2.6.1)(jsdom@28.1.0)(yaml@2.8.2)
 
+  libs/fict-remove-scroll:
+    dependencies:
+      '@fictjs/fict-remove-scroll-bar':
+        specifier: workspace:*
+        version: link:../fict-remove-scroll-bar
+      '@fictjs/fict-style-singleton':
+        specifier: workspace:*
+        version: link:../fict-style-singleton
+      '@fictjs/use-callback-ref':
+        specifier: workspace:*
+        version: link:../use-callback-ref
+      '@fictjs/use-sidecar':
+        specifier: workspace:*
+        version: link:../use-sidecar
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      fict:
+        specifier: ^0.17.0
+        version: 0.17.0
+      jsdom:
+        specifier: ^28.1.0
+        version: 28.1.0
+
   libs/fict-remove-scroll-bar:
     dependencies:
       '@fictjs/fict-style-singleton':
@@ -197,8 +222,6 @@ importers:
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
-
-  packages/ui-primitives: {}
 
 packages:
 
