@@ -1,0 +1,81 @@
+{
+  "name": "@fictjs/fict-remove-scroll",
+  "version": "0.1.0",
+  "description": "Scroll isolation primitives for Fict, based on react-remove-scroll.",
+  "keywords": [
+    "fict",
+    "scroll",
+    "scroll-lock",
+    "remove-scroll",
+    "ui-primitives"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "./dist/sidecar.js",
+    "./dist/sidecar.cjs"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./UI": {
+      "types": "./dist/UI.d.ts",
+      "import": "./dist/UI.js",
+      "require": "./dist/UI.cjs"
+    },
+    "./sidecar": {
+      "types": "./dist/sidecar.d.ts",
+      "import": "./dist/sidecar.js",
+      "require": "./dist/sidecar.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fictjs/ui-primitives.git",
+    "directory": "libs/fict-remove-scroll"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rimraf coverage dist",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage",
+    "test:watch": "vitest --config ./vitest.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fictjs/fict-remove-scroll-bar": "workspace:*",
+    "@fictjs/fict-style-singleton": "workspace:*",
+    "@fictjs/use-callback-ref": "workspace:*",
+    "@fictjs/use-sidecar": "workspace:*"
+  },
+  "peerDependencies": {
+    "fict": "^0.17.0"
+  },
+  "devDependencies": {
+    "@fictjs/eslint-config": "workspace:*",
+    "@fictjs/runtime": "link:../../../packages/runtime",
+    "@fictjs/tsconfig": "workspace:*",
+    "fict": "^0.17.0",
+    "jsdom": "^28.1.0"
+  }
+}
