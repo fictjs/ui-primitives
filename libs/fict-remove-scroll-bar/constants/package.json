@@ -1,0 +1,8 @@
+{
+  "description": "separate entrypoint for constants only",
+  "private": true,
+  "main": "../dist/constants.cjs",
+  "module": "../dist/constants.js",
+  "types": "../dist/constants.d.ts",
+  "sideEffects": false
+}

@@ -135,7 +135,24 @@ importers:
         specifier: 'catalog:'
         version: 4.0.18(@types/node@25.3.5)(jiti@2.6.1)(jsdom@28.1.0)(yaml@2.8.2)
 
-  libs/fict-remove-scroll-bar: {}
+  libs/fict-remove-scroll-bar:
+    dependencies:
+      '@fictjs/fict-style-singleton':
+        specifier: workspace:*
+        version: link:../fict-style-singleton
+    devDependencies:
+      '@fictjs/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@fictjs/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      fict:
+        specifier: ^0.17.0
+        version: 0.17.0
+      jsdom:
+        specifier: ^28.1.0
+        version: 28.1.0
 
   libs/fict-style-singleton:
     dependencies:
