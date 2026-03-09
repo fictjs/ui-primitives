@@ -142,7 +142,7 @@ importers:
         version: link:../fict-style-singleton
       '@fictjs/use-callback-ref':
         specifier: workspace:*
-        version: link:../use-callback-ref
+        version: link:../../packages/use-callback-ref
       '@fictjs/use-sidecar':
         specifier: workspace:*
         version: link:../use-sidecar
@@ -205,16 +205,133 @@ importers:
         specifier: ^28.1.0
         version: 28.1.0
 
-  libs/use-callback-ref:
+  libs/use-sidecar:
     devDependencies:
       '@fictjs/runtime':
-        specifier: ^0.17.0
+        specifier: 'catalog:'
         version: 0.17.0
       jsdom:
-        specifier: ^28.1.0
+        specifier: 'catalog:'
         version: 28.1.0
 
-  libs/use-sidecar:
+  packages/compose-refs:
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/context:
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/direction:
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/id:
+    dependencies:
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/use-callback-ref:
+    dependencies:
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/use-controllable-state:
+    dependencies:
+      '@fictjs/use-effect-event':
+        specifier: workspace:*
+        version: link:../use-effect-event
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/use-effect-event:
+    dependencies:
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/use-escape-keydown:
+    dependencies:
+      '@fictjs/use-callback-ref':
+        specifier: workspace:*
+        version: link:../use-callback-ref
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/use-is-hydrated:
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/use-layout-effect:
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/use-previous:
+    dependencies:
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'

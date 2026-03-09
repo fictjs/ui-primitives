@@ -1,0 +1,36 @@
+{
+  "extends": "../../tsconfig.library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@fictjs/runtime",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@fictjs/direction": ["./src/index.ts"],
+      "@fictjs/runtime": ["../../../packages/runtime/dist/index.d.ts"],
+      "@fictjs/runtime/advanced": ["../../../packages/runtime/dist/advanced.d.ts"],
+      "@fictjs/runtime/jsx-runtime": ["../../../packages/runtime/dist/jsx-runtime.d.ts"],
+      "@fictjs/runtime/jsx-dev-runtime": ["../../../packages/runtime/dist/jsx-dev-runtime.d.ts"],
+      "@fictjs/compose-refs": ["../compose-refs/src/index.ts"],
+      "@fictjs/context": ["../context/src/index.ts"],
+      "@fictjs/id": ["../id/src/index.ts"],
+      "@fictjs/use-callback-ref": ["../use-callback-ref/src/index.ts"],
+      "@fictjs/use-controllable-state": ["../use-controllable-state/src/index.ts"],
+      "@fictjs/use-effect-event": ["../use-effect-event/src/index.ts"],
+      "@fictjs/use-escape-keydown": ["../use-escape-keydown/src/index.ts"],
+      "@fictjs/use-is-hydrated": ["../use-is-hydrated/src/index.ts"],
+      "@fictjs/use-layout-effect": ["../use-layout-effect/src/index.ts"],
+      "@fictjs/use-previous": ["../use-previous/src/index.ts"]
+    },
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "test/**/*.ts",
+    "test/**/*.tsx",
+    "tsup.config.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": ["coverage", "dist"]
+}

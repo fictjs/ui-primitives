@@ -1,7 +1,7 @@
 {
-  "name": "@fictjs/use-callback-ref",
+  "name": "@fictjs/use-escape-keydown",
   "version": "0.1.0",
-  "description": "Callback-aware ref utilities for Fict UI primitives.",
+  "description": "Escape key listener hook for Fict UI primitives.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -28,15 +28,15 @@
   },
   "keywords": [
     "fict",
-    "ref",
-    "callback-ref",
-    "headless",
-    "ui-primitives"
+    "radix",
+    "ui-primitives",
+    "keyboard",
+    "escape"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fictjs/ui-primitives.git",
-    "directory": "libs/use-callback-ref"
+    "directory": "packages/use-escape-keydown"
   },
   "scripts": {
     "build": "tsup",
@@ -49,8 +49,14 @@
     "test:watch": "vitest --config ./vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
+  "dependencies": {
+    "@fictjs/use-callback-ref": "workspace:*"
+  },
+  "peerDependencies": {
+    "@fictjs/runtime": ">=0.17.0"
+  },
   "devDependencies": {
-    "@fictjs/runtime": "^0.17.0",
-    "jsdom": "^28.1.0"
+    "@fictjs/runtime": "catalog:",
+    "jsdom": "catalog:"
   }
 }

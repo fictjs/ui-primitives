@@ -75,6 +75,17 @@ describe('@fictjs/use-callback-ref', () => {
       expect(objectRef.current).toBe(42)
     })
 
+    it('useCallbackRef also supports the Radix stable-callback overload', () => {
+      const events: string[] = []
+      const callback = useCallbackRef((value: string) => {
+        events.push(value)
+      })
+
+      callback('ready')
+
+      expect(events).toEqual(['ready'])
+    })
+
     it('mergeRefs fans values out to all refs and exposes the latest current value', () => {
       const callbackRef = createCallbackRef<number>(() => {})
       const objectRef = { current: null as number | null }

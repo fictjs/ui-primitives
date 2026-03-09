@@ -24,7 +24,7 @@ export default defineConfig({
       },
       {
         find: '@fictjs/use-callback-ref',
-        replacement: path.resolve(libsRoot, 'use-callback-ref/src/index.ts'),
+        replacement: path.resolve(currentDir, '../../packages/use-callback-ref/src/index.ts'),
       },
       {
         find: '@fictjs/use-sidecar',

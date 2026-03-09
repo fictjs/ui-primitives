@@ -2,12 +2,12 @@
 
 Callback-aware ref utilities for Fict UI primitives.
 
-This package ports the React `use-callback-ref` surface to the Fict execution model. It keeps the same core helpers for:
+This package combines two related surfaces for Fict libraries:
 
-- observing ref value changes
-- merging object refs and callback refs
-- transforming one ref shape into another
-- adapting ref objects to callback refs
+- Radix-style stable callback wrappers via `useCallbackRef(callback)`
+- callback-aware ref objects and ref composition helpers for imperative handles
+
+That lets the package satisfy both the Radix `react-use-callback-ref` contract and the existing ref-facade utilities already used inside this workspace.
 
 ## Why a Fict version
 
@@ -18,7 +18,7 @@ Fict already supports object refs (`createRef()`) and callback refs (`ref={node 
 - expose a transformed handle instead of the raw node
 - keep ref utilities reusable outside JSX
 
-Because Fict components execute once, the `use*` helpers are thin, stable wrappers over the low-level factories rather than rerender-driven memoization layers.
+Because Fict components execute once, the `use*` helpers are thin, stable wrappers over low-level factories rather than rerender-driven memoization layers.
 
 ## Installation
 
@@ -30,6 +30,7 @@ pnpm add @fictjs/use-callback-ref
 
 - `assignRef(ref, value)`
 - `createCallbackRef(callback)`
+- `useCallbackRef(callback)`
 - `useCallbackRef(initialValue, callback)`
 - `mergeRefs(refs)`
 - `useMergeRefs(refs, defaultValue?)`
@@ -47,6 +48,10 @@ import { useCallbackRef, useMergeRefs, useTransformRef } from '@fictjs/use-callb
 function Trigger(props: {
   ref?: ((node: HTMLButtonElement | null) => void) | { current: HTMLButtonElement | null }
 }) {
+  const onOpen = useCallbackRef(() => {
+    console.log('opened')
+  })
+
   const localRef = useCallbackRef<HTMLButtonElement>(null, (next, prev) => {
     if (next !== prev) {
       console.log('trigger changed', { next, prev })
@@ -57,6 +62,7 @@ function Trigger(props: {
 
   onMount(() => {
     localRef.current?.focus()
+    onOpen()
   })
 
   return <button ref={mergedRef}>Open</button>
@@ -74,7 +80,8 @@ function TriggerLabel(props: { ref?: { current: string | null } }) {
 
 ## Fict-specific notes
 
-- `useCallbackRef` and `createCallbackRef` are both safe outside components.
+- `useCallbackRef(callback)` mirrors Radix's stable event handler helper.
+- `useCallbackRef(initialValue, callback)` and `createCallbackRef` provide the ref-facade behavior used by lower-level DOM helpers.
 - `useMergeRefs` and `useTransformRef` are stable for the full component lifetime because Fict components do not rerun after mount.
 - Cleanup still works with Fict runtime refs: when a DOM node unmounts, object refs are nulled and callback refs are called with `null`.
 - The helpers are generic and can also manage non-DOM values for imperative handles.
