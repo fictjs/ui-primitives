@@ -214,6 +214,19 @@ importers:
         specifier: 'catalog:'
         version: 28.1.0
 
+  packages/accessible-icon:
+    dependencies:
+      '@fictjs/visually-hidden':
+        specifier: workspace:*
+        version: link:../visually-hidden
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
   packages/announce:
     dependencies:
       '@fictjs/compose-refs':
@@ -278,6 +291,15 @@ importers:
         version: 28.1.0
 
   packages/direction:
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/focus-guards:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
@@ -369,6 +391,12 @@ importers:
       '@fictjs/runtime':
         specifier: 'catalog:'
         version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/rect:
+    devDependencies:
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -473,6 +501,32 @@ importers:
         version: 28.1.0
 
   packages/use-previous:
+    dependencies:
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/use-rect:
+    dependencies:
+      '@fictjs/rect':
+        specifier: workspace:*
+        version: link:../rect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/use-size:
     dependencies:
       '@fictjs/use-layout-effect':
         specifier: workspace:*

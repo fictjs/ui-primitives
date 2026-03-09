@@ -1,0 +1,56 @@
+{
+  "name": "@fictjs/rect",
+  "version": "0.1.0",
+  "description": "Rectangle observation utilities for Fict UI primitives.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "fict",
+    "radix",
+    "rect",
+    "measurement",
+    "ui-primitives"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fictjs/ui-primitives.git",
+    "directory": "packages/rect"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rimraf coverage dist",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage",
+    "test:watch": "vitest --config ./vitest.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jsdom": "catalog:"
+  }
+}
