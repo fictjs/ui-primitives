@@ -1,21 +1,54 @@
 {
   "name": "@fictjs/use-sidecar",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Workspace package placeholder for @fictjs/use-sidecar.",
+  "version": "0.1.0",
+  "description": "Sidecar code-splitting utilities for Fict components.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fictjs/ui-primitives.git",
     "directory": "libs/use-sidecar"
   },
   "scripts": {
-    "build": "node --eval \"const fs=require('node:fs');fs.mkdirSync('dist',{recursive:true});fs.writeFileSync('dist/.keep','')\"",
-    "clean": "node --eval \"require('node:fs').rmSync('dist',{force:true,recursive:true})\"",
-    "lint": "node --eval \"process.exit(0)\"",
-    "test": "node --eval \"process.exit(0)\"",
-    "typecheck": "node --eval \"process.exit(0)\""
+    "build": "tsup",
+    "clean": "rimraf coverage dist",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage",
+    "test:watch": "vitest --config ./vitest.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@fictjs/runtime": ">=0.17.0"
+  },
+  "devDependencies": {
+    "@fictjs/runtime": "catalog:",
+    "@fictjs/eslint-config": "workspace:*",
+    "@fictjs/tsconfig": "workspace:*",
+    "jsdom": "catalog:"
   }
 }
