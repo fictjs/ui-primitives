@@ -10,6 +10,11 @@ const packagesRoot = path.resolve(currentDir, '..')
 export default defineConfig({
   resolve: {
     alias: [
+      { find: '@fictjs/context', replacement: path.resolve(packagesRoot, 'context/src/index.ts') },
+      {
+        find: '@fictjs/primitive',
+        replacement: path.resolve(packagesRoot, 'primitive/src/index.tsx'),
+      },
       { find: '@fictjs/slot', replacement: path.resolve(packagesRoot, 'slot/src/index.tsx') },
       {
         find: '@fictjs/runtime/advanced',

@@ -1,4 +1,4 @@
-import type { FictNode, JSX } from '@fictjs/runtime'
+import { mergeProps, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { createSlot } from '@fictjs/slot'
 
@@ -40,7 +40,11 @@ const Primitive = NODES.reduce<Primitives>((primitive, node) => {
   const Slot = createSlot(`Primitive.${node}`)
 
   const Node = ((props: PrimitivePropsWithRef<typeof node>) => {
-    const { asChild, ...primitiveProps } = props
+    const asChild = props.asChild
+    const primitiveProps = mergeProps(
+      () => props as Record<string, unknown>,
+      { asChild: undefined },
+    )
     const Comp = asChild ? Slot : node
 
     if (typeof window !== 'undefined') {

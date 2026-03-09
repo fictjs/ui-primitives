@@ -10,7 +10,19 @@ const packagesRoot = path.resolve(currentDir, '..')
 export default defineConfig({
   resolve: {
     alias: [
+      {
+        find: '@fictjs/compose-refs',
+        replacement: path.resolve(packagesRoot, 'compose-refs/src/index.ts'),
+      },
+      {
+        find: '@fictjs/primitive',
+        replacement: path.resolve(packagesRoot, 'primitive/src/index.tsx'),
+      },
       { find: '@fictjs/slot', replacement: path.resolve(packagesRoot, 'slot/src/index.tsx') },
+      {
+        find: '@fictjs/use-layout-effect',
+        replacement: path.resolve(packagesRoot, 'use-layout-effect/src/index.ts'),
+      },
       {
         find: '@fictjs/runtime/advanced',
         replacement: path.resolve(workspaceRoot, 'packages/runtime/src/advanced.ts'),

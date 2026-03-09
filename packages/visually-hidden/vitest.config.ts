@@ -20,6 +20,10 @@ export default defineConfig({
         replacement: path.resolve(workspaceRoot, 'packages/runtime/src/advanced.ts'),
       },
       {
+        find: '@fictjs/runtime/internal',
+        replacement: path.resolve(workspaceRoot, 'packages/runtime/src/internal.ts'),
+      },
+      {
         find: '@fictjs/runtime/jsx-runtime',
         replacement: path.resolve(workspaceRoot, 'packages/runtime/src/jsx-runtime.ts'),
       },
