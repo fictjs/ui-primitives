@@ -1,0 +1,21 @@
+{
+  "name": "@fictjs/floating-ui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace package placeholder for @fictjs/floating-ui.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fictjs/ui-primitives.git",
+    "directory": "libs/floating-ui"
+  },
+  "scripts": {
+    "build": "node --eval \"const fs=require('node:fs');fs.mkdirSync('dist',{recursive:true});fs.writeFileSync('dist/.keep','')\"",
+    "clean": "node --eval \"require('node:fs').rmSync('dist',{force:true,recursive:true})\"",
+    "lint": "node --eval \"process.exit(0)\"",
+    "test": "node --eval \"process.exit(0)\"",
+    "typecheck": "node --eval \"process.exit(0)\""
+  }
+}

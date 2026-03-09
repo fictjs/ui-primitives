@@ -1,0 +1,5 @@
+{
+  "extends": "./packages/tsconfig/node.json",
+  "include": ["vitest.workspace.ts"],
+  "exclude": ["coverage", "dist", "node_modules"]
+}
