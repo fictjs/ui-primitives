@@ -1,0 +1,66 @@
+{
+  "name": "@fictjs/floating-ui-dom",
+  "version": "0.1.0",
+  "description": "Floating UI bindings for Fict DOM.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "fict",
+    "floating-ui",
+    "tooltip",
+    "popover",
+    "positioning",
+    "headless",
+    "ui-primitives"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fictjs/ui-primitives.git",
+    "directory": "libs/floating-ui-dom"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rimraf coverage dist",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage",
+    "test:watch": "vitest --config ./vitest.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@fictjs/runtime": ">=0.17.0"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.7.6"
+  },
+  "devDependencies": {
+    "@fictjs/eslint-config": "workspace:*",
+    "@fictjs/runtime": "link:../../../packages/runtime",
+    "@fictjs/tsconfig": "workspace:*",
+    "jsdom": "^28.1.0"
+  }
+}

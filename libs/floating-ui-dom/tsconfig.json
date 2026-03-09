@@ -1,0 +1,19 @@
+{
+  "extends": "@fictjs/tsconfig/library.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@fictjs/runtime",
+    "lib": ["ES2023", "DOM"],
+    "rootDir": ".",
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "test/**/*.ts",
+    "test/**/*.tsx",
+    "tsup.config.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": ["coverage", "dist"]
+}
