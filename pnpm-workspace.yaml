@@ -5,6 +5,7 @@ packages:
 catalogMode: strict
 
 catalog:
+  '@fictjs/runtime': 0.17.0
   '@changesets/cli': 2.30.0
   '@commitlint/cli': 20.4.3
   '@commitlint/config-conventional': 20.4.3
@@ -16,6 +17,7 @@ catalog:
   eslint: 10.0.3
   globals: 17.4.0
   husky: 9.1.7
+  jsdom: 28.1.0
   lint-staged: 16.3.2
   prettier: 3.8.1
   rimraf: 6.1.3
