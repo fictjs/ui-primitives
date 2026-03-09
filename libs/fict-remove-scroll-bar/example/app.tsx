@@ -29,8 +29,12 @@ function Locker(props: { label: string }): FictNode {
       }}
     >
       {locked() ? <RemoveScrollBar /> : null}
-      <div style={{ display: 'flex', gap: '0.75rem', 'align-items': 'center', 'flex-wrap': 'wrap' }}>
-        <button onClick={() => locked(!locked())}>{`${props.label}: ${locked() ? 'restore scroll' : 'remove scroll'}`}</button>
+      <div
+        style={{ display: 'flex', gap: '0.75rem', 'align-items': 'center', 'flex-wrap': 'wrap' }}
+      >
+        <button
+          onClick={() => locked(!locked())}
+        >{`${props.label}: ${locked() ? 'restore scroll' : 'remove scroll'}`}</button>
         <code>{JSON.stringify(getGapWidth())}</code>
       </div>
       <div style={{ color: '#5c5750' }}>
@@ -86,7 +90,9 @@ export default function App(): FictNode {
   const rows = fill(80, 'Scrollable row')
 
   return (
-    <div style={{ 'font-family': 'ui-monospace, SFMono-Regular, Menlo, monospace', color: '#1d1d1d' }}>
+    <div
+      style={{ 'font-family': 'ui-monospace, SFMono-Regular, Menlo, monospace', color: '#1d1d1d' }}
+    >
       <FixedBars />
       <main style={{ padding: '7rem 1rem 2rem', display: 'grid', gap: '1rem' }}>
         <Locker label="Primary lock" />

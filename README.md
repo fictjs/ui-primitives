@@ -17,14 +17,16 @@ Modern Node.js + TypeScript monorepo scaffolded around `pnpm`, `turbo`, `vitest`
 
 ```text
 .
+├── libs
 ├── packages
-│   ├── eslint-config
-│   ├── tsconfig
 │   └── ui-primitives
 ├── .changeset
 ├── .github/workflows
 ├── eslint.config.mjs
 ├── pnpm-workspace.yaml
+├── tsconfig.base.json
+├── tsconfig.library.json
+├── tsconfig.node.json
 ├── turbo.json
 └── vitest.workspace.ts
 ```

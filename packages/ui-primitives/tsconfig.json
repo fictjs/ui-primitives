@@ -1,5 +1,5 @@
 {
-  "extends": "@fictjs/tsconfig/library.json",
+  "extends": "../../tsconfig.library.json",
   "compilerOptions": {
     "rootDir": ".",
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"

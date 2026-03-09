@@ -3,16 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createEffect, createRoot, onMount, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
-import {
-  arrow,
-  flip,
-  hide,
-  limitShift,
-  offset,
-  shift,
-  size,
-  useFloating,
-} from '../src/index.js'
+import { arrow, flip, hide, limitShift, offset, shift, size, useFloating } from '../src/index.js'
 
 function tick(): Promise<void> {
   return new Promise((resolve) => {
@@ -33,12 +24,7 @@ async function flush(): Promise<void> {
   await tick()
 }
 
-function createRect(
-  width: number,
-  height: number,
-  x = 0,
-  y = 0,
-): DOMRect {
+function createRect(width: number, height: number, x = 0, y = 0): DOMRect {
   return {
     x,
     y,
@@ -54,16 +40,8 @@ function createRect(
   } as DOMRect
 }
 
-function mockRect(
-  element: Element,
-  width: number,
-  height: number,
-  x = 0,
-  y = 0,
-): void {
-  ;(element as HTMLElement).getBoundingClientRect = vi.fn(() =>
-    createRect(width, height, x, y),
-  )
+function mockRect(element: Element, width: number, height: number, x = 0, y = 0): void {
+  ;(element as HTMLElement).getBoundingClientRect = vi.fn(() => createRect(width, height, x, y))
 }
 
 describe('@fictjs/floating-ui-dom', () => {
@@ -123,9 +101,7 @@ describe('@fictjs/floating-ui-dom', () => {
       )
     }, container)
 
-    let stateful:
-      | ReturnType<typeof useFloating<HTMLDivElement>>
-      | undefined
+    let stateful: ReturnType<typeof useFloating<HTMLDivElement>> | undefined
 
     const stateDispose = render(() => {
       const stateArrow = createSignal<HTMLDivElement | null>(null)
@@ -203,9 +179,7 @@ describe('@fictjs/floating-ui-dom', () => {
   })
 
   it('positions mounted elements and exposes reactive accessors', async () => {
-    let floating:
-      | ReturnType<typeof useFloating<HTMLButtonElement>>
-      | undefined
+    let floating: ReturnType<typeof useFloating<HTMLButtonElement>> | undefined
 
     const dispose = render(() => {
       const api = useFloating<HTMLButtonElement>()
@@ -247,9 +221,7 @@ describe('@fictjs/floating-ui-dom', () => {
   it('supports reactive middleware and open state without rerendering the component', async () => {
     const gap = createSignal(10)
     const open = createSignal(false)
-    let floating:
-      | ReturnType<typeof useFloating<HTMLButtonElement>>
-      | undefined
+    let floating: ReturnType<typeof useFloating<HTMLButtonElement>> | undefined
 
     const dispose = render(() => {
       const api = useFloating<HTMLButtonElement>({
@@ -269,7 +241,8 @@ describe('@fictjs/floating-ui-dom', () => {
               <div data-testid="floating" ref={api.refs.setFloating} style={api.floatingStyles}>
                 Content
               </div>
-            ) : null}
+            ) : null
+          }
         </>
       )
     }, container)
@@ -301,9 +274,7 @@ describe('@fictjs/floating-ui-dom', () => {
     const referenceElement = createSignal<HTMLButtonElement | null>(null)
     const floatingElement = createSignal<HTMLDivElement | null>(null)
     const arrowElement = createSignal<HTMLSpanElement | null>(null)
-    let floating:
-      | ReturnType<typeof useFloating<HTMLButtonElement>>
-      | undefined
+    let floating: ReturnType<typeof useFloating<HTMLButtonElement>> | undefined
 
     const dispose = render(() => {
       const api = useFloating<HTMLButtonElement>({
@@ -348,9 +319,7 @@ describe('@fictjs/floating-ui-dom', () => {
   })
 
   it('applies layout styles when transform is disabled', async () => {
-    let floating:
-      | ReturnType<typeof useFloating<HTMLButtonElement>>
-      | undefined
+    let floating: ReturnType<typeof useFloating<HTMLButtonElement>> | undefined
 
     const dispose = render(() => {
       const api = useFloating<HTMLButtonElement>({
@@ -422,17 +391,13 @@ describe('@fictjs/floating-ui-dom', () => {
             <button ref={floating.refs.setReference} onClick={() => open(true)}>
               Trigger
             </button>
-            {() =>
-              open() ? (
-                <div ref={floating.refs.setFloating}>Content</div>
-              ) : null}
+            {() => (open() ? <div ref={floating.refs.setFloating}>Content</div> : null)}
           </>
         )
       }, container)
 
       await flush()
       expect(attachSpy).toHaveBeenCalledTimes(0)
-
       ;(container.querySelector('button') as HTMLButtonElement).click()
       await flush()
       expect(attachSpy).toHaveBeenCalledTimes(1)
@@ -451,10 +416,7 @@ describe('@fictjs/floating-ui-dom', () => {
 
         return (
           <>
-            {() =>
-              open() ? (
-                <button ref={floating.refs.setReference}>Trigger</button>
-              ) : null}
+            {() => (open() ? <button ref={floating.refs.setReference}>Trigger</button> : null)}
             <div role="tooltip" ref={floating.refs.setFloating} onClick={() => open(true)}>
               Content
             </div>
@@ -464,7 +426,6 @@ describe('@fictjs/floating-ui-dom', () => {
 
       await flush()
       expect(attachSpy).toHaveBeenCalledTimes(0)
-
       ;(container.querySelector('[role="tooltip"]') as HTMLDivElement).click()
       await flush()
       expect(attachSpy).toHaveBeenCalledTimes(1)
@@ -487,16 +448,14 @@ describe('@fictjs/floating-ui-dom', () => {
 
         return (
           <>
-            {() =>
-              open() ? (
-                <button ref={floating.refs.setReference}>Trigger</button>
-              ) : null}
+            {() => (open() ? <button ref={floating.refs.setReference}>Trigger</button> : null)}
             {() =>
               open() ? (
                 <div role="tooltip" ref={floating.refs.setFloating}>
                   Content
                 </div>
-              ) : null}
+              ) : null
+            }
           </>
         )
       }, container)
@@ -508,44 +467,46 @@ describe('@fictjs/floating-ui-dom', () => {
     })
 
     it('runs cleanup when the mounted pair detaches', async () => {
-    const open = createSignal(true)
-    const cleanupSpy = vi.fn()
-    const attachSpy = vi.fn(() => cleanupSpy)
+      const open = createSignal(true)
+      const cleanupSpy = vi.fn()
+      const attachSpy = vi.fn(() => cleanupSpy)
 
-    const dispose = render(() => {
-      const api = useFloating<HTMLButtonElement>({
-        open,
-        whileElementsMounted: attachSpy,
-      })
+      const dispose = render(() => {
+        const api = useFloating<HTMLButtonElement>({
+          open,
+          whileElementsMounted: attachSpy,
+        })
 
-      return (
-        <>
-          {() =>
-            open() ? (
-              <button data-testid="reference" ref={api.refs.setReference}>
-                Trigger
-              </button>
-            ) : null}
-          {() =>
-            open() ? (
-              <div data-testid="floating" ref={api.refs.setFloating}>
-                Content
-              </div>
-            ) : null}
-        </>
-      )
-    }, container)
+        return (
+          <>
+            {() =>
+              open() ? (
+                <button data-testid="reference" ref={api.refs.setReference}>
+                  Trigger
+                </button>
+              ) : null
+            }
+            {() =>
+              open() ? (
+                <div data-testid="floating" ref={api.refs.setFloating}>
+                  Content
+                </div>
+              ) : null
+            }
+          </>
+        )
+      }, container)
 
-    await flush()
+      await flush()
 
-    expect(attachSpy).toHaveBeenCalledTimes(1)
+      expect(attachSpy).toHaveBeenCalledTimes(1)
 
-    open(false)
-    await flush()
+      open(false)
+      await flush()
 
-    expect(cleanupSpy).toHaveBeenCalledTimes(1)
+      expect(cleanupSpy).toHaveBeenCalledTimes(1)
 
-    dispose()
+      dispose()
     })
   })
 
@@ -569,9 +530,7 @@ describe('@fictjs/floating-ui-dom', () => {
   it('tracks isPositioned across repeated open transitions', async () => {
     const open = createSignal(false)
     const seen: boolean[] = []
-    let floating:
-      | ReturnType<typeof useFloating<HTMLButtonElement>>
-      | undefined
+    let floating: ReturnType<typeof useFloating<HTMLButtonElement>> | undefined
 
     const dispose = render(() => {
       const api = useFloating<HTMLButtonElement>({ open })
@@ -586,10 +545,7 @@ describe('@fictjs/floating-ui-dom', () => {
           <button ref={api.refs.setReference} onClick={() => open(!open())}>
             Toggle
           </button>
-          {() =>
-            open() ? (
-              <div ref={api.refs.setFloating}>Content</div>
-            ) : null}
+          {() => (open() ? <div ref={api.refs.setFloating}>Content</div> : null)}
         </>
       )
     }, container)
@@ -776,7 +732,11 @@ describe('@fictjs/floating-ui-dom', () => {
       return (
         <>
           <div data-testid="reference" ref={floating.refs.setReference} />
-          <div data-testid="floating" ref={floating.refs.setFloating} style={floating.floatingStyles} />
+          <div
+            data-testid="floating"
+            ref={floating.refs.setFloating}
+            style={floating.floatingStyles}
+          />
         </>
       )
     }, container)

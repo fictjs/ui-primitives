@@ -58,9 +58,7 @@
     "@floating-ui/dom": "^1.7.6"
   },
   "devDependencies": {
-    "@fictjs/eslint-config": "workspace:*",
-    "@fictjs/runtime": "link:../../../packages/runtime",
-    "@fictjs/tsconfig": "workspace:*",
+    "@fictjs/runtime": "^0.17.0",
     "jsdom": "^28.1.0"
   }
 }

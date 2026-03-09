@@ -86,9 +86,6 @@ importers:
       '@eslint/js':
         specifier: 'catalog:'
         version: 10.0.1(eslint@10.0.3(jiti@2.6.1))
-      '@fictjs/eslint-config':
-        specifier: workspace:*
-        version: link:packages/eslint-config
       '@types/node':
         specifier: 'catalog:'
         version: 25.3.5
@@ -141,15 +138,9 @@ importers:
         specifier: workspace:*
         version: link:../fict-style-singleton
     devDependencies:
-      '@fictjs/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
       '@fictjs/runtime':
         specifier: ^0.17.0
         version: 0.17.0
-      '@fictjs/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
       '@fictjs/vite-plugin':
         specifier: ^0.17.0
         version: 0.17.0(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(yaml@2.8.2))
@@ -169,12 +160,6 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
     devDependencies:
-      '@fictjs/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@fictjs/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
       fict:
         specifier: ^0.17.0
         version: 0.17.0
@@ -188,74 +173,32 @@ importers:
         specifier: ^1.7.6
         version: 1.7.6
     devDependencies:
-      '@fictjs/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
       '@fictjs/runtime':
-        specifier: link:../../../packages/runtime
-        version: link:../../../packages/runtime
-      '@fictjs/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
+        specifier: ^0.17.0
+        version: 0.17.0
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
 
   libs/use-callback-ref:
     devDependencies:
-      '@fictjs/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
       '@fictjs/runtime':
-        specifier: link:../../../packages/runtime
-        version: link:../../../packages/runtime
-      '@fictjs/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
+        specifier: ^0.17.0
+        version: 0.17.0
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
 
   libs/use-sidecar:
     devDependencies:
-      '@fictjs/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
       '@fictjs/runtime':
         specifier: 'catalog:'
         version: 0.17.0
-      '@fictjs/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
 
-  packages/eslint-config:
-    dependencies:
-      '@eslint/js':
-        specifier: 'catalog:'
-        version: 10.0.1(eslint@10.0.3(jiti@2.6.1))
-      eslint:
-        specifier: ^10.0.0
-        version: 10.0.3(jiti@2.6.1)
-      globals:
-        specifier: 'catalog:'
-        version: 17.4.0
-      typescript-eslint:
-        specifier: 'catalog:'
-        version: 8.56.1(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)
-
-  packages/tsconfig: {}
-
-  packages/ui-primitives:
-    devDependencies:
-      '@fictjs/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@fictjs/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
+  packages/ui-primitives: {}
 
 packages:
 

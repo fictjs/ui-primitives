@@ -56,8 +56,6 @@
     "fict": "^0.17.0"
   },
   "devDependencies": {
-    "@fictjs/eslint-config": "workspace:*",
-    "@fictjs/tsconfig": "workspace:*",
     "fict": "^0.17.0",
     "jsdom": "^28.1.0"
   }

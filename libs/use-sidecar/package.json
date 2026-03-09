@@ -47,8 +47,6 @@
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",
-    "@fictjs/eslint-config": "workspace:*",
-    "@fictjs/tsconfig": "workspace:*",
     "jsdom": "catalog:"
   }
 }

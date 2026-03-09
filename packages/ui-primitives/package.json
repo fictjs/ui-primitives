@@ -48,9 +48,5 @@
     "test:coverage": "vitest run --config ./vitest.config.ts --coverage",
     "test:watch": "vitest --config ./vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
-  },
-  "devDependencies": {
-    "@fictjs/eslint-config": "workspace:*",
-    "@fictjs/tsconfig": "workspace:*"
   }
 }

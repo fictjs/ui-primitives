@@ -3,4 +3,10 @@ node_modules
 .turbo
 coverage
 dist
+floating-ui
 pnpm-lock.yaml
+react-remove-scroll
+react-remove-scroll-bar
+react-style-singleton
+use-callback-ref
+use-sidecar

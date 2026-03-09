@@ -80,27 +80,28 @@ describe('@fictjs/fict-style-singleton', () => {
     const createElement = document.createElement.bind(document)
     let cssText = ''
 
-    const createElementSpy = vi
-      .spyOn(document, 'createElement')
-      .mockImplementation(((tagName: string, options?: ElementCreationOptions) => {
-        const element = createElement(tagName, options)
+    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation(((
+      tagName: string,
+      options?: ElementCreationOptions,
+    ) => {
+      const element = createElement(tagName, options)
 
-        if (tagName === 'style') {
-          Object.defineProperty(element, 'styleSheet', {
-            configurable: true,
-            value: {
-              get cssText() {
-                return cssText
-              },
-              set cssText(value: string) {
-                cssText = value
-              },
+      if (tagName === 'style') {
+        Object.defineProperty(element, 'styleSheet', {
+          configurable: true,
+          value: {
+            get cssText() {
+              return cssText
             },
-          })
-        }
+            set cssText(value: string) {
+              cssText = value
+            },
+          },
+        })
+      }
 
-        return element
-      }) as typeof document.createElement)
+      return element
+    }) as typeof document.createElement)
 
     try {
       const sheet = stylesheetSingleton()
@@ -164,10 +165,7 @@ describe('@fictjs/fict-style-singleton', () => {
     const styles = createSignal('body { color: red; }')
     const container = document.createElement('div')
 
-    const dispose = render(
-      () => <Style styles={prop(() => styles())} />,
-      container,
-    )
+    const dispose = render(() => <Style styles={prop(() => styles())} />, container)
 
     expect(getStyleText()).toBe('body { color: red; }')
 
@@ -184,10 +182,7 @@ describe('@fictjs/fict-style-singleton', () => {
     const styles = createSignal('body { color: red; }')
     const container = document.createElement('div')
 
-    const dispose = render(
-      () => <Style styles={prop(() => styles())} dynamic />,
-      container,
-    )
+    const dispose = render(() => <Style styles={prop(() => styles())} dynamic />, container)
 
     expect(getStyleText()).toBe('body { color: red; }')
 
@@ -228,7 +223,10 @@ describe('@fictjs/fict-style-singleton', () => {
     const container = document.createElement('div')
 
     function App() {
-      useStyle(() => styles(), () => dynamic())
+      useStyle(
+        () => styles(),
+        () => dynamic(),
+      )
       return <div>toggle-dynamic</div>
     }
 

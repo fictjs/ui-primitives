@@ -37,7 +37,6 @@
     }
   },
   "devDependencies": {
-    "@fictjs/eslint-config": "workspace:*",
     "@changesets/cli": "catalog:",
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
