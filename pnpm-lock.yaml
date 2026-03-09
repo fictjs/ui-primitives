@@ -254,6 +254,77 @@ importers:
         specifier: 'catalog:'
         version: 28.1.0
 
+  packages/label:
+    dependencies:
+      '@fictjs/primitive':
+        specifier: workspace:*
+        version: link:../primitive
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/portal:
+    dependencies:
+      '@fictjs/primitive':
+        specifier: workspace:*
+        version: link:../primitive
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/presence:
+    dependencies:
+      '@fictjs/compose-refs':
+        specifier: workspace:*
+        version: link:../compose-refs
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/primitive:
+    dependencies:
+      '@fictjs/slot':
+        specifier: workspace:*
+        version: link:../slot
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/slot:
+    dependencies:
+      '@fictjs/compose-refs':
+        specifier: workspace:*
+        version: link:../compose-refs
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
   packages/use-callback-ref:
     dependencies:
       '@fictjs/use-layout-effect':
@@ -332,6 +403,19 @@ importers:
       '@fictjs/use-layout-effect':
         specifier: workspace:*
         version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
+  packages/visually-hidden:
+    dependencies:
+      '@fictjs/primitive':
+        specifier: workspace:*
+        version: link:../primitive
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
