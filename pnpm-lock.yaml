@@ -662,6 +662,43 @@ importers:
         specifier: 'catalog:'
         version: 28.1.0
 
+  packages/password-toggle-field:
+    dependencies:
+      '@fictjs/compose-refs':
+        specifier: workspace:*
+        version: link:../compose-refs
+      '@fictjs/context':
+        specifier: workspace:*
+        version: link:../context
+      '@fictjs/core-primitive':
+        specifier: workspace:*
+        version: link:../core-primitive
+      '@fictjs/id':
+        specifier: workspace:*
+        version: link:../id
+      '@fictjs/primitive':
+        specifier: workspace:*
+        version: link:../primitive
+      '@fictjs/use-controllable-state':
+        specifier: workspace:*
+        version: link:../use-controllable-state
+      '@fictjs/use-effect-event':
+        specifier: workspace:*
+        version: link:../use-effect-event
+      '@fictjs/use-is-hydrated':
+        specifier: workspace:*
+        version: link:../use-is-hydrated
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
   packages/popover:
     dependencies:
       '@fictjs/compose-refs':
