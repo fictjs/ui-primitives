@@ -272,6 +272,31 @@ importers:
         specifier: 'catalog:'
         version: 28.1.0
 
+  packages/avatar:
+    dependencies:
+      '@fictjs/context':
+        specifier: workspace:*
+        version: link:../context
+      '@fictjs/primitive':
+        specifier: workspace:*
+        version: link:../primitive
+      '@fictjs/use-callback-ref':
+        specifier: workspace:*
+        version: link:../use-callback-ref
+      '@fictjs/use-is-hydrated':
+        specifier: workspace:*
+        version: link:../use-is-hydrated
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
   packages/compose-refs:
     devDependencies:
       '@fictjs/runtime':
