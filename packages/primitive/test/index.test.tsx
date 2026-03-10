@@ -41,6 +41,27 @@ describe('@fictjs/primitive', () => {
     expect(link?.getAttribute('href')).toBe('/docs')
   })
 
+  it('forwards refs to the rendered DOM element and cleans them up on unmount', () => {
+    const calls: Array<string | null> = []
+    const container = document.createElement('div')
+
+    const dispose = render(() => (
+      <Primitive.button
+        ref={(node) => {
+          calls.push(node?.tagName ?? null)
+        }}
+      >
+        Open
+      </Primitive.button>
+    ), container)
+
+    expect(calls).toEqual(['BUTTON'])
+
+    dispose()
+
+    expect(calls).toEqual(['BUTTON', null])
+  })
+
   it('dispatches custom events immediately', () => {
     const target = document.createElement('button')
     const handleCustomEvent = vi.fn()
