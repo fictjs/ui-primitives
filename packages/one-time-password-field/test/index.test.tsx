@@ -1,0 +1,157 @@
+/** @jsxImportSource @fictjs/runtime */
+
+import { afterEach, describe, expect, it } from 'vitest'
+
+import { render } from '@fictjs/runtime'
+
+import { HiddenInput, Input, Root } from '../src/index.js'
+
+function changeInput(target: HTMLInputElement, value: string): void {
+  target.value = value
+  target.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }))
+  target.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }))
+}
+
+function paste(target: Element, value: string): void {
+  const event = new Event('paste', { bubbles: true, cancelable: true }) as ClipboardEvent & {
+    clipboardData: DataTransfer
+  }
+  Object.defineProperty(event, 'clipboardData', {
+    value: {
+      getData: () => value,
+    },
+  })
+  target.dispatchEvent(event)
+}
+
+async function waitForEffects(cycles = 6): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 0))
+  for (let index = 0; index < cycles; index++) {
+    await new Promise<void>((resolve) => {
+      if (typeof queueMicrotask === 'function') {
+        queueMicrotask(resolve)
+        return
+      }
+
+      Promise.resolve().then(resolve)
+    })
+  }
+}
+
+describe('@fictjs/one-time-password-field', () => {
+  const cleanups: Array<() => void> = []
+
+  function mount(view: Parameters<typeof render>[0], container: HTMLElement): void {
+    cleanups.push(render(view, container))
+  }
+
+  afterEach(() => {
+    while (cleanups.length > 0) {
+      cleanups.pop()?.()
+    }
+
+    document.body.innerHTML = ''
+  })
+
+  it('updates the hidden input as characters are entered', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(() => (
+      <Root>
+        <Input />
+        <Input />
+        <Input />
+        <HiddenInput name="code" />
+      </Root>
+    ), container)
+
+    await waitForEffects()
+
+    const inputs = Array.from(
+      container.querySelectorAll('input:not([type="hidden"])'),
+    ) as HTMLInputElement[]
+    const hiddenInput = container.querySelector('input[type="hidden"]') as HTMLInputElement
+
+    changeInput(inputs[0] as HTMLInputElement, '1')
+    await waitForEffects()
+    changeInput(inputs[1] as HTMLInputElement, '2')
+    await waitForEffects()
+    changeInput(inputs[2] as HTMLInputElement, '3')
+    await waitForEffects()
+
+    expect(hiddenInput.value).toBe('123')
+  })
+
+  it('masks input values when type is password and mirrors them to the hidden input', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(() => (
+      <Root type="password">
+        <Input />
+        <HiddenInput name="code" />
+      </Root>
+    ), container)
+
+    await waitForEffects()
+
+    const input = container.querySelector('input:not([type="hidden"])') as HTMLInputElement
+    const hiddenInput = container.querySelector('input[type="hidden"]') as HTMLInputElement
+
+    changeInput(input, '7')
+    await waitForEffects()
+
+    expect(input.type).toBe('password')
+    expect(hiddenInput.value).toBe('7')
+  })
+
+  it('disables all visible inputs from the root and supports paste distribution', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(() => (
+      <Root disabled>
+        <Input />
+        <Input />
+        <Input />
+        <HiddenInput name="code" />
+      </Root>
+    ), container)
+
+    await waitForEffects()
+
+    let inputs = Array.from(
+      container.querySelectorAll('input:not([type="hidden"])'),
+    ) as HTMLInputElement[]
+    inputs.forEach((input) => {
+      expect(input.getAttribute('disabled')).toBe('')
+    })
+
+    const cleanup = cleanups.pop()
+    cleanup?.()
+    container.innerHTML = ''
+
+    mount(() => (
+      <Root>
+        <Input />
+        <Input />
+        <Input />
+        <HiddenInput name="code" />
+      </Root>
+    ), container)
+
+    await waitForEffects()
+
+    inputs = Array.from(
+      container.querySelectorAll('input:not([type="hidden"])'),
+    ) as HTMLInputElement[]
+    const hiddenInput = container.querySelector('input[type="hidden"]') as HTMLInputElement
+
+    paste(container.querySelector('[role="group"]') as HTMLElement, '1 2 3')
+    await waitForEffects()
+
+    expect(inputs.map((input) => input.value).join(',')).toBe('1,2,3')
+    expect(hiddenInput.value).toBe('123')
+  })
+})
