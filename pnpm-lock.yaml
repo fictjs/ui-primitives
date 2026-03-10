@@ -290,6 +290,12 @@ importers:
         specifier: 'catalog:'
         version: 28.1.0
 
+  packages/core-primitive:
+    devDependencies:
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
   packages/direction:
     devDependencies:
       '@fictjs/runtime':
