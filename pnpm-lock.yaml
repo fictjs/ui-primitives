@@ -470,6 +470,31 @@ importers:
         specifier: 'catalog:'
         version: 28.1.0
 
+  packages/context-menu:
+    dependencies:
+      '@fictjs/context':
+        specifier: workspace:*
+        version: link:../context
+      '@fictjs/core-primitive':
+        specifier: workspace:*
+        version: link:../core-primitive
+      '@fictjs/menu':
+        specifier: workspace:*
+        version: link:../menu
+      '@fictjs/primitive':
+        specifier: workspace:*
+        version: link:../primitive
+      '@fictjs/use-controllable-state':
+        specifier: workspace:*
+        version: link:../use-controllable-state
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
   packages/core-primitive:
     devDependencies:
       jsdom:

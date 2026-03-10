@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@fictjs/runtime",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@fictjs/context-menu": ["./src/index.ts"],
+      "@fictjs/context": ["../context/src/index.ts"],
+      "@fictjs/core-primitive": ["../core-primitive/src/index.ts"],
+      "@fictjs/menu": ["../menu/dist/index.d.ts"],
+      "@fictjs/primitive": ["../primitive/src/index.tsx"],
+      "@fictjs/use-controllable-state": ["../use-controllable-state/src/index.ts"],
+      "@fictjs/runtime": ["../../../packages/runtime/dist/index.d.ts"],
+      "@fictjs/runtime/advanced": ["../../../packages/runtime/dist/advanced.d.ts"],
+      "@fictjs/runtime/jsx-runtime": ["../../../packages/runtime/dist/jsx-runtime.d.ts"],
+      "@fictjs/runtime/jsx-dev-runtime": ["../../../packages/runtime/dist/jsx-dev-runtime.d.ts"]
+    },
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "test/**/*.ts",
+    "test/**/*.tsx",
+    "tsup.config.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": ["coverage", "dist"]
+}
