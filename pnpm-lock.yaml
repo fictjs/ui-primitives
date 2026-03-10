@@ -1136,6 +1136,181 @@ importers:
         specifier: 'catalog:'
         version: 28.1.0
 
+  packages/radix-ui:
+    dependencies:
+      '@fictjs/accessible-icon':
+        specifier: workspace:*
+        version: link:../accessible-icon
+      '@fictjs/accordion':
+        specifier: workspace:*
+        version: link:../accordion
+      '@fictjs/alert-dialog':
+        specifier: workspace:*
+        version: link:../alert-dialog
+      '@fictjs/arrow':
+        specifier: workspace:*
+        version: link:../arrow
+      '@fictjs/aspect-ratio':
+        specifier: workspace:*
+        version: link:../aspect-ratio
+      '@fictjs/avatar':
+        specifier: workspace:*
+        version: link:../avatar
+      '@fictjs/checkbox':
+        specifier: workspace:*
+        version: link:../checkbox
+      '@fictjs/collapsible':
+        specifier: workspace:*
+        version: link:../collapsible
+      '@fictjs/collection':
+        specifier: workspace:*
+        version: link:../collection
+      '@fictjs/compose-refs':
+        specifier: workspace:*
+        version: link:../compose-refs
+      '@fictjs/context':
+        specifier: workspace:*
+        version: link:../context
+      '@fictjs/context-menu':
+        specifier: workspace:*
+        version: link:../context-menu
+      '@fictjs/core-primitive':
+        specifier: workspace:*
+        version: link:../core-primitive
+      '@fictjs/dialog':
+        specifier: workspace:*
+        version: link:../dialog
+      '@fictjs/direction':
+        specifier: workspace:*
+        version: link:../direction
+      '@fictjs/dismissable-layer':
+        specifier: workspace:*
+        version: link:../dismissable-layer
+      '@fictjs/dropdown-menu':
+        specifier: workspace:*
+        version: link:../dropdown-menu
+      '@fictjs/focus-guards':
+        specifier: workspace:*
+        version: link:../focus-guards
+      '@fictjs/focus-scope':
+        specifier: workspace:*
+        version: link:../focus-scope
+      '@fictjs/form':
+        specifier: workspace:*
+        version: link:../form
+      '@fictjs/hover-card':
+        specifier: workspace:*
+        version: link:../hover-card
+      '@fictjs/label':
+        specifier: workspace:*
+        version: link:../label
+      '@fictjs/menu':
+        specifier: workspace:*
+        version: link:../menu
+      '@fictjs/menubar':
+        specifier: workspace:*
+        version: link:../menubar
+      '@fictjs/navigation-menu':
+        specifier: workspace:*
+        version: link:../navigation-menu
+      '@fictjs/one-time-password-field':
+        specifier: workspace:*
+        version: link:../one-time-password-field
+      '@fictjs/password-toggle-field':
+        specifier: workspace:*
+        version: link:../password-toggle-field
+      '@fictjs/popover':
+        specifier: workspace:*
+        version: link:../popover
+      '@fictjs/popper':
+        specifier: workspace:*
+        version: link:../popper
+      '@fictjs/portal':
+        specifier: workspace:*
+        version: link:../portal
+      '@fictjs/presence':
+        specifier: workspace:*
+        version: link:../presence
+      '@fictjs/primitive':
+        specifier: workspace:*
+        version: link:../primitive
+      '@fictjs/progress':
+        specifier: workspace:*
+        version: link:../progress
+      '@fictjs/radio-group':
+        specifier: workspace:*
+        version: link:../radio-group
+      '@fictjs/roving-focus':
+        specifier: workspace:*
+        version: link:../roving-focus
+      '@fictjs/scroll-area':
+        specifier: workspace:*
+        version: link:../scroll-area
+      '@fictjs/select':
+        specifier: workspace:*
+        version: link:../select
+      '@fictjs/separator':
+        specifier: workspace:*
+        version: link:../separator
+      '@fictjs/slider':
+        specifier: workspace:*
+        version: link:../slider
+      '@fictjs/slot':
+        specifier: workspace:*
+        version: link:../slot
+      '@fictjs/switch':
+        specifier: workspace:*
+        version: link:../switch
+      '@fictjs/tabs':
+        specifier: workspace:*
+        version: link:../tabs
+      '@fictjs/toast':
+        specifier: workspace:*
+        version: link:../toast
+      '@fictjs/toggle':
+        specifier: workspace:*
+        version: link:../toggle
+      '@fictjs/toggle-group':
+        specifier: workspace:*
+        version: link:../toggle-group
+      '@fictjs/toolbar':
+        specifier: workspace:*
+        version: link:../toolbar
+      '@fictjs/tooltip':
+        specifier: workspace:*
+        version: link:../tooltip
+      '@fictjs/use-callback-ref':
+        specifier: workspace:*
+        version: link:../use-callback-ref
+      '@fictjs/use-controllable-state':
+        specifier: workspace:*
+        version: link:../use-controllable-state
+      '@fictjs/use-effect-event':
+        specifier: workspace:*
+        version: link:../use-effect-event
+      '@fictjs/use-escape-keydown':
+        specifier: workspace:*
+        version: link:../use-escape-keydown
+      '@fictjs/use-is-hydrated':
+        specifier: workspace:*
+        version: link:../use-is-hydrated
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+      '@fictjs/use-size':
+        specifier: workspace:*
+        version: link:../use-size
+      '@fictjs/visually-hidden':
+        specifier: workspace:*
+        version: link:../visually-hidden
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
   packages/rect:
     devDependencies:
       jsdom:
