@@ -13,8 +13,9 @@ import { createSignal } from '@fictjs/runtime/advanced'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
 function usePrevious<T>(value: MaybeAccessor<T>): () => T | undefined {
-  const previous = createSignal<T | undefined>(undefined)
-  let current = readValue(value)
+  const initialValue = readValue(value)
+  const previous = createSignal<T | undefined>(initialValue)
+  let current = initialValue
 
   useLayoutEffect(() => {
     const next = readValue(value)

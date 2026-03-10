@@ -28,7 +28,7 @@ describe('@fictjs/use-previous', () => {
       return <div />
     }, document.createElement('div'))
 
-    expect(previous?.()).toBeUndefined()
+    expect(previous?.()).toBe(1)
 
     count(2)
     await tick()
