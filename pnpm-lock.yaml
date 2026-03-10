@@ -368,6 +368,28 @@ importers:
         specifier: 'catalog:'
         version: 28.1.0
 
+  packages/collection:
+    dependencies:
+      '@fictjs/compose-refs':
+        specifier: workspace:*
+        version: link:../compose-refs
+      '@fictjs/context':
+        specifier: workspace:*
+        version: link:../context
+      '@fictjs/slot':
+        specifier: workspace:*
+        version: link:../slot
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
   packages/compose-refs:
     devDependencies:
       '@fictjs/runtime':
