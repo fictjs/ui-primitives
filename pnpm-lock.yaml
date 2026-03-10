@@ -731,6 +731,34 @@ importers:
         specifier: 'catalog:'
         version: 28.1.0
 
+  packages/toggle-group:
+    dependencies:
+      '@fictjs/context':
+        specifier: workspace:*
+        version: link:../context
+      '@fictjs/direction':
+        specifier: workspace:*
+        version: link:../direction
+      '@fictjs/primitive':
+        specifier: workspace:*
+        version: link:../primitive
+      '@fictjs/roving-focus':
+        specifier: workspace:*
+        version: link:../roving-focus
+      '@fictjs/toggle':
+        specifier: workspace:*
+        version: link:../toggle
+      '@fictjs/use-controllable-state':
+        specifier: workspace:*
+        version: link:../use-controllable-state
+    devDependencies:
+      '@fictjs/runtime':
+        specifier: 'catalog:'
+        version: 0.17.0
+      jsdom:
+        specifier: 'catalog:'
+        version: 28.1.0
+
   packages/use-callback-ref:
     dependencies:
       '@fictjs/use-layout-effect':
