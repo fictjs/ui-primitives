@@ -1,0 +1,215 @@
+/** @jsxImportSource @fictjs/runtime */
+
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { render } from '@fictjs/runtime'
+
+const hideOthersMock = vi.hoisted(() => vi.fn(() => () => {}))
+
+vi.mock('aria-hidden', () => ({
+  hideOthers: hideOthersMock,
+}))
+
+vi.mock('@fictjs/fict-remove-scroll', () => ({
+  RemoveScroll: (props: { children?: unknown }) => props.children ?? null,
+}))
+
+vi.mock('@fictjs/popper', async () => {
+  const { Primitive } = await import('@fictjs/primitive')
+
+  const Popper = (props: { children?: unknown }) => props.children ?? null
+  const PopperAnchor = (props: Record<string, unknown>) => (
+    <Primitive.div {...props} data-popper-anchor="" />
+  )
+  const PopperContent = (props: Record<string, unknown>) => (
+    <Primitive.div {...props} data-popper-content="" />
+  )
+  const PopperArrow = (props: Record<string, unknown>) => (
+    <Primitive.svg {...props} data-popper-arrow="" />
+  )
+
+  return {
+    createPopperScope: () => () => ({}),
+    Popper,
+    PopperAnchor,
+    PopperContent,
+    PopperArrow,
+    Root: Popper,
+    Anchor: PopperAnchor,
+    Content: PopperContent,
+    Arrow: PopperArrow,
+  }
+})
+
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverArrow,
+  PopoverClose,
+  PopoverContent,
+  PopoverPortal,
+  PopoverTrigger,
+} from '../src/index.js'
+
+function click(target: Element): void {
+  target.dispatchEvent(
+    new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    }),
+  )
+}
+
+function pressEscape(target: Document): void {
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      key: 'Escape',
+    }),
+  )
+}
+
+async function flushEffects(cycles = 4): Promise<void> {
+  for (let index = 0; index < cycles; index++) {
+    await new Promise<void>((resolve) => {
+      if (typeof queueMicrotask === 'function') {
+        queueMicrotask(resolve)
+        return
+      }
+
+      Promise.resolve().then(resolve)
+    })
+  }
+}
+
+async function waitForEffects(): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 0))
+  await flushEffects()
+}
+
+describe('@fictjs/popover', () => {
+  const cleanups: Array<() => void> = []
+
+  function mount(view: Parameters<typeof render>[0], container: HTMLElement): void {
+    cleanups.push(render(view, container))
+  }
+
+  afterEach(() => {
+    while (cleanups.length > 0) {
+      cleanups.pop()?.()
+    }
+
+    document.body.innerHTML = ''
+    hideOthersMock.mockClear()
+    vi.clearAllMocks()
+  })
+
+  it('opens in a portal and closes via PopoverClose', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    mount(() => (
+      <Popover>
+        <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+        <PopoverPortal container={portalRoot}>
+          <PopoverContent data-testid="content">
+            <PopoverArrow data-testid="arrow" />
+            <PopoverClose data-testid="close">Close</PopoverClose>
+          </PopoverContent>
+        </PopoverPortal>
+      </Popover>
+    ), container)
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+
+    click(trigger)
+    await waitForEffects()
+
+    const content = portalRoot.querySelector('[data-testid="content"]') as HTMLDivElement
+    expect(content).not.toBeNull()
+    expect(content.getAttribute('role')).toBe('dialog')
+    expect(content.getAttribute('data-state')).toBe('open')
+    expect(content.getAttribute('id')).toBe(trigger.getAttribute('aria-controls'))
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(portalRoot.querySelector('[data-testid="arrow"]')).not.toBeNull()
+
+    click(portalRoot.querySelector('[data-testid="close"]') as HTMLButtonElement)
+    await waitForEffects()
+
+    expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(hideOthersMock).not.toHaveBeenCalled()
+  })
+
+  it('wraps the trigger in a default popper anchor when no custom anchor exists', () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(() => (
+      <Popover>
+        <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+      </Popover>
+    ), container)
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    expect(trigger.hasAttribute('data-popper-anchor')).toBe(true)
+  })
+
+  it('uses PopoverAnchor instead of wrapping the trigger', () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(() => (
+      <Popover>
+        <PopoverAnchor data-testid="anchor">Anchor</PopoverAnchor>
+        <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+      </Popover>
+    ), container)
+
+    return waitForEffects().then(() => {
+      const anchor = container.querySelector('[data-testid="anchor"]') as HTMLDivElement
+      const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+      expect(anchor.hasAttribute('data-popper-anchor')).toBe(true)
+      expect(trigger.hasAttribute('data-popper-anchor')).toBe(false)
+    })
+  })
+
+  it('locks modal focus flow and restores trigger focus on escape', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(() => (
+      <Popover modal>
+        <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+        <PopoverPortal>
+          <PopoverContent data-testid="content">
+            <button data-testid="inside" type="button">
+              Inside
+            </button>
+          </PopoverContent>
+        </PopoverPortal>
+      </Popover>
+    ), container)
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    trigger.focus()
+
+    click(trigger)
+    await waitForEffects()
+
+    expect(document.body.style.pointerEvents).toBe('none')
+    expect(hideOthersMock).toHaveBeenCalledTimes(1)
+
+    pressEscape(document)
+    await waitForEffects()
+    await waitForEffects()
+
+    expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+    expect(document.body.style.pointerEvents).toBe('')
+    expect(document.activeElement).toBe(trigger)
+  })
+})
