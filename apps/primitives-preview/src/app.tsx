@@ -1,4 +1,4 @@
-import type { FictNode } from '@fictjs/runtime'
+import { createEffect, onCleanup, onMount, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import {
@@ -45,51 +45,6 @@ const AVATAR_SRC =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="26" fill="#c66b35"/><circle cx="48" cy="36" r="18" fill="#fffaf3"/><path d="M18 82c8-15 19-22 30-22s22 7 30 22" fill="#fffaf3"/></svg>',
   )
 
-const packageGroups = [
-  {
-    title: 'Accessibility',
-    items: ['accessible-icon', 'label', 'separator', 'slot', 'visually-hidden', 'direction'],
-  },
-  {
-    title: 'Layout & Media',
-    items: ['aspect-ratio', 'avatar', 'portal', 'progress', 'scroll-area'],
-  },
-  {
-    title: 'Inputs & Forms',
-    items: [
-      'accordion',
-      'collapsible',
-      'checkbox',
-      'switch',
-      'slider',
-      'radio-group',
-      'tabs',
-      'toggle',
-      'toggle-group',
-      'form',
-      'one-time-password-field',
-      'password-toggle-field',
-    ],
-  },
-  {
-    title: 'Menus & Overlays',
-    items: [
-      'navigation-menu',
-      'dropdown-menu',
-      'context-menu',
-      'menubar',
-      'select',
-      'toolbar',
-      'dialog',
-      'alert-dialog',
-      'popover',
-      'hover-card',
-      'tooltip',
-      'toast',
-    ],
-  },
-] as const
-
 function Surface(props: {
   eyebrow: string
   title: string
@@ -112,7 +67,7 @@ function DemoCard(props: {
   title: string
   packages: string[]
   note: string
-  span?: 'wide'
+  span?: 'wide' | undefined
   children?: FictNode | FictNode[]
 }): FictNode {
   return (
@@ -564,8 +519,8 @@ function NavigationShowcase(): FictNode {
                 implementation work.
               </p>
             </article>
-            <a class="inline-cta" href="#lab">
-              Jump to the full matrix
+            <a class="inline-cta" href="#/overview">
+              Browse overview
             </a>
           </NavigationMenuUI.Content>
         </NavigationMenuUI.Item>
@@ -656,8 +611,8 @@ function MenubarToolbarShowcase(): FictNode {
       <ToolbarUI.Root class="toolbar-shell" orientation="horizontal">
         <ToolbarUI.Button class="chip-button">Undo</ToolbarUI.Button>
         <ToolbarUI.Separator class="separator-vertical" />
-        <ToolbarUI.Link class="chip-button" href="#lab">
-          Jump to lab
+        <ToolbarUI.Link class="chip-button" href="#/overview">
+          Overview
         </ToolbarUI.Link>
         <ToolbarUI.ToggleGroup class="toggle-group-root" defaultValue="grid" type="single">
           <ToolbarUI.ToggleItem class="toggle-chip" value="grid">
@@ -796,235 +751,1082 @@ function ToastShowcase(): FictNode {
   )
 }
 
-export default function App(): FictNode {
-  return (
-    <div class="page-shell">
-      <div class="ambient ambient-left" />
-      <div class="ambient ambient-right" />
+type GroupDefinition = {
+  slug: string
+  navTitle: string
+  eyebrow: string
+  title: string
+  detail: string
+  summary: string
+  packages: string[]
+}
 
-      <header class="hero">
-        <div class="hero-copy">
-          <span class="hero-kicker">Local Workspace Preview</span>
-          <h1>Fict UI primitives, now with full surface coverage.</h1>
-          <p class="hero-summary">
-            This page previews every public component family exported by `@fictjs/radix-ui`,
-            wired directly to the local `ui-primitives` workspace instead of a published bundle.
+type PackageMeta = {
+  exportName: string
+  summary: string
+  workspacePackage: string
+}
+
+type PackageDefinition = PackageMeta & {
+  slug: string
+  group: string
+  showcaseId: string
+}
+
+type ShowcaseDefinition = {
+  id: string
+  group: string
+  title: string
+  packages: string[]
+  note: string
+  span?: 'wide'
+  render: () => FictNode
+}
+
+type Route =
+  | { kind: 'overview' }
+  | { kind: 'group'; slug: string }
+  | { kind: 'package'; slug: string }
+  | { kind: 'not-found'; slug: string }
+
+const MIRRORED_PACKAGE_COUNT = 59
+
+const GROUPS: GroupDefinition[] = [
+  {
+    slug: 'foundation',
+    navTitle: 'Foundation',
+    eyebrow: 'Foundation',
+    title: 'Accessibility, layout, and low-level composition',
+    detail:
+      'These cards cover the non-flashy primitives that the higher-level packages rely on: semantics, layout shells, directional context, portals, slots, and scroll/progress surfaces.',
+    summary: 'Semantics, layout wrappers, portals, and directional context for the rest of the stack.',
+    packages: [
+      'accessible-icon',
+      'label',
+      'separator',
+      'visually-hidden',
+      'aspect-ratio',
+      'avatar',
+      'slot',
+      'portal',
+      'direction',
+      'progress',
+      'scroll-area',
+    ],
+  },
+  {
+    slug: 'state',
+    navTitle: 'State',
+    eyebrow: 'State',
+    title: 'Disclosure, selection, and form mechanics',
+    detail:
+      'This section covers the high-frequency controls: disclosure widgets, toggles, binary inputs, range inputs, tabs, and compound form fields.',
+    summary: 'Open state, selection state, and form-oriented controls that show most interaction contracts.',
+    packages: [
+      'accordion',
+      'collapsible',
+      'tabs',
+      'checkbox',
+      'switch',
+      'radio-group',
+      'slider',
+      'toggle',
+      'toggle-group',
+      'form',
+      'one-time-password-field',
+      'password-toggle-field',
+    ],
+  },
+  {
+    slug: 'navigation',
+    navTitle: 'Navigation',
+    eyebrow: 'Navigation',
+    title: 'Menus, navigation, and command surfaces',
+    detail:
+      'This is the densest dependency cluster in the repo. Navigation and menu packages stack on top of shared focus, dismissal, portal, and collection primitives.',
+    summary: 'Menus, list-like command surfaces, and navigation shells built on shared focus and layering.',
+    packages: [
+      'navigation-menu',
+      'select',
+      'dropdown-menu',
+      'context-menu',
+      'menubar',
+      'toolbar',
+    ],
+  },
+  {
+    slug: 'overlay',
+    navTitle: 'Overlay',
+    eyebrow: 'Overlay',
+    title: 'Modal, non-modal, and ephemeral layers',
+    detail:
+      'Dialogs, popovers, hover cards, tooltips, and toast are all represented here so portal-backed behavior can be checked from one place.',
+    summary: 'Layered UI surfaces ranging from modal dialogs to short-lived tooltips and toast notifications.',
+    packages: ['dialog', 'alert-dialog', 'popover', 'hover-card', 'tooltip', 'toast'],
+  },
+]
+
+const PACKAGE_META: Record<string, PackageMeta> = {
+  'accessible-icon': {
+    exportName: 'AccessibleIcon',
+    summary: 'Adds an accessible text label to icon-only controls without changing the visible glyph.',
+    workspacePackage: '@fictjs/accessible-icon',
+  },
+  label: {
+    exportName: 'Label',
+    summary: 'Associates text labels with form controls while preserving native labeling behavior.',
+    workspacePackage: '@fictjs/label',
+  },
+  separator: {
+    exportName: 'Separator',
+    summary: 'Renders semantic horizontal or vertical dividers with decorative and non-decorative modes.',
+    workspacePackage: '@fictjs/separator',
+  },
+  slot: {
+    exportName: 'Slot',
+    summary: 'Merges props into a child target so composition can stay declarative without wrapper noise.',
+    workspacePackage: '@fictjs/slot',
+  },
+  'visually-hidden': {
+    exportName: 'VisuallyHidden',
+    summary: 'Keeps content accessible to assistive technology while removing it from the visual layout.',
+    workspacePackage: '@fictjs/visually-hidden',
+  },
+  direction: {
+    exportName: 'Direction',
+    summary: 'Provides LTR and RTL direction context to primitives that need directional awareness.',
+    workspacePackage: '@fictjs/direction',
+  },
+  'aspect-ratio': {
+    exportName: 'AspectRatio',
+    summary: 'Locks media and embedded surfaces to a predictable proportion as their width changes.',
+    workspacePackage: '@fictjs/aspect-ratio',
+  },
+  avatar: {
+    exportName: 'Avatar',
+    summary: 'Coordinates image loading and fallback rendering for profile-like identity surfaces.',
+    workspacePackage: '@fictjs/avatar',
+  },
+  portal: {
+    exportName: 'Portal',
+    summary: 'Mounts content into `document.body` or a supplied container for layered interfaces.',
+    workspacePackage: '@fictjs/portal',
+  },
+  progress: {
+    exportName: 'Progress',
+    summary: 'Exposes an accessible progressbar with determinate and indeterminate state handling.',
+    workspacePackage: '@fictjs/progress',
+  },
+  'scroll-area': {
+    exportName: 'ScrollArea',
+    summary: 'Separates viewport, scrollbars, thumbs, and corner rendering for custom scrolling shells.',
+    workspacePackage: '@fictjs/scroll-area',
+  },
+  accordion: {
+    exportName: 'Accordion',
+    summary: 'Builds structured disclosure stacks in single or multiple-open modes.',
+    workspacePackage: '@fictjs/accordion',
+  },
+  collapsible: {
+    exportName: 'Collapsible',
+    summary: 'Exposes the lower-level open-state disclosure primitive that accordion layers on top of.',
+    workspacePackage: '@fictjs/collapsible',
+  },
+  checkbox: {
+    exportName: 'Checkbox',
+    summary: 'Implements checked and indeterminate states with native form participation.',
+    workspacePackage: '@fictjs/checkbox',
+  },
+  switch: {
+    exportName: 'Switch',
+    summary: 'Represents binary on/off state with switch semantics and hidden form integration.',
+    workspacePackage: '@fictjs/switch',
+  },
+  'radio-group': {
+    exportName: 'RadioGroup',
+    summary: 'Coordinates exclusive selection and keyboard focus movement across grouped options.',
+    workspacePackage: '@fictjs/radio-group',
+  },
+  slider: {
+    exportName: 'Slider',
+    summary: 'Handles ranged values with one or more thumbs, track math, and keyboard interaction.',
+    workspacePackage: '@fictjs/slider',
+  },
+  tabs: {
+    exportName: 'Tabs',
+    summary: 'Provides tablist, trigger, and panel primitives for compact view switching.',
+    workspacePackage: '@fictjs/tabs',
+  },
+  toggle: {
+    exportName: 'Toggle',
+    summary: 'Represents a single pressed-state control with button semantics.',
+    workspacePackage: '@fictjs/toggle',
+  },
+  'toggle-group': {
+    exportName: 'ToggleGroup',
+    summary: 'Coordinates pressed-state items in single or multiple selection models.',
+    workspacePackage: '@fictjs/toggle-group',
+  },
+  form: {
+    exportName: 'Form',
+    summary: 'Composes labels, controls, messages, and submit behavior on top of native validity APIs.',
+    workspacePackage: '@fictjs/form',
+  },
+  'one-time-password-field': {
+    exportName: 'unstable_OneTimePasswordField',
+    summary: 'Splits one-time code entry across slots while preserving a single hidden form value.',
+    workspacePackage: '@fictjs/one-time-password-field',
+  },
+  'password-toggle-field': {
+    exportName: 'unstable_PasswordToggleField',
+    summary: 'Wraps password visibility state so reveal toggles stay aligned with the input field.',
+    workspacePackage: '@fictjs/password-toggle-field',
+  },
+  'navigation-menu': {
+    exportName: 'NavigationMenu',
+    summary: 'Renders information-dense navigation with viewport, indicator, and content panels.',
+    workspacePackage: '@fictjs/navigation-menu',
+  },
+  'dropdown-menu': {
+    exportName: 'DropdownMenu',
+    summary: 'Opens an action menu from a trigger button while preserving menu semantics.',
+    workspacePackage: '@fictjs/dropdown-menu',
+  },
+  'context-menu': {
+    exportName: 'ContextMenu',
+    summary: 'Uses the same menu model for right-click or context-triggered interaction surfaces.',
+    workspacePackage: '@fictjs/context-menu',
+  },
+  menubar: {
+    exportName: 'Menubar',
+    summary: 'Keeps top-level application menus persistent and keyboard navigable.',
+    workspacePackage: '@fictjs/menubar',
+  },
+  select: {
+    exportName: 'Select',
+    summary: 'Coordinates trigger, content, items, and value display for single-choice selection.',
+    workspacePackage: '@fictjs/select',
+  },
+  toolbar: {
+    exportName: 'Toolbar',
+    summary: 'Creates command strips with roving focus and mixed button, link, and toggle items.',
+    workspacePackage: '@fictjs/toolbar',
+  },
+  dialog: {
+    exportName: 'Dialog',
+    summary: 'Implements modal and non-modal dialog patterns with focus management and portals.',
+    workspacePackage: '@fictjs/dialog',
+  },
+  'alert-dialog': {
+    exportName: 'AlertDialog',
+    summary: 'Specializes dialog behavior for confirmation and destructive flows with safer dismissal.',
+    workspacePackage: '@fictjs/alert-dialog',
+  },
+  popover: {
+    exportName: 'Popover',
+    summary: 'Anchors interactive floating content to a trigger while supporting dismissal layering.',
+    workspacePackage: '@fictjs/popover',
+  },
+  'hover-card': {
+    exportName: 'HoverCard',
+    summary: 'Shows richer pointer- or focus-driven previews without promoting them to full dialogs.',
+    workspacePackage: '@fictjs/hover-card',
+  },
+  tooltip: {
+    exportName: 'Tooltip',
+    summary: 'Surfaces terse hint text with provider-managed delay and graceful pointer handling.',
+    workspacePackage: '@fictjs/tooltip',
+  },
+  toast: {
+    exportName: 'Toast',
+    summary: 'Mounts transient notifications into a dedicated viewport with action and close affordances.',
+    workspacePackage: '@fictjs/toast',
+  },
+}
+
+const SHOWCASES: ShowcaseDefinition[] = [
+  {
+    id: 'accessibility-helpers',
+    group: 'foundation',
+    title: 'Accessibility helpers',
+    packages: ['accessible-icon', 'label', 'separator', 'visually-hidden'],
+    note: 'Small primitives that carry a disproportionate amount of semantic weight.',
+    render: AccessibilityFoundationsShowcase,
+  },
+  {
+    id: 'media-framing',
+    group: 'foundation',
+    title: 'Media and framing',
+    packages: ['aspect-ratio', 'avatar'],
+    note: 'Aspect-ratio wrappers and avatar loading/fallback behavior share the same design language.',
+    render: AspectAvatarShowcase,
+  },
+  {
+    id: 'slot-portal-direction',
+    group: 'foundation',
+    title: 'Slot, portal, and direction',
+    packages: ['slot', 'portal', 'direction'],
+    note: 'Composition primitives stay visible here instead of being hidden behind larger components.',
+    render: SlotPortalDirectionShowcase,
+  },
+  {
+    id: 'progress-scroll',
+    group: 'foundation',
+    title: 'Progress and scroll surfaces',
+    packages: ['progress', 'scroll-area'],
+    note: 'Progress feedback and custom scrolling are separate packages but often travel together in app shells.',
+    render: ProgressScrollShowcase,
+  },
+  {
+    id: 'accordion-collapsible',
+    group: 'state',
+    title: 'Accordion and collapsible',
+    packages: ['accordion', 'collapsible'],
+    note: 'Accordion builds on the same core open-state mechanics exposed separately by collapsible.',
+    render: AccordionCollapsibleShowcase,
+  },
+  {
+    id: 'tabs',
+    group: 'state',
+    title: 'Tabs',
+    packages: ['tabs'],
+    note: 'Tabbed content keeps the controlled-state API familiar while expressing a navigation-specific pattern.',
+    render: TabsShowcase,
+  },
+  {
+    id: 'selection-controls',
+    group: 'state',
+    title: 'Binary, choice, and range controls',
+    packages: ['checkbox', 'switch', 'radio-group', 'slider'],
+    note: 'These four packages are the control-heavy edge of the library, including hidden form inputs and roving focus.',
+    render: SelectionControlsShowcase,
+  },
+  {
+    id: 'toggle-families',
+    group: 'state',
+    title: 'Toggle families',
+    packages: ['toggle', 'toggle-group'],
+    note: 'Single toggles and grouped toggles share pressed-state semantics but diverge on selection models.',
+    render: ToggleShowcase,
+  },
+  {
+    id: 'form',
+    group: 'state',
+    title: 'Form composition',
+    packages: ['form'],
+    note: 'Field, control, label, message, and submit stay composable while exposing built-in validity states.',
+    render: FormShowcase,
+  },
+  {
+    id: 'credential-fields',
+    group: 'state',
+    title: 'Credential fields',
+    packages: ['one-time-password-field', 'password-toggle-field'],
+    note: 'Purpose-built field packages cover multi-input OTP entry and password visibility controls.',
+    render: CredentialFieldsShowcase,
+  },
+  {
+    id: 'navigation-menu',
+    group: 'navigation',
+    title: 'Navigation menu',
+    packages: ['navigation-menu'],
+    note: 'Navigation-menu stays the most information-dense package in the public surface, so it gets a wider stage.',
+    span: 'wide',
+    render: NavigationShowcase,
+  },
+  {
+    id: 'select-dropdown',
+    group: 'navigation',
+    title: 'Select and dropdown menu',
+    packages: ['select', 'dropdown-menu'],
+    note: 'Selection menus and action menus differ in semantics, but their layering and keyboard machinery rhyme.',
+    render: SelectDropdownShowcase,
+  },
+  {
+    id: 'context-menu',
+    group: 'navigation',
+    title: 'Context menu',
+    packages: ['context-menu'],
+    note: 'A right-click surface with the same item model as the rest of the menu family.',
+    render: ContextMenuShowcase,
+  },
+  {
+    id: 'menubar-toolbar',
+    group: 'navigation',
+    title: 'Menubar and toolbar',
+    packages: ['menubar', 'toolbar'],
+    note: 'Top-level menu triggers and command strips both depend on disciplined focus order.',
+    render: MenubarToolbarShowcase,
+  },
+  {
+    id: 'dialog',
+    group: 'overlay',
+    title: 'Dialog',
+    packages: ['dialog'],
+    note: 'The standard modal dialog remains the baseline for focus trapping and layered interaction.',
+    render: DialogShowcase,
+  },
+  {
+    id: 'alert-dialog',
+    group: 'overlay',
+    title: 'Alert dialog',
+    packages: ['alert-dialog'],
+    note: 'Alert-dialog narrows the dismissal model and promotes the cancel action into the primary focus target.',
+    render: AlertDialogShowcase,
+  },
+  {
+    id: 'floating-layers',
+    group: 'overlay',
+    title: 'Popover, hover card, and tooltip',
+    packages: ['popover', 'hover-card', 'tooltip'],
+    note: 'Three related floating surfaces with different intent: action panel, rich preview, and terse hint.',
+    render: FloatingLayersShowcase,
+  },
+  {
+    id: 'toast',
+    group: 'overlay',
+    title: 'Toast',
+    packages: ['toast'],
+    note: 'Transient feedback is mounted into a dedicated viewport so it can be verified without leaving the page.',
+    render: ToastShowcase,
+  },
+]
+
+const GROUP_BY_SLUG = Object.fromEntries(
+  GROUPS.map((group) => [group.slug, group]),
+) as Record<string, GroupDefinition>
+
+const SHOWCASE_BY_ID = Object.fromEntries(
+  SHOWCASES.map((showcase) => [showcase.id, showcase]),
+) as Record<string, ShowcaseDefinition>
+
+const PACKAGE_DOCS = Object.fromEntries(
+  Object.entries(PACKAGE_META).map(([slug, meta]) => {
+    const showcase = SHOWCASES.find((entry) => entry.packages.includes(slug))
+
+    if (!showcase) {
+      throw new Error(`Missing showcase for package ${slug}`)
+    }
+
+    return [
+      slug,
+      {
+        ...meta,
+        slug,
+        group: showcase.group,
+        showcaseId: showcase.id,
+      },
+    ]
+  }),
+) as Record<string, PackageDefinition>
+
+function getGroup(slug: string): GroupDefinition {
+  const group = GROUP_BY_SLUG[slug]
+
+  if (!group) {
+    throw new Error(`Unknown group ${slug}`)
+  }
+
+  return group
+}
+
+function getShowcase(id: string): ShowcaseDefinition {
+  const showcase = SHOWCASE_BY_ID[id]
+
+  if (!showcase) {
+    throw new Error(`Unknown showcase ${id}`)
+  }
+
+  return showcase
+}
+
+function getPackageDoc(slug: string): PackageDefinition {
+  const doc = PACKAGE_DOCS[slug]
+
+  if (!doc) {
+    throw new Error(`Unknown package ${slug}`)
+  }
+
+  return doc
+}
+
+function isGroupRoute(route: Route, slug: string): boolean {
+  return route.kind === 'group' && route.slug === slug
+}
+
+function isPackageRoute(route: Route, slug: string): boolean {
+  return route.kind === 'package' && route.slug === slug
+}
+
+function normalizeHash(hash: string): string {
+  const raw = hash.replace(/^#/, '')
+  const path = (raw || '/overview').split('?')[0]?.trim() || '/overview'
+  const normalized = path.startsWith('/') ? path : `/${path}`
+
+  if (normalized === '/') {
+    return '/overview'
+  }
+
+  return normalized.endsWith('/') ? normalized.slice(0, -1) : normalized
+}
+
+function parseRoute(hash: string): Route {
+  const path = normalizeHash(hash)
+
+  if (path === '/overview') {
+    return { kind: 'overview' }
+  }
+
+  if (path.startsWith('/group/')) {
+    const slug = path.slice('/group/'.length)
+    return GROUP_BY_SLUG[slug] ? { kind: 'group', slug } : { kind: 'not-found', slug }
+  }
+
+  if (path.startsWith('/package/')) {
+    const slug = path.slice('/package/'.length)
+    return PACKAGE_DOCS[slug] ? { kind: 'package', slug } : { kind: 'not-found', slug }
+  }
+
+  return { kind: 'not-found', slug: path.replace(/^\//, '') }
+}
+
+function routeHref(route: Exclude<Route, { kind: 'not-found' }> | { kind: 'group'; slug: string } | { kind: 'package'; slug: string }): string {
+  if (route.kind === 'overview') {
+    return '#/overview'
+  }
+
+  if (route.kind === 'group') {
+    return `#/group/${route.slug}`
+  }
+
+  return `#/package/${route.slug}`
+}
+
+function pageTitle(route: Route): string {
+  if (route.kind === 'overview') {
+    return 'Preview Docs Overview'
+  }
+
+  if (route.kind === 'group') {
+    return getGroup(route.slug).navTitle
+  }
+
+  if (route.kind === 'package') {
+    return getPackageDoc(route.slug).exportName
+  }
+
+  return 'Preview Docs'
+}
+
+function routeLabel(route: Route): string {
+  if (route.kind === 'overview') {
+    return 'Overview'
+  }
+
+  if (route.kind === 'group') {
+    return getGroup(route.slug).navTitle
+  }
+
+  if (route.kind === 'package') {
+    return getPackageDoc(route.slug).workspacePackage
+  }
+
+  return 'Not found'
+}
+
+function matchesQuery(slug: string, query: string): boolean {
+  const normalizedQuery = query.trim().toLowerCase()
+
+  if (normalizedQuery.length === 0) {
+    return true
+  }
+
+  const doc = getPackageDoc(slug)
+  const haystack = `${slug} ${doc.exportName} ${doc.summary} ${doc.workspacePackage}`.toLowerCase()
+
+  return haystack.includes(normalizedQuery)
+}
+
+function renderShowcaseCard(showcase: ShowcaseDefinition): FictNode {
+  return (
+    <DemoCard
+      note={showcase.note}
+      packages={showcase.packages}
+      span={showcase.span}
+      title={showcase.title}
+    >
+      {showcase.render()}
+    </DemoCard>
+  )
+}
+
+function Breadcrumbs(props: { items: Array<{ label: string; href?: string }> }): FictNode {
+  return (
+    <nav aria-label="Breadcrumb" class="breadcrumbs">
+      {props.items.map((item, index) => (
+        <>
+          {index > 0 ? <span class="breadcrumb-divider">/</span> : null}
+          {item.href ? <a href={item.href}>{item.label}</a> : <span>{item.label}</span>}
+        </>
+      ))}
+    </nav>
+  )
+}
+
+function Sidebar(props: {
+  route: () => Route
+  query: () => string
+  setQuery: (value: string) => void
+}): FictNode {
+  const currentRoute = () => props.route()
+  const matchingCount = () =>
+    Object.keys(PACKAGE_DOCS).filter((slug) => matchesQuery(slug, props.query())).length
+
+  return (
+    <aside class="docs-sidebar">
+      <div class="sidebar-brand">
+        <span class="hero-kicker">Workspace Docs</span>
+        <strong class="brand-title">Fict UI primitives</strong>
+        <p class="sidebar-meta">
+          Hash-routed docs and playground pages for every public export in `@fictjs/radix-ui`.
+        </p>
+      </div>
+
+      <a
+        class="sidebar-overview"
+        data-active={currentRoute().kind === 'overview' ? 'true' : undefined}
+        href={routeHref({ kind: 'overview' })}
+      >
+        <span>Overview</span>
+        <strong>{Object.keys(PACKAGE_DOCS).length}</strong>
+      </a>
+
+      <div class="search-shell">
+        <label class="field-label" for="package-search">
+          Filter packages
+        </label>
+        <input
+          id="package-search"
+          class="search-input"
+          onInput={(event) => props.setQuery((event.currentTarget as HTMLInputElement).value)}
+          placeholder="checkbox, dialog, tooltip..."
+          type="search"
+          value={props.query()}
+        />
+        <span class="sidebar-hint">{matchingCount()} matching packages</span>
+      </div>
+
+      {GROUPS.map((group) => {
+        const packages = group.packages.filter((slug) => matchesQuery(slug, props.query()))
+
+        if (packages.length === 0) {
+          return null
+        }
+
+        return (
+          <section class="sidebar-section">
+            <div class="sidebar-section-head">
+              <a
+                class="sidebar-group-link"
+                data-active={isGroupRoute(currentRoute(), group.slug) ? 'true' : undefined}
+                href={routeHref({ kind: 'group', slug: group.slug })}
+              >
+                {group.navTitle}
+              </a>
+              <span class="sidebar-count">{packages.length}</span>
+            </div>
+
+            <div class="sidebar-link-list">
+              {packages.map((slug) => {
+                const doc = getPackageDoc(slug)
+                return (
+                  <a
+                    class="sidebar-link"
+                    data-active={isPackageRoute(currentRoute(), slug) ? 'true' : undefined}
+                    href={routeHref({ kind: 'package', slug })}
+                  >
+                    <span>{slug}</span>
+                    <small>{doc.exportName}</small>
+                  </a>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })}
+    </aside>
+  )
+}
+
+function OverviewPage(): FictNode {
+  return (
+    <div class="docs-stack">
+      <section class="page-panel overview-hero">
+        <div class="page-header">
+          <span class="hero-kicker">Preview Docs</span>
+          <h1 class="page-title">Component docs, routing, and live demos in one local site.</h1>
+          <p class="page-summary">
+            Every public component family exported by `@fictjs/radix-ui` now has an addressable
+            docs page under `#/package/...`, plus grouped overview pages under `#/group/...`.
+            Everything still renders directly against the local workspace sources.
           </p>
           <div class="hero-actions">
-            <a class="primary-button" href="#lab">
-              Explore all demos
+            <a class="primary-button" href={routeHref({ kind: 'group', slug: 'foundation' })}>
+              Start with foundation
+            </a>
+            <a class="ghost-button" href={routeHref({ kind: 'package', slug: 'dialog' })}>
+              Open a package page
             </a>
             <code class="command-chip">pnpm preview:dev</code>
           </div>
         </div>
 
-        <aside class="hero-panel">
+        <div class="overview-metrics">
           <div class="metric-row">
-            <strong>59</strong>
-            <span>React-equivalent packages mirrored from Radix in the workspace</span>
+            <strong>{MIRRORED_PACKAGE_COUNT}</strong>
+            <span>Workspace packages mirrored from Radix primitives</span>
           </div>
           <div class="metric-row">
-            <strong>35</strong>
-            <span>Public component families covered in this preview site</span>
+            <strong>{Object.keys(PACKAGE_DOCS).length}</strong>
+            <span>Public component families with dedicated docs routes</span>
           </div>
           <div class="metric-row">
-            <strong>1</strong>
-            <span>Live Vite app pointing at source packages instead of compiled releases</span>
+            <strong>{SHOWCASES.length}</strong>
+            <span>Live demo surfaces shared across overview, group, and package pages</span>
           </div>
-        </aside>
-      </header>
+        </div>
+      </section>
 
-      <section class="catalog-band">
-        {packageGroups.map((group) => (
-          <article class="catalog-group">
-            <span class="catalog-title">{group.title}</span>
+      <section class="group-summary-grid">
+        {GROUPS.map((group) => (
+          <a class="group-summary-card" href={routeHref({ kind: 'group', slug: group.slug })}>
+            <span class="catalog-title">{group.navTitle}</span>
+            <strong>{group.packages.length} packages</strong>
+            <p>{group.summary}</p>
             <div class="catalog-list">
-              {group.items.map((item) => (
-                <span class="catalog-pill">{item}</span>
+              {group.packages.slice(0, 4).map((slug) => (
+                <span class="catalog-pill">{slug}</span>
               ))}
+              {group.packages.length > 4 ? (
+                <span class="catalog-pill">+{group.packages.length - 4} more</span>
+              ) : null}
             </div>
-          </article>
+          </a>
         ))}
       </section>
 
-      <main class="lab" id="lab">
-        <Surface
-          eyebrow="Foundation"
-          title="Accessibility, layout, and low-level composition"
-          detail="These cards cover the non-flashy primitives that the higher-level packages rely on: semantics, layout shells, directional context, portals, slots, and scroll/progress surfaces."
-        >
+      {GROUPS.map((group) => (
+        <Surface detail={group.detail} eyebrow={group.eyebrow} title={group.title}>
           <div class="showcase-grid">
-            <DemoCard
-              title="Accessibility helpers"
-              packages={['accessible-icon', 'label', 'separator', 'visually-hidden']}
-              note="Small primitives that carry a disproportionate amount of semantic weight."
-            >
-              <AccessibilityFoundationsShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Media and framing"
-              packages={['aspect-ratio', 'avatar']}
-              note="Aspect-ratio wrappers and avatar loading/fallback behavior share the same design language."
-            >
-              <AspectAvatarShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Slot, portal, and direction"
-              packages={['slot', 'portal', 'direction']}
-              note="Composition primitives stay visible here instead of being hidden behind larger components."
-            >
-              <SlotPortalDirectionShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Progress and scroll surfaces"
-              packages={['progress', 'scroll-area']}
-              note="Progress feedback and custom scrolling are separate packages but often travel together in app shells."
-            >
-              <ProgressScrollShowcase />
-            </DemoCard>
+            {SHOWCASES.filter((showcase) => showcase.group === group.slug).map(renderShowcaseCard)}
           </div>
         </Surface>
+      ))}
+    </div>
+  )
+}
 
-        <Surface
-          eyebrow="State"
-          title="Disclosure, selection, and form mechanics"
-          detail="This section covers the high-frequency controls: disclosure widgets, toggles, binary inputs, range inputs, tabs, and compound form fields."
-        >
-          <div class="showcase-grid">
-            <DemoCard
-              title="Accordion and collapsible"
-              packages={['accordion', 'collapsible']}
-              note="Accordion builds on the same core open-state mechanics exposed separately by collapsible."
-            >
-              <AccordionCollapsibleShowcase />
-            </DemoCard>
+function GroupPage(props: { group: GroupDefinition }): FictNode {
+  return (
+    <div class="docs-stack">
+      <section class="page-panel">
+        <div class="page-header">
+          <Breadcrumbs
+            items={[
+              { href: routeHref({ kind: 'overview' }), label: 'Overview' },
+              { label: props.group.navTitle },
+            ]}
+          />
+          <span class="hero-kicker">{props.group.eyebrow}</span>
+          <h1 class="page-title">{props.group.title}</h1>
+          <p class="page-summary">{props.group.detail}</p>
+        </div>
 
-            <DemoCard
-              title="Tabs"
-              packages={['tabs']}
-              note="Tabbed content keeps the controlled-state API familiar while expressing a navigation-specific pattern."
-            >
-              <TabsShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Binary, choice, and range controls"
-              packages={['checkbox', 'switch', 'radio-group', 'slider']}
-              note="These four packages are the control-heavy edge of the library, including hidden form inputs and roving focus."
-            >
-              <SelectionControlsShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Toggle families"
-              packages={['toggle', 'toggle-group']}
-              note="Single toggles and grouped toggles share pressed-state semantics but diverge on selection models."
-            >
-              <ToggleShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Form composition"
-              packages={['form']}
-              note="Field, control, label, message, and submit stay composable while exposing built-in and custom validity states."
-            >
-              <FormShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Credential fields"
-              packages={['one-time-password-field', 'password-toggle-field']}
-              note="Purpose-built field packages cover multi-input OTP entry and password visibility controls."
-            >
-              <CredentialFieldsShowcase />
-            </DemoCard>
+        <div class="facts-grid">
+          <div class="fact-card">
+            <span>Packages</span>
+            <strong>{props.group.packages.length}</strong>
           </div>
-        </Surface>
-
-        <Surface
-          eyebrow="Navigation"
-          title="Menus, navigation, and command surfaces"
-          detail="This is the densest dependency cluster in the repo. Navigation and menu packages stack on top of shared focus, dismissal, portal, and collection primitives."
-        >
-          <div class="showcase-grid">
-            <DemoCard
-              note="Navigation-menu stays the most information-dense package in the public surface, so it gets a wider stage."
-              packages={['navigation-menu']}
-              span="wide"
-              title="Navigation menu"
-            >
-              <NavigationShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Select and dropdown menu"
-              packages={['select', 'dropdown-menu']}
-              note="Selection menus and action menus differ in semantics, but their layering and keyboard machinery rhyme."
-            >
-              <SelectDropdownShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Context menu"
-              packages={['context-menu']}
-              note="A right-click surface with the same item model as the rest of the menu family."
-            >
-              <ContextMenuShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Menubar and toolbar"
-              packages={['menubar', 'toolbar']}
-              note="Top-level menu triggers and command strips both depend on disciplined focus order."
-            >
-              <MenubarToolbarShowcase />
-            </DemoCard>
+          <div class="fact-card">
+            <span>Showcases</span>
+            <strong>
+              {SHOWCASES.filter((showcase) => showcase.group === props.group.slug).length}
+            </strong>
           </div>
-        </Surface>
-
-        <Surface
-          eyebrow="Overlay"
-          title="Modal, non-modal, and ephemeral layers"
-          detail="Dialogs, popovers, hover cards, tooltips, and toast are all represented here so portal-backed behavior can be checked from one place."
-        >
-          <div class="showcase-grid">
-            <DemoCard
-              title="Dialog"
-              packages={['dialog']}
-              note="The standard modal dialog remains the baseline for focus trapping and layered interaction."
-            >
-              <DialogShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Alert dialog"
-              packages={['alert-dialog']}
-              note="Alert-dialog narrows the dismissal model and promotes the cancel action into the primary focus target."
-            >
-              <AlertDialogShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Popover, hover card, and tooltip"
-              packages={['popover', 'hover-card', 'tooltip']}
-              note="Three related floating surfaces with different intent: action panel, rich preview, and terse hint."
-            >
-              <FloatingLayersShowcase />
-            </DemoCard>
-
-            <DemoCard
-              title="Toast"
-              packages={['toast']}
-              note="Transient feedback is mounted into a dedicated viewport so it can be verified without leaving the page."
-            >
-              <ToastShowcase />
-            </DemoCard>
+          <div class="fact-card">
+            <span>Section</span>
+            <strong>{props.group.navTitle}</strong>
           </div>
-        </Surface>
-      </main>
+        </div>
+      </section>
+
+      <section class="page-panel">
+        <div class="section-head">
+          <span class="catalog-title">Package Directory</span>
+          <p class="surface-note">Each package page keeps the same live demo surface plus route-specific metadata.</p>
+        </div>
+        <div class="directory-grid">
+          {props.group.packages.map((slug) => {
+            const doc = getPackageDoc(slug)
+            return (
+              <a class="package-tile" href={routeHref({ kind: 'package', slug })}>
+                <div class="package-tile-title">
+                  <h3>{slug}</h3>
+                  <span class="mini-pill">{doc.exportName}</span>
+                </div>
+                <p>{doc.summary}</p>
+                <div class="package-meta">
+                  <span class="catalog-pill">{doc.workspacePackage}</span>
+                </div>
+              </a>
+            )
+          })}
+        </div>
+      </section>
+
+      <Surface
+        detail={`These are the live demo surfaces currently grouped under ${props.group.navTitle}.`}
+        eyebrow={props.group.eyebrow}
+        title={`Live demos for ${props.group.navTitle}`}
+      >
+        <div class="showcase-grid">
+          {SHOWCASES.filter((showcase) => showcase.group === props.group.slug).map(renderShowcaseCard)}
+        </div>
+      </Surface>
+    </div>
+  )
+}
+
+function PackagePage(props: { doc: PackageDefinition }): FictNode {
+  const showcase = getShowcase(props.doc.showcaseId)
+  const group = getGroup(props.doc.group)
+  const relatedPackages = showcase.packages.filter((slug) => slug !== props.doc.slug)
+  const packageIndex = group.packages.indexOf(props.doc.slug)
+  const previousPackage = packageIndex > 0 ? group.packages[packageIndex - 1] : undefined
+  const nextPackage =
+    packageIndex >= 0 && packageIndex < group.packages.length - 1
+      ? group.packages[packageIndex + 1]
+      : undefined
+
+  return (
+    <div class="docs-stack">
+      <section class="page-panel">
+        <div class="page-header">
+          <Breadcrumbs
+            items={[
+              { href: routeHref({ kind: 'overview' }), label: 'Overview' },
+              { href: routeHref({ kind: 'group', slug: group.slug }), label: group.navTitle },
+              { label: props.doc.slug },
+            ]}
+          />
+          <span class="hero-kicker">{group.navTitle}</span>
+          <h1 class="page-title">{props.doc.slug}</h1>
+          <p class="page-summary">{props.doc.summary}</p>
+        </div>
+
+        <div class="facts-grid">
+          <div class="fact-card">
+            <span>Export</span>
+            <strong>{props.doc.exportName}</strong>
+          </div>
+          <div class="fact-card">
+            <span>Workspace package</span>
+            <strong>{props.doc.workspacePackage}</strong>
+          </div>
+          <div class="fact-card">
+            <span>Shared demo</span>
+            <strong>{showcase.title}</strong>
+          </div>
+        </div>
+      </section>
+
+      <div class="detail-layout">
+        <div class="detail-main">
+          <section class="detail-card">
+            <div class="section-head">
+              <span class="catalog-title">Live Demo</span>
+              <p class="surface-note">
+                {relatedPackages.length > 0
+                  ? `This package is previewed on a shared surface with ${relatedPackages.join(', ')}.`
+                  : 'This package has a dedicated demo surface in the preview site.'}
+              </p>
+            </div>
+            {renderShowcaseCard(showcase)}
+          </section>
+        </div>
+
+        <aside class="detail-rail">
+          <section class="detail-card">
+            <div class="section-head">
+              <span class="catalog-title">Package Facts</span>
+            </div>
+            <ul class="detail-list">
+              <li>Docs route: `{routeHref({ kind: 'package', slug: props.doc.slug })}`</li>
+              <li>Section: {group.navTitle}</li>
+              <li>Preview source: `packages/{props.doc.slug}`</li>
+            </ul>
+          </section>
+
+          <section class="detail-card">
+            <div class="section-head">
+              <span class="catalog-title">Related Routes</span>
+            </div>
+            <div class="link-list">
+              <a class="sidebar-link route-link" href={routeHref({ kind: 'group', slug: group.slug })}>
+                <span>{group.navTitle} section</span>
+                <small>{group.packages.length} packages</small>
+              </a>
+              {relatedPackages.map((slug) => (
+                <a class="sidebar-link route-link" href={routeHref({ kind: 'package', slug })}>
+                  <span>{slug}</span>
+                  <small>{getPackageDoc(slug).exportName}</small>
+                </a>
+              ))}
+              {previousPackage ? (
+                <a
+                  class="sidebar-link route-link"
+                  href={routeHref({ kind: 'package', slug: previousPackage })}
+                >
+                  <span>Previous: {previousPackage}</span>
+                  <small>{getPackageDoc(previousPackage).exportName}</small>
+                </a>
+              ) : null}
+              {nextPackage ? (
+                <a class="sidebar-link route-link" href={routeHref({ kind: 'package', slug: nextPackage })}>
+                  <span>Next: {nextPackage}</span>
+                  <small>{getPackageDoc(nextPackage).exportName}</small>
+                </a>
+              ) : null}
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+function NotFoundPage(props: { slug: string }): FictNode {
+  return (
+    <section class="page-panel not-found-panel">
+      <div class="page-header">
+        <Breadcrumbs items={[{ href: routeHref({ kind: 'overview' }), label: 'Overview' }, { label: 'Not found' }]} />
+        <span class="hero-kicker">Missing Route</span>
+        <h1 class="page-title">No preview route for `{props.slug}`.</h1>
+        <p class="page-summary">
+          Use the sidebar to jump to a known group or package page. The overview route still
+          contains the full interactive matrix.
+        </p>
+      </div>
+      <div class="hero-actions">
+        <a class="primary-button" href={routeHref({ kind: 'overview' })}>
+          Back to overview
+        </a>
+      </div>
+    </section>
+  )
+}
+
+export default function App(): FictNode {
+  const route = createSignal<Route>(
+    parseRoute(typeof window === 'undefined' ? '#/overview' : window.location.hash),
+  )
+  const query = createSignal('')
+
+  onMount(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const sync = () => route(parseRoute(window.location.hash))
+
+    sync()
+    window.addEventListener('hashchange', sync)
+
+    onCleanup(() => window.removeEventListener('hashchange', sync))
+  })
+
+  createEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = `Fict UI Primitives Preview · ${pageTitle(route())}`
+    }
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' })
+    }
+  })
+
+  const renderCurrentPage = () => {
+    const currentRoute = route()
+
+    if (currentRoute.kind === 'overview') {
+      return <OverviewPage />
+    }
+
+    if (currentRoute.kind === 'group') {
+      return <GroupPage group={getGroup(currentRoute.slug)} />
+    }
+
+    if (currentRoute.kind === 'package') {
+      return <PackagePage doc={getPackageDoc(currentRoute.slug)} />
+    }
+
+    return <NotFoundPage slug={currentRoute.slug} />
+  }
+
+  return (
+    <div class="page-shell">
+      <a class="skip-link" href="#main-content">
+        Skip to main content
+      </a>
+      <div class="ambient ambient-left" />
+      <div class="ambient ambient-right" />
+
+      <div class="docs-layout">
+        <Sidebar query={query} route={route} setQuery={query} />
+
+        <div class="docs-main-shell">
+          <>
+            {() => {
+              const currentRoute = route()
+
+              return (
+                <header class="docs-topbar">
+                  <div class="topbar-copy">
+                    <span class="hero-kicker">Current Route</span>
+                    <strong class="topbar-title">{routeLabel(currentRoute)}</strong>
+                  </div>
+
+                  <div class="topbar-links">
+                    <a
+                      class="topbar-link"
+                      data-active={currentRoute.kind === 'overview' ? 'true' : undefined}
+                      href={routeHref({ kind: 'overview' })}
+                    >
+                      Overview
+                    </a>
+                    {GROUPS.map((group) => (
+                      <a
+                        class="topbar-link"
+                        data-active={isGroupRoute(currentRoute, group.slug) ? 'true' : undefined}
+                        href={routeHref({ kind: 'group', slug: group.slug })}
+                      >
+                        {group.navTitle}
+                      </a>
+                    ))}
+                    <code class="command-chip">pnpm preview:dev</code>
+                  </div>
+                </header>
+              )
+            }}
+          </>
+
+          <main class="docs-main" id="main-content">
+            <>
+              {() => renderCurrentPage()}
+            </>
+          </main>
+        </div>
+      </div>
     </div>
   )
 }
