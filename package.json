@@ -25,6 +25,7 @@
     "preview:build": "pnpm --filter @fictjs/primitives-preview build",
     "preview:dev": "pnpm --filter @fictjs/primitives-preview dev",
     "preview:preview": "pnpm --filter @fictjs/primitives-preview preview",
+    "preview:test": "pnpm --filter @fictjs/primitives-preview test",
     "prepare": "husky",
     "release": "changeset publish",
     "test": "turbo run test",

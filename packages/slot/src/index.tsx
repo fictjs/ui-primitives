@@ -1,4 +1,4 @@
-import { Fragment, type FictNode, type FictVNode, type JSX } from '@fictjs/runtime'
+import { Fragment, prop, type FictNode, type FictVNode, type JSX } from '@fictjs/runtime'
 
 import { composeRefs, type PossibleRef } from '@fictjs/compose-refs'
 
@@ -25,6 +25,9 @@ interface SlottableComponent {
 }
 
 const SLOTTABLE_IDENTIFIER = Symbol('fict.slot.slottable')
+const SIGNAL_MARKER = Symbol.for('fict:signal')
+const COMPUTED_MARKER = Symbol.for('fict:computed')
+const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
 function isVNode(node: unknown): node is FictVNode {
   return !!node && typeof node === 'object' && 'type' in (node as FictVNode)
@@ -59,6 +62,25 @@ function normalizePropName(name: string): string {
   if (name === 'className') return 'class'
   if (name === 'htmlFor') return 'for'
   return name
+}
+
+function isReactiveValue(value: unknown): value is () => unknown {
+  return (
+    typeof value === 'function' &&
+    ((value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
+      (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
+      (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
+  )
+}
+
+function readValue<T>(value: T): T {
+  if (
+    isReactiveValue(value)
+  ) {
+    return (value as () => T)()
+  }
+
+  return value
 }
 
 function normalizeProps(source: Record<string, unknown> | null | undefined): PropsRecord {
@@ -111,24 +133,43 @@ function mergeProps(slotProps: PropsRecord, childProps: PropsRecord): PropsRecor
     if (isEventProp(key)) {
       if (slotPropValue && childPropValue) {
         overrideProps[key] = (...args: unknown[]) => {
-          const childResult = (childPropValue as (...args: unknown[]) => unknown)(...args)
-          ;(slotPropValue as (...args: unknown[]) => unknown)(...args)
+          const resolvedChild = readValue(childPropValue)
+          const resolvedSlot = readValue(slotPropValue)
+          const childResult =
+            typeof resolvedChild === 'function'
+              ? (resolvedChild as (...args: unknown[]) => unknown)(...args)
+              : undefined
+          if (typeof resolvedSlot === 'function') {
+            ;(resolvedSlot as (...args: unknown[]) => unknown)(...args)
+          }
           return childResult
         }
       } else if (slotPropValue) {
         overrideProps[key] = slotPropValue
       }
     } else if (key === 'style') {
-      const mergedStyle = mergeStyle(slotPropValue, childPropValue)
-      if (mergedStyle !== undefined) {
-        overrideProps[key] = mergedStyle
+      if (isReactiveValue(slotPropValue) || isReactiveValue(childPropValue)) {
+        overrideProps[key] = prop(() => mergeStyle(readValue(slotPropValue), readValue(childPropValue)))
+      } else {
+        const mergedStyle = mergeStyle(slotPropValue, childPropValue)
+        if (mergedStyle !== undefined) {
+          overrideProps[key] = mergedStyle
+        }
       }
     } else if (key === 'class') {
-      const mergedClassName = [toClassName(slotPropValue), toClassName(childPropValue)]
-        .filter(Boolean)
-        .join(' ')
-      if (mergedClassName) {
-        overrideProps[key] = mergedClassName
+      if (isReactiveValue(slotPropValue) || isReactiveValue(childPropValue)) {
+        overrideProps[key] = prop(() =>
+          [toClassName(readValue(slotPropValue)), toClassName(readValue(childPropValue))]
+            .filter(Boolean)
+            .join(' '),
+        )
+      } else {
+        const mergedClassName = [toClassName(slotPropValue), toClassName(childPropValue)]
+          .filter(Boolean)
+          .join(' ')
+        if (mergedClassName) {
+          overrideProps[key] = mergedClassName
+        }
       }
     }
   }

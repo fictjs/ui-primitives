@@ -517,6 +517,32 @@ function OneTimePasswordFieldInput(
     }
     setRef(props.ref as PossibleRef<HTMLInputElement>, node)
   }
+  const syncInputValue = (target: HTMLInputElement) => {
+    const currentIndex = index()
+    if (currentIndex < 0) return
+
+    if (!target.validity.valid) {
+      onInvalidChange?.(target.value)
+      requestAnimationFrame(() => {
+        if (target.ownerDocument.activeElement === target) {
+          target.select()
+        }
+      })
+      return
+    }
+
+    if (target.value === '') {
+      context.clearChar(currentIndex, 'Delete')
+      return
+    }
+
+    if (target.value.length > 1) {
+      context.pasteValue(target.value)
+      return
+    }
+
+    context.setChar(currentIndex, target.value)
+  }
 
   const primitiveProps = mergeProps(
     {
@@ -548,41 +574,21 @@ function OneTimePasswordFieldInput(
       onInput: composeEventHandlers<InputEvent>(
         props.onInput as ((event: InputEvent) => void) | undefined,
         (event) => {
-          const value = (event.currentTarget as HTMLInputElement).value
+          const target = event.currentTarget as HTMLInputElement
+          const value = target.value
           if (value.length > 1) {
             event.preventDefault()
             context.pasteValue(value)
+            return
           }
+
+          syncInputValue(target)
         },
       ),
       onChange: composeEventHandlers<Event>(
         props.onChange as ((event: Event) => void) | undefined,
         (event) => {
-          const target = event.currentTarget as HTMLInputElement
-          const currentIndex = index()
-          if (currentIndex < 0) return
-
-          if (!target.validity.valid) {
-            onInvalidChange?.(target.value)
-            requestAnimationFrame(() => {
-              if (target.ownerDocument.activeElement === target) {
-                target.select()
-              }
-            })
-            return
-          }
-
-          if (target.value === '') {
-            context.clearChar(currentIndex, 'Delete')
-            return
-          }
-
-          if (target.value.length > 1) {
-            context.pasteValue(target.value)
-            return
-          }
-
-          context.setChar(currentIndex, target.value)
+          syncInputValue(event.currentTarget as HTMLInputElement)
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(

@@ -367,10 +367,7 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
         (event) => {
           if (disabled()) {
             event.preventDefault()
-            return
           }
-
-          context.setCurrentTabStop(value)
         },
       ),
       value,

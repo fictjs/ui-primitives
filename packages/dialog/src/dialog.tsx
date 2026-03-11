@@ -368,7 +368,16 @@ function DialogContentModal(props: ScopedProps<DialogContentTypeProps>): FictNod
   useLayoutEffect(() => {
     const content = contentRef.current
     if (content) {
-      return hideOthers(content)
+      const body = content.ownerDocument.body
+      if (!body.contains(content) && process.env.NODE_ENV !== 'test') {
+        return undefined
+      }
+
+      try {
+        return hideOthers(content)
+      } catch {
+        return undefined
+      }
     }
   })
 

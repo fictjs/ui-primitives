@@ -6,6 +6,7 @@ packages:
 catalogMode: strict
 
 catalog:
+  '@playwright/test': 1.56.1
   '@fictjs/runtime': 0.17.0
   '@changesets/cli': 2.30.0
   '@commitlint/cli': 20.4.3

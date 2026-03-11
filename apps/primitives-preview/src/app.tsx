@@ -68,10 +68,11 @@ function DemoCard(props: {
   packages: string[]
   note: string
   span?: 'wide' | undefined
+  testId?: string
   children?: FictNode | FictNode[]
 }): FictNode {
   return (
-    <article class="demo-card" data-span={props.span}>
+    <article class="demo-card" data-showcase={props.testId} data-span={props.span}>
       <div class="demo-card-head">
         <div class="demo-packages">
           {props.packages.map((entry) => (
@@ -182,11 +183,16 @@ function SlotPortalDirectionShowcase(): FictNode {
 
       <div class="portal-shell">
         <div class="portal-host" ref={(node) => portalHost(node)} />
-        {portalHost() ? (
-          <PortalUI.Root container={portalHost()}>
-            <div class="portal-badge">Portaled into local host</div>
-          </PortalUI.Root>
-        ) : null}
+        <>
+          {() => {
+            const host = portalHost()
+            return host ? (
+              <PortalUI.Root container={host}>
+                <div class="portal-badge">Portaled into local host</div>
+              </PortalUI.Root>
+            ) : null
+          }}
+        </>
       </div>
 
       <div class="direction-grid">
@@ -206,18 +212,22 @@ function ProgressScrollShowcase(): FictNode {
 
   return (
     <div class="stack-list foundation-stack">
-      <div class="progress-row">
-        <ProgressUI.Root class="progress-root" max={100} value={() => value()}>
-          <ProgressUI.Indicator class="progress-indicator" style={{ width: `${value()}%` }} />
-        </ProgressUI.Root>
-        <button
-          class="ghost-button"
-          type="button"
-          onClick={() => value((value() + 12) % 101)}
-        >
-          Advance
-        </button>
-      </div>
+      <>
+        {() => (
+          <div class="progress-row">
+            <ProgressUI.Root class="progress-root" max={100} value={value()}>
+              <ProgressUI.Indicator class="progress-indicator" style={{ width: `${value()}%` }} />
+            </ProgressUI.Root>
+            <button
+              class="ghost-button"
+              type="button"
+              onClick={() => value((value() + 12) % 101)}
+            >
+              Advance
+            </button>
+          </div>
+        )}
+      </>
 
       <ScrollAreaUI.Root class="scroll-root">
         <ScrollAreaUI.Viewport class="scroll-viewport">
@@ -304,128 +314,185 @@ function TabsShowcase(): FictNode {
 function SelectionControlsShowcase(): FictNode {
   const checkbox = createSignal<boolean | 'indeterminate'>(true)
   const notifications = createSignal(true)
+  const releaseChannel = createSignal('beta')
   const density = createSignal([42])
 
   return (
-    <div class="controls-grid controls-grid-compact">
-      <div class="control-block">
-        <label class="control-label">Checkbox</label>
-        <div class="toggle-row">
-          <CheckboxUI.Root
-            aria-label="Enable previews"
-            checked={checkbox}
-            class="checkbox-root"
-            onCheckedChange={checkbox}
-          >
-            <CheckboxUI.Indicator class="checkbox-indicator">✓</CheckboxUI.Indicator>
-          </CheckboxUI.Root>
-          <span class="control-copy">Preview content enabled</span>
+    <>
+      {() => (
+        <div class="controls-grid controls-grid-compact">
+          <div class="control-block">
+            <label class="control-label">Checkbox</label>
+            <div class="toggle-row">
+              <CheckboxUI.Root
+                aria-label="Enable previews"
+                checked={checkbox()}
+                class="checkbox-root"
+                onCheckedChange={checkbox}
+              >
+                <CheckboxUI.Indicator class="checkbox-indicator">✓</CheckboxUI.Indicator>
+              </CheckboxUI.Root>
+              <span class="control-copy">Preview content enabled</span>
+            </div>
+          </div>
+
+          <div class="control-block">
+            <label class="control-label">Switch</label>
+            <div class="toggle-row">
+              <SwitchUI.Root
+                aria-label="Enable release notifications"
+                checked={notifications()}
+                class="switch-root"
+                onCheckedChange={notifications}
+              >
+                <SwitchUI.Thumb class="switch-thumb" />
+              </SwitchUI.Root>
+              <span class="control-copy">
+                Notifications {notifications() ? 'active' : 'muted'}
+              </span>
+            </div>
+          </div>
+
+          <div class="control-block">
+            <label class="control-label">Radio group</label>
+            <RadioGroupUI.Root
+              class="radio-list"
+              onValueChange={releaseChannel}
+              value={releaseChannel()}
+            >
+              <RadioGroupUI.Item
+                class="radio-item"
+                onMouseUp={() => releaseChannel('alpha')}
+                value="alpha"
+              >
+                <RadioGroupUI.Indicator class="indicator-dot" />
+                Alpha
+              </RadioGroupUI.Item>
+              <RadioGroupUI.Item
+                class="radio-item"
+                onMouseUp={() => releaseChannel('beta')}
+                value="beta"
+              >
+                <RadioGroupUI.Indicator class="indicator-dot" />
+                Beta
+              </RadioGroupUI.Item>
+            </RadioGroupUI.Root>
+          </div>
+
+          <div class="control-block control-slider-block">
+            <label class="control-label">Slider</label>
+            <SliderUI.Root
+              class="slider-root"
+              max={100}
+              onValueChange={density}
+              step={1}
+              value={density()}
+            >
+              <SliderUI.Track class="slider-track">
+                <SliderUI.Range class="slider-range" />
+              </SliderUI.Track>
+              <SliderUI.Thumb aria-label="Preview density" class="slider-thumb" />
+            </SliderUI.Root>
+            <span class="surface-note">Density target: {density()[0] ?? 0}%</span>
+          </div>
         </div>
-      </div>
-
-      <div class="control-block">
-        <label class="control-label">Switch</label>
-        <div class="toggle-row">
-          <SwitchUI.Root
-            aria-label="Enable release notifications"
-            checked={notifications}
-            class="switch-root"
-            onCheckedChange={notifications}
-          >
-            <SwitchUI.Thumb class="switch-thumb" />
-          </SwitchUI.Root>
-          <span class="control-copy">
-            Notifications {notifications() ? 'active' : 'muted'}
-          </span>
-        </div>
-      </div>
-
-      <div class="control-block">
-        <label class="control-label">Radio group</label>
-        <RadioGroupUI.Root class="radio-list" defaultValue="beta">
-          <RadioGroupUI.Item class="radio-item" value="alpha">
-            <RadioGroupUI.Indicator class="indicator-dot" />
-            Alpha
-          </RadioGroupUI.Item>
-          <RadioGroupUI.Item class="radio-item" value="beta">
-            <RadioGroupUI.Indicator class="indicator-dot" />
-            Beta
-          </RadioGroupUI.Item>
-        </RadioGroupUI.Root>
-      </div>
-
-      <div class="control-block control-slider-block">
-        <label class="control-label">Slider</label>
-        <SliderUI.Root
-          aria-label="Preview density"
-          class="slider-root"
-          max={100}
-          onValueChange={density}
-          step={1}
-          value={density}
-        >
-          <SliderUI.Track class="slider-track">
-            <SliderUI.Range class="slider-range" />
-          </SliderUI.Track>
-          <SliderUI.Thumb class="slider-thumb" />
-        </SliderUI.Root>
-        <span class="surface-note">Density target: {density()[0] ?? 0}%</span>
-      </div>
-    </div>
+      )}
+    </>
   )
 }
 
 function ToggleShowcase(): FictNode {
   const pressed = createSignal(true)
   const modes = createSignal(['italic'])
+  const toggleMode = (mode: string) => {
+    const currentModes = modes()
+    modes(currentModes.includes(mode) ? currentModes.filter((entry) => entry !== mode) : [...currentModes, mode])
+  }
 
   return (
-    <div class="stack-list foundation-stack">
-      <div class="toggle-row toggle-row-wide">
-        <ToggleUI.Root
-          aria-label="Pin release notes"
-          class="toggle-chip"
-          onPressedChange={pressed}
-          pressed={pressed}
-        >
-          Pin release notes
-        </ToggleUI.Root>
-        <span class="surface-note">{pressed() ? 'Pinned' : 'Unpinned'}</span>
-      </div>
+    <>
+      {() => (
+        <div class="stack-list foundation-stack">
+          <div class="toggle-row toggle-row-wide">
+            <ToggleUI.Root
+              aria-label="Pin release notes"
+              class="toggle-chip"
+              onPressedChange={pressed}
+              pressed={pressed()}
+            >
+              Pin release notes
+            </ToggleUI.Root>
+            <span class="surface-note">{pressed() ? 'Pinned' : 'Unpinned'}</span>
+          </div>
 
-      <ToggleGroupUI.Root
-        class="toggle-group-root"
-        onValueChange={modes}
-        type="multiple"
-        value={modes}
-      >
-        <ToggleGroupUI.Item class="toggle-chip" value="bold">
-          Bold
-        </ToggleGroupUI.Item>
-        <ToggleGroupUI.Item class="toggle-chip" value="italic">
-          Italic
-        </ToggleGroupUI.Item>
-        <ToggleGroupUI.Item class="toggle-chip" value="underline">
-          Underline
-        </ToggleGroupUI.Item>
-      </ToggleGroupUI.Root>
-    </div>
+          <ToggleGroupUI.Root
+            class="toggle-group-root"
+            onValueChange={modes}
+            type="multiple"
+            value={modes()}
+          >
+            <ToggleGroupUI.Item class="toggle-chip" onMouseDown={() => toggleMode('bold')} value="bold">
+              Bold
+            </ToggleGroupUI.Item>
+            <ToggleGroupUI.Item class="toggle-chip" onMouseDown={() => toggleMode('italic')} value="italic">
+              Italic
+            </ToggleGroupUI.Item>
+            <ToggleGroupUI.Item
+              class="toggle-chip"
+              onMouseDown={() => toggleMode('underline')}
+              value="underline"
+            >
+              Underline
+            </ToggleGroupUI.Item>
+          </ToggleGroupUI.Root>
+        </div>
+      )}
+    </>
   )
 }
 
 function FormShowcase(): FictNode {
-  return (
-    <FormUI.Root class="form-shell">
-      <FormUI.Field class="form-field" name="email">
-        <FormUI.Label class="field-label">Email</FormUI.Label>
-        <FormUI.Control class="text-input" placeholder="you@fict.dev" required />
-        <FormUI.Message class="validation-text" match="valueMissing">
-          Email is required
-        </FormUI.Message>
-      </FormUI.Field>
+  const email = createSignal('')
+  const submitted = createSignal(false)
 
-      <FormUI.Submit class="primary-button form-submit">Submit form</FormUI.Submit>
-    </FormUI.Root>
+  return (
+    <>
+      {() => (
+        <FormUI.Root
+          class="form-shell"
+          onSubmit={(event) => {
+            submitted(true)
+            if (!email().trim()) {
+              event.preventDefault()
+            }
+          }}
+        >
+          <FormUI.Field
+            class="form-field"
+            name="email"
+            serverInvalid={submitted() && email().trim().length === 0}
+          >
+            <FormUI.Label class="field-label">Email</FormUI.Label>
+            <FormUI.Control
+              class="text-input"
+              onInput={(event) => email((event.currentTarget as HTMLInputElement).value)}
+              placeholder="you@fict.dev"
+              required
+              value={email()}
+            />
+            <FormUI.Message
+              class="validation-text"
+              forceMatch={submitted() && email().trim().length === 0}
+              match="valueMissing"
+            >
+              Email is required
+            </FormUI.Message>
+          </FormUI.Field>
+
+          <FormUI.Submit class="primary-button form-submit">Submit form</FormUI.Submit>
+        </FormUI.Root>
+      )}
+    </>
   )
 }
 
@@ -535,39 +602,43 @@ function SelectDropdownShowcase(): FictNode {
   const lane = createSignal('beta')
 
   return (
-    <div class="stack-list foundation-stack">
-      <SelectUI.Root onValueChange={lane} value={lane}>
-        <SelectUI.Trigger class="select-trigger">
-          <SelectUI.Value placeholder="Choose a release lane" />
-          <SelectUI.Icon>▾</SelectUI.Icon>
-        </SelectUI.Trigger>
-        <SelectUI.Content class="select-content">
-          <SelectUI.Item class="select-item" value="alpha">
-            <SelectUI.ItemText>Alpha channel</SelectUI.ItemText>
-            <SelectUI.ItemIndicator class="select-indicator">✓</SelectUI.ItemIndicator>
-          </SelectUI.Item>
-          <SelectUI.Item class="select-item" value="beta">
-            <SelectUI.ItemText>Beta channel</SelectUI.ItemText>
-            <SelectUI.ItemIndicator class="select-indicator">✓</SelectUI.ItemIndicator>
-          </SelectUI.Item>
-          <SelectUI.Item class="select-item" value="stable">
-            <SelectUI.ItemText>Stable channel</SelectUI.ItemText>
-            <SelectUI.ItemIndicator class="select-indicator">✓</SelectUI.ItemIndicator>
-          </SelectUI.Item>
-        </SelectUI.Content>
-      </SelectUI.Root>
+    <>
+      {() => (
+        <div class="stack-list foundation-stack">
+          <SelectUI.Root onValueChange={lane} value={lane()}>
+            <SelectUI.Trigger class="select-trigger">
+              <SelectUI.Value placeholder="Choose a release lane" />
+              <SelectUI.Icon>▾</SelectUI.Icon>
+            </SelectUI.Trigger>
+            <SelectUI.Content class="select-content">
+              <SelectUI.Item class="select-item" value="alpha">
+                <SelectUI.ItemText>Alpha channel</SelectUI.ItemText>
+                <SelectUI.ItemIndicator class="select-indicator">✓</SelectUI.ItemIndicator>
+              </SelectUI.Item>
+              <SelectUI.Item class="select-item" value="beta">
+                <SelectUI.ItemText>Beta channel</SelectUI.ItemText>
+                <SelectUI.ItemIndicator class="select-indicator">✓</SelectUI.ItemIndicator>
+              </SelectUI.Item>
+              <SelectUI.Item class="select-item" value="stable">
+                <SelectUI.ItemText>Stable channel</SelectUI.ItemText>
+                <SelectUI.ItemIndicator class="select-indicator">✓</SelectUI.ItemIndicator>
+              </SelectUI.Item>
+            </SelectUI.Content>
+          </SelectUI.Root>
 
-      <DropdownMenuUI.Root>
-        <DropdownMenuUI.Trigger class="chip-button">Open actions</DropdownMenuUI.Trigger>
-        <DropdownMenuUI.Content class="menu-card">
-          <DropdownMenuUI.Item class="menu-item">Open package README</DropdownMenuUI.Item>
-          <DropdownMenuUI.Item class="menu-item">Run focused tests</DropdownMenuUI.Item>
-          <DropdownMenuUI.Item class="menu-item">Build current package</DropdownMenuUI.Item>
-        </DropdownMenuUI.Content>
-      </DropdownMenuUI.Root>
+          <DropdownMenuUI.Root>
+            <DropdownMenuUI.Trigger class="chip-button">Open actions</DropdownMenuUI.Trigger>
+            <DropdownMenuUI.Content class="menu-card">
+              <DropdownMenuUI.Item class="menu-item">Open package README</DropdownMenuUI.Item>
+              <DropdownMenuUI.Item class="menu-item">Run focused tests</DropdownMenuUI.Item>
+              <DropdownMenuUI.Item class="menu-item">Build current package</DropdownMenuUI.Item>
+            </DropdownMenuUI.Content>
+          </DropdownMenuUI.Root>
 
-      <p class="surface-note">Current release lane: {lane()}</p>
-    </div>
+          <p class="surface-note">Current release lane: {lane()}</p>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -632,8 +703,8 @@ function DialogShowcase(): FictNode {
     <DialogUI.Root>
       <DialogUI.Trigger class="primary-button">Open release dialog</DialogUI.Trigger>
       <DialogUI.Portal>
-        <DialogUI.Overlay class="dialog-overlay" />
-        <DialogUI.Content class="dialog-content">
+        <DialogUI.Overlay class="dialog-overlay" style={{ zIndex: 120 }} />
+        <DialogUI.Content class="dialog-content" style={{ pointerEvents: 'auto', zIndex: 121 }}>
           <DialogUI.Title>Ship a primitive with confidence</DialogUI.Title>
           <DialogUI.Description>
             Start from the local package, verify the README and tests, and finish with a clean
@@ -659,8 +730,11 @@ function AlertDialogShowcase(): FictNode {
     <AlertDialogUI.Root>
       <AlertDialogUI.Trigger class="chip-button">Open alert dialog</AlertDialogUI.Trigger>
       <AlertDialogUI.Portal>
-        <AlertDialogUI.Overlay class="dialog-overlay" />
-        <AlertDialogUI.Content class="dialog-content alert-dialog-content">
+        <AlertDialogUI.Overlay class="dialog-overlay" style={{ zIndex: 120 }} />
+        <AlertDialogUI.Content
+          class="dialog-content alert-dialog-content"
+          style={{ pointerEvents: 'auto', zIndex: 121 }}
+        >
           <AlertDialogUI.Title>Delete the generated preview?</AlertDialogUI.Title>
           <AlertDialogUI.Description>
             This action blocks outside dismissal and pushes the safe escape hatch to the cancel
@@ -682,11 +756,11 @@ function FloatingLayersShowcase(): FictNode {
       <PopoverUI.Root>
         <PopoverUI.Trigger class="chip-button">Open popover</PopoverUI.Trigger>
         <PopoverUI.Portal>
-          <PopoverUI.Content class="floating-panel">
+          <PopoverUI.Content class="floating-panel" style={{ pointerEvents: 'auto', zIndex: 96 }}>
             <strong>Popover content</strong>
             <p>Anchored content can host forms, actions, or diagnostics.</p>
             <PopoverUI.Close class="ghost-button">Dismiss</PopoverUI.Close>
-            <PopoverUI.Arrow class="floating-arrow">▲</PopoverUI.Arrow>
+            <PopoverUI.Arrow />
           </PopoverUI.Content>
         </PopoverUI.Portal>
       </PopoverUI.Root>
@@ -700,10 +774,10 @@ function FloatingLayersShowcase(): FictNode {
           @fictjs hover preview
         </HoverCardUI.Trigger>
         <HoverCardUI.Portal>
-          <HoverCardUI.Content class="hover-panel">
+          <HoverCardUI.Content class="hover-panel" style={{ pointerEvents: 'auto', zIndex: 96 }}>
             <strong>Hover card</strong>
             <p>Pointer-driven surface for rich previews without fully opening a dialog.</p>
-            <HoverCardUI.Arrow class="floating-arrow">▲</HoverCardUI.Arrow>
+            <HoverCardUI.Arrow />
           </HoverCardUI.Content>
         </HoverCardUI.Portal>
       </HoverCardUI.Root>
@@ -712,9 +786,9 @@ function FloatingLayersShowcase(): FictNode {
         <TooltipUI.Root>
           <TooltipUI.Trigger class="chip-button">Hover for tooltip</TooltipUI.Trigger>
           <TooltipUI.Portal>
-            <TooltipUI.Content class="tooltip-bubble">
+            <TooltipUI.Content class="tooltip-bubble" style={{ pointerEvents: 'auto', zIndex: 96 }}>
               Fast status detail
-              <TooltipUI.Arrow class="floating-arrow">▲</TooltipUI.Arrow>
+              <TooltipUI.Arrow />
             </TooltipUI.Content>
           </TooltipUI.Portal>
         </TooltipUI.Root>
@@ -728,25 +802,31 @@ function ToastShowcase(): FictNode {
 
   return (
     <ToastUI.Provider duration={2600}>
-      <div class="toast-launch">
-        <button class="primary-button" onClick={() => open(true)} type="button">
-          Queue toast
-        </button>
-        <p class="surface-note">Launches a workspace-scoped release notification.</p>
-      </div>
-      <ToastUI.Viewport class="toast-viewport" />
-      <ToastUI.Root class="toast-root" onOpenChange={open} open={open}>
-        <ToastUI.Title class="toast-title">Preview site ready</ToastUI.Title>
-        <ToastUI.Description class="toast-description">
-          All public component families now have a live demo in this workspace preview.
-        </ToastUI.Description>
-        <div class="toast-actions">
-          <ToastUI.Action altText="Open the preview section" class="chip-button">
-            Review
-          </ToastUI.Action>
-          <ToastUI.Close class="ghost-button">Dismiss</ToastUI.Close>
-        </div>
-      </ToastUI.Root>
+      <>
+        {() => (
+          <>
+            <div class="toast-launch">
+              <button class="primary-button" onClick={() => open(true)} type="button">
+                Queue toast
+              </button>
+              <p class="surface-note">Launches a workspace-scoped release notification.</p>
+            </div>
+            <ToastUI.Viewport class="toast-viewport" />
+            <ToastUI.Root class="toast-root" onOpenChange={open} open={open()}>
+              <ToastUI.Title class="toast-title">Preview site ready</ToastUI.Title>
+              <ToastUI.Description class="toast-description">
+                All public component families now have a live demo in this workspace preview.
+              </ToastUI.Description>
+              <div class="toast-actions">
+                <ToastUI.Action altText="Open the preview section" class="chip-button">
+                  Review
+                </ToastUI.Action>
+                <ToastUI.Close class="ghost-button">Dismiss</ToastUI.Close>
+              </div>
+            </ToastUI.Root>
+          </>
+        )}
+      </>
     </ToastUI.Provider>
   )
 }
@@ -1348,14 +1428,17 @@ function matchesQuery(slug: string, query: string): boolean {
 }
 
 function renderShowcaseCard(showcase: ShowcaseDefinition): FictNode {
+  const Showcase = showcase.render
+
   return (
     <DemoCard
       note={showcase.note}
       packages={showcase.packages}
       span={showcase.span}
+      testId={showcase.id}
       title={showcase.title}
     >
-      {showcase.render()}
+      <Showcase />
     </DemoCard>
   )
 }
@@ -1413,54 +1496,60 @@ function Sidebar(props: {
           type="search"
           value={props.query()}
         />
-        <span class="sidebar-hint">{matchingCount()} matching packages</span>
+        <>
+          {() => <span class="sidebar-hint">{matchingCount()} matching packages</span>}
+        </>
       </div>
 
-      {GROUPS.map((group) => {
-        const packages = group.packages.filter((slug) => matchesQuery(slug, props.query()))
+      <>
+        {() =>
+          GROUPS.map((group) => {
+            const packages = group.packages.filter((slug) => matchesQuery(slug, props.query()))
 
-        if (packages.length === 0) {
-          return null
-        }
+            if (packages.length === 0) {
+              return null
+            }
 
-        return (
-          <section class="sidebar-section">
-            <div class="sidebar-section-head">
-              <a
-                class="sidebar-group-link"
-                data-active={isGroupRoute(currentRoute(), group.slug) ? 'true' : undefined}
-                href={routeHref({ kind: 'group', slug: group.slug })}
-              >
-                {group.navTitle}
-              </a>
-              <span class="sidebar-count">{packages.length}</span>
-            </div>
-
-            <div class="sidebar-link-list">
-              {packages.map((slug) => {
-                const doc = getPackageDoc(slug)
-                return (
+            return (
+              <section class="sidebar-section">
+                <div class="sidebar-section-head">
                   <a
-                    class="sidebar-link"
-                    data-active={isPackageRoute(currentRoute(), slug) ? 'true' : undefined}
-                    href={routeHref({ kind: 'package', slug })}
+                    class="sidebar-group-link"
+                    data-active={isGroupRoute(currentRoute(), group.slug) ? 'true' : undefined}
+                    href={routeHref({ kind: 'group', slug: group.slug })}
                   >
-                    <span>{slug}</span>
-                    <small>{doc.exportName}</small>
+                    {group.navTitle}
                   </a>
-                )
-              })}
-            </div>
-          </section>
-        )
-      })}
+                  <span class="sidebar-count">{packages.length}</span>
+                </div>
+
+                <div class="sidebar-link-list">
+                  {packages.map((slug) => {
+                    const doc = getPackageDoc(slug)
+                    return (
+                      <a
+                        class="sidebar-link"
+                        data-active={isPackageRoute(currentRoute(), slug) ? 'true' : undefined}
+                        href={routeHref({ kind: 'package', slug })}
+                      >
+                        <span>{slug}</span>
+                        <small>{doc.exportName}</small>
+                      </a>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })
+        }
+      </>
     </aside>
   )
 }
 
 function OverviewPage(): FictNode {
   return (
-    <div class="docs-stack">
+    <div class="docs-stack" data-page-kind="overview">
       <section class="page-panel overview-hero">
         <div class="page-header">
           <span class="hero-kicker">Preview Docs</span>
@@ -1528,7 +1617,7 @@ function OverviewPage(): FictNode {
 
 function GroupPage(props: { group: GroupDefinition }): FictNode {
   return (
-    <div class="docs-stack">
+    <div class="docs-stack" data-page-kind="group" data-page-slug={props.group.slug}>
       <section class="page-panel">
         <div class="page-header">
           <Breadcrumbs
@@ -1609,7 +1698,7 @@ function PackagePage(props: { doc: PackageDefinition }): FictNode {
       : undefined
 
   return (
-    <div class="docs-stack">
+    <div class="docs-stack" data-page-kind="package" data-page-slug={props.doc.slug}>
       <section class="page-panel">
         <div class="page-header">
           <Breadcrumbs
@@ -1707,7 +1796,7 @@ function PackagePage(props: { doc: PackageDefinition }): FictNode {
 
 function NotFoundPage(props: { slug: string }): FictNode {
   return (
-    <section class="page-panel not-found-panel">
+    <section class="page-panel not-found-panel" data-page-kind="not-found">
       <div class="page-header">
         <Breadcrumbs items={[{ href: routeHref({ kind: 'overview' }), label: 'Overview' }, { label: 'Not found' }]} />
         <span class="hero-kicker">Missing Route</span>

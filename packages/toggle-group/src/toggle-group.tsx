@@ -450,13 +450,9 @@ function ToggleGroupItem(props: ScopedProps<ToggleGroupItemProps>): FictNode {
       onMouseDown: composeEventHandlers<MouseEvent>(
         props.onMouseDown as ((event: MouseEvent) => void) | undefined,
         (event) => {
-          if (!context.rovingFocus()) return
           if (disabled()) {
             event.preventDefault()
-            return
           }
-
-          context.setCurrentTabStop(props.value)
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
