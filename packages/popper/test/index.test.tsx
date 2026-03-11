@@ -245,6 +245,7 @@ describe('@fictjs/popper', () => {
     expect(middleware.map((entry) => entry.name)).toEqual([
       'offset',
       'size',
+      'arrow',
       'transformOrigin',
       'hide',
     ])

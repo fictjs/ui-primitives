@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url))
-const workspaceRoot = path.resolve(currentDir, '../../..')
 const packagesRoot = path.resolve(currentDir, '..')
 
 export default defineConfig({
@@ -29,22 +28,6 @@ export default defineConfig({
       {
         find: '@fictjs/use-controllable-state',
         replacement: path.resolve(packagesRoot, 'use-controllable-state/src/index.ts'),
-      },
-      {
-        find: '@fictjs/runtime/advanced',
-        replacement: path.resolve(workspaceRoot, 'packages/runtime/src/advanced.ts'),
-      },
-      {
-        find: '@fictjs/runtime/jsx-runtime',
-        replacement: path.resolve(workspaceRoot, 'packages/runtime/src/jsx-runtime.ts'),
-      },
-      {
-        find: '@fictjs/runtime/jsx-dev-runtime',
-        replacement: path.resolve(workspaceRoot, 'packages/runtime/src/jsx-dev-runtime.ts'),
-      },
-      {
-        find: '@fictjs/runtime',
-        replacement: path.resolve(workspaceRoot, 'packages/runtime/src/index.ts'),
       },
     ],
   },

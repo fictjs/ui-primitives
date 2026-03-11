@@ -75,9 +75,12 @@ describe('@fictjs/use-rect', () => {
       },
     })
 
+    let latestTarget: ReturnType<typeof createSignal<HTMLDivElement | null>> | undefined
+
     function Test() {
       const target = createSignal<HTMLDivElement | null>(null)
       const rect = useRect(() => target())
+      latestTarget = target
 
       return (
         <>
@@ -102,16 +105,18 @@ describe('@fictjs/use-rect', () => {
     flushAnimationFrames()
     await flushMicrotasks()
 
-    const target = container.querySelector('div') as HTMLDivElement
     const output = container.querySelector('output')
 
     expect(output?.textContent).toBe('120x64')
 
-    target.dataset.width = '160'
-    target.dataset.height = '96'
+    const target = latestTarget?.()
+    expect(target).toBeInstanceOf(HTMLDivElement)
+
+    target!.dataset.width = '160'
+    target!.dataset.height = '96'
     flushAnimationFrames()
     await flushMicrotasks()
 
-    expect(output?.textContent).toBe('160x96')
+    expect(container.querySelector('output')?.textContent).toBe('160x96')
   })
 })

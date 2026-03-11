@@ -22,11 +22,7 @@
       "@fictjs/use-controllable-state": ["../use-controllable-state/src/index.ts"],
       "@fictjs/use-effect-event": ["../use-effect-event/src/index.ts"],
       "@fictjs/use-escape-keydown": ["../use-escape-keydown/src/index.ts"],
-      "@fictjs/use-layout-effect": ["../use-layout-effect/src/index.ts"],
-      "@fictjs/runtime": ["../../../packages/runtime/dist/index.d.ts"],
-      "@fictjs/runtime/advanced": ["../../../packages/runtime/dist/advanced.d.ts"],
-      "@fictjs/runtime/jsx-runtime": ["../../../packages/runtime/dist/jsx-runtime.d.ts"],
-      "@fictjs/runtime/jsx-dev-runtime": ["../../../packages/runtime/dist/jsx-dev-runtime.d.ts"]
+      "@fictjs/use-layout-effect": ["../use-layout-effect/src/index.ts"]
     },
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },

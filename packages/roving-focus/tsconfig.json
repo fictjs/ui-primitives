@@ -16,11 +16,7 @@
       "@fictjs/primitive": ["../primitive/src/index.tsx"],
       "@fictjs/use-callback-ref": ["../use-callback-ref/src/index.ts"],
       "@fictjs/use-controllable-state": ["../use-controllable-state/src/index.ts"],
-      "@fictjs/use-layout-effect": ["../use-layout-effect/src/index.ts"],
-      "@fictjs/runtime": ["../../../packages/runtime/dist/index.d.ts"],
-      "@fictjs/runtime/advanced": ["../../../packages/runtime/dist/advanced.d.ts"],
-      "@fictjs/runtime/jsx-runtime": ["../../../packages/runtime/dist/jsx-runtime.d.ts"],
-      "@fictjs/runtime/jsx-dev-runtime": ["../../../packages/runtime/dist/jsx-dev-runtime.d.ts"]
+      "@fictjs/use-layout-effect": ["../use-layout-effect/src/index.ts"]
     },
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },

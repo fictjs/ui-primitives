@@ -59,12 +59,12 @@ describe('@fictjs/presence', () => {
       container,
     )
 
-    expect((container.firstElementChild as HTMLDivElement).dataset.present).toBe('false')
+    expect(container.querySelector('[data-present]')?.getAttribute('data-present')).toBe('false')
 
     present(true)
     await flushMicrotasks()
 
-    expect((container.firstElementChild as HTMLDivElement).dataset.present).toBe('true')
+    expect(container.querySelector('[data-present]')?.getAttribute('data-present')).toBe('true')
   })
 
   it('keeps content mounted until the exit animation completes', async () => {
@@ -82,21 +82,21 @@ describe('@fictjs/presence', () => {
       container,
     )
 
-    const node = container.firstElementChild as HTMLDivElement
+    const node = container.querySelector('[data-testid="content"]') as HTMLDivElement
     expect(node.textContent).toBe('Animated')
 
     node.style.animationName = 'fade-out'
     present(false)
     await flushMicrotasks()
 
-    expect(container.firstElementChild).not.toBeNull()
+    expect(container.querySelector('[data-testid="content"]')).not.toBeNull()
 
-    const currentNode = container.firstElementChild as HTMLDivElement
+    const currentNode = container.querySelector('[data-testid="content"]') as HTMLDivElement
     currentNode.style.animationName = 'fade-out'
     dispatchAnimationEvent(currentNode, 'animationstart', 'fade-out')
     dispatchAnimationEvent(currentNode, 'animationend', 'fade-out')
     await flushMicrotasks()
 
-    expect(container.firstElementChild).toBeNull()
+    expect(container.querySelector('[data-testid="content"]')).toBeNull()
   })
 })

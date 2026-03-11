@@ -13,15 +13,7 @@
       "@fictjs/fict-remove-scroll-bar/constants": ["../fict-remove-scroll-bar/src/constants.ts"],
       "@fictjs/fict-style-singleton": ["../fict-style-singleton/src/index.ts"],
       "@fictjs/use-callback-ref": ["../../packages/use-callback-ref/src/index.ts"],
-      "@fictjs/use-sidecar": ["../use-sidecar/src/index.ts"],
-      "@fictjs/runtime": ["../../../packages/runtime/dist/index.d.ts"],
-      "@fictjs/runtime/advanced": ["../../../packages/runtime/dist/advanced.d.ts"],
-      "@fictjs/runtime/jsx-runtime": ["../../../packages/runtime/dist/jsx-runtime.d.ts"],
-      "@fictjs/runtime/jsx-dev-runtime": ["../../../packages/runtime/dist/jsx-dev-runtime.d.ts"],
-      "fict": ["../../../packages/fict/dist/index.d.ts"],
-      "fict/jsx-runtime": ["../../../packages/fict/dist/jsx-runtime.d.ts"],
-      "fict/jsx-dev-runtime": ["../../../packages/fict/dist/jsx-dev-runtime.d.ts"],
-      "fict/advanced": ["../../../packages/fict/dist/advanced.d.ts"]
+      "@fictjs/use-sidecar": ["../use-sidecar/dist/index.d.ts"]
     },
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
