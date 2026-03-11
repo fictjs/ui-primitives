@@ -107,4 +107,31 @@ describe('@fictjs/use-size', () => {
 
     expect(container.querySelector('output')?.textContent).toBe('180x72')
   })
+
+  it('ignores temporary ref targets that are not elements', async () => {
+    const observe = vi.fn()
+    vi.stubGlobal('ResizeObserver', class {
+      observe = observe
+      unobserve(): void {}
+      disconnect(): void {}
+    })
+
+    function Test() {
+      const target = {
+        current: document.createComment('placeholder') as unknown as HTMLDivElement,
+      }
+      const size = useSize(target)
+
+      return <output>{size() ? 'ready' : 'none'}</output>
+    }
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    render(() => <Test />, container)
+    await flushMicrotasks()
+
+    expect(container.querySelector('output')?.textContent).toBe('none')
+    expect(observe).not.toHaveBeenCalled()
+  })
 })

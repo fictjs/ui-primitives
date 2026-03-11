@@ -35,6 +35,10 @@ function isBorderBoxSize(value: unknown): value is BorderBoxSize {
   )
 }
 
+function isElement(value: unknown): value is HTMLElement {
+  return typeof Element !== 'undefined' && value instanceof Element
+}
+
 function useSize(target: ElementTarget<HTMLElement>): () => Size | undefined {
   const size = createSignal<Size | undefined>(undefined)
 
@@ -46,7 +50,7 @@ function useSize(target: ElementTarget<HTMLElement>): () => Size | undefined {
       cleanup?.()
       cleanup = undefined
 
-      if (!element) {
+      if (!element || !isElement(element)) {
         size(undefined)
         return
       }
