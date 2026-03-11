@@ -1,0 +1,122 @@
+{
+  "name": "@fictjs/radix-ui-themes",
+  "version": "0.1.0",
+  "description": "Radix Themes port for Fict, built on top of @fictjs/radix-ui.",
+  "keywords": [
+    "fict",
+    "radix",
+    "themes",
+    "design-system",
+    "ui-primitives"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "style": "./styles.css",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./components/*": {
+      "types": "./dist/components/*.d.ts",
+      "import": "./dist/components/*.js",
+      "require": "./dist/components/*.cjs"
+    },
+    "./helpers": {
+      "types": "./dist/helpers/index.d.ts",
+      "import": "./dist/helpers/index.js",
+      "require": "./dist/helpers/index.cjs"
+    },
+    "./props": {
+      "types": "./dist/props/index.d.ts",
+      "import": "./dist/props/index.js",
+      "require": "./dist/props/index.cjs"
+    },
+    "./styles.css": "./styles.css",
+    "./components.css": "./components.css",
+    "./utilities.css": "./utilities.css",
+    "./tokens.css": "./tokens.css",
+    "./tokens/*": "./tokens/*",
+    "./layout.css": "./layout.css",
+    "./layout/*": "./layout/*",
+    "./*": "./*"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "styles.css",
+    "components.css",
+    "utilities.css",
+    "tokens.css",
+    "tokens",
+    "layout.css",
+    "layout",
+    "postcss-breakpoints.cjs",
+    "postcss-whitespace.cjs"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fictjs/ui-primitives.git",
+    "directory": "libs/radix-ui-themes"
+  },
+  "scripts": {
+    "build": "pnpm build:js && pnpm build:css",
+    "build:js": "tsup",
+    "build:css": "pnpm build:css:index && pnpm build:css:tokens && pnpm build:css:components && pnpm build:css:utilities && pnpm build:css:layout",
+    "build:css:index": "postcss src/styles/index.css -o styles.css",
+    "build:css:components": "postcss src/components/index.css -o components.css",
+    "build:css:utilities": "postcss src/styles/utilities/index.css -o utilities.css",
+    "build:css:tokens": "pnpm build:css:tokens:index && pnpm build:css:tokens:base && pnpm build:css:tokens:colors",
+    "build:css:tokens:index": "postcss src/styles/tokens/index.css -o tokens.css",
+    "build:css:tokens:base": "mkdir -p tokens && postcss src/styles/tokens/base.css -o tokens/base.css",
+    "build:css:tokens:colors": "mkdir -p tokens/colors && postcss src/styles/tokens/colors/*.css --dir tokens/colors",
+    "build:css:layout": "pnpm build:css:layout:index && pnpm build:css:layout:tokens && pnpm build:css:layout:components && pnpm build:css:layout:utilities",
+    "build:css:layout:index": "postcss src/styles/layout.css -o layout.css",
+    "build:css:layout:tokens": "mkdir -p layout && postcss src/styles/tokens/layout.css -o layout/tokens.css",
+    "build:css:layout:components": "mkdir -p layout && postcss src/components/layout.css -o layout/components.css",
+    "build:css:layout:utilities": "mkdir -p layout && postcss src/styles/utilities/layout.css -o layout/utilities.css",
+    "clean": "rimraf coverage dist layout tokens styles.css components.css utilities.css tokens.css layout.css",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:coverage": "vitest run --config ./vitest.config.ts --coverage",
+    "test:watch": "vitest --config ./vitest.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fictjs/radix-ui": "workspace:*",
+    "@radix-ui/colors": "^3.0.0",
+    "classnames": "^2.3.2"
+  },
+  "peerDependencies": {
+    "fict": "^0.17.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "10.4.24",
+    "fict": "^0.17.0",
+    "jsdom": "^28.1.0",
+    "postcss": "8.5.6",
+    "postcss-cli": "11.0.1",
+    "postcss-combine-duplicated-selectors": "10.0.3",
+    "postcss-custom-media": "12.0.0",
+    "postcss-discard-empty": "7.0.1",
+    "postcss-import": "16.1.1",
+    "postcss-nesting": "14.0.0"
+  }
+}
