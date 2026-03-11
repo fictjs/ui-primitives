@@ -63,14 +63,17 @@ describe('@fictjs/slider', () => {
     document.body.append(container)
     const onValueCommit = vi.fn()
 
-    mount(() => (
-      <Root defaultValue={[25]} max={100} onValueCommit={onValueCommit}>
-        <Track data-testid="track">
-          <Range data-testid="range" />
-        </Track>
-        <Thumb />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root defaultValue={[25]} max={100} onValueCommit={onValueCommit}>
+          <Track data-testid="track">
+            <Range data-testid="range" />
+          </Track>
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -108,14 +111,17 @@ describe('@fictjs/slider', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root defaultValue={[10]} step={5}>
-        <Track>
-          <Range />
-        </Track>
-        <Thumb />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root defaultValue={[10]} step={5}>
+          <Track>
+            <Range />
+          </Track>
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -131,15 +137,18 @@ describe('@fictjs/slider', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root defaultValue={[20, 40]} step={10} minStepsBetweenThumbs={2}>
-        <Track>
-          <Range />
-        </Track>
-        <Thumb />
-        <Thumb />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root defaultValue={[20, 40]} step={10} minStepsBetweenThumbs={2}>
+          <Track>
+            <Range />
+          </Track>
+          <Thumb />
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

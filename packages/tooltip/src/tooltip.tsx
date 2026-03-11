@@ -4,10 +4,7 @@ import { createSignal } from '@fictjs/runtime/advanced'
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
 import { composeEventHandlers } from '@fictjs/core-primitive'
-import {
-  DismissableLayer,
-  type DismissableLayerProps,
-} from '@fictjs/dismissable-layer'
+import { DismissableLayer, type DismissableLayerProps } from '@fictjs/dismissable-layer'
 import { useId } from '@fictjs/id'
 import {
   createPopperScope,
@@ -226,7 +223,9 @@ function Tooltip(props: ScopedProps<TooltipProps>): FictNode {
       ? providerContext.disableHoverableContent()
       : Boolean(readValue(props.disableHoverableContent as MaybeAccessor<boolean | undefined>))
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? false
@@ -361,10 +360,7 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
             return
           }
 
-          if (
-            !hasPointerMoveOpenedRef.current &&
-            !providerContext.isPointerInTransitRef.current
-          ) {
+          if (!hasPointerMoveOpenedRef.current && !providerContext.isPointerInTransitRef.current) {
             context.onTriggerEnter()
             hasPointerMoveOpenedRef.current = true
           }
@@ -485,10 +481,7 @@ function TooltipContentHoverable(props: ScopedProps<TooltipContentImplProps>): F
   )
   const contentRef = { current: null as HTMLDivElement | null }
   const pointerGraceArea = createSignal<Polygon | null>(null)
-  const composedRefs = useComposedRefs(
-    props.ref as PossibleRef<HTMLDivElement>,
-    contentRef,
-  )
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, contentRef)
   const handleRemoveGraceArea = () => {
     pointerGraceArea(null)
     providerContext.onPointerInTransitChange(false)
@@ -764,7 +757,7 @@ function isPointInPolygon(point: Point, polygon: Polygon): boolean {
     const yi = ii.y
     const xj = jj.x
     const yj = jj.y
-    const intersect = (yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi
+    const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi
 
     if (intersect) {
       inside = !inside

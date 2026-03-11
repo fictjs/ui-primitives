@@ -41,8 +41,9 @@ const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
-const [createOneTimePasswordFieldContext, createOneTimePasswordFieldScope] =
-  createContextScope(ONE_TIME_PASSWORD_FIELD_NAME)
+const [createOneTimePasswordFieldContext, createOneTimePasswordFieldScope] = createContextScope(
+  ONE_TIME_PASSWORD_FIELD_NAME,
+)
 
 type OneTimePasswordFieldContextValue = {
   autoComplete: () => AutoComplete
@@ -98,12 +99,28 @@ type OneTimePasswordFieldProps = Omit<JSX.IntrinsicElements['div'], 'dir'> & {
 
 type OneTimePasswordFieldHiddenInputProps = Omit<
   JSX.IntrinsicElements['input'],
-  'value' | 'defaultValue' | 'type' | 'onChange' | 'readOnly' | 'disabled' | 'autoComplete' | 'autoFocus'
+  | 'value'
+  | 'defaultValue'
+  | 'type'
+  | 'onChange'
+  | 'readOnly'
+  | 'disabled'
+  | 'autoComplete'
+  | 'autoFocus'
 >
 
 type OneTimePasswordFieldInputProps = Omit<
   JSX.IntrinsicElements['input'],
-  'value' | 'defaultValue' | 'disabled' | 'readOnly' | 'autoComplete' | 'autoFocus' | 'form' | 'name' | 'placeholder' | 'type'
+  | 'value'
+  | 'defaultValue'
+  | 'disabled'
+  | 'readOnly'
+  | 'autoComplete'
+  | 'autoFocus'
+  | 'form'
+  | 'name'
+  | 'placeholder'
+  | 'type'
 > & {
   onInvalidChange?: (character: string) => void
   index?: number
@@ -154,7 +171,9 @@ function focusInput(element: HTMLInputElement | null | undefined) {
 
 function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): FictNode {
   const direction = useDirection(
-    props.dir === undefined ? undefined : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? undefined),
+    props.dir === undefined
+      ? undefined
+      : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? undefined),
   )
   const autoComplete = () =>
     props.autoComplete === undefined
@@ -162,12 +181,17 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
       : ((readValue(props.autoComplete as MaybeAccessor<AutoComplete | undefined>) ??
           'one-time-code') as AutoComplete)
   const autoFocus = () => Boolean(readValue(props.autoFocus as MaybeAccessor<boolean | undefined>))
-  const autoSubmit = () => Boolean(readValue(props.autoSubmit as MaybeAccessor<boolean | undefined>))
+  const autoSubmit = () =>
+    Boolean(readValue(props.autoSubmit as MaybeAccessor<boolean | undefined>))
   const disabled = () => Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>))
   const form = () =>
-    props.form === undefined ? undefined : readValue(props.form as MaybeAccessor<string | undefined>)
+    props.form === undefined
+      ? undefined
+      : readValue(props.form as MaybeAccessor<string | undefined>)
   const name = () =>
-    props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>)
+    props.name === undefined
+      ? undefined
+      : readValue(props.name as MaybeAccessor<string | undefined>)
   const orientation = () =>
     props.orientation === undefined
       ? 'horizontal'
@@ -208,7 +232,9 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
   }
 
   const valueProp = () =>
-    props.value === undefined ? undefined : sanitizeValue(readValue(props.value as MaybeAccessor<string | undefined>) ?? '')
+    props.value === undefined
+      ? undefined
+      : sanitizeValue(readValue(props.value as MaybeAccessor<string | undefined>) ?? '')
   const defaultValue = () =>
     props.defaultValue === undefined
       ? []
@@ -372,7 +398,12 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
   useLayoutEffect(() => {
     const currentValue = values().join('')
     const count = getInputs().length
-    if (autoSubmit() && count > 0 && values().length === count && values().every((char) => char !== '')) {
+    if (
+      autoSubmit() &&
+      count > 0 &&
+      values().length === count &&
+      values().every((char) => char !== '')
+    ) {
       props.onAutoSubmit?.(currentValue)
       attemptSubmit()
     }
@@ -397,7 +428,9 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
 
   return (
     <OneTimePasswordFieldProvider
-      scope={props.__scopeOneTimePasswordField as Scope<OneTimePasswordFieldContextValue | undefined>}
+      scope={
+        props.__scopeOneTimePasswordField as Scope<OneTimePasswordFieldContextValue | undefined>
+      }
       autoComplete={autoComplete}
       autoFocus={autoFocus}
       disabled={disabled}
@@ -485,9 +518,7 @@ function OneTimePasswordFieldHiddenInput(
   )
 }
 
-function OneTimePasswordFieldInput(
-  props: ScopedProps<OneTimePasswordFieldInputProps>,
-): FictNode {
+function OneTimePasswordFieldInput(props: ScopedProps<OneTimePasswordFieldInputProps>): FictNode {
   const { __scopeOneTimePasswordField, onInvalidChange, index: indexProp, ...inputProps } = props
   const context = useOneTimePasswordFieldContext(
     'OneTimePasswordFieldInput',
@@ -497,7 +528,7 @@ function OneTimePasswordFieldInput(
   const index = () => context.getIndex(nodeRef.current, indexProp ?? -1)
   const char = () => {
     const currentIndex = index()
-    return currentIndex >= 0 ? context.values()[currentIndex] ?? '' : ''
+    return currentIndex >= 0 ? (context.values()[currentIndex] ?? '') : ''
   }
   const validation = () => INPUT_VALIDATION_MAP[context.validationType()]
   const placeholder = () => {
@@ -560,7 +591,9 @@ function OneTimePasswordFieldInput(
       inputMode: prop(() => validation()?.inputMode),
       pattern: prop(() => validation()?.pattern),
       maxLength: prop(() => (index() === 0 ? Math.max(1, context.getInputs().length) : 1)),
-      'aria-label': prop(() => `Character ${index() + 1} of ${Math.max(context.getInputs().length, 1)}`),
+      'aria-label': prop(
+        () => `Character ${index() + 1} of ${Math.max(context.getInputs().length, 1)}`,
+      ),
       ref: registerRef,
     },
     () => inputProps as Record<string, unknown>,
@@ -628,7 +661,12 @@ function OneTimePasswordFieldInput(
               : (readValue(props.orientation as MaybeAccessor<Orientation | undefined>) ??
                 context.orientation())
 
-          if (event.key === 'ArrowLeft' || (event.key === 'ArrowUp' && context.getInputs().length > 1 && inputOrientation !== 'horizontal')) {
+          if (
+            event.key === 'ArrowLeft' ||
+            (event.key === 'ArrowUp' &&
+              context.getInputs().length > 1 &&
+              inputOrientation !== 'horizontal')
+          ) {
             if (context.getInputs().length > 0) {
               event.preventDefault()
               focusInput(context.getInputs()[Math.max(0, currentIndex - 1)])
@@ -636,10 +674,17 @@ function OneTimePasswordFieldInput(
             return
           }
 
-          if (event.key === 'ArrowRight' || (event.key === 'ArrowDown' && context.getInputs().length > 1 && inputOrientation !== 'horizontal')) {
+          if (
+            event.key === 'ArrowRight' ||
+            (event.key === 'ArrowDown' &&
+              context.getInputs().length > 1 &&
+              inputOrientation !== 'horizontal')
+          ) {
             if (context.getInputs().length > 0) {
               event.preventDefault()
-              focusInput(context.getInputs()[Math.min(context.getInputs().length - 1, currentIndex + 1)])
+              focusInput(
+                context.getInputs()[Math.min(context.getInputs().length - 1, currentIndex + 1)],
+              )
             }
           }
         },
@@ -648,7 +693,11 @@ function OneTimePasswordFieldInput(
         props.onPointerDown as ((event: PointerEvent) => void) | undefined,
         (event) => {
           event.preventDefault()
-          focusInput(context.getInputs()[Math.min(index(), Math.max(0, context.values().join('').trim().length))])
+          focusInput(
+            context.getInputs()[
+              Math.min(index(), Math.max(0, context.values().join('').trim().length))
+            ],
+          )
         },
       ),
     },

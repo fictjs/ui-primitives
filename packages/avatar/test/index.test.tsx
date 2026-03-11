@@ -132,7 +132,11 @@ describe('@fictjs/avatar', () => {
     mount(() => (
       <Root>
         <AvatarFallback>{FALLBACK_TEXT}</AvatarFallback>
-        <AvatarImage alt={IMAGE_ALT_TEXT} onLoadingStatusChange={onLoadingStatusChange} src="/test.png" />
+        <AvatarImage
+          alt={IMAGE_ALT_TEXT}
+          onLoadingStatusChange={onLoadingStatusChange}
+          src="/test.png"
+        />
       </Root>
     ))
 

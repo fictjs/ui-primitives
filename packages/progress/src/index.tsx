@@ -102,7 +102,11 @@ function Progress(props: ScopedProps<ProgressProps>): FictNode {
       console.error(getInvalidMaxError(String(candidateMax), PROGRESS_NAME))
     }
 
-    if (candidateValue !== null && candidateValue !== undefined && !isValidValueNumber(candidateValue, max())) {
+    if (
+      candidateValue !== null &&
+      candidateValue !== undefined &&
+      !isValidValueNumber(candidateValue, max())
+    ) {
       console.error(getInvalidValueError(String(candidateValue), PROGRESS_NAME))
     }
   })

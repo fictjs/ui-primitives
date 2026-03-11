@@ -5,7 +5,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
-import { CheckboxItem, Content, Item, ItemIndicator, Menu, Portal, RadioGroup, RadioItem } from '../src/index.js'
+import {
+  CheckboxItem,
+  Content,
+  Item,
+  ItemIndicator,
+  Menu,
+  Portal,
+  RadioGroup,
+  RadioItem,
+} from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -53,17 +62,20 @@ describe('@fictjs/menu', () => {
     const open = createSignal(true)
     const onSelect = vi.fn()
 
-    mount(() => (
-      <Menu open={open} onOpenChange={open}>
-        <Portal container={portalRoot}>
-          <Content data-testid="content">
-            <Item data-testid="first" onSelect={onSelect}>
-              First
-            </Item>
-          </Content>
-        </Portal>
-      </Menu>
-    ), container)
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open}>
+          <Portal container={portalRoot}>
+            <Content data-testid="content">
+              <Item data-testid="first" onSelect={onSelect}>
+                First
+              </Item>
+            </Content>
+          </Portal>
+        </Menu>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -87,29 +99,32 @@ describe('@fictjs/menu', () => {
     const checked = createSignal<true | false>(false)
     const radioValue = createSignal('one')
 
-    mount(() => (
-      <Menu open={open} onOpenChange={open} modal={false}>
-        <Content data-testid="content">
-          <CheckboxItem
-            checked={checked}
-            onCheckedChange={(value) => checked(Boolean(value))}
-            data-testid="checkbox"
-          >
-            Toggle
-            <ItemIndicator data-testid="checkbox-indicator">x</ItemIndicator>
-          </CheckboxItem>
-          <RadioGroup value={radioValue} onValueChange={radioValue}>
-            <RadioItem value="one" data-testid="radio-one">
-              One
-            </RadioItem>
-            <RadioItem value="two" data-testid="radio-two">
-              Two
-              <ItemIndicator data-testid="radio-indicator">dot</ItemIndicator>
-            </RadioItem>
-          </RadioGroup>
-        </Content>
-      </Menu>
-    ), container)
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Content data-testid="content">
+            <CheckboxItem
+              checked={checked}
+              onCheckedChange={(value) => checked(Boolean(value))}
+              data-testid="checkbox"
+            >
+              Toggle
+              <ItemIndicator data-testid="checkbox-indicator">x</ItemIndicator>
+            </CheckboxItem>
+            <RadioGroup value={radioValue} onValueChange={radioValue}>
+              <RadioItem value="one" data-testid="radio-one">
+                One
+              </RadioItem>
+              <RadioItem value="two" data-testid="radio-two">
+                Two
+                <ItemIndicator data-testid="radio-indicator">dot</ItemIndicator>
+              </RadioItem>
+            </RadioGroup>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

@@ -130,13 +130,17 @@ function DropdownMenu(props: ScopedProps<DropdownMenuProps>): FictNode {
   const triggerRef = { current: null as HTMLButtonElement | null }
   const menuScope = useMenuScope(props.__scopeDropdownMenu)
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? false
       : (readValue(props.defaultOpen as MaybeAccessor<boolean | undefined>) ?? false)
   const modal = () =>
-    props.modal === undefined ? true : Boolean(readValue(props.modal as MaybeAccessor<boolean | undefined>) ?? true)
+    props.modal === undefined
+      ? true
+      : Boolean(readValue(props.modal as MaybeAccessor<boolean | undefined>) ?? true)
   const dir = () =>
     props.dir === undefined
       ? undefined
@@ -161,13 +165,7 @@ function DropdownMenu(props: ScopedProps<DropdownMenuProps>): FictNode {
       }}
       modal={modal}
     >
-      <Menu
-        {...menuScope}
-        open={open}
-        onOpenChange={setOpen}
-        dir={dir}
-        modal={modal}
-      >
+      <Menu {...menuScope} open={open} onOpenChange={setOpen} dir={dir} modal={modal}>
         {props.children}
       </Menu>
     </DropdownMenuProvider>

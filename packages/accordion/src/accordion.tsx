@@ -162,7 +162,9 @@ function AccordionImplSingle(props: ScopedProps<AccordionImplSingleProps>): Fict
   const collapsible = () =>
     Boolean(readValue(props.collapsible as MaybeAccessor<boolean | undefined>) ?? false)
   const valueProp = () =>
-    props.value === undefined ? undefined : readValue(props.value as MaybeAccessor<string | undefined>)
+    props.value === undefined
+      ? undefined
+      : readValue(props.value as MaybeAccessor<string | undefined>)
   const defaultValue = () =>
     props.defaultValue === undefined
       ? ''
@@ -173,16 +175,13 @@ function AccordionImplSingle(props: ScopedProps<AccordionImplSingleProps>): Fict
     caller: ACCORDION_NAME,
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
-  const primitiveProps = mergeProps(
-    () => props as Record<string, unknown>,
-    {
-      collapsible: undefined,
-      defaultValue: undefined,
-      onValueChange: undefined,
-      type: undefined,
-      value: undefined,
-    },
-  )
+  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
+    collapsible: undefined,
+    defaultValue: undefined,
+    onValueChange: undefined,
+    type: undefined,
+    value: undefined,
+  })
 
   return (
     <AccordionValueProvider
@@ -223,15 +222,12 @@ function AccordionImplMultiple(props: ScopedProps<AccordionImplMultipleProps>): 
     caller: ACCORDION_NAME,
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
-  const primitiveProps = mergeProps(
-    () => props as Record<string, unknown>,
-    {
-      defaultValue: undefined,
-      onValueChange: undefined,
-      type: undefined,
-      value: undefined,
-    },
-  )
+  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
+    defaultValue: undefined,
+    onValueChange: undefined,
+    type: undefined,
+    value: undefined,
+  })
 
   return (
     <AccordionValueProvider
@@ -344,17 +340,14 @@ function AccordionImpl(props: ScopedProps<AccordionImplProps>): FictNode {
       triggerCollection[nextIndex]?.ref.current?.focus()
     },
   )
-  const primitiveProps = mergeProps(
-    () => props as Record<string, unknown>,
-    {
-      __scopeAccordion: undefined,
-      dir: undefined,
-      disabled: undefined,
-      orientation: undefined,
-      'data-orientation': prop(orientation),
-      onKeyDown: disabled() ? undefined : handleKeyDown,
-    },
-  )
+  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
+    __scopeAccordion: undefined,
+    dir: undefined,
+    disabled: undefined,
+    orientation: undefined,
+    'data-orientation': prop(orientation),
+    onKeyDown: disabled() ? undefined : handleKeyDown,
+  })
 
   return (
     <AccordionImplProvider
@@ -472,7 +465,10 @@ function AccordionTrigger(props: ScopedProps<AccordionTriggerProps>): FictNode {
   )
 
   return (
-    <Collection.ItemSlot scope={__scopeAccordion} ref={props.ref as PossibleRef<AccordionTriggerElement>}>
+    <Collection.ItemSlot
+      scope={__scopeAccordion}
+      ref={props.ref as PossibleRef<AccordionTriggerElement>}
+    >
       <CollapsibleTriggerPrimitive {...(primitiveProps as Record<string, unknown>)} />
     </Collection.ItemSlot>
   )

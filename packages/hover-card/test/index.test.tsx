@@ -31,19 +31,9 @@ vi.mock('@fictjs/popper', async () => {
   }
 })
 
-import {
-  Arrow,
-  Content,
-  HoverCard,
-  HoverCardPortal,
-  Trigger,
-} from '../src/index.js'
+import { Arrow, Content, HoverCard, HoverCardPortal, Trigger } from '../src/index.js'
 
-function pointerEvent(
-  target: Element,
-  type: string,
-  init: PointerEventInit = {},
-): void {
+function pointerEvent(target: Element, type: string, init: PointerEventInit = {}): void {
   target.dispatchEvent(
     new PointerEvent(type, {
       bubbles: true,
@@ -98,14 +88,17 @@ describe('@fictjs/hover-card', () => {
     const portalRoot = document.createElement('div')
     document.body.append(container, portalRoot)
 
-    mount(() => (
-      <HoverCard openDelay={50} closeDelay={20}>
-        <Trigger data-testid="trigger">Profile</Trigger>
-        <HoverCardPortal container={portalRoot}>
-          <Content data-testid="content">Preview</Content>
-        </HoverCardPortal>
-      </HoverCard>
-    ), container)
+    mount(
+      () => (
+        <HoverCard openDelay={50} closeDelay={20}>
+          <Trigger data-testid="trigger">Profile</Trigger>
+          <HoverCardPortal container={portalRoot}>
+            <Content data-testid="content">Preview</Content>
+          </HoverCardPortal>
+        </HoverCard>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLAnchorElement
     pointerEvent(trigger, 'pointerenter')
@@ -128,14 +121,17 @@ describe('@fictjs/hover-card', () => {
     const portalRoot = document.createElement('div')
     document.body.append(container, portalRoot)
 
-    mount(() => (
-      <HoverCard openDelay={0} closeDelay={30}>
-        <Trigger data-testid="trigger">Profile</Trigger>
-        <HoverCardPortal container={portalRoot}>
-          <Content data-testid="content">Preview</Content>
-        </HoverCardPortal>
-      </HoverCard>
-    ), container)
+    mount(
+      () => (
+        <HoverCard openDelay={0} closeDelay={30}>
+          <Trigger data-testid="trigger">Profile</Trigger>
+          <HoverCardPortal container={portalRoot}>
+            <Content data-testid="content">Preview</Content>
+          </HoverCardPortal>
+        </HoverCard>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLAnchorElement
     pointerEvent(trigger, 'pointerenter')
@@ -159,16 +155,19 @@ describe('@fictjs/hover-card', () => {
     const portalRoot = document.createElement('div')
     document.body.append(container, portalRoot)
 
-    mount(() => (
-      <HoverCard openDelay={0}>
-        <Trigger data-testid="trigger">Profile</Trigger>
-        <HoverCardPortal container={portalRoot} forceMount>
-          <Content data-testid="content">
-            <Arrow data-testid="arrow" />
-          </Content>
-        </HoverCardPortal>
-      </HoverCard>
-    ), container)
+    mount(
+      () => (
+        <HoverCard openDelay={0}>
+          <Trigger data-testid="trigger">Profile</Trigger>
+          <HoverCardPortal container={portalRoot} forceMount>
+            <Content data-testid="content">
+              <Arrow data-testid="arrow" />
+            </Content>
+          </HoverCardPortal>
+        </HoverCard>
+      ),
+      container,
+    )
 
     await flushEffects()
 

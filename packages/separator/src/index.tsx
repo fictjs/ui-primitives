@@ -26,7 +26,11 @@ function isValidOrientation(orientation: unknown): orientation is Orientation {
 }
 
 function Separator(props: SeparatorProps): FictNode {
-  const { decorative = false, orientation: orientationProp = DEFAULT_ORIENTATION, ...domProps } = props
+  const {
+    decorative = false,
+    orientation: orientationProp = DEFAULT_ORIENTATION,
+    ...domProps
+  } = props
   const orientation = (() => {
     const candidate = readValue(orientationProp)
     return isValidOrientation(candidate) ? candidate : DEFAULT_ORIENTATION

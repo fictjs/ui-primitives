@@ -127,13 +127,17 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
   const selectedText = createSignal('')
   const textByValue = new Map<string, string>()
   const valueProp = () =>
-    props.value === undefined ? undefined : readValue(props.value as MaybeAccessor<string | undefined>)
+    props.value === undefined
+      ? undefined
+      : readValue(props.value as MaybeAccessor<string | undefined>)
   const defaultValue = () =>
     props.defaultValue === undefined
       ? ''
       : (readValue(props.defaultValue as MaybeAccessor<string | undefined>) ?? '')
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? false
@@ -174,12 +178,7 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
         }
       }}
     >
-      <Menu
-        {...menuScope}
-        open={open}
-        onOpenChange={setOpen}
-        modal={false}
-      >
+      <Menu {...menuScope} open={open} onOpenChange={setOpen} modal={false}>
         {props.children}
       </Menu>
     </SelectProvider>
@@ -189,7 +188,10 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
 Select.displayName = SELECT_NAME
 
 function SelectTrigger(props: ScopedProps<SelectTriggerProps>): FictNode {
-  const context = useSelectContext(TRIGGER_NAME, props.__scopeSelect as Scope<SelectContextValue | undefined>)
+  const context = useSelectContext(
+    TRIGGER_NAME,
+    props.__scopeSelect as Scope<SelectContextValue | undefined>,
+  )
   const primitiveProps = mergeProps(
     {
       type: 'button',
@@ -226,7 +228,10 @@ function SelectTrigger(props: ScopedProps<SelectTriggerProps>): FictNode {
 SelectTrigger.displayName = TRIGGER_NAME
 
 function SelectValue(props: ScopedProps<SelectValueProps>): FictNode {
-  const context = useSelectContext(VALUE_NAME, props.__scopeSelect as Scope<SelectContextValue | undefined>)
+  const context = useSelectContext(
+    VALUE_NAME,
+    props.__scopeSelect as Scope<SelectContextValue | undefined>,
+  )
   const placeholder = () =>
     props.placeholder === undefined
       ? ''
@@ -271,7 +276,10 @@ SelectPortal.displayName = PORTAL_NAME
 
 function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeSelect)
-  const context = useSelectContext(CONTENT_NAME, props.__scopeSelect as Scope<SelectContextValue | undefined>)
+  const context = useSelectContext(
+    CONTENT_NAME,
+    props.__scopeSelect as Scope<SelectContextValue | undefined>,
+  )
 
   return (
     <MenuContent
@@ -309,7 +317,10 @@ function SelectLabel(props: ScopedProps<SelectLabelProps>): FictNode {
 SelectLabel.displayName = LABEL_NAME
 
 function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
-  const context = useSelectContext(ITEM_NAME, props.__scopeSelect as Scope<SelectContextValue | undefined>)
+  const context = useSelectContext(
+    ITEM_NAME,
+    props.__scopeSelect as Scope<SelectContextValue | undefined>,
+  )
   const selected = () => context.value() === props.value
   const disabled = () =>
     props.disabled === undefined
@@ -362,8 +373,14 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
 SelectItem.displayName = ITEM_NAME
 
 function SelectItemText(props: ScopedProps<SelectItemTextProps>): FictNode {
-  const rootContext = useSelectContext(ITEM_TEXT_NAME, props.__scopeSelect as Scope<SelectContextValue | undefined>)
-  const itemContext = useSelectItemContext(ITEM_TEXT_NAME, props.__scopeSelect as Scope<SelectItemContextValue | undefined>)
+  const rootContext = useSelectContext(
+    ITEM_TEXT_NAME,
+    props.__scopeSelect as Scope<SelectContextValue | undefined>,
+  )
+  const itemContext = useSelectItemContext(
+    ITEM_TEXT_NAME,
+    props.__scopeSelect as Scope<SelectItemContextValue | undefined>,
+  )
   const ref = { current: null as HTMLSpanElement | null }
 
   useLayoutEffect(() => {

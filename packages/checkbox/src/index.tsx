@@ -126,22 +126,31 @@ function setNativeInputChecked(input: HTMLInputElement, checked: CheckedState): 
 
 function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
   const checkedProp = () =>
-    props.checked === undefined ? undefined : readValue(props.checked as MaybeAccessor<CheckedState | undefined>)
+    props.checked === undefined
+      ? undefined
+      : readValue(props.checked as MaybeAccessor<CheckedState | undefined>)
   const defaultChecked = () =>
     props.defaultChecked === undefined
       ? false
       : (readValue(props.defaultChecked as MaybeAccessor<CheckedState | undefined>) ?? false)
   const required = () =>
-    props.required === undefined ? undefined : readValue(props.required as MaybeAccessor<boolean | undefined>)
+    props.required === undefined
+      ? undefined
+      : readValue(props.required as MaybeAccessor<boolean | undefined>)
   const disabled = () => Boolean(readValue(props.disabled as MaybeAccessor<unknown>))
   const name = () =>
-    props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>)
+    props.name === undefined
+      ? undefined
+      : readValue(props.name as MaybeAccessor<string | undefined>)
   const form = () =>
-    props.form === undefined ? undefined : readValue(props.form as MaybeAccessor<string | undefined>)
+    props.form === undefined
+      ? undefined
+      : readValue(props.form as MaybeAccessor<string | undefined>)
   const value = () =>
     props.value === undefined
       ? 'on'
-      : ((readValue(props.value as MaybeAccessor<CheckboxValue | undefined>) ?? 'on') as CheckboxValue)
+      : ((readValue(props.value as MaybeAccessor<CheckboxValue | undefined>) ??
+          'on') as CheckboxValue)
   const control = createSignal<HTMLButtonElement | null>(null)
   const bubbleInput = createSignal<HTMLInputElement | null>(null)
   const isFormControl = createSignal(Boolean(form()))
@@ -212,9 +221,8 @@ CheckboxProvider.displayName = CHECKBOX_NAME + 'Provider'
 function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
   const { __scopeCheckbox, ...triggerProps } = props
   const context = useCheckboxContext(TRIGGER_NAME, __scopeCheckbox)
-  const composedRefs = useComposedRefs(
-    props.ref as PossibleRef<HTMLButtonElement>,
-    (node) => context.setControl(node),
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLButtonElement>, (node) =>
+    context.setControl(node),
   )
   const initialCheckedState = context.checked()
 
@@ -296,7 +304,9 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
     {
       type: 'button',
       role: 'checkbox',
-      'aria-checked': prop(() => (isIndeterminate(context.checked()) ? 'mixed' : String(context.checked()))),
+      'aria-checked': prop(() =>
+        isIndeterminate(context.checked()) ? 'mixed' : String(context.checked()),
+      ),
       'aria-required': prop(() => (context.required() ? 'true' : undefined)),
       'data-state': prop(() => getState(context.checked())),
       'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
@@ -322,21 +332,18 @@ function CheckboxIndicator(props: ScopedProps<CheckboxIndicatorProps>): FictNode
   const present = () =>
     Boolean(
       (props.forceMount === undefined ? false : readValue(props.forceMount)) ||
-        isIndeterminate(context.checked()) ||
-        context.checked() === true,
+      isIndeterminate(context.checked()) ||
+      context.checked() === true,
     )
-  const primitiveProps = mergeProps(
-    () => indicatorProps as Record<string, unknown>,
-    {
-      'data-state': prop(() => getState(context.checked())),
-      'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
-      forceMount: undefined,
-      style: prop(() => ({
-        pointerEvents: 'none',
-        ...readStyle(props.style as MaybeAccessor<CheckboxStyle> | undefined),
-      })),
-    },
-  )
+  const primitiveProps = mergeProps(() => indicatorProps as Record<string, unknown>, {
+    'data-state': prop(() => getState(context.checked())),
+    'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
+    forceMount: undefined,
+    style: prop(() => ({
+      pointerEvents: 'none',
+      ...readStyle(props.style as MaybeAccessor<CheckboxStyle> | undefined),
+    })),
+  })
 
   return (
     <Presence present={present}>
@@ -350,9 +357,8 @@ CheckboxIndicator.displayName = INDICATOR_NAME
 function CheckboxBubbleInput(props: ScopedProps<CheckboxBubbleInputProps>): FictNode {
   const { __scopeCheckbox, ...inputProps } = props
   const context = useCheckboxContext(BUBBLE_INPUT_NAME, __scopeCheckbox)
-  const composedRefs = useComposedRefs(
-    props.ref as PossibleRef<HTMLInputElement>,
-    (node) => context.setBubbleInput(node),
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLInputElement>, (node) =>
+    context.setBubbleInput(node),
   )
   const controlSize = useSize(context.control)
 
@@ -405,7 +411,9 @@ function CheckboxBubbleInput(props: ScopedProps<CheckboxBubbleInputProps>): Fict
 
 CheckboxBubbleInput.displayName = BUBBLE_INPUT_NAME
 
-function CheckboxRootBubbleInput(props: { __scopeCheckbox?: Scope<CheckboxContextValue | undefined> }): FictNode {
+function CheckboxRootBubbleInput(props: {
+  __scopeCheckbox?: Scope<CheckboxContextValue | undefined>
+}): FictNode {
   const context = useCheckboxContext(CHECKBOX_NAME, props.__scopeCheckbox)
 
   return (

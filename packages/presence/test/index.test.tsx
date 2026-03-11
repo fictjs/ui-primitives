@@ -29,11 +29,14 @@ describe('@fictjs/presence', () => {
     const present = createSignal(true)
     const container = document.createElement('div')
 
-    render(() => (
-      <Presence present={() => present()}>
-        <div data-testid="content">Ready</div>
-      </Presence>
-    ), container)
+    render(
+      () => (
+        <Presence present={() => present()}>
+          <div data-testid="content">Ready</div>
+        </Presence>
+      ),
+      container,
+    )
 
     expect(container.textContent).toBe('Ready')
 
@@ -47,11 +50,14 @@ describe('@fictjs/presence', () => {
     const present = createSignal(false)
     const container = document.createElement('div')
 
-    render(() => (
-      <Presence present={() => present()}>
-        {({ present: isPresent }) => <div data-present={String(isPresent)}>Stateful</div>}
-      </Presence>
-    ), container)
+    render(
+      () => (
+        <Presence present={() => present()}>
+          {({ present: isPresent }) => <div data-present={String(isPresent)}>Stateful</div>}
+        </Presence>
+      ),
+      container,
+    )
 
     expect((container.firstElementChild as HTMLDivElement).dataset.present).toBe('false')
 
@@ -65,11 +71,16 @@ describe('@fictjs/presence', () => {
     const present = createSignal(true)
     const container = document.createElement('div')
 
-    render(() => (
-      <Presence present={() => present()}>
-        <div data-testid="content" style={{ animationName: 'fade-in' }}>Animated</div>
-      </Presence>
-    ), container)
+    render(
+      () => (
+        <Presence present={() => present()}>
+          <div data-testid="content" style={{ animationName: 'fade-in' }}>
+            Animated
+          </div>
+        </Presence>
+      ),
+      container,
+    )
 
     const node = container.firstElementChild as HTMLDivElement
     expect(node.textContent).toBe('Animated')

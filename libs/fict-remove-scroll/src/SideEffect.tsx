@@ -27,7 +27,7 @@ export const getTouchXY = (event: TouchEvent | Event): [number, number] =>
   'changedTouches' in event && event.changedTouches.length > 0
     ? (() => {
         const touch = event.changedTouches.item(0)
-        return touch ? [touch.clientX, touch.clientY] as [number, number] : [0, 0]
+        return touch ? ([touch.clientX, touch.clientY] as [number, number]) : [0, 0]
       })()
     : [0, 0]
 
@@ -56,7 +56,10 @@ const generateStyle = (id: number): string => `
 let idCounter = 0
 let lockStack: unknown[] = []
 
-function readBoolean(value: MaybeAccessor<boolean | undefined> | undefined, fallback = false): boolean {
+function readBoolean(
+  value: MaybeAccessor<boolean | undefined> | undefined,
+  fallback = false,
+): boolean {
   if (typeof value === 'function') {
     return Boolean((value as () => boolean | undefined)())
   }
@@ -73,7 +76,9 @@ function readGapMode(value: MaybeAccessor<GapMode | undefined> | undefined): Gap
 }
 
 function readShards(
-  value: MaybeAccessor<Array<HTMLElement | { current: HTMLElement | null }> | undefined> | undefined,
+  value:
+    | MaybeAccessor<Array<HTMLElement | { current: HTMLElement | null }> | undefined>
+    | undefined,
 ): Array<HTMLElement | { current: HTMLElement | null }> {
   if (typeof value === 'function') {
     return (value as () => Array<HTMLElement | { current: HTMLElement | null }> | undefined)() ?? []
@@ -99,7 +104,10 @@ export function RemoveScrollSideCar(props: IRemoveScrollEffectProps): FictNode {
   const Style = styleSingleton()
 
   const shouldCancelEvent = (event: WheelEvent | TouchEvent, parent: HTMLElement): boolean => {
-    if (('touches' in event && event.touches.length === 2) || (event.type === 'wheel' && event.ctrlKey)) {
+    if (
+      ('touches' in event && event.touches.length === 2) ||
+      (event.type === 'wheel' && event.ctrlKey)
+    ) {
       return !readBoolean(props.allowPinchZoom, false)
     }
 
@@ -109,13 +117,20 @@ export function RemoveScrollSideCar(props: IRemoveScrollEffectProps): FictNode {
     const target = event.target as HTMLElement
     const moveDirection: Axis = Math.abs(deltaX) > Math.abs(deltaY) ? 'h' : 'v'
 
-    if ('touches' in event && moveDirection === 'h' && target instanceof HTMLInputElement && target.type === 'range') {
+    if (
+      'touches' in event &&
+      moveDirection === 'h' &&
+      target instanceof HTMLInputElement &&
+      target.type === 'range'
+    ) {
       return false
     }
 
     const selection = typeof window !== 'undefined' ? window.getSelection() : null
     const anchorNode = selection?.anchorNode
-    const isTouchingSelection = anchorNode ? anchorNode === target || anchorNode.contains(target) : false
+    const isTouchingSelection = anchorNode
+      ? anchorNode === target || anchorNode.contains(target)
+      : false
 
     if (isTouchingSelection) {
       return false
@@ -192,7 +207,12 @@ export function RemoveScrollSideCar(props: IRemoveScrollEffectProps): FictNode {
     }
   }
 
-  const shouldCancel = (name: string, delta: number[], target: EventTarget | null, should: boolean): void => {
+  const shouldCancel = (
+    name: string,
+    delta: number[],
+    target: EventTarget | null,
+    should: boolean,
+  ): void => {
     const event: QueueItem = {
       name,
       delta,
@@ -225,7 +245,12 @@ export function RemoveScrollSideCar(props: IRemoveScrollEffectProps): FictNode {
       return
     }
 
-    shouldCancel(event.type, getDeltaXY(event), event.target, shouldCancelEvent(event as WheelEvent, parent))
+    shouldCancel(
+      event.type,
+      getDeltaXY(event),
+      event.target,
+      shouldCancelEvent(event as WheelEvent, parent),
+    )
   }
 
   const scrollTouchMove = (event: Event): void => {
@@ -235,7 +260,12 @@ export function RemoveScrollSideCar(props: IRemoveScrollEffectProps): FictNode {
       return
     }
 
-    shouldCancel(event.type, getTouchXY(event), event.target, shouldCancelEvent(event as TouchEvent, parent))
+    shouldCancel(
+      event.type,
+      getTouchXY(event),
+      event.target,
+      shouldCancelEvent(event as TouchEvent, parent),
+    )
   }
 
   onMount(() => {

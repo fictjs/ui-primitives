@@ -28,7 +28,9 @@ type PrimitivePropsWithRef<E extends PrimitiveNode> = JSX.IntrinsicElements[E] &
   asChild?: boolean
 }
 
-type PrimitiveComponent<E extends PrimitiveNode> = ((props: PrimitivePropsWithRef<E>) => FictNode) & {
+type PrimitiveComponent<E extends PrimitiveNode> = ((
+  props: PrimitivePropsWithRef<E>,
+) => FictNode) & {
   displayName?: string
 }
 
@@ -42,14 +44,14 @@ const Primitive = NODES.reduce<Primitives>((primitive, node) => {
   const Node = ((props: PrimitivePropsWithRef<typeof node>) => {
     const asChild = props.asChild
     const forwardedRef = props.ref
-    const primitiveProps = mergeProps(
-      () => props as Record<string, unknown>,
-      { asChild: undefined, ref: undefined },
-    )
+    const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
+      asChild: undefined,
+      ref: undefined,
+    })
     const Comp = asChild ? Slot : node
 
     if (typeof window !== 'undefined') {
-      ;((window as unknown) as Window & Record<PropertyKey, unknown>)[Symbol.for('radix-ui')] = true
+      ;(window as unknown as Window & Record<PropertyKey, unknown>)[Symbol.for('radix-ui')] = true
     }
 
     return createElement({

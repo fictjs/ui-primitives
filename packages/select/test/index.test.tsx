@@ -4,15 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 
-import {
-  Content,
-  Item,
-  ItemIndicator,
-  ItemText,
-  Root,
-  Trigger,
-  Value,
-} from '../src/index.js'
+import { Content, Item, ItemIndicator, ItemText, Root, Trigger, Value } from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -57,21 +49,24 @@ describe('@fictjs/select', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root>
-        <Trigger data-testid="trigger">
-          <Value data-testid="value" placeholder="Choose one" />
-        </Trigger>
-        <Content data-testid="content">
-          <Item value="apple" data-testid="item-apple">
-            <ItemText>Apple</ItemText>
-          </Item>
-          <Item value="orange" data-testid="item-orange">
-            <ItemText>Orange</ItemText>
-          </Item>
-        </Content>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root>
+          <Trigger data-testid="trigger">
+            <Value data-testid="value" placeholder="Choose one" />
+          </Trigger>
+          <Content data-testid="content">
+            <Item value="apple" data-testid="item-apple">
+              <ItemText>Apple</ItemText>
+            </Item>
+            <Item value="orange" data-testid="item-orange">
+              <ItemText>Orange</ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Choose one')
@@ -89,19 +84,22 @@ describe('@fictjs/select', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root defaultValue="apple" defaultOpen>
-        <Trigger>
-          <Value />
-        </Trigger>
-        <Content>
-          <Item value="apple" data-testid="item-apple">
-            <ItemText>Apple</ItemText>
-            <ItemIndicator data-testid="indicator">x</ItemIndicator>
-          </Item>
-        </Content>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root defaultValue="apple" defaultOpen>
+          <Trigger>
+            <Value />
+          </Trigger>
+          <Content>
+            <Item value="apple" data-testid="item-apple">
+              <ItemText>Apple</ItemText>
+              <ItemIndicator data-testid="indicator">x</ItemIndicator>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

@@ -24,7 +24,9 @@ function readValue<T>(value: MaybeAccessor<T>): T {
 
 function Toggle(props: ToggleProps): FictNode {
   const controlledPressed = () =>
-    props.pressed === undefined ? undefined : readValue(props.pressed as MaybeAccessor<boolean | undefined>)
+    props.pressed === undefined
+      ? undefined
+      : readValue(props.pressed as MaybeAccessor<boolean | undefined>)
   const defaultPressed = () =>
     props.defaultPressed === undefined ? false : (readValue(props.defaultPressed) ?? false)
   const isDisabled = () => Boolean(readValue(props.disabled as MaybeAccessor<unknown>))

@@ -68,12 +68,15 @@ describe('@fictjs/use-size', () => {
     })
 
     let observer: ResizeObserverMock | undefined
-    vi.stubGlobal('ResizeObserver', class {
-      constructor(callback: ResizeObserverCallback) {
-        observer = new ResizeObserverMock(callback)
-        return observer
-      }
-    })
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          observer = new ResizeObserverMock(callback)
+          return observer
+        }
+      },
+    )
 
     function Test() {
       const target = createSignal<HTMLDivElement | null>(null)
@@ -83,10 +86,12 @@ describe('@fictjs/use-size', () => {
         <>
           <div ref={(node) => target(node)} data-width="120" data-height="48" />
           <output>
-            {(() => {
-              const nextSize = size()
-              return nextSize ? `${nextSize.width}x${nextSize.height}` : 'none'
-            }) as unknown as string}
+            {
+              (() => {
+                const nextSize = size()
+                return nextSize ? `${nextSize.width}x${nextSize.height}` : 'none'
+              }) as unknown as string
+            }
           </output>
         </>
       )
@@ -110,11 +115,14 @@ describe('@fictjs/use-size', () => {
 
   it('ignores temporary ref targets that are not elements', async () => {
     const observe = vi.fn()
-    vi.stubGlobal('ResizeObserver', class {
-      observe = observe
-      unobserve(): void {}
-      disconnect(): void {}
-    })
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe = observe
+        unobserve(): void {}
+        disconnect(): void {}
+      },
+    )
 
     function Test() {
       const target = {

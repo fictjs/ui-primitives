@@ -20,11 +20,14 @@ describe('@fictjs/portal', () => {
     const portalRoot = document.createElement('div')
     document.body.append(host, portalRoot)
 
-    render(() => (
-      <Portal container={portalRoot} id="custom-portal">
-        <span>Inside</span>
-      </Portal>
-    ), host)
+    render(
+      () => (
+        <Portal container={portalRoot} id="custom-portal">
+          <span>Inside</span>
+        </Portal>
+      ),
+      host,
+    )
 
     await flushMicrotasks()
 

@@ -110,17 +110,20 @@ describe('@fictjs/popover', () => {
     const portalRoot = document.createElement('div')
     document.body.append(container, portalRoot)
 
-    mount(() => (
-      <Popover>
-        <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
-        <PopoverPortal container={portalRoot}>
-          <PopoverContent data-testid="content">
-            <PopoverArrow data-testid="arrow" />
-            <PopoverClose data-testid="close">Close</PopoverClose>
-          </PopoverContent>
-        </PopoverPortal>
-      </Popover>
-    ), container)
+    mount(
+      () => (
+        <Popover>
+          <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+          <PopoverPortal container={portalRoot}>
+            <PopoverContent data-testid="content">
+              <PopoverArrow data-testid="arrow" />
+              <PopoverClose data-testid="close">Close</PopoverClose>
+            </PopoverContent>
+          </PopoverPortal>
+        </Popover>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
@@ -148,11 +151,14 @@ describe('@fictjs/popover', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Popover>
-        <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
-      </Popover>
-    ), container)
+    mount(
+      () => (
+        <Popover>
+          <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+        </Popover>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
     expect(trigger.hasAttribute('data-popper-anchor')).toBe(true)
@@ -162,12 +168,15 @@ describe('@fictjs/popover', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Popover>
-        <PopoverAnchor data-testid="anchor">Anchor</PopoverAnchor>
-        <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
-      </Popover>
-    ), container)
+    mount(
+      () => (
+        <Popover>
+          <PopoverAnchor data-testid="anchor">Anchor</PopoverAnchor>
+          <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+        </Popover>
+      ),
+      container,
+    )
 
     return waitForEffects().then(() => {
       const anchor = container.querySelector('[data-testid="anchor"]') as HTMLDivElement
@@ -182,18 +191,21 @@ describe('@fictjs/popover', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Popover modal>
-        <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
-        <PopoverPortal>
-          <PopoverContent data-testid="content">
-            <button data-testid="inside" type="button">
-              Inside
-            </button>
-          </PopoverContent>
-        </PopoverPortal>
-      </Popover>
-    ), container)
+    mount(
+      () => (
+        <Popover modal>
+          <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+          <PopoverPortal>
+            <PopoverContent data-testid="content">
+              <button data-testid="inside" type="button">
+                Inside
+              </button>
+            </PopoverContent>
+          </PopoverPortal>
+        </Popover>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
     trigger.focus()

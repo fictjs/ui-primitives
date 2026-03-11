@@ -3,6 +3,7 @@ node_modules
 .turbo
 coverage
 dist
+test-results
 floating-ui
 pnpm-lock.yaml
 react-remove-scroll

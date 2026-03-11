@@ -68,22 +68,25 @@ describe('@fictjs/accordion', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Accordion type="single" defaultValue="one" collapsible>
-        <AccordionItem value="one">
-          <AccordionHeader>
-            <AccordionTrigger data-testid="one-trigger">One</AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent data-testid="one-content">One content</AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="two">
-          <AccordionHeader>
-            <AccordionTrigger data-testid="two-trigger">Two</AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent data-testid="two-content">Two content</AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    ), container)
+    mount(
+      () => (
+        <Accordion type="single" defaultValue="one" collapsible>
+          <AccordionItem value="one">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="one-trigger">One</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent data-testid="one-content">One content</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="two">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="two-trigger">Two</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent data-testid="two-content">Two content</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -117,22 +120,25 @@ describe('@fictjs/accordion', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Accordion type="multiple" defaultValue={['one']}>
-        <AccordionItem value="one">
-          <AccordionHeader>
-            <AccordionTrigger data-testid="one-trigger">One</AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent data-testid="one-content">One content</AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="two">
-          <AccordionHeader>
-            <AccordionTrigger data-testid="two-trigger">Two</AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent data-testid="two-content">Two content</AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    ), container)
+    mount(
+      () => (
+        <Accordion type="multiple" defaultValue={['one']}>
+          <AccordionItem value="one">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="one-trigger">One</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent data-testid="one-content">One content</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="two">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="two-trigger">Two</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent data-testid="two-content">Two content</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -155,34 +161,39 @@ describe('@fictjs/accordion', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Accordion type="single">
-        <AccordionItem value="one">
-          <AccordionHeader>
-            <AccordionTrigger data-testid="one-trigger">One</AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent>One content</AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="two">
-          <AccordionHeader>
-            <AccordionTrigger data-testid="two-trigger">Two</AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent>Two content</AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="three">
-          <AccordionHeader>
-            <AccordionTrigger data-testid="three-trigger">Three</AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent>Three content</AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    ), container)
+    mount(
+      () => (
+        <Accordion type="single">
+          <AccordionItem value="one">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="one-trigger">One</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>One content</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="two">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="two-trigger">Two</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>Two content</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="three">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="three-trigger">Three</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>Three content</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
     const oneTrigger = container.querySelector('[data-testid="one-trigger"]') as HTMLButtonElement
     const twoTrigger = container.querySelector('[data-testid="two-trigger"]') as HTMLButtonElement
-    const threeTrigger = container.querySelector('[data-testid="three-trigger"]') as HTMLButtonElement
+    const threeTrigger = container.querySelector(
+      '[data-testid="three-trigger"]',
+    ) as HTMLButtonElement
 
     oneTrigger.focus()
     keyDown(oneTrigger, 'ArrowDown')

@@ -32,12 +32,7 @@ function mergeStyle(style: unknown): string | Record<string, string | number> {
 }
 
 function VisuallyHidden(props: VisuallyHiddenProps): FictNode {
-  return (
-    <Primitive.span
-      {...(props as Record<string, unknown>)}
-      style={mergeStyle(props.style)}
-    />
-  )
+  return <Primitive.span {...(props as Record<string, unknown>)} style={mergeStyle(props.style)} />
 }
 
 VisuallyHidden.displayName = 'VisuallyHidden'

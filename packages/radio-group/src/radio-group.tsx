@@ -144,7 +144,9 @@ function getNextItem(
 function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
   const contextDirection = useDirection()
   const name = () =>
-    props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>)
+    props.name === undefined
+      ? undefined
+      : readValue(props.name as MaybeAccessor<string | undefined>)
   const required = () =>
     Boolean(readValue(props.required as MaybeAccessor<boolean | undefined>) ?? false)
   const disabled = () =>
@@ -162,7 +164,9 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
       ? contextDirection()
       : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? contextDirection())
   const valueProp = () =>
-    props.value === undefined ? undefined : readValue(props.value as MaybeAccessor<string | undefined>)
+    props.value === undefined
+      ? undefined
+      : readValue(props.value as MaybeAccessor<string | undefined>)
   const defaultValue = () =>
     props.defaultValue === undefined
       ? ''
@@ -290,12 +294,9 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
   )
   const radioScope = useRadioScope(__scopeRadioGroup)
   const itemRef = { current: null as RadioGroupItemElement | null }
-  const composedRefs = useComposedRefs(
-    props.ref as PossibleRef<RadioGroupItemElement>,
-    (node) => {
-      itemRef.current = node
-    },
-  )
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<RadioGroupItemElement>, (node) => {
+    itemRef.current = node
+  })
   const checked = () => context.value() === value
   const disabled = () =>
     context.disabled() ||

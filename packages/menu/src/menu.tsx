@@ -5,10 +5,7 @@ import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
 import { composeEventHandlers } from '@fictjs/core-primitive'
 import { useDirection, type Direction } from '@fictjs/direction'
-import {
-  DismissableLayer,
-  type DismissableLayerProps,
-} from '@fictjs/dismissable-layer'
+import { DismissableLayer, type DismissableLayerProps } from '@fictjs/dismissable-layer'
 import { RemoveScroll } from '@fictjs/fict-remove-scroll'
 import { FocusScope, type FocusScopeProps } from '@fictjs/focus-scope'
 import { useId } from '@fictjs/id'
@@ -104,8 +101,7 @@ const [MenuItemIndicatorProvider, useMenuItemIndicatorContext] =
   createMenuContext<MenuItemIndicatorContextValue>(ITEM_INDICATOR_NAME, {
     checked: () => false,
   })
-const [MenuSubProvider, useMenuSubContext] =
-  createMenuContext<MenuSubContextValue>(SUB_NAME)
+const [MenuSubProvider, useMenuSubContext] = createMenuContext<MenuSubContextValue>(SUB_NAME)
 
 type MenuProps = {
   children?: FictNode | FictNode[]
@@ -212,13 +208,17 @@ function Menu(props: ScopedProps<MenuProps>): FictNode {
   const inheritedDirection = useDirection()
   const contentId = useId()
   const modal = () =>
-    props.modal === undefined ? true : Boolean(readValue(props.modal as MaybeAccessor<boolean | undefined>) ?? true)
+    props.modal === undefined
+      ? true
+      : Boolean(readValue(props.modal as MaybeAccessor<boolean | undefined>) ?? true)
   const dir = () =>
     props.dir === undefined
       ? inheritedDirection()
       : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? inheritedDirection())
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const [open, setOpen] = useControllableState<boolean>({
     prop: openProp,
     defaultProp: () => false,
@@ -249,7 +249,10 @@ function MenuAnchor(props: ScopedProps<MenuAnchorProps>): FictNode {
 MenuAnchor.displayName = ANCHOR_NAME
 
 function MenuPortal(props: ScopedProps<MenuPortalProps>): FictNode {
-  const context = useMenuContext(PORTAL_NAME, props.__scopeMenu as Scope<MenuContextValue | undefined>)
+  const context = useMenuContext(
+    PORTAL_NAME,
+    props.__scopeMenu as Scope<MenuContextValue | undefined>,
+  )
   const forceMount =
     props.forceMount === undefined
       ? undefined
@@ -274,9 +277,7 @@ function MenuPortal(props: ScopedProps<MenuPortalProps>): FictNode {
       forceMount={forceMount}
     >
       <Presence present={() => Boolean(forceMount || context.open())}>
-        <PortalPrimitive {...portalProps}>
-          {props.children}
-        </PortalPrimitive>
+        <PortalPrimitive {...portalProps}>{props.children}</PortalPrimitive>
       </Presence>
     </PortalProvider>
   )
@@ -285,8 +286,14 @@ function MenuPortal(props: ScopedProps<MenuPortalProps>): FictNode {
 MenuPortal.displayName = PORTAL_NAME
 
 function MenuContent(props: ScopedProps<MenuContentProps>): FictNode {
-  const portalContext = usePortalContext(PORTAL_NAME, props.__scopeMenu as Scope<PortalContextValue | undefined>)
-  const menuContext = useMenuContext(CONTENT_NAME, props.__scopeMenu as Scope<MenuContextValue | undefined>)
+  const portalContext = usePortalContext(
+    PORTAL_NAME,
+    props.__scopeMenu as Scope<PortalContextValue | undefined>,
+  )
+  const menuContext = useMenuContext(
+    CONTENT_NAME,
+    props.__scopeMenu as Scope<MenuContextValue | undefined>,
+  )
   const forceMount =
     props.forceMount === undefined
       ? portalContext.forceMount
@@ -341,13 +348,20 @@ MenuContent.displayName = CONTENT_NAME
 
 function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
   const { __scopeMenu, forceMount: _forceMount, ...contentProps } = props
-  const menuContext = useMenuContext(CONTENT_NAME, __scopeMenu as Scope<MenuContextValue | undefined>)
+  const menuContext = useMenuContext(
+    CONTENT_NAME,
+    __scopeMenu as Scope<MenuContextValue | undefined>,
+  )
   const contentContext = useMenuContentContext(
     CONTENT_NAME,
     __scopeMenu as Scope<MenuContentContextValue | undefined>,
   )
   const ref = { current: null as HTMLDivElement | null }
-  const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, ref, contentContext.contentRef)
+  const composedRefs = useComposedRefs(
+    props.ref as PossibleRef<HTMLDivElement>,
+    ref,
+    contentContext.contentRef,
+  )
 
   useLayoutEffect(() => {
     if (!menuContext.open()) return
@@ -507,7 +521,9 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
       'data-state': checked ? prop(dataState) : undefined,
       'aria-disabled': prop(() => (disabled() ? 'true' : undefined)),
-      'aria-checked': checked ? prop(() => String(checked() === 'indeterminate' ? 'mixed' : checked() === true)) : undefined,
+      'aria-checked': checked
+        ? prop(() => String(checked() === 'indeterminate' ? 'mixed' : checked() === true))
+        : undefined,
       onPointerMove: composeEventHandlers<PointerEvent>(
         props.onPointerMove as ((event: PointerEvent) => void) | undefined,
         () => {
@@ -602,7 +618,9 @@ MenuCheckboxItem.displayName = CHECKBOX_ITEM_NAME
 
 function MenuRadioGroup(props: ScopedProps<MenuRadioGroupProps>): FictNode {
   const value = () =>
-    props.value === undefined ? '' : (readValue(props.value as MaybeAccessor<string | undefined>) ?? '')
+    props.value === undefined
+      ? ''
+      : (readValue(props.value as MaybeAccessor<string | undefined>) ?? '')
 
   return (
     <MenuRadioGroupProvider
@@ -653,7 +671,10 @@ function MenuItemIndicator(props: ScopedProps<MenuItemIndicatorProps>): FictNode
     props.forceMount === undefined
       ? false
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
-  const present = () => forceMount || indicatorContext.checked() === true || indicatorContext.checked() === 'indeterminate'
+  const present = () =>
+    forceMount ||
+    indicatorContext.checked() === true ||
+    indicatorContext.checked() === 'indeterminate'
 
   return (
     <Presence present={present}>
@@ -678,7 +699,9 @@ MenuArrow.displayName = ARROW_NAME
 
 function MenuSub(props: ScopedProps<MenuSubProps>): FictNode {
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? false
@@ -717,7 +740,11 @@ function MenuSubTrigger(props: ScopedProps<MenuSubTriggerProps>): FictNode {
     props.__scopeMenu as Scope<MenuSubContextValue | undefined>,
   )
   const ref = { current: null as HTMLElement | null }
-  const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLElement>, ref, subContext.triggerRef)
+  const composedRefs = useComposedRefs(
+    props.ref as PossibleRef<HTMLElement>,
+    ref,
+    subContext.triggerRef,
+  )
   const openKeys = () => SUB_OPEN_KEYS[menuContext.dir()]
   const disabled = () =>
     props.disabled === undefined
@@ -773,7 +800,10 @@ function MenuSubContent(props: ScopedProps<MenuSubContentProps>): FictNode {
       forceMount={() =>
         props.forceMount === undefined
           ? subContext.open()
-          : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? subContext.open())
+          : Boolean(
+              readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ??
+              subContext.open(),
+            )
       }
       onCloseAutoFocus={(event) => {
         props.onCloseAutoFocus?.(event)

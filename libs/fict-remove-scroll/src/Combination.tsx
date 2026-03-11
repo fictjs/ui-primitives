@@ -8,9 +8,12 @@ import type { IRemoveScrollProps, IRemoveScrollUIProps, RemoveScrollType } from 
 
 const FictRemoveScroll = ((props: IRemoveScrollProps) => (
   <RemoveScrollUI
-    {...(mergeProps(props as Record<string, unknown>, {
-      sideCar: SideCar,
-    } as Record<string, unknown>) as IRemoveScrollUIProps)}
+    {...(mergeProps(
+      props as Record<string, unknown>,
+      {
+        sideCar: SideCar,
+      } as Record<string, unknown>,
+    ) as IRemoveScrollUIProps)}
   />
 )) as RemoveScrollType
 

@@ -134,7 +134,7 @@ function getNextItem(
   items: ToolbarItemElement[],
   currentElement: ToolbarItemElement | null,
   intent: 'prev' | 'next' | 'first' | 'last',
-  loop: boolean
+  loop: boolean,
 ): ToolbarItemElement | undefined {
   if (items.length === 0) return undefined
 
@@ -168,7 +168,9 @@ function Toolbar(props: ScopedProps<ToolbarProps>): FictNode {
       ? inheritedDirection()
       : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? inheritedDirection())
   const loop = () =>
-    props.loop === undefined ? true : Boolean(readValue(props.loop as MaybeAccessor<boolean | undefined>) ?? true)
+    props.loop === undefined
+      ? true
+      : Boolean(readValue(props.loop as MaybeAccessor<boolean | undefined>) ?? true)
   const rootRef = { current: null as HTMLDivElement | null }
   const currentTabStopRef = { current: null as ToolbarItemElement | null }
   const getItems = () =>
@@ -309,8 +311,8 @@ function useToolbarItemProps(
           if (!intent) return
 
           const currentTarget =
-            ((document.activeElement as ToolbarItemElement | null) ??
-              (event.currentTarget as ToolbarItemElement))
+            (document.activeElement as ToolbarItemElement | null) ??
+            (event.currentTarget as ToolbarItemElement)
           const enabledItems = context.getItems().filter((item) => !isToolbarItemDisabled(item))
           const nextItem = getNextItem(enabledItems, currentTarget, intent, context.loop())
           if (!nextItem) return
@@ -327,7 +329,8 @@ function useToolbarItemProps(
 
 function ToolbarButton(props: ScopedProps<ToolbarButtonProps>): FictNode {
   const { __scopeToolbar: _scopeToolbar, disabled = false, ...buttonProps } = props
-  const isDisabled = () => Boolean(readValue(disabled as MaybeAccessor<boolean | undefined>) ?? false)
+  const isDisabled = () =>
+    Boolean(readValue(disabled as MaybeAccessor<boolean | undefined>) ?? false)
   const primitiveProps = mergeProps(
     {
       type: 'button',
@@ -353,22 +356,19 @@ ToolbarButton.displayName = BUTTON_NAME
 function ToolbarLink(props: ScopedProps<ToolbarLinkProps>): FictNode {
   const { __scopeToolbar: _scopeToolbar, ...linkProps } = props
   const isDisabled = () => false
-  const toolbarLinkProps = mergeProps(
-    () => linkProps as Record<string, unknown>,
-    {
-      onKeyDown: composeEventHandlers<KeyboardEvent>(
-        linkProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-        (event) => {
-          if (event.key === ' ') {
-            event.preventDefault()
-            if (!isDisabled()) {
-              ;(event.currentTarget as HTMLAnchorElement).click()
-            }
+  const toolbarLinkProps = mergeProps(() => linkProps as Record<string, unknown>, {
+    onKeyDown: composeEventHandlers<KeyboardEvent>(
+      linkProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+      (event) => {
+        if (event.key === ' ') {
+          event.preventDefault()
+          if (!isDisabled()) {
+            ;(event.currentTarget as HTMLAnchorElement).click()
           }
-        },
-      ),
-    },
-  )
+        }
+      },
+    ),
+  })
   const primitiveProps = mergeProps(
     useToolbarItemProps(
       props.__scopeToolbar,
@@ -413,7 +413,8 @@ ToolbarToggleGroup.displayName = TOGGLE_GROUP_NAME
 
 function ToolbarToggleItem(props: ScopedProps<ToolbarToggleItemProps>): FictNode {
   const { __scopeToolbar: _scopeToolbar, disabled = false, ...toggleItemProps } = props
-  const isDisabled = () => Boolean(readValue(disabled as MaybeAccessor<boolean | undefined>) ?? false)
+  const isDisabled = () =>
+    Boolean(readValue(disabled as MaybeAccessor<boolean | undefined>) ?? false)
   const primitiveProps = mergeProps(
     useToolbarItemProps(
       props.__scopeToolbar,

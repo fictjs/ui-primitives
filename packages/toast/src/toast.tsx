@@ -163,7 +163,8 @@ function isDeltaPastThreshold(
     return false
   }
 
-  const distance = direction === 'left' || direction === 'right' ? Math.abs(delta.x) : Math.abs(delta.y)
+  const distance =
+    direction === 'left' || direction === 'right' ? Math.abs(delta.x) : Math.abs(delta.y)
   return distance >= threshold
 }
 
@@ -336,7 +337,9 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
   const ref = { current: null as ToastElement | null }
   const composedRefs = useComposedRefs(props.ref as PossibleRef<ToastElement>, ref)
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? true
@@ -344,7 +347,8 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
   const resolvedDuration = () =>
     props.duration === undefined
       ? providerContext.duration()
-      : (readValue(props.duration as MaybeAccessor<number | undefined>) ?? providerContext.duration())
+      : (readValue(props.duration as MaybeAccessor<number | undefined>) ??
+        providerContext.duration())
   const [open, setOpen] = useControllableState<boolean>({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -518,7 +522,9 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
 
           const delta = getSwipeDirectionDelta(pointerStartRef.current, event)
           swipeDelta(delta)
-          swipeState(isDeltaInDirection(providerContext.swipeDirection(), delta) ? 'move' : 'cancel')
+          swipeState(
+            isDeltaInDirection(providerContext.swipeDirection(), delta) ? 'move' : 'cancel',
+          )
         },
       ),
       onPointerUp: composeEventHandlers<PointerEvent>(
@@ -627,7 +633,9 @@ function ToastAction(props: ScopedProps<ToastActionProps>): FictNode {
   const { altText, ...actionProps } = props
 
   if (!altText.trim()) {
-    console.error(`Invalid prop \`altText\` supplied to \`${ACTION_NAME}\`. Expected non-empty \`string\`.`)
+    console.error(
+      `Invalid prop \`altText\` supplied to \`${ACTION_NAME}\`. Expected non-empty \`string\`.`,
+    )
   }
 
   return <Primitive.button {...actionProps} aria-label={altText} />
@@ -636,7 +644,10 @@ function ToastAction(props: ScopedProps<ToastActionProps>): FictNode {
 ToastAction.displayName = ACTION_NAME
 
 function ToastClose(props: ScopedProps<ToastCloseProps>): FictNode {
-  const context = useToastContext(CLOSE_NAME, props.__scopeToast as Scope<ToastContextValue | undefined>)
+  const context = useToastContext(
+    CLOSE_NAME,
+    props.__scopeToast as Scope<ToastContextValue | undefined>,
+  )
   const primitiveProps = mergeProps(
     {
       type: 'button',

@@ -10,10 +10,7 @@ import {
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
 import { composeEventHandlers } from '@fictjs/core-primitive'
-import {
-  DismissableLayer,
-  type DismissableLayerProps,
-} from '@fictjs/dismissable-layer'
+import { DismissableLayer, type DismissableLayerProps } from '@fictjs/dismissable-layer'
 import { RemoveScroll } from '@fictjs/fict-remove-scroll'
 import { useFocusGuards } from '@fictjs/focus-guards'
 import { FocusScope, type FocusScopeProps } from '@fictjs/focus-scope'
@@ -172,13 +169,17 @@ function Dialog(props: ScopedProps<DialogProps>): FictNode {
   const titleId = useId()
   const descriptionId = useId()
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? false
       : (readValue(props.defaultOpen as MaybeAccessor<boolean | undefined>) ?? false)
   const modal = () =>
-    props.modal === undefined ? true : Boolean(readValue(props.modal as MaybeAccessor<boolean | undefined>))
+    props.modal === undefined
+      ? true
+      : Boolean(readValue(props.modal as MaybeAccessor<boolean | undefined>))
   const [open, setOpen] = useControllableState<boolean>({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -387,25 +388,19 @@ function DialogContentModal(props: ScopedProps<DialogContentTypeProps>): FictNod
       ref={composedRefs}
       trapFocus={() => context.open()}
       disableOutsidePointerEvents
-      onCloseAutoFocus={composeEventHandlers(
-        props.onCloseAutoFocus,
-        (event) => {
-          event.preventDefault()
-          context.triggerRef.current?.focus()
-        },
-      )}
-      onPointerDownOutside={composeEventHandlers(
-        props.onPointerDownOutside,
-        (event) => {
-          const originalEvent = event.detail.originalEvent
-          const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true
-          const isRightClick = originalEvent.button === 2 || ctrlLeftClick
+      onCloseAutoFocus={composeEventHandlers(props.onCloseAutoFocus, (event) => {
+        event.preventDefault()
+        context.triggerRef.current?.focus()
+      })}
+      onPointerDownOutside={composeEventHandlers(props.onPointerDownOutside, (event) => {
+        const originalEvent = event.detail.originalEvent
+        const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true
+        const isRightClick = originalEvent.button === 2 || ctrlLeftClick
 
-          if (isRightClick) {
-            event.preventDefault()
-          }
-        },
-      )}
+        if (isRightClick) {
+          event.preventDefault()
+        }
+      })}
       onFocusOutside={composeEventHandlers(
         props.onFocusOutside,
         (event) => {
@@ -548,7 +543,10 @@ function DialogContentImpl(props: ScopedProps<DialogContentImplProps>): FictNode
       {process.env.NODE_ENV !== 'production' ? (
         <>
           <TitleWarning titleId={context.titleId()} />
-          <DescriptionWarning contentRef={context.contentRef} descriptionId={context.descriptionId()} />
+          <DescriptionWarning
+            contentRef={context.contentRef}
+            descriptionId={context.descriptionId()}
+          />
         </>
       ) : null}
     </>

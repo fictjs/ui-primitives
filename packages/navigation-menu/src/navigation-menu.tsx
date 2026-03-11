@@ -1,4 +1,11 @@
-import { createElement, createPortal as createFictPortal, mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import {
+  createElement,
+  createPortal as createFictPortal,
+  mergeProps,
+  prop,
+  type FictNode,
+  type JSX,
+} from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -87,7 +94,9 @@ function readValue<T>(value: MaybeAccessor<T>): T {
 
 function NavigationMenuImpl(props: ScopedProps<NavigationMenuProps>, name: string): FictNode {
   const valueProp = () =>
-    props.value === undefined ? undefined : readValue(props.value as MaybeAccessor<string | undefined>)
+    props.value === undefined
+      ? undefined
+      : readValue(props.value as MaybeAccessor<string | undefined>)
   const defaultValue = () =>
     props.defaultValue === undefined
       ? ''
@@ -99,15 +108,12 @@ function NavigationMenuImpl(props: ScopedProps<NavigationMenuProps>, name: strin
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
   const viewport = createSignal<HTMLDivElement | null>(null)
-  const primitiveProps = mergeProps(
-    () => props as Record<string, unknown>,
-    {
-      __scopeNavigationMenu: undefined,
-      defaultValue: undefined,
-      onValueChange: undefined,
-      value: undefined,
-    },
-  )
+  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
+    __scopeNavigationMenu: undefined,
+    defaultValue: undefined,
+    onValueChange: undefined,
+    value: undefined,
+  })
 
   return (
     <NavigationMenuProvider
@@ -143,7 +149,9 @@ NavigationMenuList.displayName = LIST_NAME
 function NavigationMenuItem(props: ScopedProps<NavigationMenuItemProps>): FictNode {
   const generatedValue = useId()
   const value = () =>
-    props.value === undefined ? generatedValue() : (readValue(props.value as MaybeAccessor<string | undefined>) ?? generatedValue())
+    props.value === undefined
+      ? generatedValue()
+      : (readValue(props.value as MaybeAccessor<string | undefined>) ?? generatedValue())
 
   return (
     <NavigationMenuItemProvider
@@ -190,13 +198,12 @@ NavigationMenuTrigger.displayName = TRIGGER_NAME
 
 function NavigationMenuLink(props: ScopedProps<NavigationMenuLinkProps>): FictNode {
   const active = () =>
-    props.active === undefined ? false : Boolean(readValue(props.active as MaybeAccessor<boolean | undefined>) ?? false)
+    props.active === undefined
+      ? false
+      : Boolean(readValue(props.active as MaybeAccessor<boolean | undefined>) ?? false)
 
   return (
-    <Primitive.a
-      {...(props as Record<string, unknown>)}
-      data-active={active() ? '' : undefined}
-    />
+    <Primitive.a {...(props as Record<string, unknown>)} data-active={active() ? '' : undefined} />
   )
 }
 
@@ -235,7 +242,11 @@ function NavigationMenuContent(props: ScopedProps<NavigationMenuContentProps>): 
         if (!present()) return null
         if (!rootContext.viewport()) return node
 
-        return createFictPortal(rootContext.viewport() as HTMLDivElement, () => node, createElement) as unknown as FictNode
+        return createFictPortal(
+          rootContext.viewport() as HTMLDivElement,
+          () => node,
+          createElement,
+        ) as unknown as FictNode
       }}
     </Presence>
   )

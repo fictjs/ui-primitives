@@ -52,12 +52,15 @@ describe('@fictjs/password-toggle-field', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root>
-        <Input data-testid="input" defaultValue="secret" />
-        <Toggle data-testid="toggle">Show</Toggle>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root>
+          <Input data-testid="input" defaultValue="secret" />
+          <Toggle data-testid="toggle">Show</Toggle>
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -80,12 +83,15 @@ describe('@fictjs/password-toggle-field', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root>
-        <Input data-testid="input" id="account-password" defaultValue="secret" />
-        <Toggle data-testid="toggle">Show</Toggle>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root>
+          <Input data-testid="input" id="account-password" defaultValue="secret" />
+          <Toggle data-testid="toggle">Show</Toggle>
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -97,18 +103,24 @@ describe('@fictjs/password-toggle-field', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root>
-        <Input data-testid="input" defaultValue="secret" />
-        <Toggle data-testid="toggle">Show</Toggle>
-        <Slot visible={<span data-testid="slot-visible">Visible</span>} hidden={<span data-testid="slot-hidden">Hidden</span>} />
-        <Icon
-          data-testid="icon"
-          visible={<path data-testid="icon-visible" d="M0 0" />}
-          hidden={<path data-testid="icon-hidden" d="M1 1" />}
-        />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root>
+          <Input data-testid="input" defaultValue="secret" />
+          <Toggle data-testid="toggle">Show</Toggle>
+          <Slot
+            visible={<span data-testid="slot-visible">Visible</span>}
+            hidden={<span data-testid="slot-hidden">Hidden</span>}
+          />
+          <Icon
+            data-testid="icon"
+            visible={<path data-testid="icon-visible" d="M0 0" />}
+            hidden={<path data-testid="icon-hidden" d="M1 1" />}
+          />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

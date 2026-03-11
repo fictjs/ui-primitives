@@ -17,27 +17,30 @@ describe('@fictjs/slot', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
-    const dispose = render(() => (
-      <Slot
-        class="slot"
-        onClick={() => {
-          events.push('slot')
-        }}
-        style={{ color: 'red' }}
-      >
-        <button
-          class="child"
+    const dispose = render(
+      () => (
+        <Slot
+          class="slot"
           onClick={() => {
-            events.push('child')
+            events.push('slot')
           }}
-          ref={childRef}
-          style={{ backgroundColor: 'blue' }}
-          type="button"
+          style={{ color: 'red' }}
         >
-          Click
-        </button>
-      </Slot>
-    ), container)
+          <button
+            class="child"
+            onClick={() => {
+              events.push('child')
+            }}
+            ref={childRef}
+            style={{ backgroundColor: 'blue' }}
+            type="button"
+          >
+            Click
+          </button>
+        </Slot>
+      ),
+      container,
+    )
 
     const button = childRef.current
     expect(button).not.toBeNull()
@@ -55,15 +58,18 @@ describe('@fictjs/slot', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
-    render(() => (
-      <Slot class="trigger" data-slot="root">
-        <span>left</span>
-        <Slottable>
-          <button type="button">center</button>
-        </Slottable>
-        <span>right</span>
-      </Slot>
-    ), container)
+    render(
+      () => (
+        <Slot class="trigger" data-slot="root">
+          <span>left</span>
+          <Slottable>
+            <button type="button">center</button>
+          </Slottable>
+          <span>right</span>
+        </Slot>
+      ),
+      container,
+    )
 
     const button = container.querySelector('button')
     expect(button).not.toBeNull()
@@ -76,12 +82,15 @@ describe('@fictjs/slot', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
-    render(() => (
-      <Slot>
-        <span>first</span>
-        <span>second</span>
-      </Slot>
-    ), container)
+    render(
+      () => (
+        <Slot>
+          <span>first</span>
+          <span>second</span>
+        </Slot>
+      ),
+      container,
+    )
 
     expect(container.innerHTML).toBe('')
   })

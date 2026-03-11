@@ -28,12 +28,15 @@ describe('@fictjs/label', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
-    render(() => (
-      <Label>
-        Name
-        <input />
-      </Label>
-    ), container)
+    render(
+      () => (
+        <Label>
+          Name
+          <input />
+        </Label>
+      ),
+      container,
+    )
 
     const input = container.querySelector('input') as HTMLInputElement
     const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true, detail: 2 })

@@ -83,7 +83,10 @@ function cloneVNode(node: FictVNode, props: Record<string, unknown>): FictVNode 
 function usePresence(present: MaybeAccessor<boolean>) {
   const node = createSignal<HTMLElement | undefined>(undefined)
   const initialPresent = readValue(present)
-  const [state, send] = createStateMachine(initialPresent ? 'mounted' : 'unmounted', PRESENCE_MACHINE)
+  const [state, send] = createStateMachine(
+    initialPresent ? 'mounted' : 'unmounted',
+    PRESENCE_MACHINE,
+  )
   let stylesRef: CSSStyleDeclaration | null = null
   let prevPresent = initialPresent
   let prevAnimationName = 'none'
@@ -150,7 +153,9 @@ function usePresence(present: MaybeAccessor<boolean>) {
       const animationEvent = event as Event & { animationName?: string }
       const currentAnimationName = readAnimationName()
       const eventAnimationName = animationEvent.animationName ?? ''
-      const isCurrentAnimation = currentAnimationName.includes(escapeAnimationName(eventAnimationName))
+      const isCurrentAnimation = currentAnimationName.includes(
+        escapeAnimationName(eventAnimationName),
+      )
 
       if (event.target === currentNode && isCurrentAnimation) {
         send('ANIMATION_END')

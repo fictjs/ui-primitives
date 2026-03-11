@@ -4,15 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 
-import {
-  Action,
-  Close,
-  Description,
-  Provider,
-  Root,
-  Title,
-  Viewport,
-} from '../src/index.js'
+import { Action, Close, Description, Provider, Root, Title, Viewport } from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -62,16 +54,19 @@ describe('@fictjs/toast', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Provider>
-        <Viewport data-testid="viewport" />
-        <Root defaultOpen data-testid="toast">
-          <Title data-testid="title">Saved</Title>
-          <Description data-testid="description">Changes stored.</Description>
-          <Close data-testid="close">Dismiss</Close>
-        </Root>
-      </Provider>
-    ), container)
+    mount(
+      () => (
+        <Provider>
+          <Viewport data-testid="viewport" />
+          <Root defaultOpen data-testid="toast">
+            <Title data-testid="title">Saved</Title>
+            <Description data-testid="description">Changes stored.</Description>
+            <Close data-testid="close">Dismiss</Close>
+          </Root>
+        </Provider>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -95,14 +90,17 @@ describe('@fictjs/toast', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Provider duration={50}>
-        <Viewport data-testid="viewport" />
-        <Root defaultOpen data-testid="toast">
-          <Title>Queued</Title>
-        </Root>
-      </Provider>
-    ), container)
+    mount(
+      () => (
+        <Provider duration={50}>
+          <Viewport data-testid="viewport" />
+          <Root defaultOpen data-testid="toast">
+            <Title>Queued</Title>
+          </Root>
+        </Provider>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -124,16 +122,19 @@ describe('@fictjs/toast', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Provider>
-        <Viewport data-testid="viewport" />
-        <Root defaultOpen>
-          <Action data-testid="action" altText="Undo last save">
-            Undo
-          </Action>
-        </Root>
-      </Provider>
-    ), container)
+    mount(
+      () => (
+        <Provider>
+          <Viewport data-testid="viewport" />
+          <Root defaultOpen>
+            <Action data-testid="action" altText="Undo last save">
+              Undo
+            </Action>
+          </Root>
+        </Provider>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

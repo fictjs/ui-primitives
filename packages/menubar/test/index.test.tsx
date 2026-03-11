@@ -59,16 +59,19 @@ describe('@fictjs/menubar', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Menubar>
-        <Menu value="file">
-          <Trigger data-testid="file-trigger">File</Trigger>
-          <Content data-testid="file-content">
-            <Item data-testid="file-item">New</Item>
-          </Content>
-        </Menu>
-      </Menubar>
-    ), container)
+    mount(
+      () => (
+        <Menubar>
+          <Menu value="file">
+            <Trigger data-testid="file-trigger">File</Trigger>
+            <Content data-testid="file-content">
+              <Item data-testid="file-item">New</Item>
+            </Content>
+          </Menu>
+        </Menubar>
+      ),
+      container,
+    )
 
     click(container.querySelector('[data-testid="file-trigger"]') as HTMLButtonElement)
     await waitForEffects()
@@ -85,18 +88,21 @@ describe('@fictjs/menubar', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Menubar>
-        <Menu value="file">
-          <Trigger data-testid="file-trigger">File</Trigger>
-          <Content />
-        </Menu>
-        <Menu value="edit">
-          <Trigger data-testid="edit-trigger">Edit</Trigger>
-          <Content />
-        </Menu>
-      </Menubar>
-    ), container)
+    mount(
+      () => (
+        <Menubar>
+          <Menu value="file">
+            <Trigger data-testid="file-trigger">File</Trigger>
+            <Content />
+          </Menu>
+          <Menu value="edit">
+            <Trigger data-testid="edit-trigger">Edit</Trigger>
+            <Content />
+          </Menu>
+        </Menubar>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

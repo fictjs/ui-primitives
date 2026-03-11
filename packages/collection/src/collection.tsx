@@ -16,7 +16,10 @@ type CollectionProps = SlotProps & {
 type BaseItemData = {
   id?: string
 }
-type ItemDataWithElement<ItemData extends BaseItemData, ItemElement extends HTMLElement> = ItemData & {
+type ItemDataWithElement<
+  ItemData extends BaseItemData,
+  ItemElement extends HTMLElement,
+> = ItemData & {
   element: ItemElement
 }
 type ItemMap<ItemElement extends HTMLElement, ItemData extends BaseItemData> = OrderedDict<
@@ -29,7 +32,9 @@ type CollectionState<ItemElement extends HTMLElement, ItemData extends BaseItemD
   setItemMap: SetCollectionState<ItemMap<ItemElement, ItemData>>,
 ]
 
-function createCollection<ItemElement extends HTMLElement, ItemData extends object = {}>(name: string) {
+function createCollection<ItemElement extends HTMLElement, ItemData extends object = {}>(
+  name: string,
+) {
   type AllItemData = ItemData & BaseItemData
 
   const PROVIDER_NAME = name + 'CollectionProvider'
@@ -54,26 +59,26 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
     },
   )
 
-  function CollectionProvider(
-    props: {
-      children?: FictNode | FictNode[]
-      scope: any
-      state?: CollectionState<ItemElement, AllItemData>
-    },
-  ): FictNode {
+  function CollectionProvider(props: {
+    children?: FictNode | FictNode[]
+    scope: any
+    state?: CollectionState<ItemElement, AllItemData>
+  }): FictNode {
     const state = props.state ?? useInitCollection()
-    return <CollectionProviderImpl scope={props.scope} state={state}>{props.children}</CollectionProviderImpl>
+    return (
+      <CollectionProviderImpl scope={props.scope} state={state}>
+        {props.children}
+      </CollectionProviderImpl>
+    )
   }
 
   CollectionProvider.displayName = PROVIDER_NAME
 
-  function CollectionProviderImpl(
-    props: {
-      children?: FictNode | FictNode[]
-      scope: any
-      state: CollectionState<ItemElement, AllItemData>
-    },
-  ): FictNode {
+  function CollectionProviderImpl(props: {
+    children?: FictNode | FictNode[]
+    scope: any
+    state: CollectionState<ItemElement, AllItemData>
+  }): FictNode {
     const collectionElement = createSignal<CollectionElement | null>(null)
     const collectionRefObject = { current: null as CollectionElement | null }
     const collectionRef = (node: CollectionElement | null) => {
@@ -100,7 +105,9 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
 
   const COLLECTION_SLOT_NAME = name + 'CollectionSlot'
   const CollectionSlotImpl = createSlot(COLLECTION_SLOT_NAME)
-  const CollectionSlotRenderer = CollectionSlotImpl as unknown as (props: Record<string, unknown>) => FictNode
+  const CollectionSlotRenderer = CollectionSlotImpl as unknown as (
+    props: Record<string, unknown>,
+  ) => FictNode
 
   function CollectionSlot(
     props: CollectionProps & { ref?: PossibleRef<CollectionElement> },
@@ -120,8 +127,9 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
   const ITEM_SLOT_NAME = name + 'CollectionItemSlot'
   const ITEM_DATA_ATTR = 'data-radix-collection-item'
   const CollectionItemSlotImpl = createSlot(ITEM_SLOT_NAME)
-  const CollectionItemSlotRenderer =
-    CollectionItemSlotImpl as unknown as (props: Record<string, unknown>) => FictNode
+  const CollectionItemSlotRenderer = CollectionItemSlotImpl as unknown as (
+    props: Record<string, unknown>,
+  ) => FictNode
 
   type CollectionItemSlotProps = AllItemData & {
     children?: FictNode | FictNode[]
@@ -186,12 +194,19 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
   CollectionItemSlot.displayName = ITEM_SLOT_NAME
 
   function useInitCollection() {
-    let currentItemMap = new OrderedDict<ItemElement, ItemDataWithElement<AllItemData, ItemElement>>()
+    let currentItemMap = new OrderedDict<
+      ItemElement,
+      ItemDataWithElement<AllItemData, ItemElement>
+    >()
     const itemMap = createSignal<ItemMap<ItemElement, AllItemData>>(currentItemMap)
     const setItemMap: SetCollectionState<ItemMap<ItemElement, AllItemData>> = (value) => {
       currentItemMap =
         typeof value === 'function'
-          ? (value as (previousValue: ItemMap<ItemElement, AllItemData>) => ItemMap<ItemElement, AllItemData>)(currentItemMap)
+          ? (
+              value as (
+                previousValue: ItemMap<ItemElement, AllItemData>,
+              ) => ItemMap<ItemElement, AllItemData>
+            )(currentItemMap)
           : value
       itemMap(currentItemMap)
     }
@@ -218,7 +233,11 @@ function sortByDocumentPosition<E extends HTMLElement, T extends BaseItemData>(
   a: EntryOf<ItemMap<E, T>>,
   b: EntryOf<ItemMap<E, T>>,
 ) {
-  return !a[1].element || !b[1].element ? 0 : isElementPreceding(a[1].element, b[1].element) ? -1 : 1
+  return !a[1].element || !b[1].element
+    ? 0
+    : isElementPreceding(a[1].element, b[1].element)
+      ? -1
+      : 1
 }
 
 export { createCollection }

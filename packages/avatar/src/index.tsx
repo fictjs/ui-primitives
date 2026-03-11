@@ -30,7 +30,10 @@ const imageStatusSubscribers = new Map<string, Set<(status: ImageLoadingStatus) 
 const [, createAvatarScope] = createContextScope(AVATAR_NAME)
 
 type AvatarProps = JSX.IntrinsicElements['span']
-type AvatarImageProps = Omit<JSX.IntrinsicElements['img'], 'crossOrigin' | 'referrerPolicy' | 'src'> & {
+type AvatarImageProps = Omit<
+  JSX.IntrinsicElements['img'],
+  'crossOrigin' | 'referrerPolicy' | 'src'
+> & {
   crossOrigin?: MaybeAccessor<ImgCrossOrigin | undefined>
   referrerPolicy?: MaybeAccessor<ImgReferrerPolicy | undefined>
   src?: MaybeAccessor<string | undefined>
@@ -68,7 +71,10 @@ function cloneVNode(node: FictVNode, props: Record<string, unknown>): FictVNode 
   }
 }
 
-function injectAvatarState(node: FictNode | FictNode[] | undefined, state: AvatarStateProps): FictNode | FictNode[] {
+function injectAvatarState(
+  node: FictNode | FictNode[] | undefined,
+  state: AvatarStateProps,
+): FictNode | FictNode[] {
   if (Array.isArray(node)) {
     return node.map((child) => injectAvatarState(child, state))
   }
@@ -104,16 +110,15 @@ function Avatar(props: ScopedProps<AvatarProps>): FictNode {
   })
 
   return (
-    <Primitive.span {...(primitiveProps as Record<string, unknown>)}>
-      {children}
-    </Primitive.span>
+    <Primitive.span {...(primitiveProps as Record<string, unknown>)}>{children}</Primitive.span>
   )
 }
 
 Avatar.displayName = AVATAR_NAME
 
 function AvatarImage(props: ScopedProps<AvatarImageProps & AvatarStateProps>): FictNode {
-  const src = () => (props.src === undefined ? undefined : readValue(props.src as MaybeAccessor<string | undefined>))
+  const src = () =>
+    props.src === undefined ? undefined : readValue(props.src as MaybeAccessor<string | undefined>)
   const imageLoadingStatus = useImageLoadingStatus(src, {
     crossOrigin: () =>
       props.crossOrigin === undefined
@@ -149,9 +154,7 @@ function AvatarImage(props: ScopedProps<AvatarImageProps & AvatarStateProps>): F
   return (
     <>
       {() =>
-        imageLoadingStatus() === 'loaded' ? (
-          <Primitive.img {...getPrimitiveProps()} />
-        ) : null
+        imageLoadingStatus() === 'loaded' ? <Primitive.img {...getPrimitiveProps()} /> : null
       }
     </>
   )
@@ -161,11 +164,14 @@ AvatarImage.displayName = IMAGE_NAME
 
 function AvatarFallback(props: ScopedProps<AvatarFallbackProps & AvatarStateProps>): FictNode {
   const canRender = createSignal(props.delayMs === undefined)
-  const imageLoadingStatus = props.__avatarImageLoadingStatus ?? (() => 'idle' as ImageLoadingStatus)
+  const imageLoadingStatus =
+    props.__avatarImageLoadingStatus ?? (() => 'idle' as ImageLoadingStatus)
 
   useLayoutEffect(() => {
     const delayMs =
-      props.delayMs === undefined ? undefined : readValue(props.delayMs as MaybeAccessor<number | undefined>)
+      props.delayMs === undefined
+        ? undefined
+        : readValue(props.delayMs as MaybeAccessor<number | undefined>)
 
     if (delayMs === undefined) {
       canRender(true)
@@ -310,7 +316,11 @@ function useImageLoadingStatus(
     return () => {
       const currentSubscribers = imageStatusSubscribers.get(currentKey)
       currentSubscribers?.delete(handleStatusChange)
-      if (currentSubscribers && currentSubscribers.size === 0 && !pendingImageLoads.has(currentKey)) {
+      if (
+        currentSubscribers &&
+        currentSubscribers.size === 0 &&
+        !pendingImageLoads.has(currentKey)
+      ) {
         imageStatusSubscribers.delete(currentKey)
       }
     }

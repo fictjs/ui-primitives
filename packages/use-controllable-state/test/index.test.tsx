@@ -31,7 +31,11 @@ describe('@fictjs/use-controllable-state', () => {
     const onChange = vi.fn()
 
     render(() => {
-      ;[value, setValue] = useControllableState({ prop: () => controlled(), defaultProp: 'fallback', onChange })
+      ;[value, setValue] = useControllableState({
+        prop: () => controlled(),
+        defaultProp: 'fallback',
+        onChange,
+      })
       return <div />
     }, document.createElement('div'))
 
@@ -46,19 +50,25 @@ describe('@fictjs/use-controllable-state', () => {
       count: number
       state: string
     }
-    type ReducerAction = {
-      type: 'increment'
-    } | {
-      type: 'select'
-      value: string
-    }
+    type ReducerAction =
+      | {
+          type: 'increment'
+        }
+      | {
+          type: 'select'
+          value: string
+        }
 
     let state: (() => ReducerState) | undefined
     let dispatch: ((action: ReducerAction) => void) | undefined
     const onChange = vi.fn()
 
     render(() => {
-      ;[state, dispatch] = useControllableStateReducer<string, Omit<ReducerState, 'state'>, ReducerAction>(
+      ;[state, dispatch] = useControllableStateReducer<
+        string,
+        Omit<ReducerState, 'state'>,
+        ReducerAction
+      >(
         (prevState, action) => {
           if (action.type === 'increment') {
             return { ...prevState, count: prevState.count + 1 }
@@ -87,12 +97,14 @@ describe('@fictjs/use-controllable-state', () => {
       count: number
       state: string
     }
-    type ReducerAction = {
-      type: 'increment'
-    } | {
-      type: 'select'
-      value: string
-    }
+    type ReducerAction =
+      | {
+          type: 'increment'
+        }
+      | {
+          type: 'select'
+          value: string
+        }
 
     const controlled = createSignal('first')
     let state: (() => ReducerState) | undefined
@@ -100,7 +112,11 @@ describe('@fictjs/use-controllable-state', () => {
     const onChange = vi.fn()
 
     render(() => {
-      ;[state, dispatch] = useControllableStateReducer<string, Omit<ReducerState, 'state'>, ReducerAction>(
+      ;[state, dispatch] = useControllableStateReducer<
+        string,
+        Omit<ReducerState, 'state'>,
+        ReducerAction
+      >(
         (prevState, action) => {
           if (action.type === 'increment') {
             return { ...prevState, count: prevState.count + 1 }

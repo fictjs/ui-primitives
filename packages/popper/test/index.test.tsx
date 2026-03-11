@@ -109,22 +109,25 @@ describe('@fictjs/popper', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
-    render(() => (
-      <Popper>
-        <PopperAnchor data-testid="anchor" />
-        <PopperContent
-          align="end"
-          alignOffset={6}
-          dir="rtl"
-          onPlaced={onPlaced}
-          side="bottom"
-          sideOffset={4}
-          style={{ zIndex: 40 }}
-        >
-          content
-        </PopperContent>
-      </Popper>
-    ), container)
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor data-testid="anchor" />
+          <PopperContent
+            align="end"
+            alignOffset={6}
+            dir="rtl"
+            onPlaced={onPlaced}
+            side="bottom"
+            sideOffset={4}
+            style={{ zIndex: 40 }}
+          >
+            content
+          </PopperContent>
+        </Popper>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -211,14 +214,17 @@ describe('@fictjs/popper', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
-    render(() => (
-      <Popper>
-        <PopperAnchor virtualRef={virtualRef} />
-        <PopperContent avoidCollisions={false} hideWhenDetached>
-          <PopperArrow data-testid="arrow" />
-        </PopperContent>
-      </Popper>
-    ), container)
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor virtualRef={virtualRef} />
+          <PopperContent avoidCollisions={false} hideWhenDetached>
+            <PopperArrow data-testid="arrow" />
+          </PopperContent>
+        </Popper>
+      ),
+      container,
+    )
 
     await flushEffects()
 

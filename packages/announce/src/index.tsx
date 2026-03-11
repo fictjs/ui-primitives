@@ -1,4 +1,9 @@
-import { createElement, createPortal as createFictPortal, type FictNode, type JSX } from '@fictjs/runtime'
+import {
+  createElement,
+  createPortal as createFictPortal,
+  type FictNode,
+  type JSX,
+} from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs } from '@fictjs/compose-refs'
@@ -94,7 +99,9 @@ function Announce(props: AnnounceProps): FictNode {
     ...regionProps
   } = props
 
-  const ownerDocument = createSignal<Document | null>(typeof document !== 'undefined' ? document : null)
+  const ownerDocument = createSignal<Document | null>(
+    typeof document !== 'undefined' ? document : null,
+  )
   const region = createSignal<HTMLElement | null>(null)
   const ref = useComposedRefs(forwardedRef, (node: HTMLDivElement | null) => {
     if (node) {
@@ -169,21 +176,14 @@ function Announce(props: AnnounceProps): FictNode {
 
   return (
     <>
-      <Primitive.div
-        {...(regionProps as Record<string, unknown>)}
-        ref={ref}
-      >
+      <Primitive.div {...(regionProps as Record<string, unknown>)} ref={ref}>
         {children}
       </Primitive.div>
       {() => {
         const liveRegion = region()
         if (!liveRegion) return null
 
-        return createFictPortal(
-          liveRegion,
-          () => <div>{children}</div>,
-          createElement,
-        )
+        return createFictPortal(liveRegion, () => <div>{children}</div>, createElement)
       }}
     </>
   )

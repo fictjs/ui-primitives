@@ -63,32 +63,43 @@ describe('@fictjs/tabs', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Tabs defaultValue="account">
-        <TabsList data-testid="list">
-          <TabsTrigger data-testid="account-trigger" value="account">
-            Account
-          </TabsTrigger>
-          <TabsTrigger data-testid="password-trigger" value="password">
-            Password
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent data-testid="account-content" value="account">
-          Account content
-        </TabsContent>
-        <TabsContent data-testid="password-content" value="password">
-          Password content
-        </TabsContent>
-      </Tabs>
-    ), container)
+    mount(
+      () => (
+        <Tabs defaultValue="account">
+          <TabsList data-testid="list">
+            <TabsTrigger data-testid="account-trigger" value="account">
+              Account
+            </TabsTrigger>
+            <TabsTrigger data-testid="password-trigger" value="password">
+              Password
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent data-testid="account-content" value="account">
+            Account content
+          </TabsContent>
+          <TabsContent data-testid="password-content" value="password">
+            Password content
+          </TabsContent>
+        </Tabs>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
     const getNodes = () => {
-      const accountTrigger = container.querySelector('[data-testid="account-trigger"]') as HTMLButtonElement
-      const passwordTrigger = container.querySelector('[data-testid="password-trigger"]') as HTMLButtonElement
-      const accountContent = container.querySelector('[data-testid="account-content"]') as HTMLDivElement
-      const passwordContent = container.querySelector('[data-testid="password-content"]') as HTMLDivElement
+      const accountTrigger = container.querySelector(
+        '[data-testid="account-trigger"]',
+      ) as HTMLButtonElement
+      const passwordTrigger = container.querySelector(
+        '[data-testid="password-trigger"]',
+      ) as HTMLButtonElement
+      const accountContent = container.querySelector(
+        '[data-testid="account-content"]',
+      ) as HTMLDivElement
+      const passwordContent = container.querySelector(
+        '[data-testid="password-content"]',
+      ) as HTMLDivElement
       return { accountTrigger, passwordTrigger, accountContent, passwordContent }
     }
     let nodes = getNodes()
@@ -109,24 +120,27 @@ describe('@fictjs/tabs', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Tabs defaultValue="one">
-        <TabsList>
-          <TabsTrigger data-testid="one-trigger" value="one">
-            One
-          </TabsTrigger>
-          <TabsTrigger data-testid="two-trigger" value="two">
-            Two
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent data-testid="one-content" value="one">
-          One content
-        </TabsContent>
-        <TabsContent data-testid="two-content" value="two">
-          Two content
-        </TabsContent>
-      </Tabs>
-    ), container)
+    mount(
+      () => (
+        <Tabs defaultValue="one">
+          <TabsList>
+            <TabsTrigger data-testid="one-trigger" value="one">
+              One
+            </TabsTrigger>
+            <TabsTrigger data-testid="two-trigger" value="two">
+              Two
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent data-testid="one-content" value="one">
+            One content
+          </TabsContent>
+          <TabsContent data-testid="two-content" value="two">
+            Two content
+          </TabsContent>
+        </Tabs>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -144,30 +158,33 @@ describe('@fictjs/tabs', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Tabs defaultValue="one" activationMode="manual">
-        <TabsList>
-          <TabsTrigger data-testid="one-trigger" value="one">
-            One
-          </TabsTrigger>
-          <TabsTrigger data-testid="two-trigger" value="two">
-            Two
-          </TabsTrigger>
-          <TabsTrigger data-testid="three-trigger" value="three">
-            Three
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent data-testid="one-content" value="one">
-          One content
-        </TabsContent>
-        <TabsContent data-testid="two-content" value="two">
-          Two content
-        </TabsContent>
-        <TabsContent data-testid="three-content" value="three">
-          Three content
-        </TabsContent>
-      </Tabs>
-    ), container)
+    mount(
+      () => (
+        <Tabs defaultValue="one" activationMode="manual">
+          <TabsList>
+            <TabsTrigger data-testid="one-trigger" value="one">
+              One
+            </TabsTrigger>
+            <TabsTrigger data-testid="two-trigger" value="two">
+              Two
+            </TabsTrigger>
+            <TabsTrigger data-testid="three-trigger" value="three">
+              Three
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent data-testid="one-content" value="one">
+            One content
+          </TabsContent>
+          <TabsContent data-testid="two-content" value="two">
+            Two content
+          </TabsContent>
+          <TabsContent data-testid="three-content" value="three">
+            Three content
+          </TabsContent>
+        </Tabs>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

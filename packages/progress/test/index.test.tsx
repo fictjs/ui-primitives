@@ -20,11 +20,14 @@ describe('@fictjs/progress', () => {
   it('renders progress semantics and indicator state', () => {
     const container = document.createElement('div')
 
-    render(() => (
-      <Progress value={30} max={80} data-testid="progress">
-        <ProgressIndicator data-testid="indicator" />
-      </Progress>
-    ), container)
+    render(
+      () => (
+        <Progress value={30} max={80} data-testid="progress">
+          <ProgressIndicator data-testid="indicator" />
+        </Progress>
+      ),
+      container,
+    )
 
     const progress = container.querySelector('[data-testid="progress"]') as HTMLDivElement
     const indicator = container.querySelector('[data-testid="indicator"]') as HTMLDivElement
@@ -44,11 +47,14 @@ describe('@fictjs/progress', () => {
     const value = createSignal<number | null>(10)
     const container = document.createElement('div')
 
-    render(() => (
-      <Progress value={() => value()}>
-        <ProgressIndicator data-testid="indicator" />
-      </Progress>
-    ), container)
+    render(
+      () => (
+        <Progress value={() => value()}>
+          <ProgressIndicator data-testid="indicator" />
+        </Progress>
+      ),
+      container,
+    )
 
     const progress = container.firstElementChild as HTMLDivElement
     const indicator = container.querySelector('[data-testid="indicator"]') as HTMLDivElement
@@ -69,11 +75,14 @@ describe('@fictjs/progress', () => {
     const container = document.createElement('div')
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    render(() => (
-      <Progress value={150} max={0} data-testid="progress">
-        <ProgressIndicator />
-      </Progress>
-    ), container)
+    render(
+      () => (
+        <Progress value={150} max={0} data-testid="progress">
+          <ProgressIndicator />
+        </Progress>
+      ),
+      container,
+    )
 
     await flushMicrotasks()
 

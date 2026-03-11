@@ -34,12 +34,15 @@ describe('@fictjs/collapsible', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root>
-        <Trigger>Toggle</Trigger>
-        <Content data-testid="content">Body</Content>
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root>
+          <Trigger>Toggle</Trigger>
+          <Content data-testid="content">Body</Content>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -74,12 +77,15 @@ describe('@fictjs/collapsible', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root defaultOpen onOpenChange={onOpenChange}>
-        <Trigger>Toggle</Trigger>
-        <Content data-testid="content">Body</Content>
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root defaultOpen onOpenChange={onOpenChange}>
+          <Trigger>Toggle</Trigger>
+          <Content data-testid="content">Body</Content>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -107,12 +113,15 @@ describe('@fictjs/collapsible', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root open={open} onOpenChange={onOpenChange}>
-        <Trigger>Toggle</Trigger>
-        <Content data-testid="content">Body</Content>
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root open={open} onOpenChange={onOpenChange}>
+          <Trigger>Toggle</Trigger>
+          <Content data-testid="content">Body</Content>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -132,14 +141,17 @@ describe('@fictjs/collapsible', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root>
-        <Trigger>Toggle</Trigger>
-        <Content data-testid="content" forceMount>
-          Body
-        </Content>
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root>
+          <Trigger>Toggle</Trigger>
+          <Content data-testid="content" forceMount>
+            Body
+          </Content>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -155,16 +167,19 @@ describe('@fictjs/collapsible', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    const dispose = render(() => (
-      <Root
-        ref={(node) => {
-          calls.push(node?.tagName ?? null)
-        }}
-      >
-        <Trigger>Toggle</Trigger>
-        <Content>Body</Content>
-      </Root>
-    ), container)
+    const dispose = render(
+      () => (
+        <Root
+          ref={(node) => {
+            calls.push(node?.tagName ?? null)
+          }}
+        >
+          <Trigger>Toggle</Trigger>
+          <Content>Body</Content>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
     expect(calls).toEqual(['DIV'])

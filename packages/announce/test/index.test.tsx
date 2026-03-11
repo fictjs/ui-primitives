@@ -38,12 +38,15 @@ describe('@fictjs/announce', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
-    render(() => (
-      <>
-        <Announce regionIdentifier="toast">First</Announce>
-        <Announce regionIdentifier="toast">Second</Announce>
-      </>
-    ), container)
+    render(
+      () => (
+        <>
+          <Announce regionIdentifier="toast">First</Announce>
+          <Announce regionIdentifier="toast">Second</Announce>
+        </>
+      ),
+      container,
+    )
     await flushMicrotasks()
 
     const liveRegions = document.body.querySelectorAll('[data-radix-announce-region-toast]')

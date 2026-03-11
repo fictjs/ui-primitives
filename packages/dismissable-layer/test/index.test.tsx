@@ -67,18 +67,21 @@ describe('@fictjs/dismissable-layer', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <div>
-        <Root onDismiss={onDismiss}>
-          <button data-testid="inside" type="button">
-            Inside
+    mount(
+      () => (
+        <div>
+          <Root onDismiss={onDismiss}>
+            <button data-testid="inside" type="button">
+              Inside
+            </button>
+          </Root>
+          <button data-testid="outside" type="button">
+            Outside
           </button>
-        </Root>
-        <button data-testid="outside" type="button">
-          Outside
-        </button>
-      </div>
-    ), container)
+        </div>
+      ),
+      container,
+    )
 
     await waitForListenerRegistration()
 
@@ -93,20 +96,23 @@ describe('@fictjs/dismissable-layer', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <div>
-        <Root onDismiss={onDismiss}>
-          <button data-testid="inside" type="button">
-            Inside
-          </button>
-        </Root>
-        <Branch>
-          <button data-testid="branch" type="button">
-            Branch
-          </button>
-        </Branch>
-      </div>
-    ), container)
+    mount(
+      () => (
+        <div>
+          <Root onDismiss={onDismiss}>
+            <button data-testid="inside" type="button">
+              Inside
+            </button>
+          </Root>
+          <Branch>
+            <button data-testid="branch" type="button">
+              Branch
+            </button>
+          </Branch>
+        </div>
+      ),
+      container,
+    )
 
     await waitForListenerRegistration()
 
@@ -121,18 +127,21 @@ describe('@fictjs/dismissable-layer', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <div>
-        <Root onDismiss={onDismiss}>
-          <button data-testid="inside" type="button">
-            Inside
+    mount(
+      () => (
+        <div>
+          <Root onDismiss={onDismiss}>
+            <button data-testid="inside" type="button">
+              Inside
+            </button>
+          </Root>
+          <button data-testid="outside" type="button">
+            Outside
           </button>
-        </Root>
-        <button data-testid="outside" type="button">
-          Outside
-        </button>
-      </div>
-    ), container)
+        </div>
+      ),
+      container,
+    )
 
     await waitForListenerRegistration()
 
@@ -154,13 +163,16 @@ describe('@fictjs/dismissable-layer', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root {...captureProps}>
-        <button data-testid="inside" type="button">
-          Inside
-        </button>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root {...captureProps}>
+          <button data-testid="inside" type="button">
+            Inside
+          </button>
+        </Root>
+      ),
+      container,
+    )
 
     await waitForListenerRegistration()
 
@@ -175,18 +187,22 @@ describe('@fictjs/dismissable-layer', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <>
-        {() =>
-          open() ? (
-            <Root data-testid="layer" disableOutsidePointerEvents>
-              <button data-testid="inside" type="button">
-                Inside
-              </button>
-            </Root>
-          ) : null}
-      </>
-    ), container)
+    mount(
+      () => (
+        <>
+          {() =>
+            open() ? (
+              <Root data-testid="layer" disableOutsidePointerEvents>
+                <button data-testid="inside" type="button">
+                  Inside
+                </button>
+              </Root>
+            ) : null
+          }
+        </>
+      ),
+      container,
+    )
 
     await waitForListenerRegistration()
 
@@ -205,23 +221,27 @@ describe('@fictjs/dismissable-layer', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root onDismiss={onOuterDismiss}>
-        <button data-testid="outer" type="button">
-          Outer
-        </button>
-        <>
-          {() =>
-            openInner() ? (
-              <Root onDismiss={onInnerDismiss}>
-                <button data-testid="inner" type="button">
-                  Inner
-                </button>
-              </Root>
-            ) : null}
-        </>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root onDismiss={onOuterDismiss}>
+          <button data-testid="outer" type="button">
+            Outer
+          </button>
+          <>
+            {() =>
+              openInner() ? (
+                <Root onDismiss={onInnerDismiss}>
+                  <button data-testid="inner" type="button">
+                    Inner
+                  </button>
+                </Root>
+              ) : null
+            }
+          </>
+        </Root>
+      ),
+      container,
+    )
 
     await waitForListenerRegistration()
 

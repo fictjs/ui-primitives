@@ -37,7 +37,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function flattenChildren(children: FictNode | FictNode[] | undefined, result: FictNode[] = []): FictNode[] {
+function flattenChildren(
+  children: FictNode | FictNode[] | undefined,
+  result: FictNode[] = [],
+): FictNode[] {
   if (Array.isArray(children)) {
     for (const child of children) {
       flattenChildren(child, result)
@@ -65,18 +68,21 @@ function normalizePropName(name: string): string {
 }
 
 function isReactiveValue(value: unknown): value is () => unknown {
+  if (typeof value !== 'function') {
+    return false
+  }
+
+  const reactiveValue = value as unknown as PropsRecord
+
   return (
-    typeof value === 'function' &&
-    ((value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
-      (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
-      (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
+    reactiveValue[SIGNAL_MARKER] === true ||
+    reactiveValue[COMPUTED_MARKER] === true ||
+    reactiveValue[PROP_GETTER_MARKER] === true
   )
 }
 
 function readValue<T>(value: T): T {
-  if (
-    isReactiveValue(value)
-  ) {
+  if (isReactiveValue(value)) {
     return (value as () => T)()
   }
 
@@ -149,7 +155,9 @@ function mergeProps(slotProps: PropsRecord, childProps: PropsRecord): PropsRecor
       }
     } else if (key === 'style') {
       if (isReactiveValue(slotPropValue) || isReactiveValue(childPropValue)) {
-        overrideProps[key] = prop(() => mergeStyle(readValue(slotPropValue), readValue(childPropValue)))
+        overrideProps[key] = prop(() =>
+          mergeStyle(readValue(slotPropValue), readValue(childPropValue)),
+        )
       } else {
         const mergedStyle = mergeStyle(slotPropValue, childPropValue)
         if (mergedStyle !== undefined) {
@@ -253,7 +261,10 @@ function createSlot(ownerName: string) {
 
       const newChildren = childrenArray.map((child) => {
         if (child === slottable) {
-          return (newElement.props as { children?: FictNode | FictNode[] } | null | undefined)?.children ?? null
+          return (
+            (newElement.props as { children?: FictNode | FictNode[] } | null | undefined)
+              ?.children ?? null
+          )
         }
         return child
       })

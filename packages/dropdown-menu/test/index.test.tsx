@@ -4,13 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 
-import {
-  Content,
-  DropdownMenu,
-  Item,
-  Portal,
-  Trigger,
-} from '../src/index.js'
+import { Content, DropdownMenu, Item, Portal, Trigger } from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -56,16 +50,19 @@ describe('@fictjs/dropdown-menu', () => {
     const portalRoot = document.createElement('div')
     document.body.append(container, portalRoot)
 
-    mount(() => (
-      <DropdownMenu>
-        <Trigger data-testid="trigger">Open</Trigger>
-        <Portal container={portalRoot}>
-          <Content data-testid="content">
-            <Item data-testid="item">Item</Item>
-          </Content>
-        </Portal>
-      </DropdownMenu>
-    ), container)
+    mount(
+      () => (
+        <DropdownMenu>
+          <Trigger data-testid="trigger">Open</Trigger>
+          <Portal container={portalRoot}>
+            <Content data-testid="content">
+              <Item data-testid="item">Item</Item>
+            </Content>
+          </Portal>
+        </DropdownMenu>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
@@ -83,14 +80,17 @@ describe('@fictjs/dropdown-menu', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <DropdownMenu defaultOpen>
-        <Trigger data-testid="trigger">Open</Trigger>
-        <Content data-testid="content">
-          <Item data-testid="item">Item</Item>
-        </Content>
-      </DropdownMenu>
-    ), container)
+    mount(
+      () => (
+        <DropdownMenu defaultOpen>
+          <Trigger data-testid="trigger">Open</Trigger>
+          <Content data-testid="content">
+            <Item data-testid="item">Item</Item>
+          </Content>
+        </DropdownMenu>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

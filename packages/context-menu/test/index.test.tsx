@@ -51,14 +51,17 @@ describe('@fictjs/context-menu', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <ContextMenu>
-        <Trigger data-testid="trigger">Area</Trigger>
-        <Content data-testid="content">
-          <Item data-testid="item">Action</Item>
-        </Content>
-      </ContextMenu>
-    ), container)
+    mount(
+      () => (
+        <ContextMenu>
+          <Trigger data-testid="trigger">Area</Trigger>
+          <Content data-testid="content">
+            <Item data-testid="item">Action</Item>
+          </Content>
+        </ContextMenu>
+      ),
+      container,
+    )
 
     contextMenu(container.querySelector('[data-testid="trigger"]') as HTMLDivElement, 32, 64)
     await waitForEffects()

@@ -114,19 +114,19 @@ const RemoveScroll = ((props: IRemoveScrollUIProps) => {
   const SideCar = props.sideCar
   const Container = props.as ?? 'div'
 
-  const content = props.forwardProps
-    ? (() => {
-        if (!isVNode(props.children)) {
-          throw new Error('RemoveScroll with `forwardProps` expects a single Fict element child.')
-        }
+  const content = props.forwardProps ? (
+    (() => {
+      if (!isVNode(props.children)) {
+        throw new Error('RemoveScroll with `forwardProps` expects a single Fict element child.')
+      }
 
-        return cloneVNode(props.children, forwardedProps)
-      })()
-    : (
-        <Container {...forwardedProps} className={props.className} ref={containerRef}>
-          {props.children}
-        </Container>
-      )
+      return cloneVNode(props.children, forwardedProps)
+    })()
+  ) : (
+    <Container {...forwardedProps} className={props.className} ref={containerRef}>
+      {props.children}
+    </Container>
+  )
 
   return (
     <>

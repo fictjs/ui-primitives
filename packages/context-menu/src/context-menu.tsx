@@ -73,10 +73,9 @@ const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
-const [createContextMenuContext, createContextMenuScope] = createContextScope(
-  CONTEXT_MENU_NAME,
-  [createMenuScope],
-)
+const [createContextMenuContext, createContextMenuScope] = createContextScope(CONTEXT_MENU_NAME, [
+  createMenuScope,
+])
 const [ContextMenuProvider, useContextMenuContext] =
   createContextMenuContext<ContextMenuContextValue>(CONTEXT_MENU_NAME)
 const useMenuScope = createMenuScope()
@@ -130,13 +129,17 @@ function readStyle(value: unknown): StyleRecord {
 function ContextMenu(props: ScopedProps<ContextMenuProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeContextMenu)
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? false
       : (readValue(props.defaultOpen as MaybeAccessor<boolean | undefined>) ?? false)
   const modal = () =>
-    props.modal === undefined ? true : Boolean(readValue(props.modal as MaybeAccessor<boolean | undefined>) ?? true)
+    props.modal === undefined
+      ? true
+      : Boolean(readValue(props.modal as MaybeAccessor<boolean | undefined>) ?? true)
   const [open, setOpen] = useControllableState<boolean>({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -226,7 +229,9 @@ function ContextMenuContent(props: ScopedProps<ContextMenuContentProps>): FictNo
       {...props}
       style={{
         position: 'fixed',
-        ...(context.anchorPoint() ? { left: context.anchorPoint()!.x, top: context.anchorPoint()!.y } : {}),
+        ...(context.anchorPoint()
+          ? { left: context.anchorPoint()!.x, top: context.anchorPoint()!.y }
+          : {}),
         ...readStyle(props.style),
       }}
       onCloseAutoFocus={(event) => {

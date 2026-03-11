@@ -18,7 +18,10 @@ type ModernItem = {
   textValue: string
 }
 
-const [LegacyCollection, useLegacyCollection] = createCollection<HTMLDivElement, { textValue: string }>('LegacyTest')
+const [LegacyCollection, useLegacyCollection] = createCollection<
+  HTMLDivElement,
+  { textValue: string }
+>('LegacyTest')
 const [ModernCollection, { useCollection: useModernCollection, useInitCollection }] =
   unstable_createCollection<HTMLDivElement, { textValue: string }>('ModernTest')
 
@@ -31,7 +34,10 @@ function LegacyConsumer() {
 }
 
 function ModernConsumer() {
-  readModernCollection = useModernCollection(undefined) as () => OrderedDict<HTMLDivElement, ModernItem>
+  readModernCollection = useModernCollection(undefined) as () => OrderedDict<
+    HTMLDivElement,
+    ModernItem
+  >
   return null
 }
 
@@ -49,7 +55,8 @@ function LegacyHarness(props: { showMiddle: () => boolean }) {
                 <LegacyCollection.ItemSlot scope={undefined} textValue="middle">
                   <div data-value="middle">Middle</div>
                 </LegacyCollection.ItemSlot>
-              ) : null}
+              ) : null
+            }
           </>
           <LegacyCollection.ItemSlot scope={undefined} textValue="last">
             <div data-value="last">Last</div>
@@ -77,7 +84,8 @@ function ModernHarness(props: { showMiddle: () => boolean }) {
                 <ModernCollection.ItemSlot scope={undefined} textValue="middle">
                   <div data-value="middle">Middle</div>
                 </ModernCollection.ItemSlot>
-              ) : null}
+              ) : null
+            }
           </>
           <ModernCollection.ItemSlot scope={undefined} textValue="last">
             <div data-value="last">Last</div>
@@ -152,6 +160,9 @@ describe('@fictjs/collection', () => {
 
     collection = readModernCollection?.()
     expect(collection?.size).toBe(2)
-    expect(Array.from(collection?.values() ?? []).map((item) => item.textValue)).toEqual(['first', 'last'])
+    expect(Array.from(collection?.values() ?? []).map((item) => item.textValue)).toEqual([
+      'first',
+      'last',
+    ])
   })
 })

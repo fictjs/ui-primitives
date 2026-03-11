@@ -15,13 +15,16 @@ describe('@fictjs/accessible-icon', () => {
   it('renders a hidden text label and hides the icon from assistive tech', () => {
     const container = document.createElement('div')
 
-    render(() => (
-      <AccessibleIcon label="Close">
-        <svg data-testid="icon" viewBox="0 0 32 32">
-          <path d="M2 30 L30 2 M30 30 L2 2" />
-        </svg>
-      </AccessibleIcon>
-    ), container)
+    render(
+      () => (
+        <AccessibleIcon label="Close">
+          <svg data-testid="icon" viewBox="0 0 32 32">
+            <path d="M2 30 L30 2 M30 30 L2 2" />
+          </svg>
+        </AccessibleIcon>
+      ),
+      container,
+    )
 
     const icon = container.querySelector('[data-testid="icon"]') as SVGSVGElement
 

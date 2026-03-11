@@ -86,8 +86,7 @@ const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 const [createMenubarContext, createMenubarScope] = createContextScope(MENUBAR_NAME, [
   createMenuScope,
 ])
-const [MenubarProvider, useMenubarContext] =
-  createMenubarContext<MenubarContextValue>(MENUBAR_NAME)
+const [MenubarProvider, useMenubarContext] = createMenubarContext<MenubarContextValue>(MENUBAR_NAME)
 const [MenubarMenuProvider, useMenubarMenuContext] =
   createMenubarContext<MenubarMenuContextValue>(MENU_NAME)
 const useMenuScope = createMenuScope()
@@ -149,7 +148,9 @@ function Menubar(props: ScopedProps<MenubarProps>): FictNode {
       ? inheritedDirection()
       : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? inheritedDirection())
   const loop = () =>
-    props.loop === undefined ? true : Boolean(readValue(props.loop as MaybeAccessor<boolean | undefined>) ?? true)
+    props.loop === undefined
+      ? true
+      : Boolean(readValue(props.loop as MaybeAccessor<boolean | undefined>) ?? true)
   const valueProp = () =>
     props.value === undefined
       ? undefined
@@ -209,11 +210,16 @@ function Menubar(props: ScopedProps<MenubarProps>): FictNode {
 Menubar.displayName = MENUBAR_NAME
 
 function MenubarMenu(props: ScopedProps<MenubarMenuProps>): FictNode {
-  const context = useMenubarContext(MENU_NAME, props.__scopeMenubar as Scope<MenubarContextValue | undefined>)
+  const context = useMenubarContext(
+    MENU_NAME,
+    props.__scopeMenubar as Scope<MenubarContextValue | undefined>,
+  )
   const menuScope = useMenuScope(props.__scopeMenubar)
   const generatedValue = useId()
   const value = () =>
-    props.value === undefined ? generatedValue() : (readValue(props.value as MaybeAccessor<string | undefined>) ?? generatedValue())
+    props.value === undefined
+      ? generatedValue()
+      : (readValue(props.value as MaybeAccessor<string | undefined>) ?? generatedValue())
   const triggerId = useId()
   const contentId = useId()
   const triggerRef = { current: null as HTMLButtonElement | null }
@@ -247,7 +253,12 @@ function getTriggerElements(root: HTMLDivElement | null): HTMLButtonElement[] {
   return Array.from(root?.querySelectorAll<HTMLButtonElement>('[data-menubar-trigger]') ?? [])
 }
 
-function focusMenuTrigger(root: HTMLDivElement | null, current: HTMLButtonElement | null, intent: FocusIntent, loop: boolean): void {
+function focusMenuTrigger(
+  root: HTMLDivElement | null,
+  current: HTMLButtonElement | null,
+  intent: FocusIntent,
+  loop: boolean,
+): void {
   const items = getTriggerElements(root)
   if (items.length === 0) return
 
@@ -316,7 +327,9 @@ function MenubarTrigger(props: ScopedProps<MenubarTriggerProps>): FictNode {
             event.preventDefault()
             return
           }
-          rootContext.onValueChange(rootContext.value() === menuContext.value() ? null : menuContext.value())
+          rootContext.onValueChange(
+            rootContext.value() === menuContext.value() ? null : menuContext.value(),
+          )
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
@@ -333,25 +346,45 @@ function MenubarTrigger(props: ScopedProps<MenubarTriggerProps>): FictNode {
 
           if (key === 'ArrowRight') {
             event.preventDefault()
-            focusMenuTrigger(rootContext.rootRef.current, menuContext.triggerRef.current, 'next', rootContext.loop())
+            focusMenuTrigger(
+              rootContext.rootRef.current,
+              menuContext.triggerRef.current,
+              'next',
+              rootContext.loop(),
+            )
             return
           }
 
           if (key === 'ArrowLeft') {
             event.preventDefault()
-            focusMenuTrigger(rootContext.rootRef.current, menuContext.triggerRef.current, 'prev', rootContext.loop())
+            focusMenuTrigger(
+              rootContext.rootRef.current,
+              menuContext.triggerRef.current,
+              'prev',
+              rootContext.loop(),
+            )
             return
           }
 
           if (key === 'Home') {
             event.preventDefault()
-            focusMenuTrigger(rootContext.rootRef.current, menuContext.triggerRef.current, 'first', rootContext.loop())
+            focusMenuTrigger(
+              rootContext.rootRef.current,
+              menuContext.triggerRef.current,
+              'first',
+              rootContext.loop(),
+            )
             return
           }
 
           if (key === 'End') {
             event.preventDefault()
-            focusMenuTrigger(rootContext.rootRef.current, menuContext.triggerRef.current, 'last', rootContext.loop())
+            focusMenuTrigger(
+              rootContext.rootRef.current,
+              menuContext.triggerRef.current,
+              'last',
+              rootContext.loop(),
+            )
           }
         },
       ),
@@ -385,7 +418,10 @@ MenubarPortal.displayName = PORTAL_NAME
 
 function MenubarContent(props: ScopedProps<MenubarContentProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  const rootContext = useMenubarContext(CONTENT_NAME, props.__scopeMenubar as Scope<MenubarContextValue | undefined>)
+  const rootContext = useMenubarContext(
+    CONTENT_NAME,
+    props.__scopeMenubar as Scope<MenubarContextValue | undefined>,
+  )
   const menuContext = useMenubarMenuContext(
     CONTENT_NAME,
     props.__scopeMenubar as Scope<MenubarMenuContextValue | undefined>,
@@ -402,7 +438,7 @@ function MenubarContent(props: ScopedProps<MenubarContentProps>): FictNode {
         event.preventDefault()
         menuContext.triggerRef.current?.focus()
       }}
-      onInteractOutside={(event: Event) => {
+      onInteractOutside={(event) => {
         props.onInteractOutside?.(event)
         rootContext.onValueChange(null)
       }}

@@ -78,9 +78,13 @@ function getState(open: boolean): 'open' | 'closed' {
 
 function Collapsible(props: ScopedProps<CollapsibleProps>): FictNode {
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const defaultOpen = () =>
-    props.defaultOpen === undefined ? false : (readValue(props.defaultOpen as MaybeAccessor<boolean | undefined>) ?? false)
+    props.defaultOpen === undefined
+      ? false
+      : (readValue(props.defaultOpen as MaybeAccessor<boolean | undefined>) ?? false)
   const disabled = () => Boolean(readValue(props.disabled as MaybeAccessor<unknown>))
   const contentId = useId()
   const controllableStateProps = {
@@ -97,18 +101,15 @@ function Collapsible(props: ScopedProps<CollapsibleProps>): FictNode {
 
     setOpen((previousOpen) => !previousOpen)
   }
-  const primitiveProps = mergeProps(
-    () => props as Record<string, unknown>,
-    {
-      __scopeCollapsible: undefined,
-      defaultOpen: undefined,
-      disabled: undefined,
-      onOpenChange: undefined,
-      open: undefined,
-      'data-state': prop(() => getState(open())),
-      'data-disabled': prop(() => (disabled() ? '' : undefined)),
-    },
-  )
+  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
+    __scopeCollapsible: undefined,
+    defaultOpen: undefined,
+    disabled: undefined,
+    onOpenChange: undefined,
+    open: undefined,
+    'data-state': prop(() => getState(open())),
+    'data-disabled': prop(() => (disabled() ? '' : undefined)),
+  })
 
   useLayoutEffect(() => {
     const forwardedRef = props.ref as PossibleRef<HTMLDivElement>
@@ -173,9 +174,7 @@ function CollapsibleContent(props: ScopedProps<CollapsibleContentProps>): FictNo
   const { forceMount, ...contentProps } = props
   const context = useCollapsibleContext(CONTENT_NAME, props.__scopeCollapsible)
   const present = () =>
-    Boolean(
-      (forceMount === undefined ? false : readValue(forceMount)) || context.open(),
-    )
+    Boolean((forceMount === undefined ? false : readValue(forceMount)) || context.open())
 
   return (
     <Presence present={present}>
@@ -198,9 +197,8 @@ function CollapsibleContentImpl(props: ScopedProps<CollapsibleContentImplProps>)
   const isPresent = createSignal(readValue(present))
   const height = createSignal<number | undefined>(undefined)
   const width = createSignal<number | undefined>(undefined)
-  const composedRefs = useComposedRefs(
-    props.ref as PossibleRef<HTMLDivElement>,
-    (nextNode) => node(nextNode),
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, (nextNode) =>
+    node(nextNode),
   )
   const isOpen = () => context.open() || isPresent()
   let isMountAnimationPrevented = isOpen()
@@ -263,24 +261,21 @@ function CollapsibleContentImpl(props: ScopedProps<CollapsibleContentImplProps>)
     }
   })
 
-  const primitiveProps = mergeProps(
-    () => contentProps as Record<string, unknown>,
-    {
-      __scopeCollapsible: undefined,
-      present: undefined,
-      'data-state': prop(() => getState(context.open())),
-      'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
-      hidden: prop(() => !isOpen()),
-      id: prop(context.contentId),
-      ref: undefined,
-      style: prop(() => ({
-        '--radix-collapsible-content-height': height() ? `${height()}px` : undefined,
-        '--radix-collapsible-content-width': width() ? `${width()}px` : undefined,
-        ...readStyle(props.style as MaybeAccessor<CollapsibleStyle> | undefined),
-      })),
-      children: prop(() => (isOpen() ? children : null)),
-    },
-  )
+  const primitiveProps = mergeProps(() => contentProps as Record<string, unknown>, {
+    __scopeCollapsible: undefined,
+    present: undefined,
+    'data-state': prop(() => getState(context.open())),
+    'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
+    hidden: prop(() => !isOpen()),
+    id: prop(context.contentId),
+    ref: undefined,
+    style: prop(() => ({
+      '--radix-collapsible-content-height': height() ? `${height()}px` : undefined,
+      '--radix-collapsible-content-width': width() ? `${width()}px` : undefined,
+      ...readStyle(props.style as MaybeAccessor<CollapsibleStyle> | undefined),
+    })),
+    children: prop(() => (isOpen() ? children : null)),
+  })
 
   return <Primitive.div {...primitiveProps} ref={composedRefs} />
 }
@@ -289,5 +284,13 @@ const Root = Collapsible
 const Trigger = CollapsibleTrigger
 const Content = CollapsibleContent
 
-export { createCollapsibleScope, Collapsible, CollapsibleTrigger, CollapsibleContent, Root, Trigger, Content }
+export {
+  createCollapsibleScope,
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+  Root,
+  Trigger,
+  Content,
+}
 export type { CollapsibleProps, CollapsibleTriggerProps, CollapsibleContentProps }

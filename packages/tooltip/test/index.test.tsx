@@ -27,7 +27,7 @@ vi.mock('@fictjs/popper', async () => {
     Root: Popper,
     Anchor: PopperAnchor,
     Content: PopperContent,
-    Arrow: PopperArrow
+    Arrow: PopperArrow,
   }
 })
 
@@ -37,7 +37,7 @@ import {
   TooltipContent,
   TooltipPortal,
   TooltipProvider,
-  TooltipTrigger
+  TooltipTrigger,
 } from '../src/index.js'
 
 function pointerMove(target: Element): void {
@@ -45,8 +45,8 @@ function pointerMove(target: Element): void {
     new PointerEvent('pointermove', {
       bubbles: true,
       cancelable: true,
-      pointerType: 'mouse'
-    })
+      pointerType: 'mouse',
+    }),
   )
 }
 
@@ -55,8 +55,8 @@ function pressEscape(target: Document): void {
     new KeyboardEvent('keydown', {
       bubbles: true,
       cancelable: true,
-      key: 'Escape'
-    })
+      key: 'Escape',
+    }),
   )
 }
 
@@ -106,14 +106,17 @@ describe('@fictjs/tooltip', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <TooltipProvider delayDuration={500} disableHoverableContent>
-        <Tooltip>
-          <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
-          <TooltipContent data-testid="content">Tooltip</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    ), container)
+    mount(
+      () => (
+        <TooltipProvider delayDuration={500} disableHoverableContent>
+          <Tooltip>
+            <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
+            <TooltipContent data-testid="content">Tooltip</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
 
@@ -131,14 +134,17 @@ describe('@fictjs/tooltip', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
-          <TooltipContent data-testid="content">Tooltip</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    ), container)
+    mount(
+      () => (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
+            <TooltipContent data-testid="content">Tooltip</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
 
@@ -156,19 +162,22 @@ describe('@fictjs/tooltip', () => {
     const portalRoot = document.createElement('div')
     document.body.append(container, portalRoot)
 
-    mount(() => (
-      <TooltipProvider>
-        <Tooltip defaultOpen>
-          <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
-          <TooltipPortal container={portalRoot}>
-            <TooltipContent aria-label="Helpful label" data-testid="content">
-              <span data-testid="visible">Visible</span>
-              <TooltipArrow data-testid="arrow" />
-            </TooltipContent>
-          </TooltipPortal>
-        </Tooltip>
-      </TooltipProvider>
-    ), container)
+    mount(
+      () => (
+        <TooltipProvider>
+          <Tooltip defaultOpen>
+            <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
+            <TooltipPortal container={portalRoot}>
+              <TooltipContent aria-label="Helpful label" data-testid="content">
+                <span data-testid="visible">Visible</span>
+                <TooltipArrow data-testid="arrow" />
+              </TooltipContent>
+            </TooltipPortal>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -187,14 +196,17 @@ describe('@fictjs/tooltip', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <TooltipProvider disableHoverableContent>
-        <Tooltip defaultOpen>
-          <TooltipTrigger data-testid="trigger">One</TooltipTrigger>
-          <TooltipContent data-testid="content">First</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    ), container)
+    mount(
+      () => (
+        <TooltipProvider disableHoverableContent>
+          <Tooltip defaultOpen>
+            <TooltipTrigger data-testid="trigger">One</TooltipTrigger>
+            <TooltipContent data-testid="content">First</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
 
     await waitForEffects()
     expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()

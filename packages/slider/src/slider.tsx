@@ -164,11 +164,16 @@ function sortAndClampValues(values: number[], min: number, max: number): number[
 
 function Slider(props: ScopedProps<SliderProps>): FictNode {
   const direction = useDirection(
-    props.dir === undefined ? undefined : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? undefined),
+    props.dir === undefined
+      ? undefined
+      : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? undefined),
   )
   const name = () =>
-    props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>)
-  const disabled = () => Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
+    props.name === undefined
+      ? undefined
+      : readValue(props.name as MaybeAccessor<string | undefined>)
+  const disabled = () =>
+    Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
   const orientation = () =>
     props.orientation === undefined
       ? 'horizontal'
@@ -177,7 +182,9 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
   const min = () =>
     props.min === undefined ? 0 : (readValue(props.min as MaybeAccessor<number | undefined>) ?? 0)
   const max = () =>
-    props.max === undefined ? 100 : (readValue(props.max as MaybeAccessor<number | undefined>) ?? 100)
+    props.max === undefined
+      ? 100
+      : (readValue(props.max as MaybeAccessor<number | undefined>) ?? 100)
   const step = () =>
     props.step === undefined ? 1 : (readValue(props.step as MaybeAccessor<number | undefined>) ?? 1)
   const minStepsBetweenThumbs = () =>
@@ -187,7 +194,9 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
   const inverted = () =>
     Boolean(readValue(props.inverted as MaybeAccessor<boolean | undefined>) ?? false)
   const form = () =>
-    props.form === undefined ? undefined : readValue(props.form as MaybeAccessor<string | undefined>)
+    props.form === undefined
+      ? undefined
+      : readValue(props.form as MaybeAccessor<string | undefined>)
   const defaultValue = () => {
     const nextDefaultValue =
       props.defaultValue === undefined
@@ -198,7 +207,9 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
   }
   const valueProp = () => {
     const nextValue =
-      props.value === undefined ? undefined : readValue(props.value as MaybeAccessor<number[] | undefined>)
+      props.value === undefined
+        ? undefined
+        : readValue(props.value as MaybeAccessor<number[] | undefined>)
 
     return nextValue === undefined ? undefined : sortAndClampValues(nextValue, min(), max())
   }
@@ -220,7 +231,10 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
 
   const updateValues = (value: number, atIndex: number, { commit } = { commit: false }) => {
     const decimalCount = getDecimalCount(step())
-    const snapToStep = roundValue(Math.round((value - min()) / step()) * step() + min(), decimalCount)
+    const snapToStep = roundValue(
+      Math.round((value - min()) / step()) * step() + min(),
+      decimalCount,
+    )
     const nextValue = clamp(snapToStep, [min(), max()])
 
     setValues((prevValues = []) => {
@@ -289,76 +303,86 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
       value: undefined,
     },
   )
-  const orientationNode = (
-    isHorizontal() ? (
-      <SliderHorizontal
-        {...(sliderProps as Record<string, unknown>)}
-        __scopeSlider={props.__scopeSlider}
-        dir={direction()}
-        min={min()}
-        max={max()}
-        inverted={inverted()}
-        onSlideStart={handleSlideStart}
-        onSlideMove={handleSlideMove}
-        onSlideEnd={handleSlideEnd}
-        onHomeKeyDown={() => {
-          if (!disabled()) {
-            updateValues(min(), 0, { commit: true })
-          }
-        }}
-        onEndKeyDown={() => {
-          if (!disabled()) {
-            updateValues(max(), values().length - 1, { commit: true })
-          }
-        }}
-        onStepKeyDown={({ event, direction: stepDirection }: { event: KeyboardEvent; direction: number }) => {
-          if (disabled()) return
+  const orientationNode = (isHorizontal() ? (
+    <SliderHorizontal
+      {...(sliderProps as Record<string, unknown>)}
+      __scopeSlider={props.__scopeSlider}
+      dir={direction()}
+      min={min()}
+      max={max()}
+      inverted={inverted()}
+      onSlideStart={handleSlideStart}
+      onSlideMove={handleSlideMove}
+      onSlideEnd={handleSlideEnd}
+      onHomeKeyDown={() => {
+        if (!disabled()) {
+          updateValues(min(), 0, { commit: true })
+        }
+      }}
+      onEndKeyDown={() => {
+        if (!disabled()) {
+          updateValues(max(), values().length - 1, { commit: true })
+        }
+      }}
+      onStepKeyDown={({
+        event,
+        direction: stepDirection,
+      }: {
+        event: KeyboardEvent
+        direction: number
+      }) => {
+        if (disabled()) return
 
-          const isPageKey = PAGE_KEYS.includes(event.key)
-          const isSkipKey = isPageKey || (event.shiftKey && ARROW_KEYS.includes(event.key))
-          const multiplier = isSkipKey ? 10 : 1
-          const atIndex = valueIndexToChangeRef.current
-          const currentValue = values()[atIndex] ?? min()
-          updateValues(currentValue + step() * multiplier * stepDirection, atIndex, {
-            commit: true,
-          })
-        }}
-      />
-    ) : (
-      <SliderVertical
-        {...(sliderProps as Record<string, unknown>)}
-        __scopeSlider={props.__scopeSlider}
-        min={min()}
-        max={max()}
-        inverted={inverted()}
-        onSlideStart={handleSlideStart}
-        onSlideMove={handleSlideMove}
-        onSlideEnd={handleSlideEnd}
-        onHomeKeyDown={() => {
-          if (!disabled()) {
-            updateValues(min(), 0, { commit: true })
-          }
-        }}
-        onEndKeyDown={() => {
-          if (!disabled()) {
-            updateValues(max(), values().length - 1, { commit: true })
-          }
-        }}
-        onStepKeyDown={({ event, direction: stepDirection }: { event: KeyboardEvent; direction: number }) => {
-          if (disabled()) return
+        const isPageKey = PAGE_KEYS.includes(event.key)
+        const isSkipKey = isPageKey || (event.shiftKey && ARROW_KEYS.includes(event.key))
+        const multiplier = isSkipKey ? 10 : 1
+        const atIndex = valueIndexToChangeRef.current
+        const currentValue = values()[atIndex] ?? min()
+        updateValues(currentValue + step() * multiplier * stepDirection, atIndex, {
+          commit: true,
+        })
+      }}
+    />
+  ) : (
+    <SliderVertical
+      {...(sliderProps as Record<string, unknown>)}
+      __scopeSlider={props.__scopeSlider}
+      min={min()}
+      max={max()}
+      inverted={inverted()}
+      onSlideStart={handleSlideStart}
+      onSlideMove={handleSlideMove}
+      onSlideEnd={handleSlideEnd}
+      onHomeKeyDown={() => {
+        if (!disabled()) {
+          updateValues(min(), 0, { commit: true })
+        }
+      }}
+      onEndKeyDown={() => {
+        if (!disabled()) {
+          updateValues(max(), values().length - 1, { commit: true })
+        }
+      }}
+      onStepKeyDown={({
+        event,
+        direction: stepDirection,
+      }: {
+        event: KeyboardEvent
+        direction: number
+      }) => {
+        if (disabled()) return
 
-          const isPageKey = PAGE_KEYS.includes(event.key)
-          const isSkipKey = isPageKey || (event.shiftKey && ARROW_KEYS.includes(event.key))
-          const multiplier = isSkipKey ? 10 : 1
-          const atIndex = valueIndexToChangeRef.current
-          const currentValue = values()[atIndex] ?? min()
-          updateValues(currentValue + step() * multiplier * stepDirection, atIndex, {
-            commit: true,
-          })
-        }}
-      />
-    )
-  ) as unknown as FictNode
+        const isPageKey = PAGE_KEYS.includes(event.key)
+        const isSkipKey = isPageKey || (event.shiftKey && ARROW_KEYS.includes(event.key))
+        const multiplier = isSkipKey ? 10 : 1
+        const atIndex = valueIndexToChangeRef.current
+        const currentValue = values()[atIndex] ?? min()
+        updateValues(currentValue + step() * multiplier * stepDirection, atIndex, {
+          commit: true,
+        })
+      }}
+    />
+  )) as unknown as FictNode
 
   return (
     <SliderProvider
@@ -409,9 +433,10 @@ function SliderHorizontal(props: ScopedProps<SliderHorizontalProps>): FictNode {
     if (!rect) return min
 
     rectRef.current = rect
-    return linearScale([0, rect.width], isSlidingFromLeft() ? [min, max] : [max, min])(
-      pointerPosition - rect.left,
-    )
+    return linearScale(
+      [0, rect.width],
+      isSlidingFromLeft() ? [min, max] : [max, min],
+    )(pointerPosition - rect.left)
   }
 
   return (
@@ -427,10 +452,7 @@ function SliderHorizontal(props: ScopedProps<SliderHorizontalProps>): FictNode {
         __scopeSlider={__scopeSlider}
         data-orientation="horizontal"
         dir={dir}
-        ref={useComposedRefs(
-          props.ref as PossibleRef<HTMLSpanElement>,
-          (node) => slider(node),
-        )}
+        ref={useComposedRefs(props.ref as PossibleRef<HTMLSpanElement>, (node) => slider(node))}
         style={{
           ...readStyle(props.style),
           '--radix-slider-thumb-transform': 'translateX(-50%)',
@@ -481,9 +503,10 @@ function SliderVertical(props: ScopedProps<SliderVerticalProps>): FictNode {
     if (!rect) return min
 
     rectRef.current = rect
-    return linearScale([0, rect.height], isSlidingFromBottom() ? [max, min] : [min, max])(
-      pointerPosition - rect.top,
-    )
+    return linearScale(
+      [0, rect.height],
+      isSlidingFromBottom() ? [max, min] : [min, max],
+    )(pointerPosition - rect.top)
   }
 
   return (
@@ -498,10 +521,7 @@ function SliderVertical(props: ScopedProps<SliderVerticalProps>): FictNode {
         {...(sliderProps as Record<string, unknown>)}
         __scopeSlider={__scopeSlider}
         data-orientation="vertical"
-        ref={useComposedRefs(
-          props.ref as PossibleRef<HTMLSpanElement>,
-          (node) => slider(node),
-        )}
+        ref={useComposedRefs(props.ref as PossibleRef<HTMLSpanElement>, (node) => slider(node))}
         style={{
           ...readStyle(props.style),
           '--radix-slider-thumb-transform': 'translateY(50%)',
@@ -529,75 +549,83 @@ function SliderVertical(props: ScopedProps<SliderVerticalProps>): FictNode {
 }
 
 function SliderImpl(props: ScopedProps<SliderImplProps>): FictNode {
-  const { __scopeSlider, onSlideStart, onSlideMove, onSlideEnd, onHomeKeyDown, onEndKeyDown, onStepKeyDown, ...sliderProps } =
-    props
-  const context = useSliderContext(SLIDER_NAME, __scopeSlider as Scope<SliderContextValue | undefined>)
+  const {
+    __scopeSlider,
+    onSlideStart,
+    onSlideMove,
+    onSlideEnd,
+    onHomeKeyDown,
+    onEndKeyDown,
+    onStepKeyDown,
+    ...sliderProps
+  } = props
+  const context = useSliderContext(
+    SLIDER_NAME,
+    __scopeSlider as Scope<SliderContextValue | undefined>,
+  )
   const isSlidingRef = { current: false }
 
-  const primitiveProps = mergeProps(
-    () => sliderProps as Record<string, unknown>,
-    {
-      onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-        (event) => {
-          if (context.disabled()) return
+  const primitiveProps = mergeProps(() => sliderProps as Record<string, unknown>, {
+    onKeyDown: composeEventHandlers<KeyboardEvent>(
+      props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+      (event) => {
+        if (context.disabled()) return
 
-          if (event.key === 'Home') {
-            onHomeKeyDown()
-            event.preventDefault()
-          } else if (event.key === 'End') {
-            onEndKeyDown()
-            event.preventDefault()
-          } else if (PAGE_KEYS.concat(ARROW_KEYS).includes(event.key)) {
-            onStepKeyDown(event)
-            event.preventDefault()
-          }
-        },
-      ),
-      onPointerDown: composeEventHandlers<PointerEvent>(
-        props.onPointerDown as ((event: PointerEvent) => void) | undefined,
-        (event) => {
-          if (context.disabled()) return
-
-          const target = event.target as HTMLElement | null
-          target?.setPointerCapture?.(event.pointerId)
-          isSlidingRef.current = !context.thumbs.has(target as SliderThumbElement)
+        if (event.key === 'Home') {
+          onHomeKeyDown()
           event.preventDefault()
+        } else if (event.key === 'End') {
+          onEndKeyDown()
+          event.preventDefault()
+        } else if (PAGE_KEYS.concat(ARROW_KEYS).includes(event.key)) {
+          onStepKeyDown(event)
+          event.preventDefault()
+        }
+      },
+    ),
+    onPointerDown: composeEventHandlers<PointerEvent>(
+      props.onPointerDown as ((event: PointerEvent) => void) | undefined,
+      (event) => {
+        if (context.disabled()) return
 
-          if (context.thumbs.has(target as SliderThumbElement)) {
-            target?.focus()
-          } else {
-            onSlideStart(event)
-          }
-        },
-      ),
-      onPointerMove: composeEventHandlers<PointerEvent>(
-        props.onPointerMove as ((event: PointerEvent) => void) | undefined,
-        (event) => {
-          if (context.disabled()) return
+        const target = event.target as HTMLElement | null
+        target?.setPointerCapture?.(event.pointerId)
+        isSlidingRef.current = !context.thumbs.has(target as SliderThumbElement)
+        event.preventDefault()
 
-          const target = event.target as HTMLElement | null
-          if (isSlidingRef.current || target?.hasPointerCapture?.(event.pointerId)) {
-            onSlideMove(event)
-          }
-        },
-      ),
-      onPointerUp: composeEventHandlers<PointerEvent>(
-        props.onPointerUp as ((event: PointerEvent) => void) | undefined,
-        (event) => {
-          if (context.disabled()) return
+        if (context.thumbs.has(target as SliderThumbElement)) {
+          target?.focus()
+        } else {
+          onSlideStart(event)
+        }
+      },
+    ),
+    onPointerMove: composeEventHandlers<PointerEvent>(
+      props.onPointerMove as ((event: PointerEvent) => void) | undefined,
+      (event) => {
+        if (context.disabled()) return
 
-          const target = event.target as HTMLElement | null
-          const hasPointer = target?.hasPointerCapture?.(event.pointerId)
-          if (isSlidingRef.current || hasPointer) {
-            target?.releasePointerCapture?.(event.pointerId)
-            isSlidingRef.current = false
-            onSlideEnd(event)
-          }
-        },
-      ),
-    },
-  )
+        const target = event.target as HTMLElement | null
+        if (isSlidingRef.current || target?.hasPointerCapture?.(event.pointerId)) {
+          onSlideMove(event)
+        }
+      },
+    ),
+    onPointerUp: composeEventHandlers<PointerEvent>(
+      props.onPointerUp as ((event: PointerEvent) => void) | undefined,
+      (event) => {
+        if (context.disabled()) return
+
+        const target = event.target as HTMLElement | null
+        const hasPointer = target?.hasPointerCapture?.(event.pointerId)
+        if (isSlidingRef.current || hasPointer) {
+          target?.releasePointerCapture?.(event.pointerId)
+          isSlidingRef.current = false
+          onSlideEnd(event)
+        }
+      },
+    ),
+  })
 
   return (
     <Primitive.span
@@ -612,7 +640,10 @@ function SliderImpl(props: ScopedProps<SliderImplProps>): FictNode {
 
 function SliderTrack(props: ScopedProps<SliderTrackProps>): FictNode {
   const { __scopeSlider, ...trackProps } = props
-  const context = useSliderContext(TRACK_NAME, __scopeSlider as Scope<SliderContextValue | undefined>)
+  const context = useSliderContext(
+    TRACK_NAME,
+    __scopeSlider as Scope<SliderContextValue | undefined>,
+  )
   const primitiveProps = mergeProps(
     {
       'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
@@ -633,7 +664,10 @@ function SliderTrack(props: ScopedProps<SliderTrackProps>): FictNode {
 
 function SliderRange(props: ScopedProps<SliderRangeProps>): FictNode {
   const { __scopeSlider, ...rangeProps } = props
-  const context = useSliderContext(RANGE_NAME, __scopeSlider as Scope<SliderContextValue | undefined>)
+  const context = useSliderContext(
+    RANGE_NAME,
+    __scopeSlider as Scope<SliderContextValue | undefined>,
+  )
   const orientation = useSliderOrientationContext(
     RANGE_NAME,
     __scopeSlider as Scope<SliderOrientationContextValue | undefined>,
@@ -667,7 +701,10 @@ function SliderRange(props: ScopedProps<SliderRangeProps>): FictNode {
 
 function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
   const thumb = createSignal<SliderThumbElement | null>(null)
-  const context = useSliderContext(THUMB_NAME, props.__scopeSlider as Scope<SliderContextValue | undefined>)
+  const context = useSliderContext(
+    THUMB_NAME,
+    props.__scopeSlider as Scope<SliderContextValue | undefined>,
+  )
   const orientation = useSliderOrientationContext(
     THUMB_NAME,
     props.__scopeSlider as Scope<SliderOrientationContextValue | undefined>,
@@ -677,7 +714,8 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
     if (!thumbNode) return -1
 
     const thumbNodes = Array.from(
-      context.rootRef.current?.querySelectorAll<SliderThumbElement>('[data-radix-slider-thumb]') ?? [],
+      context.rootRef.current?.querySelectorAll<SliderThumbElement>('[data-radix-slider-thumb]') ??
+        [],
     )
 
     return thumbNodes.indexOf(thumbNode)
@@ -741,24 +779,22 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
     }
   })
 
-  const bubbleInputNode = (
-    isFormControl() ? (
-      <SliderBubbleInput
-        __scopeSlider={props.__scopeSlider}
-        name={() => {
-          const itemName =
-            props.name === undefined
-              ? context.name()
-              : readValue(props.name as MaybeAccessor<string | undefined>)
+  const bubbleInputNode = (isFormControl() ? (
+    <SliderBubbleInput
+      __scopeSlider={props.__scopeSlider}
+      name={() => {
+        const itemName =
+          props.name === undefined
+            ? context.name()
+            : readValue(props.name as MaybeAccessor<string | undefined>)
 
-          if (!itemName) return undefined
-          return context.values().length > 1 ? `${itemName}[]` : itemName
-        }}
-        form={context.form}
-        value={value}
-      />
-    ) : null
-  ) as unknown as FictNode
+        if (!itemName) return undefined
+        return context.values().length > 1 ? `${itemName}[]` : itemName
+      }}
+      form={context.form}
+      value={value}
+    />
+  ) : null) as unknown as FictNode
 
   return (
     <span style={wrapperStyle()}>
@@ -803,35 +839,33 @@ function SliderBubbleInput(props: ScopedProps<SliderBubbleInputProps>): FictNode
     }
   })
 
-  const inputProps = mergeProps(
-    () => inputRestProps as Record<string, unknown>,
-    {
-      __scopeSlider: undefined,
-      defaultValue: prop(() => {
-        const nextValue = readValue(props.value)
-        return nextValue === undefined ? '' : String(nextValue)
-      }),
-      'attr:form': prop(() =>
-        formProp === undefined ? undefined : readValue(formProp as MaybeAccessor<string | undefined>),
-      ),
-      name: prop(() =>
-        props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>),
-      ),
-      ref: undefined,
-      style: prop(() => ({
-        display: 'none',
-        ...readStyle(props.style),
-      })),
-      value: undefined,
-    },
-  )
+  const inputProps = mergeProps(() => inputRestProps as Record<string, unknown>, {
+    __scopeSlider: undefined,
+    defaultValue: prop(() => {
+      const nextValue = readValue(props.value)
+      return nextValue === undefined ? '' : String(nextValue)
+    }),
+    'attr:form': prop(() =>
+      formProp === undefined ? undefined : readValue(formProp as MaybeAccessor<string | undefined>),
+    ),
+    name: prop(() =>
+      props.name === undefined
+        ? undefined
+        : readValue(props.name as MaybeAccessor<string | undefined>),
+    ),
+    ref: undefined,
+    style: prop(() => ({
+      display: 'none',
+      ...readStyle(props.style),
+    })),
+    value: undefined,
+  })
 
   return (
     <Primitive.input
       {...(inputProps as Record<string, unknown>)}
-      ref={useComposedRefs(
-        (props.ref as PossibleRef<HTMLInputElement>) ?? undefined,
-        (node) => ref(node),
+      ref={useComposedRefs((props.ref as PossibleRef<HTMLInputElement>) ?? undefined, (node) =>
+        ref(node),
       )}
     />
   )
@@ -908,5 +942,15 @@ const Track = SliderTrack
 const Range = SliderRange
 const Thumb = SliderThumb
 
-export { createSliderScope, Slider, SliderTrack, SliderRange, SliderThumb, Root, Track, Range, Thumb }
+export {
+  createSliderScope,
+  Slider,
+  SliderTrack,
+  SliderRange,
+  SliderThumb,
+  Root,
+  Track,
+  Range,
+  Thumb,
+}
 export type { SliderProps, SliderTrackProps, SliderRangeProps, SliderThumbProps }

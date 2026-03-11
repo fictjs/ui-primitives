@@ -1,4 +1,9 @@
-import { createElement, createPortal as createFictPortal, type FictNode, type JSX } from '@fictjs/runtime'
+import {
+  createElement,
+  createPortal as createFictPortal,
+  type FictNode,
+  type JSX,
+} from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Primitive } from '@fictjs/primitive'
@@ -16,7 +21,8 @@ function Portal(props: PortalProps): FictNode {
     mounted(true)
   })
 
-  const resolveContainer = () => containerProp ?? (mounted() ? globalThis.document?.body ?? null : null)
+  const resolveContainer = () =>
+    containerProp ?? (mounted() ? (globalThis.document?.body ?? null) : null)
 
   return (
     <>

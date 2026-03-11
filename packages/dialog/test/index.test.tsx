@@ -95,19 +95,22 @@ describe('@fictjs/dialog', () => {
     const portalRoot = document.createElement('div')
     document.body.append(container, portalRoot)
 
-    mount(() => (
-      <Dialog>
-        <DialogTrigger data-testid="trigger">Open</DialogTrigger>
-        <DialogPortal container={portalRoot}>
-          <DialogOverlay data-testid="overlay" />
-          <DialogContent data-testid="content">
-            <DialogTitle data-testid="title">Preferences</DialogTitle>
-            <DialogDescription data-testid="description">Configure options.</DialogDescription>
-            <DialogClose data-testid="close">Close</DialogClose>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    ), container)
+    mount(
+      () => (
+        <Dialog>
+          <DialogTrigger data-testid="trigger">Open</DialogTrigger>
+          <DialogPortal container={portalRoot}>
+            <DialogOverlay data-testid="overlay" />
+            <DialogContent data-testid="content">
+              <DialogTitle data-testid="title">Preferences</DialogTitle>
+              <DialogDescription data-testid="description">Configure options.</DialogDescription>
+              <DialogClose data-testid="close">Close</DialogClose>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
@@ -118,7 +121,9 @@ describe('@fictjs/dialog', () => {
     const content = portalRoot.querySelector('[data-testid="content"]') as HTMLDivElement
     const overlay = portalRoot.querySelector('[data-testid="overlay"]') as HTMLDivElement
     const title = portalRoot.querySelector('[data-testid="title"]') as HTMLHeadingElement
-    const description = portalRoot.querySelector('[data-testid="description"]') as HTMLParagraphElement
+    const description = portalRoot.querySelector(
+      '[data-testid="description"]',
+    ) as HTMLParagraphElement
 
     expect(content).not.toBeNull()
     expect(overlay).not.toBeNull()
@@ -141,21 +146,24 @@ describe('@fictjs/dialog', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Dialog>
-        <DialogTrigger data-testid="trigger">Open</DialogTrigger>
-        <DialogPortal>
-          <DialogOverlay />
-          <DialogContent data-testid="content">
-            <DialogTitle>Modal title</DialogTitle>
-            <DialogDescription>Modal description</DialogDescription>
-            <button data-testid="inside" type="button">
-              Inside
-            </button>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    ), container)
+    mount(
+      () => (
+        <Dialog>
+          <DialogTrigger data-testid="trigger">Open</DialogTrigger>
+          <DialogPortal>
+            <DialogOverlay />
+            <DialogContent data-testid="content">
+              <DialogTitle>Modal title</DialogTitle>
+              <DialogDescription>Modal description</DialogDescription>
+              <button data-testid="inside" type="button">
+                Inside
+              </button>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
     trigger.focus()
@@ -179,19 +187,22 @@ describe('@fictjs/dialog', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Dialog modal={false}>
-        <DialogTrigger data-testid="trigger">Open</DialogTrigger>
-        <DialogPortal>
-          <DialogOverlay data-testid="overlay" />
-          <DialogContent data-testid="content">
-            <DialogTitle>Non modal title</DialogTitle>
-            <DialogDescription>Non modal description</DialogDescription>
-            Non modal
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    ), container)
+    mount(
+      () => (
+        <Dialog modal={false}>
+          <DialogTrigger data-testid="trigger">Open</DialogTrigger>
+          <DialogPortal>
+            <DialogOverlay data-testid="overlay" />
+            <DialogContent data-testid="content">
+              <DialogTitle>Non modal title</DialogTitle>
+              <DialogDescription>Non modal description</DialogDescription>
+              Non modal
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
     click(trigger)
@@ -207,23 +218,26 @@ describe('@fictjs/dialog', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <>
-        <button data-testid="outside" type="button">
-          Outside
-        </button>
-        <Dialog modal={false} defaultOpen>
-          <DialogTrigger data-testid="trigger">Open</DialogTrigger>
-          <DialogPortal>
-            <DialogContent data-testid="content">
-              <DialogTitle>Non modal title</DialogTitle>
-              <DialogDescription>Non modal description</DialogDescription>
-              Non modal
-            </DialogContent>
-          </DialogPortal>
-        </Dialog>
-      </>
-    ), container)
+    mount(
+      () => (
+        <>
+          <button data-testid="outside" type="button">
+            Outside
+          </button>
+          <Dialog modal={false} defaultOpen>
+            <DialogTrigger data-testid="trigger">Open</DialogTrigger>
+            <DialogPortal>
+              <DialogContent data-testid="content">
+                <DialogTitle>Non modal title</DialogTitle>
+                <DialogDescription>Non modal description</DialogDescription>
+                Non modal
+              </DialogContent>
+            </DialogPortal>
+          </Dialog>
+        </>
+      ),
+      container,
+    )
 
     await waitForEffects()
     await waitForEffects()

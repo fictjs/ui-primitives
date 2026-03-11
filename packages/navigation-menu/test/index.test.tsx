@@ -4,15 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 
-import {
-  Content,
-  Indicator,
-  Item,
-  List,
-  Root,
-  Trigger,
-  Viewport,
-} from '../src/index.js'
+import { Content, Indicator, Item, List, Root, Trigger, Viewport } from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -56,17 +48,20 @@ describe('@fictjs/navigation-menu', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root>
-        <List>
-          <Item value="docs">
-            <Trigger data-testid="trigger">Docs</Trigger>
-            <Content data-testid="content">Panel</Content>
-          </Item>
-        </List>
-        <Indicator data-testid="indicator">i</Indicator>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root>
+          <List>
+            <Item value="docs">
+              <Trigger data-testid="trigger">Docs</Trigger>
+              <Content data-testid="content">Panel</Content>
+            </Item>
+          </List>
+          <Indicator data-testid="indicator">i</Indicator>
+        </Root>
+      ),
+      container,
+    )
 
     click(container.querySelector('[data-testid="trigger"]') as HTMLButtonElement)
     await waitForEffects()
@@ -79,17 +74,20 @@ describe('@fictjs/navigation-menu', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root defaultValue="docs">
-        <List>
-          <Item value="docs">
-            <Trigger>Docs</Trigger>
-            <Content data-testid="content">Panel</Content>
-          </Item>
-        </List>
-        <Viewport data-testid="viewport" />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root defaultValue="docs">
+          <List>
+            <Item value="docs">
+              <Trigger>Docs</Trigger>
+              <Content data-testid="content">Panel</Content>
+            </Item>
+          </List>
+          <Viewport data-testid="viewport" />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

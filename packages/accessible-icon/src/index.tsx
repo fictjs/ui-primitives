@@ -11,7 +11,10 @@ function isVNode(node: unknown): node is FictVNode {
   return !!node && typeof node === 'object' && 'type' in (node as FictVNode)
 }
 
-function flattenChildren(children: FictNode | FictNode[] | undefined, result: FictNode[] = []): FictNode[] {
+function flattenChildren(
+  children: FictNode | FictNode[] | undefined,
+  result: FictNode[] = [],
+): FictNode[] {
   if (Array.isArray(children)) {
     for (const child of children) {
       flattenChildren(child, result)

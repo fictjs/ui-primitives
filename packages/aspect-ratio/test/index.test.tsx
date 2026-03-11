@@ -14,13 +14,16 @@ describe('@fictjs/aspect-ratio', () => {
   it('renders a ratio wrapper and absolutely positioned content', () => {
     const container = document.createElement('div')
 
-    render(() => (
-      <div style={{ width: 500 }}>
-        <AspectRatio ratio={1 / 2} id="content">
-          <span>Hello</span>
-        </AspectRatio>
-      </div>
-    ), container)
+    render(
+      () => (
+        <div style={{ width: 500 }}>
+          <AspectRatio ratio={1 / 2} id="content">
+            <span>Hello</span>
+          </AspectRatio>
+        </div>
+      ),
+      container,
+    )
 
     const wrapper = container.querySelector('[data-radix-aspect-ratio-wrapper]') as HTMLDivElement
     const content = container.querySelector('#content') as HTMLDivElement
@@ -39,13 +42,18 @@ describe('@fictjs/aspect-ratio', () => {
   it('merges caller styles onto the inner element', () => {
     const container = document.createElement('div')
 
-    render(() => (
-      <AspectRatio style={{ backgroundColor: 'red' }}>
-        <span>Styled</span>
-      </AspectRatio>
-    ), container)
+    render(
+      () => (
+        <AspectRatio style={{ backgroundColor: 'red' }}>
+          <span>Styled</span>
+        </AspectRatio>
+      ),
+      container,
+    )
 
-    const content = container.querySelector('[data-radix-aspect-ratio-wrapper] > div') as HTMLDivElement
+    const content = container.querySelector(
+      '[data-radix-aspect-ratio-wrapper] > div',
+    ) as HTMLDivElement
 
     expect(content.style.backgroundColor).toBe('red')
     expect(content.style.position).toBe('absolute')

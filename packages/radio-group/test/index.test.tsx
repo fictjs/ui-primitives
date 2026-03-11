@@ -10,8 +10,8 @@ function click(target: Element): void {
   target.dispatchEvent(
     new MouseEvent('click', {
       bubbles: true,
-      cancelable: true
-    })
+      cancelable: true,
+    }),
   )
 }
 
@@ -20,8 +20,8 @@ function pressKey(target: Element, key: string): void {
     new KeyboardEvent('keydown', {
       bubbles: true,
       cancelable: true,
-      key
-    })
+      key,
+    }),
   )
 }
 
@@ -62,19 +62,22 @@ describe('@fictjs/radio-group', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <form>
-        <RadioGroup defaultValue="two" name="plan">
-          <RadioGroupItem data-testid="one" value="one">
-            One
-          </RadioGroupItem>
-          <RadioGroupItem data-testid="two" value="two">
-            <RadioGroupIndicator data-testid="indicator" />
-            Two
-          </RadioGroupItem>
-        </RadioGroup>
-      </form>
-    ), container)
+    mount(
+      () => (
+        <form>
+          <RadioGroup defaultValue="two" name="plan">
+            <RadioGroupItem data-testid="one" value="one">
+              One
+            </RadioGroupItem>
+            <RadioGroupItem data-testid="two" value="two">
+              <RadioGroupIndicator data-testid="indicator" />
+              Two
+            </RadioGroupItem>
+          </RadioGroup>
+        </form>
+      ),
+      container,
+    )
 
     const getGroup = () => container.querySelector('[role="radiogroup"]') as HTMLDivElement
     const getButtons = () => {
@@ -101,16 +104,19 @@ describe('@fictjs/radio-group', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <RadioGroup defaultValue="one">
-        <RadioGroupItem data-testid="one" value="one">
-          One
-        </RadioGroupItem>
-        <RadioGroupItem data-testid="two" value="two">
-          Two
-        </RadioGroupItem>
-      </RadioGroup>
-    ), container)
+    mount(
+      () => (
+        <RadioGroup defaultValue="one">
+          <RadioGroupItem data-testid="one" value="one">
+            One
+          </RadioGroupItem>
+          <RadioGroupItem data-testid="two" value="two">
+            Two
+          </RadioGroupItem>
+        </RadioGroup>
+      ),
+      container,
+    )
 
     const getButtons = () => {
       const one = container.querySelector('[data-testid="one"]') as HTMLButtonElement
@@ -131,13 +137,16 @@ describe('@fictjs/radio-group', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <RadioGroup disabled>
-        <RadioGroupItem data-testid="item" value="one">
-          One
-        </RadioGroupItem>
-      </RadioGroup>
-    ), container)
+    mount(
+      () => (
+        <RadioGroup disabled>
+          <RadioGroupItem data-testid="item" value="one">
+            One
+          </RadioGroupItem>
+        </RadioGroup>
+      ),
+      container,
+    )
 
     const item = container.querySelector('[data-testid="item"]') as HTMLButtonElement
     expect(item.disabled).toBe(true)
@@ -148,16 +157,19 @@ describe('@fictjs/radio-group', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <>
-        <form id="billing-form" />
-        <RadioGroup name="plan" required defaultValue="pro">
-          <RadioGroupItem data-testid="item" form="billing-form" value="pro">
-            Pro
-          </RadioGroupItem>
-        </RadioGroup>
-      </>
-    ), container)
+    mount(
+      () => (
+        <>
+          <form id="billing-form" />
+          <RadioGroup name="plan" required defaultValue="pro">
+            <RadioGroupItem data-testid="item" form="billing-form" value="pro">
+              Pro
+            </RadioGroupItem>
+          </RadioGroup>
+        </>
+      ),
+      container,
+    )
 
     await waitForUpdates()
 

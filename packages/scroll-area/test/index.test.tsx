@@ -39,16 +39,19 @@ describe('@fictjs/scroll-area', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root>
-        <Viewport data-testid="viewport">
-          <div style={{ height: '400px' }}>Content</div>
-        </Viewport>
-        <Scrollbar data-testid="scrollbar" orientation="vertical">
-          <Thumb data-testid="thumb" />
-        </Scrollbar>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root>
+          <Viewport data-testid="viewport">
+            <div style={{ height: '400px' }}>Content</div>
+          </Viewport>
+          <Scrollbar data-testid="scrollbar" orientation="vertical">
+            <Thumb data-testid="thumb" />
+          </Scrollbar>
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -72,18 +75,21 @@ describe('@fictjs/scroll-area', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root>
-        <Viewport />
-        <Scrollbar orientation="horizontal">
-          <Thumb />
-        </Scrollbar>
-        <Scrollbar orientation="vertical">
-          <Thumb />
-        </Scrollbar>
-        <Corner data-testid="corner" />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root>
+          <Viewport />
+          <Scrollbar orientation="horizontal">
+            <Thumb />
+          </Scrollbar>
+          <Scrollbar orientation="vertical">
+            <Thumb />
+          </Scrollbar>
+          <Corner data-testid="corner" />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

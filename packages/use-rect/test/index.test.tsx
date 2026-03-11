@@ -42,7 +42,11 @@ describe('@fictjs/use-rect', () => {
     frameQueue = new Map()
     vi.unstubAllGlobals()
     if (originalGetBoundingClientRect) {
-      Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', originalGetBoundingClientRect)
+      Object.defineProperty(
+        HTMLElement.prototype,
+        'getBoundingClientRect',
+        originalGetBoundingClientRect,
+      )
     }
   })
 
@@ -79,10 +83,12 @@ describe('@fictjs/use-rect', () => {
         <>
           <div ref={(node) => target(node)} data-width="120" data-height="64" />
           <output>
-            {(() => {
-              const nextRect = rect()
-              return nextRect ? `${nextRect.width}x${nextRect.height}` : 'none'
-            }) as unknown as string}
+            {
+              (() => {
+                const nextRect = rect()
+                return nextRect ? `${nextRect.width}x${nextRect.height}` : 'none'
+              }) as unknown as string
+            }
           </output>
         </>
       )

@@ -205,36 +205,33 @@ function Form(props: ScopedProps<FormProps>): FictNode {
     },
   }
 
-  const primitiveProps = mergeProps(
-    () => rootProps as Record<string, unknown>,
-    {
-      onInvalid: composeEventHandlers<Event>(
-        props.onInvalid as ((event: Event) => void) | undefined,
-        (event) => {
-          const form = event.currentTarget as HTMLFormElement
-          const firstInvalidControl = getFirstInvalidControl(form)
-          if (firstInvalidControl === event.target) {
-            firstInvalidControl.focus()
-          }
-          event.preventDefault()
-        },
-      ),
-      onSubmit: composeEventHandlers<Event>(
-        props.onSubmit as ((event: Event) => void) | undefined,
-        () => {
-          onClearServerErrors()
-        },
-        { checkForDefaultPrevented: false },
-      ),
-      onReset: composeEventHandlers<Event>(
-        props.onReset as ((event: Event) => void) | undefined,
-        () => {
-          onClearServerErrors()
-        },
-      ),
-      ref: undefined,
-    },
-  )
+  const primitiveProps = mergeProps(() => rootProps as Record<string, unknown>, {
+    onInvalid: composeEventHandlers<Event>(
+      props.onInvalid as ((event: Event) => void) | undefined,
+      (event) => {
+        const form = event.currentTarget as HTMLFormElement
+        const firstInvalidControl = getFirstInvalidControl(form)
+        if (firstInvalidControl === event.target) {
+          firstInvalidControl.focus()
+        }
+        event.preventDefault()
+      },
+    ),
+    onSubmit: composeEventHandlers<Event>(
+      props.onSubmit as ((event: Event) => void) | undefined,
+      () => {
+        onClearServerErrors()
+      },
+      { checkForDefaultPrevented: false },
+    ),
+    onReset: composeEventHandlers<Event>(
+      props.onReset as ((event: Event) => void) | undefined,
+      () => {
+        onClearServerErrors()
+      },
+    ),
+    ref: undefined,
+  })
 
   return (
     <ValidationProvider
@@ -247,10 +244,7 @@ function Form(props: ScopedProps<FormProps>): FictNode {
       >
         <Primitive.form
           {...(primitiveProps as Record<string, unknown>)}
-          ref={useComposedRefs(
-            props.ref as PossibleRef<HTMLFormElement>,
-            formRef,
-          )}
+          ref={useComposedRefs(props.ref as PossibleRef<HTMLFormElement>, formRef)}
         />
       </AriaDescriptionProvider>
     </ValidationProvider>
@@ -261,7 +255,10 @@ Form.displayName = FORM_NAME
 
 function FormField(props: ScopedProps<FormFieldProps>): FictNode {
   const { __scopeForm, name, serverInvalid = false, ...fieldProps } = props
-  const validationContext = useValidationContext(FIELD_NAME, __scopeForm as Scope<ValidationContextValue | undefined>)
+  const validationContext = useValidationContext(
+    FIELD_NAME,
+    __scopeForm as Scope<ValidationContextValue | undefined>,
+  )
   const id = useId()
   const ref = { current: null as HTMLDivElement | null }
   const validity = () => validationContext.getFieldValidity(name)
@@ -308,8 +305,14 @@ FormField.displayName = FIELD_NAME
 
 function FormLabel(props: ScopedProps<FormLabelProps>): FictNode {
   const { __scopeForm, ...labelProps } = props
-  const validationContext = useValidationContext(LABEL_NAME, __scopeForm as Scope<ValidationContextValue | undefined>)
-  const fieldContext = useFormFieldContext(LABEL_NAME, __scopeForm as Scope<FormFieldContextValue | undefined>)
+  const validationContext = useValidationContext(
+    LABEL_NAME,
+    __scopeForm as Scope<ValidationContextValue | undefined>,
+  )
+  const fieldContext = useFormFieldContext(
+    LABEL_NAME,
+    __scopeForm as Scope<FormFieldContextValue | undefined>,
+  )
   const ref = { current: null as HTMLLabelElement | null }
   const validity = () => validationContext.getFieldValidity(fieldContext.name())
   const htmlFor = () => props.htmlFor ?? fieldContext.id()
@@ -354,8 +357,14 @@ FormLabel.displayName = LABEL_NAME
 
 function FormControl(props: ScopedProps<FormControlProps>): FictNode {
   const { __scopeForm, ...controlProps } = props
-  const validationContext = useValidationContext(CONTROL_NAME, __scopeForm as Scope<ValidationContextValue | undefined>)
-  const fieldContext = useFormFieldContext(CONTROL_NAME, __scopeForm as Scope<FormFieldContextValue | undefined>)
+  const validationContext = useValidationContext(
+    CONTROL_NAME,
+    __scopeForm as Scope<ValidationContextValue | undefined>,
+  )
+  const fieldContext = useFormFieldContext(
+    CONTROL_NAME,
+    __scopeForm as Scope<FormFieldContextValue | undefined>,
+  )
   const ariaDescriptionContext = useAriaDescriptionContext(
     CONTROL_NAME,
     __scopeForm as Scope<AriaDescriptionContextValue | undefined>,
@@ -497,10 +506,7 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
   return (
     <Primitive.input
       {...(primitiveProps as Record<string, unknown>)}
-      ref={useComposedRefs(
-        props.ref as PossibleRef<HTMLInputElement>,
-        ref,
-      )}
+      ref={useComposedRefs(props.ref as PossibleRef<HTMLInputElement>, ref)}
     />
   )
 }
@@ -509,7 +515,10 @@ FormControl.displayName = CONTROL_NAME
 
 function FormMessage(props: ScopedProps<FormMessageProps>): FictNode {
   const { match, name: nameProp, ...messageProps } = props
-  const fieldContext = useFormFieldContext(MESSAGE_NAME, props.__scopeForm as Scope<FormFieldContextValue | undefined>)
+  const fieldContext = useFormFieldContext(
+    MESSAGE_NAME,
+    props.__scopeForm as Scope<FormFieldContextValue | undefined>,
+  )
   const name = nameProp ?? fieldContext.name()
 
   if (match === undefined) {
@@ -525,7 +534,11 @@ function FormMessage(props: ScopedProps<FormMessageProps>): FictNode {
       )
     }
 
-    return <FormMessageImpl {...messageProps} name={name}>{props.children ?? DEFAULT_INVALID_MESSAGE}</FormMessageImpl>
+    return (
+      <FormMessageImpl {...messageProps} name={name}>
+        {props.children ?? DEFAULT_INVALID_MESSAGE}
+      </FormMessageImpl>
+    )
   }
 
   if (typeof match === 'function') {
@@ -587,7 +600,14 @@ function FormBuiltInMessage(props: ScopedProps<FormBuiltInMessageProps>): FictNo
     )
   }
 
-  return <FormMessageImpl {...(builtInMessageProps as Record<string, unknown>)} name={name} present={matches} textContent={messageText} />
+  return (
+    <FormMessageImpl
+      {...(builtInMessageProps as Record<string, unknown>)}
+      name={name}
+      present={matches}
+      textContent={messageText}
+    />
+  )
 }
 
 type FormCustomMessageProps = FormMessageImplProps & {
@@ -612,7 +632,10 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
   const validity = () => validationContext.getFieldValidity(name)
   const customErrors = () => validationContext.getFieldCustomErrors(name)
   const matches = () =>
-    Boolean(forceMatch || (validity() && !hasBuiltInError(validity()!) && Object.values(customErrors()).some(Boolean)))
+    Boolean(
+      forceMatch ||
+      (validity() && !hasBuiltInError(validity()!) && Object.values(customErrors()).some(Boolean)),
+    )
   const customMessageProps = mergeProps(() => messageProps as Record<string, unknown>)
   const messageText = () => String(children ?? DEFAULT_INVALID_MESSAGE)
 
@@ -629,7 +652,15 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
     )
   }
 
-  return <FormMessageImpl {...(customMessageProps as Record<string, unknown>)} id={id()} name={name} present={matches} textContent={messageText} />
+  return (
+    <FormMessageImpl
+      {...(customMessageProps as Record<string, unknown>)}
+      id={id()}
+      name={name}
+      present={matches}
+      textContent={messageText}
+    />
+  )
 }
 
 function FormMessageImpl(props: ScopedProps<FormMessageImplProps>): FictNode {
@@ -712,7 +743,12 @@ function FormSubmit(props: ScopedProps<FormSubmitProps>): FictNode {
   )
 
   if (props.ref) {
-    return <Primitive.button {...(primitiveProps as Record<string, unknown>)} ref={toDomRef(props.ref as PossibleRef<HTMLButtonElement>)} />
+    return (
+      <Primitive.button
+        {...(primitiveProps as Record<string, unknown>)}
+        ref={toDomRef(props.ref as PossibleRef<HTMLButtonElement>)}
+      />
+    )
   }
 
   return <Primitive.button {...(primitiveProps as Record<string, unknown>)} />

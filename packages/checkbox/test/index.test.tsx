@@ -40,11 +40,14 @@ describe('@fictjs/checkbox', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root aria-label="notifications">
-        <Indicator data-testid="indicator" />
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root aria-label="notifications">
+          <Indicator data-testid="indicator" />
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -75,11 +78,14 @@ describe('@fictjs/checkbox', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root aria-label="terms" defaultChecked="indeterminate">
-        <Indicator data-testid="indicator" />
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root aria-label="terms" defaultChecked="indeterminate">
+          <Indicator data-testid="indicator" />
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -101,11 +107,14 @@ describe('@fictjs/checkbox', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root aria-label="disabled checkbox" disabled>
-        <Indicator />
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root aria-label="disabled checkbox" disabled>
+          <Indicator />
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -127,11 +136,14 @@ describe('@fictjs/checkbox', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root aria-label="wifi" checked={checked} onCheckedChange={onCheckedChange}>
-        <Indicator />
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root aria-label="wifi" checked={checked} onCheckedChange={onCheckedChange}>
+          <Indicator />
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -151,21 +163,24 @@ describe('@fictjs/checkbox', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <form
-        onChange={(event) => {
-          const target = event.target as HTMLInputElement
-          formChanges(target.checked)
-        }}
-      >
-        <CheckboxProvider defaultChecked="indeterminate" name="newsletter">
-          <Trigger aria-label="newsletter">
-            <Indicator data-testid="indicator" />
-          </Trigger>
-          <BubbleInput />
-        </CheckboxProvider>
-      </form>
-    ), container)
+    render(
+      () => (
+        <form
+          onChange={(event) => {
+            const target = event.target as HTMLInputElement
+            formChanges(target.checked)
+          }}
+        >
+          <CheckboxProvider defaultChecked="indeterminate" name="newsletter">
+            <Trigger aria-label="newsletter">
+              <Indicator data-testid="indicator" />
+            </Trigger>
+            <BubbleInput />
+          </CheckboxProvider>
+        </form>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -190,30 +205,33 @@ describe('@fictjs/checkbox', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <form
-        onChange={(event) => {
-          const target = event.target as HTMLInputElement
-          formChanges(target.checked)
-        }}
-      >
-        <CheckboxProvider checked={checked} onCheckedChange={checked}>
-          <Trigger aria-label="controlled">
-            <Indicator />
-          </Trigger>
-          <BubbleInput />
-        </CheckboxProvider>
-        <button
-          type="button"
-          data-testid="external"
-          onClick={() => {
-            checked(!checked())
+    render(
+      () => (
+        <form
+          onChange={(event) => {
+            const target = event.target as HTMLInputElement
+            formChanges(target.checked)
           }}
         >
-          Toggle
-        </button>
-      </form>
-    ), container)
+          <CheckboxProvider checked={checked} onCheckedChange={checked}>
+            <Trigger aria-label="controlled">
+              <Indicator />
+            </Trigger>
+            <BubbleInput />
+          </CheckboxProvider>
+          <button
+            type="button"
+            data-testid="external"
+            onClick={() => {
+              checked(!checked())
+            }}
+          >
+            Toggle
+          </button>
+        </form>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -229,16 +247,19 @@ describe('@fictjs/checkbox', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    const dispose = render(() => (
-      <Root
-        aria-label="ref test"
-        ref={(node) => {
-          calls.push(node?.tagName ?? null)
-        }}
-      >
-        <Indicator />
-      </Root>
-    ), container)
+    const dispose = render(
+      () => (
+        <Root
+          aria-label="ref test"
+          ref={(node) => {
+            calls.push(node?.tagName ?? null)
+          }}
+        >
+          <Indicator />
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
     expect(calls).toEqual(['BUTTON'])

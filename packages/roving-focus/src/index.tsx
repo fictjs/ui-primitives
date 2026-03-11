@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, onMount, prop, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { createCollection } from '@fictjs/collection'
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -316,7 +316,7 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
   const isCurrentTabStop = () => context.currentTabStopId() === id()
   const getItems = useCollection(props.__scopeRovingFocusGroup)
 
-  useLayoutEffect(() => {
+  onMount(() => {
     if (!focusable()) return
 
     context.onFocusableItemAdd()
@@ -363,25 +363,37 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
           event.preventDefault()
 
           const items = getItems().filter((item) => item.focusable)
-          let candidateNodes = items
-            .map((item) => item.ref.current)
-            .filter((node): node is HTMLElement => node !== null)
+          let candidateItems = items
 
           if (focusIntent === 'last') {
-            candidateNodes.reverse()
+            candidateItems = [...candidateItems].reverse()
           } else if (focusIntent === 'prev' || focusIntent === 'next') {
             if (focusIntent === 'prev') {
-              candidateNodes.reverse()
+              candidateItems = [...candidateItems].reverse()
             }
 
             const currentTarget = event.currentTarget as HTMLElement
-            const currentIndex = candidateNodes.indexOf(currentTarget)
-            candidateNodes = context.loop()
-              ? wrapArray(candidateNodes, currentIndex + 1)
-              : candidateNodes.slice(currentIndex + 1)
+            const currentIndex = candidateItems.findIndex(
+              (item) => item.ref.current === currentTarget,
+            )
+            candidateItems = context.loop()
+              ? wrapArray(candidateItems, currentIndex + 1)
+              : candidateItems.slice(currentIndex + 1)
           }
 
+          const nextTabStop = candidateItems[0]
+          if (!nextTabStop) return
+
+          context.onItemFocus(nextTabStop.id)
+          const candidateIds = candidateItems.map((item) => item.id)
+
           setTimeout(() => {
+            const latestItems = getItems().filter((item) => item.focusable)
+            const candidateNodes = candidateIds
+              .map(
+                (candidateId) => latestItems.find((item) => item.id === candidateId)?.ref.current,
+              )
+              .filter((node): node is HTMLElement => node !== null)
             focusFirst(candidateNodes)
           })
         },
@@ -425,11 +437,5 @@ RovingFocusGroupItem.displayName = ITEM_NAME
 const Root = RovingFocusGroup
 const Item = RovingFocusGroupItem
 
-export {
-  createRovingFocusGroupScope,
-  RovingFocusGroup,
-  RovingFocusGroupItem,
-  Root,
-  Item,
-}
+export { createRovingFocusGroupScope, RovingFocusGroup, RovingFocusGroupItem, Root, Item }
 export type { RovingFocusGroupProps, RovingFocusItemProps }

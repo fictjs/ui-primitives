@@ -48,15 +48,18 @@ describe('@fictjs/form', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Form>
-        <Field name="email">
-          <Label>Email</Label>
-          <Control required />
-          <Message match="valueMissing">Email is required</Message>
-        </Field>
-      </Form>
-    ), container)
+    mount(
+      () => (
+        <Form>
+          <Field name="email">
+            <Label>Email</Label>
+            <Control required />
+            <Message match="valueMissing">Email is required</Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -79,21 +82,24 @@ describe('@fictjs/form', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Form>
-        <Field name="password">
-          <Label>Password</Label>
-          <Control />
-        </Field>
-        <Field name="passwordConfirm">
-          <Label>Confirm</Label>
-          <Control />
-          <Message match={(value, formData) => value !== formData.get('password')}>
-            Passwords must match
-          </Message>
-        </Field>
-      </Form>
-    ), container)
+    mount(
+      () => (
+        <Form>
+          <Field name="password">
+            <Label>Password</Label>
+            <Control />
+          </Field>
+          <Field name="passwordConfirm">
+            <Label>Confirm</Label>
+            <Control />
+            <Message match={(value, formData) => value !== formData.get('password')}>
+              Passwords must match
+            </Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -114,15 +120,20 @@ describe('@fictjs/form', () => {
     document.body.append(container)
     const onClearServerErrors = vi.fn()
 
-    mount(() => (
-      <Form onClearServerErrors={onClearServerErrors}>
-        <Field name="name" serverInvalid>
-          <Control value="Ada" />
-          <ValidityState>{(validity) => <output>{validity?.valid ? 'valid' : 'unset'}</output>}</ValidityState>
-        </Field>
-        <Submit>Save</Submit>
-      </Form>
-    ), container)
+    mount(
+      () => (
+        <Form onClearServerErrors={onClearServerErrors}>
+          <Field name="name" serverInvalid>
+            <Control value="Ada" />
+            <ValidityState>
+              {(validity) => <output>{validity?.valid ? 'valid' : 'unset'}</output>}
+            </ValidityState>
+          </Field>
+          <Submit>Save</Submit>
+        </Form>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

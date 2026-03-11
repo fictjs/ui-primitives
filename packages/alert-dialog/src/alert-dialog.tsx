@@ -124,15 +124,12 @@ function AlertDialogContent(props: ScopedProps<AlertDialogContentProps>): FictNo
           {...contentProps}
           ref={composedRefs}
           role="alertdialog"
-          onOpenAutoFocus={composeEventHandlers(
-            contentProps.onOpenAutoFocus,
-            (event) => {
-              event.preventDefault()
-              queueMicrotask(() => {
-                cancelRef.current?.focus({ preventScroll: true })
-              })
-            },
-          )}
+          onOpenAutoFocus={composeEventHandlers(contentProps.onOpenAutoFocus, (event) => {
+            event.preventDefault()
+            queueMicrotask(() => {
+              cancelRef.current?.focus({ preventScroll: true })
+            })
+          })}
           onInteractOutside={(event) => {
             event.preventDefault()
           }}
@@ -190,13 +187,9 @@ function AlertDialogCancel(props: ScopedProps<AlertDialogCancelProps>): FictNode
     props.ref as PossibleRef<AlertDialogCancelElement>,
     cancelRef,
   )
-  const closeProps = mergeProps(
-    dialogScope,
-    () => cancelProps as Record<string, unknown>,
-    {
-      ref: composedRefs,
-    },
-  )
+  const closeProps = mergeProps(dialogScope, () => cancelProps as Record<string, unknown>, {
+    ref: composedRefs,
+  })
 
   return <DialogClose {...(closeProps as Record<string, unknown>)} />
 }

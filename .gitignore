@@ -11,3 +11,4 @@ packages/*/dist
 packages/*/node_modules
 apps/*/dist
 apps/*/node_modules
+apps/*/test-results

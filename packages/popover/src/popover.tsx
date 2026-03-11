@@ -4,10 +4,7 @@ import { createSignal } from '@fictjs/runtime/advanced'
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
 import { composeEventHandlers } from '@fictjs/core-primitive'
-import {
-  DismissableLayer,
-  type DismissableLayerProps,
-} from '@fictjs/dismissable-layer'
+import { DismissableLayer, type DismissableLayerProps } from '@fictjs/dismissable-layer'
 import { RemoveScroll } from '@fictjs/fict-remove-scroll'
 import { useFocusGuards } from '@fictjs/focus-guards'
 import { FocusScope, type FocusScopeProps } from '@fictjs/focus-scope'
@@ -68,8 +65,7 @@ type PortalContextValue = {
   forceMount: boolean | undefined
 }
 
-const [PopoverProvider, usePopoverContext] =
-  createPopoverContext<PopoverContextValue>(POPOVER_NAME)
+const [PopoverProvider, usePopoverContext] = createPopoverContext<PopoverContextValue>(POPOVER_NAME)
 const [PortalProvider, usePortalContext] = createPopoverContext<PortalContextValue>(PORTAL_NAME, {
   forceMount: undefined,
 })
@@ -146,7 +142,9 @@ function Popover(props: ScopedProps<PopoverProps>): FictNode {
   const contentId = useId()
   const hasCustomAnchor = createSignal(false)
   const openProp = () =>
-    props.open === undefined ? undefined : readValue(props.open as MaybeAccessor<boolean | undefined>)
+    props.open === undefined
+      ? undefined
+      : readValue(props.open as MaybeAccessor<boolean | undefined>)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? false
@@ -264,9 +262,7 @@ function PopoverPortal(props: ScopedProps<PopoverPortalProps>): FictNode {
       scope={__scopePopover as Scope<PortalContextValue | undefined>}
       forceMount={nextForceMount}
     >
-      <PortalPrimitive {...portalProps}>
-        {children}
-      </PortalPrimitive>
+      <PortalPrimitive {...portalProps}>{children}</PortalPrimitive>
     </PortalProvider>
   )
 }
@@ -335,15 +331,12 @@ function PopoverContentModal(props: ScopedProps<PopoverContentTypeProps>): FictN
         ref={composedRefs}
         trapFocus={() => context.open()}
         disableOutsidePointerEvents
-        onCloseAutoFocus={composeEventHandlers(
-          props.onCloseAutoFocus,
-          (event) => {
-            event.preventDefault()
-            if (!isRightClickOutsideRef.current) {
-              context.triggerRef.current?.focus()
-            }
-          },
-        )}
+        onCloseAutoFocus={composeEventHandlers(props.onCloseAutoFocus, (event) => {
+          event.preventDefault()
+          if (!isRightClickOutsideRef.current) {
+            context.triggerRef.current?.focus()
+          }
+        })}
         onPointerDownOutside={composeEventHandlers(
           props.onPointerDownOutside,
           (event) => {

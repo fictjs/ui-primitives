@@ -4,14 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 
-import {
-  Button,
-  Link,
-  Root,
-  Separator,
-  ToggleGroup,
-  ToggleItem,
-} from '../src/index.js'
+import { Button, Link, Root, Separator, ToggleGroup, ToggleItem } from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
@@ -66,13 +59,16 @@ describe('@fictjs/toolbar', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root orientation="horizontal">
-        <Button>One</Button>
-        <Separator data-testid="separator" />
-        <Button>Two</Button>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root orientation="horizontal">
+          <Button>One</Button>
+          <Separator data-testid="separator" />
+          <Button>Two</Button>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -87,13 +83,16 @@ describe('@fictjs/toolbar', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root orientation="horizontal">
-        <Button>One</Button>
-        <Button disabled>Two</Button>
-        <Button>Three</Button>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root orientation="horizontal">
+          <Button>One</Button>
+          <Button disabled>Two</Button>
+          <Button>Three</Button>
+        </Root>
+      ),
+      container,
+    )
 
     await waitForDeferredFocus()
 
@@ -108,23 +107,28 @@ describe('@fictjs/toolbar', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root orientation="horizontal">
-        <Button>One</Button>
-        <Link href="#target" onClick={onLinkClick}>
-          Docs
-        </Link>
-        <ToggleGroup type="single" defaultValue="bold">
-          <ToggleItem value="bold">Bold</ToggleItem>
-          <ToggleItem value="italic">Italic</ToggleItem>
-        </ToggleGroup>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root orientation="horizontal">
+          <Button>One</Button>
+          <Link href="#target" onClick={onLinkClick}>
+            Docs
+          </Link>
+          <ToggleGroup type="single" defaultValue="bold">
+            <ToggleItem value="bold">Bold</ToggleItem>
+            <ToggleItem value="italic">Italic</ToggleItem>
+          </ToggleGroup>
+        </Root>
+      ),
+      container,
+    )
 
     await waitForDeferredFocus()
 
     const link = container.querySelector('a') as HTMLAnchorElement
-    const toggleItems = Array.from(container.querySelectorAll('[data-toggle-group-item]')) as HTMLButtonElement[]
+    const toggleItems = Array.from(
+      container.querySelectorAll('[data-toggle-group-item]'),
+    ) as HTMLButtonElement[]
 
     link.focus()
     keyDown(link, ' ')

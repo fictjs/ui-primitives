@@ -72,11 +72,14 @@ describe('@fictjs/toggle', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root pressed onPressedChange={onPressedChange}>
-        Like
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root pressed onPressedChange={onPressedChange}>
+          Like
+        </Root>
+      ),
+      container,
+    )
 
     const button = container.querySelector('button') as HTMLButtonElement
 
@@ -92,15 +95,18 @@ describe('@fictjs/toggle', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root
-        onClick={(event) => {
-          event.preventDefault()
-        }}
-      >
-        Like
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root
+          onClick={(event) => {
+            event.preventDefault()
+          }}
+        >
+          Like
+        </Root>
+      ),
+      container,
+    )
 
     const button = container.querySelector('button') as HTMLButtonElement
 

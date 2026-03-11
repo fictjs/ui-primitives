@@ -17,11 +17,14 @@ describe('@fictjs/context', () => {
     }
 
     const container = document.createElement('div')
-    render(() => (
-      <Provider value="ready">
-        <Consumer />
-      </Provider>
-    ), container)
+    render(
+      () => (
+        <Provider value="ready">
+          <Consumer />
+        </Provider>
+      ),
+      container,
+    )
 
     expect(seen).toBe('ready')
     expect(container.textContent).toBe('ready')

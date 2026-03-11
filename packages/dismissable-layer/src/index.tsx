@@ -26,15 +26,16 @@ type CaptureEventProps = {
   'oncapture:focus'?: (event: FocusEvent) => void
   'oncapture:pointerdown'?: (event: PointerEvent) => void
 }
-type DismissableLayerProps = JSX.IntrinsicElements['div'] & CaptureEventProps & {
-  asChild?: boolean
-  disableOutsidePointerEvents?: MaybeAccessor<boolean | undefined>
-  onEscapeKeyDown?: (event: KeyboardEvent) => void
-  onPointerDownOutside?: (event: PointerDownOutsideEvent) => void
-  onFocusOutside?: (event: FocusOutsideEvent) => void
-  onInteractOutside?: (event: PointerDownOutsideEvent | FocusOutsideEvent) => void
-  onDismiss?: () => void
-}
+type DismissableLayerProps = JSX.IntrinsicElements['div'] &
+  CaptureEventProps & {
+    asChild?: boolean
+    disableOutsidePointerEvents?: MaybeAccessor<boolean | undefined>
+    onEscapeKeyDown?: (event: KeyboardEvent) => void
+    onPointerDownOutside?: (event: PointerDownOutsideEvent) => void
+    onFocusOutside?: (event: FocusOutsideEvent) => void
+    onInteractOutside?: (event: PointerDownOutsideEvent | FocusOutsideEvent) => void
+    onDismiss?: () => void
+  }
 type DismissableLayerBranchProps = JSX.IntrinsicElements['div'] & {
   asChild?: boolean
 }
@@ -218,42 +219,39 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     }
   })
 
-  const primitiveProps = mergeProps(
-    () => props as Record<string, unknown>,
-    {
-      disableOutsidePointerEvents: undefined,
-      onDismiss: undefined,
-      onEscapeKeyDown: undefined,
-      onFocusOutside: undefined,
-      onInteractOutside: undefined,
-      onPointerDownOutside: undefined,
-      ref: undefined,
-      style: prop(() => {
-        layerVersion()
+  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
+    disableOutsidePointerEvents: undefined,
+    onDismiss: undefined,
+    onEscapeKeyDown: undefined,
+    onFocusOutside: undefined,
+    onInteractOutside: undefined,
+    onPointerDownOutside: undefined,
+    ref: undefined,
+    style: prop(() => {
+      layerVersion()
 
-        return {
-          pointerEvents: isBodyPointerEventsDisabled()
-            ? isPointerEventsEnabled()
-              ? 'auto'
-              : 'none'
-            : undefined,
-          ...readStyle(props.style),
-        }
-      }),
-      'oncapture:blur': composeEventHandlers<FocusEvent>(
-        props['oncapture:blur'],
-        focusOutside.onBlurCapture,
-      ),
-      'oncapture:focus': composeEventHandlers<FocusEvent>(
-        props['oncapture:focus'],
-        focusOutside.onFocusCapture,
-      ),
-      'oncapture:pointerdown': composeEventHandlers<PointerEvent>(
-        props['oncapture:pointerdown'],
-        pointerDownOutside.onPointerDownCapture,
-      ),
-    },
-  )
+      return {
+        pointerEvents: isBodyPointerEventsDisabled()
+          ? isPointerEventsEnabled()
+            ? 'auto'
+            : 'none'
+          : undefined,
+        ...readStyle(props.style),
+      }
+    }),
+    'oncapture:blur': composeEventHandlers<FocusEvent>(
+      props['oncapture:blur'],
+      focusOutside.onBlurCapture,
+    ),
+    'oncapture:focus': composeEventHandlers<FocusEvent>(
+      props['oncapture:focus'],
+      focusOutside.onFocusCapture,
+    ),
+    'oncapture:pointerdown': composeEventHandlers<PointerEvent>(
+      props['oncapture:pointerdown'],
+      pointerDownOutside.onPointerDownCapture,
+    ),
+  })
 
   return <Primitive.div {...primitiveProps} ref={composedRefs} />
 }

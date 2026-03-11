@@ -30,6 +30,10 @@ async function flushEffects(cycles = 6): Promise<void> {
   }
 }
 
+function getByTestId<T extends Element>(container: ParentNode, testId: string): T {
+  return container.querySelector(`[data-testid="${testId}"]`) as T
+}
+
 async function waitForDeferredFocus(): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0))
   await flushEffects()
@@ -55,25 +59,28 @@ describe('@fictjs/roving-focus', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root data-testid="group" defaultCurrentTabStopId="one">
-        <Item data-testid="one" tabStopId="one">
-          One
-        </Item>
-        <Item data-testid="two" tabStopId="two">
-          Two
-        </Item>
-        <Item data-testid="three" tabStopId="three">
-          Three
-        </Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root data-testid="group" defaultCurrentTabStopId="one">
+          <Item data-testid="one" tabStopId="one">
+            One
+          </Item>
+          <Item data-testid="two" tabStopId="two">
+            Two
+          </Item>
+          <Item data-testid="three" tabStopId="three">
+            Three
+          </Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
-    const group = container.querySelector('[data-testid="group"]') as HTMLDivElement
-    const one = container.querySelector('[data-testid="one"]') as HTMLSpanElement
-    const two = container.querySelector('[data-testid="two"]') as HTMLSpanElement
+    const group = getByTestId<HTMLDivElement>(container, 'group')
+    let one = getByTestId<HTMLSpanElement>(container, 'one')
+    let two = getByTestId<HTMLSpanElement>(container, 'two')
 
     group.focus()
     await flushEffects()
@@ -83,6 +90,8 @@ describe('@fictjs/roving-focus', () => {
 
     keyDown(one, 'ArrowRight')
     await waitForDeferredFocus()
+    one = getByTestId<HTMLSpanElement>(container, 'one')
+    two = getByTestId<HTMLSpanElement>(container, 'two')
 
     expect(document.activeElement).toBe(two)
     expect(two.tabIndex).toBe(0)
@@ -93,25 +102,28 @@ describe('@fictjs/roving-focus', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root data-testid="group" defaultCurrentTabStopId="three" loop>
-        <Item data-testid="one" tabStopId="one">
-          One
-        </Item>
-        <Item data-testid="two" tabStopId="two">
-          Two
-        </Item>
-        <Item data-testid="three" tabStopId="three">
-          Three
-        </Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root data-testid="group" defaultCurrentTabStopId="three" loop>
+          <Item data-testid="one" tabStopId="one">
+            One
+          </Item>
+          <Item data-testid="two" tabStopId="two">
+            Two
+          </Item>
+          <Item data-testid="three" tabStopId="three">
+            Three
+          </Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
-    const group = container.querySelector('[data-testid="group"]') as HTMLDivElement
-    const one = container.querySelector('[data-testid="one"]') as HTMLSpanElement
-    const three = container.querySelector('[data-testid="three"]') as HTMLSpanElement
+    const group = getByTestId<HTMLDivElement>(container, 'group')
+    let one = getByTestId<HTMLSpanElement>(container, 'one')
+    let three = getByTestId<HTMLSpanElement>(container, 'three')
 
     group.focus()
     await flushEffects()
@@ -119,6 +131,7 @@ describe('@fictjs/roving-focus', () => {
 
     keyDown(three, 'ArrowRight')
     await waitForDeferredFocus()
+    one = getByTestId<HTMLSpanElement>(container, 'one')
 
     expect(document.activeElement).toBe(one)
   })
@@ -127,25 +140,28 @@ describe('@fictjs/roving-focus', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root data-testid="group" defaultCurrentTabStopId="two" dir="rtl" orientation="horizontal">
-        <Item data-testid="one" tabStopId="one">
-          One
-        </Item>
-        <Item data-testid="two" tabStopId="two">
-          Two
-        </Item>
-        <Item data-testid="three" tabStopId="three">
-          Three
-        </Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root data-testid="group" defaultCurrentTabStopId="two" dir="rtl" orientation="horizontal">
+          <Item data-testid="one" tabStopId="one">
+            One
+          </Item>
+          <Item data-testid="two" tabStopId="two">
+            Two
+          </Item>
+          <Item data-testid="three" tabStopId="three">
+            Three
+          </Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
-    const group = container.querySelector('[data-testid="group"]') as HTMLDivElement
-    const three = container.querySelector('[data-testid="three"]') as HTMLSpanElement
-    const two = container.querySelector('[data-testid="two"]') as HTMLSpanElement
+    const group = getByTestId<HTMLDivElement>(container, 'group')
+    let three = getByTestId<HTMLSpanElement>(container, 'three')
+    const two = getByTestId<HTMLSpanElement>(container, 'two')
 
     group.focus()
     await flushEffects()
@@ -153,6 +169,7 @@ describe('@fictjs/roving-focus', () => {
 
     keyDown(two, 'ArrowLeft')
     await waitForDeferredFocus()
+    three = getByTestId<HTMLSpanElement>(container, 'three')
 
     expect(document.activeElement).toBe(three)
   })
@@ -161,16 +178,19 @@ describe('@fictjs/roving-focus', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root data-testid="group" defaultCurrentTabStopId="one" orientation="vertical">
-        <Item data-testid="one" tabStopId="one">
-          One
-        </Item>
-        <Item data-testid="two" tabStopId="two">
-          Two
-        </Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root data-testid="group" defaultCurrentTabStopId="one" orientation="vertical">
+          <Item data-testid="one" tabStopId="one">
+            One
+          </Item>
+          <Item data-testid="two" tabStopId="two">
+            Two
+          </Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -194,16 +214,19 @@ describe('@fictjs/roving-focus', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root data-testid="group" defaultCurrentTabStopId="one" onEntryFocus={onEntryFocus}>
-        <Item data-testid="one" tabStopId="one">
-          One
-        </Item>
-        <Item data-testid="two" tabStopId="two">
-          Two
-        </Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root data-testid="group" defaultCurrentTabStopId="one" onEntryFocus={onEntryFocus}>
+          <Item data-testid="one" tabStopId="one">
+            One
+          </Item>
+          <Item data-testid="two" tabStopId="two">
+            Two
+          </Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -220,15 +243,18 @@ describe('@fictjs/roving-focus', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root defaultCurrentTabStopId="alpha">
-        <Item tabStopId="alpha">
-          {({ hasTabStop, isCurrentTabStop }) => (
-            <span data-testid="state">{String(hasTabStop) + ':' + String(isCurrentTabStop)}</span>
-          )}
-        </Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root defaultCurrentTabStopId="alpha">
+          <Item tabStopId="alpha">
+            {({ hasTabStop, isCurrentTabStop }) => (
+              <span data-testid="state">{String(hasTabStop) + ':' + String(isCurrentTabStop)}</span>
+            )}
+          </Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 

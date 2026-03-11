@@ -107,7 +107,9 @@ function Tabs(props: ScopedProps<TabsProps>): FictNode {
   const inheritedDirection = useDirection()
   const baseId = useId()
   const valueProp = () =>
-    props.value === undefined ? undefined : readValue(props.value as MaybeAccessor<string | undefined>)
+    props.value === undefined
+      ? undefined
+      : readValue(props.value as MaybeAccessor<string | undefined>)
   const defaultValue = () =>
     props.defaultValue === undefined
       ? ''
@@ -170,7 +172,9 @@ function TabsList(props: ScopedProps<TabsListProps>): FictNode {
   const { __scopeTabs, loop, ...listProps } = props
   const context = useTabsContext(LIST_NAME, __scopeTabs as Scope<TabsContextValue | undefined>)
   const shouldLoop = () =>
-    loop === undefined ? true : Boolean(readValue(loop as MaybeAccessor<boolean | undefined>) ?? true)
+    loop === undefined
+      ? true
+      : Boolean(readValue(loop as MaybeAccessor<boolean | undefined>) ?? true)
   const handleKeyDown = composeEventHandlers<KeyboardEvent>(
     props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
     (event) => {
@@ -181,7 +185,9 @@ function TabsList(props: ScopedProps<TabsListProps>): FictNode {
 
       const key = getDirectionAwareKey(event.key, context.dir())
       const triggers = Array.from(
-        (event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]:not([disabled])'),
+        (event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>(
+          '[role="tab"]:not([disabled])',
+        ),
       )
       const currentIndex = triggers.indexOf(target)
       if (currentIndex === -1) {
@@ -273,11 +279,7 @@ function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
       onFocus: composeEventHandlers<FocusEvent>(
         props.onFocus as ((event: FocusEvent) => void) | undefined,
         () => {
-          if (
-            !isSelected() &&
-            !isDisabled() &&
-            context.activationMode() === 'automatic'
-          ) {
+          if (!isSelected() && !isDisabled() && context.activationMode() === 'automatic') {
             context.onValueChange(value)
           }
         },
@@ -350,16 +352,6 @@ const List = TabsList
 const Trigger = TabsTrigger
 const Content = TabsContent
 
-export {
-  createTabsScope,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-  Root,
-  List,
-  Trigger,
-  Content,
-}
+export { createTabsScope, Tabs, TabsList, TabsTrigger, TabsContent, Root, List, Trigger, Content }
 
 export type { TabsProps, TabsListProps, TabsTriggerProps, TabsContentProps }

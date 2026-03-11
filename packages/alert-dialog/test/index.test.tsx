@@ -85,20 +85,23 @@ describe('@fictjs/alert-dialog', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <AlertDialog>
-        <AlertDialogTrigger data-testid="trigger">Delete</AlertDialogTrigger>
-        <AlertDialogPortal>
-          <AlertDialogOverlay data-testid="overlay" />
-          <AlertDialogContent data-testid="content">
-            <AlertDialogTitle>Delete item</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-            <AlertDialogAction data-testid="action">Confirm</AlertDialogAction>
-            <AlertDialogCancel data-testid="cancel">Cancel</AlertDialogCancel>
-          </AlertDialogContent>
-        </AlertDialogPortal>
-      </AlertDialog>
-    ), container)
+    mount(
+      () => (
+        <AlertDialog>
+          <AlertDialogTrigger data-testid="trigger">Delete</AlertDialogTrigger>
+          <AlertDialogPortal>
+            <AlertDialogOverlay data-testid="overlay" />
+            <AlertDialogContent data-testid="content">
+              <AlertDialogTitle>Delete item</AlertDialogTitle>
+              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+              <AlertDialogAction data-testid="action">Confirm</AlertDialogAction>
+              <AlertDialogCancel data-testid="cancel">Cancel</AlertDialogCancel>
+            </AlertDialogContent>
+          </AlertDialogPortal>
+        </AlertDialog>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
     click(trigger)
@@ -116,24 +119,27 @@ describe('@fictjs/alert-dialog', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <>
-        <button data-testid="outside" type="button">
-          Outside
-        </button>
-        <AlertDialog defaultOpen>
-          <AlertDialogTrigger>Delete</AlertDialogTrigger>
-          <AlertDialogPortal>
-            <AlertDialogOverlay />
-            <AlertDialogContent data-testid="content">
-              <AlertDialogTitle>Delete item</AlertDialogTitle>
-              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-            </AlertDialogContent>
-          </AlertDialogPortal>
-        </AlertDialog>
-      </>
-    ), container)
+    mount(
+      () => (
+        <>
+          <button data-testid="outside" type="button">
+            Outside
+          </button>
+          <AlertDialog defaultOpen>
+            <AlertDialogTrigger>Delete</AlertDialogTrigger>
+            <AlertDialogPortal>
+              <AlertDialogOverlay />
+              <AlertDialogContent data-testid="content">
+                <AlertDialogTitle>Delete item</AlertDialogTitle>
+                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+              </AlertDialogContent>
+            </AlertDialogPortal>
+          </AlertDialog>
+        </>
+      ),
+      container,
+    )
 
     await waitForEffects()
     await waitForEffects()
@@ -148,20 +154,23 @@ describe('@fictjs/alert-dialog', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <AlertDialog>
-        <AlertDialogTrigger data-testid="trigger">Delete</AlertDialogTrigger>
-        <AlertDialogPortal>
-          <AlertDialogOverlay />
-          <AlertDialogContent data-testid="content">
-            <AlertDialogTitle>Delete item</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-            <AlertDialogAction data-testid="action">Confirm</AlertDialogAction>
-            <AlertDialogCancel data-testid="cancel">Cancel</AlertDialogCancel>
-          </AlertDialogContent>
-        </AlertDialogPortal>
-      </AlertDialog>
-    ), container)
+    mount(
+      () => (
+        <AlertDialog>
+          <AlertDialogTrigger data-testid="trigger">Delete</AlertDialogTrigger>
+          <AlertDialogPortal>
+            <AlertDialogOverlay />
+            <AlertDialogContent data-testid="content">
+              <AlertDialogTitle>Delete item</AlertDialogTitle>
+              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+              <AlertDialogAction data-testid="action">Confirm</AlertDialogAction>
+              <AlertDialogCancel data-testid="cancel">Cancel</AlertDialogCancel>
+            </AlertDialogContent>
+          </AlertDialogPortal>
+        </AlertDialog>
+      ),
+      container,
+    )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
 

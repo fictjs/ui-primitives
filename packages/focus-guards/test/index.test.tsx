@@ -15,11 +15,14 @@ describe('@fictjs/focus-guards', () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
 
-    const dispose = render(() => (
-      <FocusGuards>
-        <div>Ready</div>
-      </FocusGuards>
-    ), host)
+    const dispose = render(
+      () => (
+        <FocusGuards>
+          <div>Ready</div>
+        </FocusGuards>
+      ),
+      host,
+    )
 
     const guards = document.querySelectorAll('[data-radix-focus-guard]')
 
@@ -37,8 +40,22 @@ describe('@fictjs/focus-guards', () => {
     const hostB = document.createElement('div')
     document.body.append(hostA, hostB)
 
-    const disposeA = render(() => <FocusGuards><div>A</div></FocusGuards>, hostA)
-    const disposeB = render(() => <FocusGuards><div>B</div></FocusGuards>, hostB)
+    const disposeA = render(
+      () => (
+        <FocusGuards>
+          <div>A</div>
+        </FocusGuards>
+      ),
+      hostA,
+    )
+    const disposeB = render(
+      () => (
+        <FocusGuards>
+          <div>B</div>
+        </FocusGuards>
+      ),
+      hostB,
+    )
 
     expect(document.querySelectorAll('[data-radix-focus-guard]')).toHaveLength(2)
 

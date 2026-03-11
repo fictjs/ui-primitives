@@ -29,13 +29,16 @@ describe('@fictjs/arrow', () => {
   it('slots custom svg children when using asChild', () => {
     const container = document.createElement('div')
 
-    render(() => (
-      <Arrow asChild width={24} height={12} data-arrow="custom">
-        <svg>
-          <rect width="24" height="12" />
-        </svg>
-      </Arrow>
-    ), container)
+    render(
+      () => (
+        <Arrow asChild width={24} height={12} data-arrow="custom">
+          <svg>
+            <rect width="24" height="12" />
+          </svg>
+        </Arrow>
+      ),
+      container,
+    )
 
     const svg = container.querySelector('svg') as SVGSVGElement
 

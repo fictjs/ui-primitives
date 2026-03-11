@@ -13,7 +13,9 @@ type CollectionProps = SlotProps & {
 }
 type ItemRefObject<ItemElement extends HTMLElement> = { current: ItemElement | null }
 
-function createCollection<ItemElement extends HTMLElement, ItemData extends object = {}>(name: string) {
+function createCollection<ItemElement extends HTMLElement, ItemData extends object = {}>(
+  name: string,
+) {
   const PROVIDER_NAME = name + 'CollectionProvider'
   const [createCollectionContext, createCollectionScope] = createContextScope(PROVIDER_NAME)
 
@@ -29,7 +31,10 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
 
   function CollectionProvider(props: { children?: FictNode | FictNode[]; scope: any }): FictNode {
     const collectionRef = { current: null as CollectionElement | null }
-    const itemMap = new Map<ItemRefObject<ItemElement>, { ref: ItemRefObject<ItemElement> } & ItemData>()
+    const itemMap = new Map<
+      ItemRefObject<ItemElement>,
+      { ref: ItemRefObject<ItemElement> } & ItemData
+    >()
 
     return (
       <CollectionProviderImpl scope={props.scope} collectionRef={collectionRef} itemMap={itemMap}>
@@ -42,7 +47,9 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
 
   const COLLECTION_SLOT_NAME = name + 'CollectionSlot'
   const CollectionSlotImpl = createSlot(COLLECTION_SLOT_NAME)
-  const CollectionSlotRenderer = CollectionSlotImpl as unknown as (props: Record<string, unknown>) => FictNode
+  const CollectionSlotRenderer = CollectionSlotImpl as unknown as (
+    props: Record<string, unknown>,
+  ) => FictNode
 
   function CollectionSlot(
     props: CollectionProps & { ref?: PossibleRef<CollectionElement> },
@@ -62,8 +69,9 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
   const ITEM_SLOT_NAME = name + 'CollectionItemSlot'
   const ITEM_DATA_ATTR = 'data-radix-collection-item'
   const CollectionItemSlotImpl = createSlot(ITEM_SLOT_NAME)
-  const CollectionItemSlotRenderer =
-    CollectionItemSlotImpl as unknown as (props: Record<string, unknown>) => FictNode
+  const CollectionItemSlotRenderer = CollectionItemSlotImpl as unknown as (
+    props: Record<string, unknown>,
+  ) => FictNode
 
   type CollectionItemSlotProps = ItemData & {
     children?: FictNode | FictNode[]
@@ -111,7 +119,9 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
       const items = Array.from(context.itemMap.values())
 
       return items.sort(
-        (a, b) => orderedNodes.indexOf(a.ref.current as Element) - orderedNodes.indexOf(b.ref.current as Element),
+        (a, b) =>
+          orderedNodes.indexOf(a.ref.current as Element) -
+          orderedNodes.indexOf(b.ref.current as Element),
       )
     }
   }

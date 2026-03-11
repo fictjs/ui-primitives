@@ -15,11 +15,14 @@ describe('@fictjs/direction', () => {
       return <div />
     }
 
-    render(() => (
-      <DirectionProvider dir="rtl">
-        <Consumer />
-      </DirectionProvider>
-    ), document.createElement('div'))
+    render(
+      () => (
+        <DirectionProvider dir="rtl">
+          <Consumer />
+        </DirectionProvider>
+      ),
+      document.createElement('div'),
+    )
 
     expect(direction?.()).toBe('rtl')
   })
@@ -32,11 +35,14 @@ describe('@fictjs/direction', () => {
       return <div />
     }
 
-    render(() => (
-      <DirectionProvider dir="rtl">
-        <Consumer />
-      </DirectionProvider>
-    ), document.createElement('div'))
+    render(
+      () => (
+        <DirectionProvider dir="rtl">
+          <Consumer />
+        </DirectionProvider>
+      ),
+      document.createElement('div'),
+    )
 
     expect(direction?.()).toBe('ltr')
   })

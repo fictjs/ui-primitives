@@ -33,14 +33,17 @@ function getStyleTags(): HTMLStyleElement[] {
   return Array.from(document.head.querySelectorAll('style'))
 }
 
-function setScrollableMetrics(node: HTMLElement, options: {
-  clientHeight?: number
-  clientWidth?: number
-  scrollHeight?: number
-  scrollLeft?: number
-  scrollTop?: number
-  scrollWidth?: number
-}): void {
+function setScrollableMetrics(
+  node: HTMLElement,
+  options: {
+    clientHeight?: number
+    clientWidth?: number
+    scrollHeight?: number
+    scrollLeft?: number
+    scrollTop?: number
+    scrollWidth?: number
+  },
+): void {
   for (const [key, value] of Object.entries(options)) {
     Object.defineProperty(node, key, {
       configurable: true,
@@ -94,7 +97,11 @@ describe('@fictjs/fict-remove-scroll', () => {
 
     const dispose = render(
       () => (
-        <RemoveScrollUI forwardProps ref={ref} sideCar={sidecar(() => import('../src/sidecar.js')) as any}>
+        <RemoveScrollUI
+          forwardProps
+          ref={ref}
+          sideCar={sidecar(() => import('../src/sidecar.js')) as any}
+        >
           <span data-testid="child">content</span>
         </RemoveScrollUI>
       ),

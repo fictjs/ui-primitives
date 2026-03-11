@@ -57,14 +57,17 @@ describe('@fictjs/one-time-password-field', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root>
-        <Input />
-        <Input />
-        <Input />
-        <HiddenInput name="code" />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root>
+          <Input />
+          <Input />
+          <Input />
+          <HiddenInput name="code" />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -87,12 +90,15 @@ describe('@fictjs/one-time-password-field', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root type="password">
-        <Input />
-        <HiddenInput name="code" />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root type="password">
+          <Input />
+          <HiddenInput name="code" />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -110,14 +116,17 @@ describe('@fictjs/one-time-password-field', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root disabled>
-        <Input />
-        <Input />
-        <Input />
-        <HiddenInput name="code" />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root disabled>
+          <Input />
+          <Input />
+          <Input />
+          <HiddenInput name="code" />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 
@@ -132,14 +141,17 @@ describe('@fictjs/one-time-password-field', () => {
     cleanup?.()
     container.innerHTML = ''
 
-    mount(() => (
-      <Root>
-        <Input />
-        <Input />
-        <Input />
-        <HiddenInput name="code" />
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root>
+          <Input />
+          <Input />
+          <Input />
+          <HiddenInput name="code" />
+        </Root>
+      ),
+      container,
+    )
 
     await waitForEffects()
 

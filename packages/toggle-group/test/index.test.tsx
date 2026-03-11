@@ -65,12 +65,15 @@ describe('@fictjs/toggle-group', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root type="single" onValueChange={onValueChange}>
-        <Item value="one">One</Item>
-        <Item value="two">Two</Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root type="single" onValueChange={onValueChange}>
+          <Item value="one">One</Item>
+          <Item value="two">Two</Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -114,12 +117,15 @@ describe('@fictjs/toggle-group', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root type="multiple" onValueChange={onValueChange}>
-        <Item value="one">One</Item>
-        <Item value="two">Two</Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root type="multiple" onValueChange={onValueChange}>
+          <Item value="one">One</Item>
+          <Item value="two">Two</Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -151,13 +157,16 @@ describe('@fictjs/toggle-group', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root type="single" defaultValue="two" orientation="horizontal">
-        <Item value="one">One</Item>
-        <Item value="two">Two</Item>
-        <Item value="three">Three</Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root type="single" defaultValue="two" orientation="horizontal">
+          <Item value="one">One</Item>
+          <Item value="two">Two</Item>
+          <Item value="three">Three</Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -180,12 +189,15 @@ describe('@fictjs/toggle-group', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    mount(() => (
-      <Root type="multiple" disabled>
-        <Item value="one">One</Item>
-        <Item value="two">Two</Item>
-      </Root>
-    ), container)
+    mount(
+      () => (
+        <Root type="multiple" disabled>
+          <Item value="one">One</Item>
+          <Item value="two">Two</Item>
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
 

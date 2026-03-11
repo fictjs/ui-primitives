@@ -45,9 +45,8 @@ function FocusScope(props: FocusScopeProps): FictNode {
   const onMountAutoFocus = useCallbackRef(props.onMountAutoFocus)
   const onUnmountAutoFocus = useCallbackRef(props.onUnmountAutoFocus)
   const lastFocusedElementRef = { current: null as HTMLElement | null }
-  const composedRefs = useComposedRefs(
-    props.ref as PossibleRef<HTMLDivElement>,
-    (node) => container(node),
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, (node) =>
+    container(node),
   )
   const focusScope = {
     paused: false,
@@ -121,7 +120,8 @@ function FocusScope(props: FocusScopeProps): FictNode {
     }
 
     focusScopesStack.add(focusScope)
-    const previouslyFocusedElement = currentContainer.ownerDocument.activeElement as HTMLElement | null
+    const previouslyFocusedElement = currentContainer.ownerDocument
+      .activeElement as HTMLElement | null
     const hasFocusedCandidate = currentContainer.contains(previouslyFocusedElement)
 
     if (!hasFocusedCandidate) {
@@ -178,8 +178,7 @@ function FocusScope(props: FocusScopeProps): FictNode {
   const handleKeyDown = (event: KeyboardEvent) => {
     if ((!loop() && !trapped()) || focusScope.paused) return
 
-    const isTabKey =
-      event.key === 'Tab' && !event.altKey && !event.ctrlKey && !event.metaKey
+    const isTabKey = event.key === 'Tab' && !event.altKey && !event.ctrlKey && !event.metaKey
     const focusedElement = document.activeElement as HTMLElement | null
 
     if (isTabKey && focusedElement) {
@@ -284,10 +283,7 @@ function isSelectableInput(element: unknown): element is HTMLInputElement {
   return element instanceof HTMLInputElement && 'select' in element
 }
 
-function focus(
-  element?: FocusableTarget | null,
-  { select = false }: { select?: boolean } = {},
-) {
+function focus(element?: FocusableTarget | null, { select = false }: { select?: boolean } = {}) {
   if (element && typeof element.focus === 'function') {
     const previouslyFocusedElement = document.activeElement
     element.focus({ preventScroll: true })

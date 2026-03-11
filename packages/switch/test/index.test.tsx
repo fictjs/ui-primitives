@@ -34,11 +34,14 @@ describe('@fictjs/switch', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root>
-        <Thumb data-testid="thumb" />
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root>
+          <Thumb data-testid="thumb" />
+        </Root>
+      ),
+      container,
+    )
 
     const button = container.querySelector('button') as HTMLButtonElement
     const thumb = container.querySelector('[data-testid="thumb"]') as HTMLSpanElement
@@ -60,11 +63,14 @@ describe('@fictjs/switch', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root disabled>
-        <Thumb />
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root disabled>
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
 
     const button = container.querySelector('button') as HTMLButtonElement
 
@@ -84,11 +90,14 @@ describe('@fictjs/switch', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <Root checked={checked} onCheckedChange={onCheckedChange}>
-        <Thumb />
-      </Root>
-    ), container)
+    render(
+      () => (
+        <Root checked={checked} onCheckedChange={onCheckedChange}>
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
 
     const button = container.querySelector('button') as HTMLButtonElement
 
@@ -105,13 +114,16 @@ describe('@fictjs/switch', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <form onClick={formClicks}>
-        <Root name="airplane-mode" required value="enabled">
-          <Thumb />
-        </Root>
-      </form>
-    ), container)
+    render(
+      () => (
+        <form onClick={formClicks}>
+          <Root name="airplane-mode" required value="enabled">
+            <Thumb />
+          </Root>
+        </form>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -135,14 +147,17 @@ describe('@fictjs/switch', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    render(() => (
-      <>
-        <form id="settings-form" />
-        <Root form="settings-form" name="airplane-mode" required value="enabled">
-          <Thumb />
-        </Root>
-      </>
-    ), container)
+    render(
+      () => (
+        <>
+          <form id="settings-form" />
+          <Root form="settings-form" name="airplane-mode" required value="enabled">
+            <Thumb />
+          </Root>
+        </>
+      ),
+      container,
+    )
 
     await flushEffects()
 
@@ -163,15 +178,18 @@ describe('@fictjs/switch', () => {
     const container = document.createElement('div')
     document.body.append(container)
 
-    const dispose = render(() => (
-      <Root
-        ref={(node) => {
-          calls.push(node?.tagName ?? null)
-        }}
-      >
-        <Thumb />
-      </Root>
-    ), container)
+    const dispose = render(
+      () => (
+        <Root
+          ref={(node) => {
+            calls.push(node?.tagName ?? null)
+          }}
+        >
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
 
     await flushEffects()
     expect(calls).toEqual(['BUTTON'])

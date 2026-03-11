@@ -218,11 +218,7 @@ function ProgressScrollShowcase(): FictNode {
             <ProgressUI.Root class="progress-root" max={100} value={value()}>
               <ProgressUI.Indicator class="progress-indicator" style={{ width: `${value()}%` }} />
             </ProgressUI.Root>
-            <button
-              class="ghost-button"
-              type="button"
-              onClick={() => value((value() + 12) % 101)}
-            >
+            <button class="ghost-button" type="button" onClick={() => value((value() + 12) % 101)}>
               Advance
             </button>
           </div>
@@ -347,9 +343,7 @@ function SelectionControlsShowcase(): FictNode {
               >
                 <SwitchUI.Thumb class="switch-thumb" />
               </SwitchUI.Root>
-              <span class="control-copy">
-                Notifications {notifications() ? 'active' : 'muted'}
-              </span>
+              <span class="control-copy">Notifications {notifications() ? 'active' : 'muted'}</span>
             </div>
           </div>
 
@@ -406,7 +400,11 @@ function ToggleShowcase(): FictNode {
   const modes = createSignal(['italic'])
   const toggleMode = (mode: string) => {
     const currentModes = modes()
-    modes(currentModes.includes(mode) ? currentModes.filter((entry) => entry !== mode) : [...currentModes, mode])
+    modes(
+      currentModes.includes(mode)
+        ? currentModes.filter((entry) => entry !== mode)
+        : [...currentModes, mode],
+    )
   }
 
   return (
@@ -431,10 +429,18 @@ function ToggleShowcase(): FictNode {
             type="multiple"
             value={modes()}
           >
-            <ToggleGroupUI.Item class="toggle-chip" onMouseDown={() => toggleMode('bold')} value="bold">
+            <ToggleGroupUI.Item
+              class="toggle-chip"
+              onMouseDown={() => toggleMode('bold')}
+              value="bold"
+            >
               Bold
             </ToggleGroupUI.Item>
-            <ToggleGroupUI.Item class="toggle-chip" onMouseDown={() => toggleMode('italic')} value="italic">
+            <ToggleGroupUI.Item
+              class="toggle-chip"
+              onMouseDown={() => toggleMode('italic')}
+              value="italic"
+            >
               Italic
             </ToggleGroupUI.Item>
             <ToggleGroupUI.Item
@@ -707,8 +713,8 @@ function DialogShowcase(): FictNode {
         <DialogUI.Content class="dialog-content" style={{ pointerEvents: 'auto', zIndex: 121 }}>
           <DialogUI.Title>Ship a primitive with confidence</DialogUI.Title>
           <DialogUI.Description>
-            Start from the local package, verify the README and tests, and finish with a clean
-            build before cutting the commit.
+            Start from the local package, verify the README and tests, and finish with a clean build
+            before cutting the commit.
           </DialogUI.Description>
           <ul class="dialog-checks">
             <li>build</li>
@@ -879,7 +885,8 @@ const GROUPS: GroupDefinition[] = [
     title: 'Accessibility, layout, and low-level composition',
     detail:
       'These cards cover the non-flashy primitives that the higher-level packages rely on: semantics, layout shells, directional context, portals, slots, and scroll/progress surfaces.',
-    summary: 'Semantics, layout wrappers, portals, and directional context for the rest of the stack.',
+    summary:
+      'Semantics, layout wrappers, portals, and directional context for the rest of the stack.',
     packages: [
       'accessible-icon',
       'label',
@@ -901,7 +908,8 @@ const GROUPS: GroupDefinition[] = [
     title: 'Disclosure, selection, and form mechanics',
     detail:
       'This section covers the high-frequency controls: disclosure widgets, toggles, binary inputs, range inputs, tabs, and compound form fields.',
-    summary: 'Open state, selection state, and form-oriented controls that show most interaction contracts.',
+    summary:
+      'Open state, selection state, and form-oriented controls that show most interaction contracts.',
     packages: [
       'accordion',
       'collapsible',
@@ -924,15 +932,9 @@ const GROUPS: GroupDefinition[] = [
     title: 'Menus, navigation, and command surfaces',
     detail:
       'This is the densest dependency cluster in the repo. Navigation and menu packages stack on top of shared focus, dismissal, portal, and collection primitives.',
-    summary: 'Menus, list-like command surfaces, and navigation shells built on shared focus and layering.',
-    packages: [
-      'navigation-menu',
-      'select',
-      'dropdown-menu',
-      'context-menu',
-      'menubar',
-      'toolbar',
-    ],
+    summary:
+      'Menus, list-like command surfaces, and navigation shells built on shared focus and layering.',
+    packages: ['navigation-menu', 'select', 'dropdown-menu', 'context-menu', 'menubar', 'toolbar'],
   },
   {
     slug: 'overlay',
@@ -941,7 +943,8 @@ const GROUPS: GroupDefinition[] = [
     title: 'Modal, non-modal, and ephemeral layers',
     detail:
       'Dialogs, popovers, hover cards, tooltips, and toast are all represented here so portal-backed behavior can be checked from one place.',
-    summary: 'Layered UI surfaces ranging from modal dialogs to short-lived tooltips and toast notifications.',
+    summary:
+      'Layered UI surfaces ranging from modal dialogs to short-lived tooltips and toast notifications.',
     packages: ['dialog', 'alert-dialog', 'popover', 'hover-card', 'tooltip', 'toast'],
   },
 ]
@@ -949,7 +952,8 @@ const GROUPS: GroupDefinition[] = [
 const PACKAGE_META: Record<string, PackageMeta> = {
   'accessible-icon': {
     exportName: 'AccessibleIcon',
-    summary: 'Adds an accessible text label to icon-only controls without changing the visible glyph.',
+    summary:
+      'Adds an accessible text label to icon-only controls without changing the visible glyph.',
     workspacePackage: '@fictjs/accessible-icon',
   },
   label: {
@@ -959,27 +963,32 @@ const PACKAGE_META: Record<string, PackageMeta> = {
   },
   separator: {
     exportName: 'Separator',
-    summary: 'Renders semantic horizontal or vertical dividers with decorative and non-decorative modes.',
+    summary:
+      'Renders semantic horizontal or vertical dividers with decorative and non-decorative modes.',
     workspacePackage: '@fictjs/separator',
   },
   slot: {
     exportName: 'Slot',
-    summary: 'Merges props into a child target so composition can stay declarative without wrapper noise.',
+    summary:
+      'Merges props into a child target so composition can stay declarative without wrapper noise.',
     workspacePackage: '@fictjs/slot',
   },
   'visually-hidden': {
     exportName: 'VisuallyHidden',
-    summary: 'Keeps content accessible to assistive technology while removing it from the visual layout.',
+    summary:
+      'Keeps content accessible to assistive technology while removing it from the visual layout.',
     workspacePackage: '@fictjs/visually-hidden',
   },
   direction: {
     exportName: 'Direction',
-    summary: 'Provides LTR and RTL direction context to primitives that need directional awareness.',
+    summary:
+      'Provides LTR and RTL direction context to primitives that need directional awareness.',
     workspacePackage: '@fictjs/direction',
   },
   'aspect-ratio': {
     exportName: 'AspectRatio',
-    summary: 'Locks media and embedded surfaces to a predictable proportion as their width changes.',
+    summary:
+      'Locks media and embedded surfaces to a predictable proportion as their width changes.',
     workspacePackage: '@fictjs/aspect-ratio',
   },
   avatar: {
@@ -999,7 +1008,8 @@ const PACKAGE_META: Record<string, PackageMeta> = {
   },
   'scroll-area': {
     exportName: 'ScrollArea',
-    summary: 'Separates viewport, scrollbars, thumbs, and corner rendering for custom scrolling shells.',
+    summary:
+      'Separates viewport, scrollbars, thumbs, and corner rendering for custom scrolling shells.',
     workspacePackage: '@fictjs/scroll-area',
   },
   accordion: {
@@ -1009,7 +1019,8 @@ const PACKAGE_META: Record<string, PackageMeta> = {
   },
   collapsible: {
     exportName: 'Collapsible',
-    summary: 'Exposes the lower-level open-state disclosure primitive that accordion layers on top of.',
+    summary:
+      'Exposes the lower-level open-state disclosure primitive that accordion layers on top of.',
     workspacePackage: '@fictjs/collapsible',
   },
   checkbox: {
@@ -1049,7 +1060,8 @@ const PACKAGE_META: Record<string, PackageMeta> = {
   },
   form: {
     exportName: 'Form',
-    summary: 'Composes labels, controls, messages, and submit behavior on top of native validity APIs.',
+    summary:
+      'Composes labels, controls, messages, and submit behavior on top of native validity APIs.',
     workspacePackage: '@fictjs/form',
   },
   'one-time-password-field': {
@@ -1099,17 +1111,20 @@ const PACKAGE_META: Record<string, PackageMeta> = {
   },
   'alert-dialog': {
     exportName: 'AlertDialog',
-    summary: 'Specializes dialog behavior for confirmation and destructive flows with safer dismissal.',
+    summary:
+      'Specializes dialog behavior for confirmation and destructive flows with safer dismissal.',
     workspacePackage: '@fictjs/alert-dialog',
   },
   popover: {
     exportName: 'Popover',
-    summary: 'Anchors interactive floating content to a trigger while supporting dismissal layering.',
+    summary:
+      'Anchors interactive floating content to a trigger while supporting dismissal layering.',
     workspacePackage: '@fictjs/popover',
   },
   'hover-card': {
     exportName: 'HoverCard',
-    summary: 'Shows richer pointer- or focus-driven previews without promoting them to full dialogs.',
+    summary:
+      'Shows richer pointer- or focus-driven previews without promoting them to full dialogs.',
     workspacePackage: '@fictjs/hover-card',
   },
   tooltip: {
@@ -1119,7 +1134,8 @@ const PACKAGE_META: Record<string, PackageMeta> = {
   },
   toast: {
     exportName: 'Toast',
-    summary: 'Mounts transient notifications into a dedicated viewport with action and close affordances.',
+    summary:
+      'Mounts transient notifications into a dedicated viewport with action and close affordances.',
     workspacePackage: '@fictjs/toast',
   },
 }
@@ -1272,9 +1288,10 @@ const SHOWCASES: ShowcaseDefinition[] = [
   },
 ]
 
-const GROUP_BY_SLUG = Object.fromEntries(
-  GROUPS.map((group) => [group.slug, group]),
-) as Record<string, GroupDefinition>
+const GROUP_BY_SLUG = Object.fromEntries(GROUPS.map((group) => [group.slug, group])) as Record<
+  string,
+  GroupDefinition
+>
 
 const SHOWCASE_BY_ID = Object.fromEntries(
   SHOWCASES.map((showcase) => [showcase.id, showcase]),
@@ -1370,7 +1387,12 @@ function parseRoute(hash: string): Route {
   return { kind: 'not-found', slug: path.replace(/^\//, '') }
 }
 
-function routeHref(route: Exclude<Route, { kind: 'not-found' }> | { kind: 'group'; slug: string } | { kind: 'package'; slug: string }): string {
+function routeHref(
+  route:
+    | Exclude<Route, { kind: 'not-found' }>
+    | { kind: 'group'; slug: string }
+    | { kind: 'package'; slug: string },
+): string {
   if (route.kind === 'overview') {
     return '#/overview'
   }
@@ -1496,9 +1518,7 @@ function Sidebar(props: {
           type="search"
           value={props.query()}
         />
-        <>
-          {() => <span class="sidebar-hint">{matchingCount()} matching packages</span>}
-        </>
+        <>{() => <span class="sidebar-hint">{matchingCount()} matching packages</span>}</>
       </div>
 
       <>
@@ -1555,9 +1575,9 @@ function OverviewPage(): FictNode {
           <span class="hero-kicker">Preview Docs</span>
           <h1 class="page-title">Component docs, routing, and live demos in one local site.</h1>
           <p class="page-summary">
-            Every public component family exported by `@fictjs/radix-ui` now has an addressable
-            docs page under `#/package/...`, plus grouped overview pages under `#/group/...`.
-            Everything still renders directly against the local workspace sources.
+            Every public component family exported by `@fictjs/radix-ui` now has an addressable docs
+            page under `#/package/...`, plus grouped overview pages under `#/group/...`. Everything
+            still renders directly against the local workspace sources.
           </p>
           <div class="hero-actions">
             <a class="primary-button" href={routeHref({ kind: 'group', slug: 'foundation' })}>
@@ -1652,7 +1672,9 @@ function GroupPage(props: { group: GroupDefinition }): FictNode {
       <section class="page-panel">
         <div class="section-head">
           <span class="catalog-title">Package Directory</span>
-          <p class="surface-note">Each package page keeps the same live demo surface plus route-specific metadata.</p>
+          <p class="surface-note">
+            Each package page keeps the same live demo surface plus route-specific metadata.
+          </p>
         </div>
         <div class="directory-grid">
           {props.group.packages.map((slug) => {
@@ -1679,7 +1701,9 @@ function GroupPage(props: { group: GroupDefinition }): FictNode {
         title={`Live demos for ${props.group.navTitle}`}
       >
         <div class="showcase-grid">
-          {SHOWCASES.filter((showcase) => showcase.group === props.group.slug).map(renderShowcaseCard)}
+          {SHOWCASES.filter((showcase) => showcase.group === props.group.slug).map(
+            renderShowcaseCard,
+          )}
         </div>
       </Surface>
     </div>
@@ -1761,7 +1785,10 @@ function PackagePage(props: { doc: PackageDefinition }): FictNode {
               <span class="catalog-title">Related Routes</span>
             </div>
             <div class="link-list">
-              <a class="sidebar-link route-link" href={routeHref({ kind: 'group', slug: group.slug })}>
+              <a
+                class="sidebar-link route-link"
+                href={routeHref({ kind: 'group', slug: group.slug })}
+              >
                 <span>{group.navTitle} section</span>
                 <small>{group.packages.length} packages</small>
               </a>
@@ -1781,7 +1808,10 @@ function PackagePage(props: { doc: PackageDefinition }): FictNode {
                 </a>
               ) : null}
               {nextPackage ? (
-                <a class="sidebar-link route-link" href={routeHref({ kind: 'package', slug: nextPackage })}>
+                <a
+                  class="sidebar-link route-link"
+                  href={routeHref({ kind: 'package', slug: nextPackage })}
+                >
                   <span>Next: {nextPackage}</span>
                   <small>{getPackageDoc(nextPackage).exportName}</small>
                 </a>
@@ -1798,7 +1828,12 @@ function NotFoundPage(props: { slug: string }): FictNode {
   return (
     <section class="page-panel not-found-panel" data-page-kind="not-found">
       <div class="page-header">
-        <Breadcrumbs items={[{ href: routeHref({ kind: 'overview' }), label: 'Overview' }, { label: 'Not found' }]} />
+        <Breadcrumbs
+          items={[
+            { href: routeHref({ kind: 'overview' }), label: 'Overview' },
+            { label: 'Not found' },
+          ]}
+        />
         <span class="hero-kicker">Missing Route</span>
         <h1 class="page-title">No preview route for `{props.slug}`.</h1>
         <p class="page-summary">
@@ -1910,9 +1945,7 @@ export default function App(): FictNode {
           </>
 
           <main class="docs-main" id="main-content">
-            <>
-              {() => renderCurrentPage()}
-            </>
+            <>{() => renderCurrentPage()}</>
           </main>
         </div>
       </div>

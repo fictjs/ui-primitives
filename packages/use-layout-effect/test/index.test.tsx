@@ -72,6 +72,13 @@ describe('@fictjs/use-layout-effect', () => {
     expect(events).toEqual(['effect:0', 'cleanup:0', 'effect:1', 'cleanup:1', 'effect:2'])
 
     dispose()
-    expect(events).toEqual(['effect:0', 'cleanup:0', 'effect:1', 'cleanup:1', 'effect:2', 'cleanup:2'])
+    expect(events).toEqual([
+      'effect:0',
+      'cleanup:0',
+      'effect:1',
+      'cleanup:1',
+      'effect:2',
+      'cleanup:2',
+    ])
   })
 })

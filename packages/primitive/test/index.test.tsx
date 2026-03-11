@@ -14,11 +14,14 @@ describe('@fictjs/primitive', () => {
   it('renders intrinsic elements by default', () => {
     const container = document.createElement('div')
 
-    render(() => (
-      <Primitive.button data-kind="trigger" type="button">
-        Open
-      </Primitive.button>
-    ), container)
+    render(
+      () => (
+        <Primitive.button data-kind="trigger" type="button">
+          Open
+        </Primitive.button>
+      ),
+      container,
+    )
 
     const button = container.querySelector('button')
     expect(button).not.toBeNull()
@@ -29,11 +32,14 @@ describe('@fictjs/primitive', () => {
   it('supports asChild composition through slot', () => {
     const container = document.createElement('div')
 
-    render(() => (
-      <Primitive.button asChild data-kind="trigger">
-        <a href="/docs">Docs</a>
-      </Primitive.button>
-    ), container)
+    render(
+      () => (
+        <Primitive.button asChild data-kind="trigger">
+          <a href="/docs">Docs</a>
+        </Primitive.button>
+      ),
+      container,
+    )
 
     const link = container.querySelector('a')
     expect(link).not.toBeNull()
@@ -45,15 +51,18 @@ describe('@fictjs/primitive', () => {
     const calls: Array<string | null> = []
     const container = document.createElement('div')
 
-    const dispose = render(() => (
-      <Primitive.button
-        ref={(node) => {
-          calls.push(node?.tagName ?? null)
-        }}
-      >
-        Open
-      </Primitive.button>
-    ), container)
+    const dispose = render(
+      () => (
+        <Primitive.button
+          ref={(node) => {
+            calls.push(node?.tagName ?? null)
+          }}
+        >
+          Open
+        </Primitive.button>
+      ),
+      container,
+    )
 
     expect(calls).toEqual(['BUTTON'])
 
