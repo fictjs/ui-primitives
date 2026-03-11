@@ -57,6 +57,7 @@ type RovingFocusGroupProps = RovingFocusGroupImplProps
 
 type RovingFocusGroupImplProps = Omit<JSX.IntrinsicElements['div'], 'dir'> &
   RovingFocusGroupOptions & {
+    asChild?: boolean
     currentTabStopId?: MaybeAccessor<string | null | undefined>
     defaultCurrentTabStopId?: MaybeAccessor<string | undefined>
     onCurrentTabStopIdChange?: (tabStopId: string | null) => void
@@ -65,6 +66,7 @@ type RovingFocusGroupImplProps = Omit<JSX.IntrinsicElements['div'], 'dir'> &
   }
 
 type RovingFocusItemProps = Omit<JSX.IntrinsicElements['span'], 'children'> & {
+  asChild?: boolean
   tabStopId?: MaybeAccessor<string | undefined>
   focusable?: MaybeAccessor<boolean | undefined>
   active?: MaybeAccessor<boolean | undefined>

@@ -29,7 +29,9 @@ const imageStatusSubscribers = new Map<string, Set<(status: ImageLoadingStatus) 
 
 const [, createAvatarScope] = createContextScope(AVATAR_NAME)
 
-type AvatarProps = JSX.IntrinsicElements['span']
+type AvatarProps = JSX.IntrinsicElements['span'] & {
+  asChild?: boolean
+}
 type AvatarImageProps = Omit<
   JSX.IntrinsicElements['img'],
   'crossOrigin' | 'referrerPolicy' | 'src'

@@ -6,6 +6,7 @@ import { Primitive } from '@fictjs/primitive'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
 type ScopedProps<P> = P & { __scopeScrollArea?: Scope }
+type MaybeAccessor<T> = T | (() => T)
 type StyleRecord = Record<string, string | number>
 type Orientation = 'horizontal' | 'vertical'
 type PrimitiveDivProps = JSX.IntrinsicElements['div'] & {
@@ -35,7 +36,10 @@ const [ScrollAreaProvider, useScrollAreaContext] =
 const [ScrollbarProvider, useScrollbarContext] =
   createScrollAreaContext<ScrollbarContextValue>(SCROLLBAR_NAME)
 
-type ScrollAreaProps = PrimitiveDivProps
+type ScrollAreaProps = PrimitiveDivProps & {
+  type?: MaybeAccessor<'auto' | 'always' | 'scroll' | 'hover' | undefined>
+  scrollHideDelay?: MaybeAccessor<number | undefined>
+}
 type ScrollAreaViewportProps = PrimitiveDivProps
 type ScrollAreaScrollbarProps = PrimitiveDivProps & {
   orientation: Orientation

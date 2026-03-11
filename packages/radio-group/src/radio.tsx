@@ -30,12 +30,14 @@ type RadioContextValue = {
 const [RadioProvider, useRadioContext] = createRadioContext<RadioContextValue>(RADIO_NAME)
 
 type RadioProps = Omit<JSX.IntrinsicElements['button'], 'onChange'> & {
+  asChild?: boolean
   checked?: MaybeAccessor<boolean | undefined>
   required?: MaybeAccessor<boolean | undefined>
   onCheck?: () => void
 }
 
 type RadioIndicatorProps = JSX.IntrinsicElements['span'] & {
+  asChild?: boolean
   forceMount?: MaybeAccessor<boolean | undefined>
 }
 

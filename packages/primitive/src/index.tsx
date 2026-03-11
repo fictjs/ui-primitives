@@ -2,6 +2,9 @@ import { createElement, mergeProps, type FictNode, type JSX } from '@fictjs/runt
 
 import { createSlot } from '@fictjs/slot'
 
+type RefCallback<T> = { bivarianceHack(node: T | null): void }['bivarianceHack']
+type PossibleRef<T> = RefCallback<T> | { current: T | null } | undefined
+
 const NODES = [
   'a',
   'button',
@@ -24,8 +27,9 @@ const NODES = [
 
 type PrimitiveNode = (typeof NODES)[number]
 
-type PrimitivePropsWithRef<E extends PrimitiveNode> = JSX.IntrinsicElements[E] & {
+type PrimitivePropsWithRef<E extends PrimitiveNode> = Omit<JSX.IntrinsicElements[E], 'ref'> & {
   asChild?: boolean
+  ref?: PossibleRef<Element>
 }
 
 type PrimitiveComponent<E extends PrimitiveNode> = ((

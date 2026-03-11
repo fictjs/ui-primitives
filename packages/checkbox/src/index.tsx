@@ -64,10 +64,12 @@ type CheckboxTriggerProps = Omit<
   JSX.IntrinsicElements['button'],
   keyof CheckboxProviderProps | '__scopeCheckbox'
 > & {
+  asChild?: boolean
   children?: FictNode | FictNode[]
 }
 
 type CheckboxIndicatorProps = JSX.IntrinsicElements['span'] & {
+  asChild?: boolean
   forceMount?: MaybeAccessor<boolean | undefined>
 }
 
@@ -76,6 +78,7 @@ type CheckboxBubbleInputProps = Omit<JSX.IntrinsicElements['input'], 'checked'> 
 }
 
 type CheckboxProps = Omit<JSX.IntrinsicElements['button'], 'checked' | 'defaultChecked'> & {
+  asChild?: boolean
   checked?: MaybeAccessor<CheckedState | undefined>
   defaultChecked?: MaybeAccessor<CheckedState | undefined>
   required?: MaybeAccessor<boolean | undefined>

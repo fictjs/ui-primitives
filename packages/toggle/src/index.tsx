@@ -9,6 +9,7 @@ type MaybeAccessor<T> = T | (() => T)
 const NAME = 'Toggle'
 
 type ToggleProps = JSX.IntrinsicElements['button'] & {
+  asChild?: boolean
   pressed?: MaybeAccessor<boolean | undefined>
   defaultPressed?: MaybeAccessor<boolean | undefined>
   onPressedChange?: (pressed: boolean) => void

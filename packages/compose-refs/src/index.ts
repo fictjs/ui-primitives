@@ -1,4 +1,5 @@
-type PossibleRef<T> = ((node: T | null) => void) | { current: T | null } | null | undefined
+type RefCallback<T> = { bivarianceHack(node: T | null): void }['bivarianceHack']
+type PossibleRef<T> = RefCallback<T> | { current: T | null } | null | undefined
 
 function setRef<T>(ref: PossibleRef<T>, value: T | null): void {
   if (typeof ref === 'function') {

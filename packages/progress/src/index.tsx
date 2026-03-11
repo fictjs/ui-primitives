@@ -22,12 +22,15 @@ const [ProgressProvider, useProgressContext] =
   createProgressContext<ProgressContextValue>(PROGRESS_NAME)
 
 type ProgressProps = JSX.IntrinsicElements['div'] & {
+  asChild?: boolean
   value?: MaybeAccessor<number | null | undefined>
   max?: MaybeAccessor<number | undefined>
   getValueLabel?: (value: number, max: number) => string
 }
 
-type ProgressIndicatorProps = JSX.IntrinsicElements['div']
+type ProgressIndicatorProps = JSX.IntrinsicElements['div'] & {
+  asChild?: boolean
+}
 
 function readValue<T>(value: MaybeAccessor<T>): T {
   if (typeof value === 'function' && value.length === 0) {

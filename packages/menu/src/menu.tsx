@@ -119,6 +119,10 @@ type MenuPortalProps = {
 }
 type MenuContentProps = PrimitiveDivProps &
   Omit<DismissableLayerProps, 'onDismiss'> & {
+    align?: MaybeAccessor<'start' | 'center' | 'end' | undefined>
+    alignOffset?: MaybeAccessor<number | undefined>
+    side?: MaybeAccessor<'top' | 'right' | 'bottom' | 'left' | undefined>
+    sideOffset?: MaybeAccessor<number | undefined>
     forceMount?: MaybeAccessor<boolean | undefined>
     onOpenAutoFocus?: FocusScopeProps['onMountAutoFocus']
     onCloseAutoFocus?: FocusScopeProps['onUnmountAutoFocus']
@@ -135,8 +139,7 @@ type MenuCheckboxItemProps = Omit<MenuItemProps, 'onSelect'> & {
   onCheckedChange?: (checked: CheckedState) => void
   onSelect?: (event: Event) => void
 }
-type MenuRadioGroupProps = {
-  children?: FictNode | FictNode[]
+type MenuRadioGroupProps = PrimitiveDivProps & {
   value?: MaybeAccessor<string | undefined>
   onValueChange?: (value: string) => void
 }
@@ -617,6 +620,11 @@ function MenuCheckboxItem(props: ScopedProps<MenuCheckboxItemProps>): FictNode {
 MenuCheckboxItem.displayName = CHECKBOX_ITEM_NAME
 
 function MenuRadioGroup(props: ScopedProps<MenuRadioGroupProps>): FictNode {
+  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
+    __scopeMenu: undefined,
+    onValueChange: undefined,
+    value: undefined,
+  })
   const value = () =>
     props.value === undefined
       ? ''
@@ -630,7 +638,7 @@ function MenuRadioGroup(props: ScopedProps<MenuRadioGroupProps>): FictNode {
         props.onValueChange?.(nextValue)
       }}
     >
-      {props.children}
+      <Primitive.div {...primitiveProps}>{props.children}</Primitive.div>
     </MenuRadioGroupProvider>
   )
 }
