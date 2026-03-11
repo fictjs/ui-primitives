@@ -58,6 +58,6 @@ pnpm release
 ## Release Flow
 
 1. Add a changeset with `pnpm changeset`.
-2. Merge to `main`.
-3. GitHub Actions opens or updates the release PR.
-4. Merging the release PR publishes changed public packages to npm.
+2. Run `pnpm version-packages` and commit the version/changelog updates.
+3. Create and push a git tag for that release commit.
+4. GitHub Actions publishes changed public packages to npm when that tag is pushed.
