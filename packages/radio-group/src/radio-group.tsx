@@ -373,6 +373,7 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
           context.setCurrentTabStop(value)
         },
       ),
+      value,
     },
   ) as unknown as ScopedProps<RadioProps>
 

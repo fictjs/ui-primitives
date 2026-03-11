@@ -131,6 +131,33 @@ describe('@fictjs/switch', () => {
     expect(input.checked).toBe(true)
   })
 
+  it('keeps form association props on the hidden input instead of the button', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(() => (
+      <>
+        <form id="settings-form" />
+        <Root form="settings-form" name="airplane-mode" required value="enabled">
+          <Thumb />
+        </Root>
+      </>
+    ), container)
+
+    await flushEffects()
+
+    const button = container.querySelector('button') as HTMLButtonElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+
+    expect(button.hasAttribute('form')).toBe(false)
+    expect(button.hasAttribute('name')).toBe(false)
+    expect(button.hasAttribute('required')).toBe(false)
+    expect(input.getAttribute('form')).toBe('settings-form')
+    expect(input.getAttribute('name')).toBe('airplane-mode')
+    expect(input.getAttribute('value')).toBe('enabled')
+    expect(input.hasAttribute('required')).toBe(true)
+  })
+
   it('forwards ref mount and cleanup through the switch root', async () => {
     const calls: Array<string | null> = []
     const container = document.createElement('div')

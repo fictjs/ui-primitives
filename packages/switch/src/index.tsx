@@ -80,24 +80,34 @@ function getState(checked: boolean): 'checked' | 'unchecked' {
 }
 
 function Switch(props: ScopedProps<SwitchProps>): FictNode {
+  const {
+    __scopeSwitch,
+    checked: checkedInput,
+    defaultChecked: defaultCheckedInput,
+    form: formInput,
+    name: nameInput,
+    onCheckedChange,
+    required: requiredInput,
+    ...buttonProps
+  } = props
   const button = createSignal<HTMLButtonElement | null>(null)
   const bubbleInput = createSignal<HTMLInputElement | null>(null)
   const isFormControl = createSignal(true)
   const checkedProp = () =>
-    props.checked === undefined ? undefined : readValue(props.checked as MaybeAccessor<boolean | undefined>)
+    checkedInput === undefined ? undefined : readValue(checkedInput as MaybeAccessor<boolean | undefined>)
   const defaultChecked = () =>
-    props.defaultChecked === undefined ? false : (readValue(props.defaultChecked) ?? false)
+    defaultCheckedInput === undefined ? false : (readValue(defaultCheckedInput) ?? false)
   const required = () =>
-    props.required === undefined ? undefined : readValue(props.required as MaybeAccessor<boolean | undefined>)
+    requiredInput === undefined ? undefined : readValue(requiredInput as MaybeAccessor<boolean | undefined>)
   const disabled = () => Boolean(readValue(props.disabled as MaybeAccessor<unknown>))
   const name = () =>
-    props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>)
+    nameInput === undefined ? undefined : readValue(nameInput as MaybeAccessor<string | undefined>)
   const value = () =>
     props.value === undefined
       ? 'on'
       : (readValue(props.value as MaybeAccessor<SwitchValue | undefined>) ?? 'on')
   const form = () =>
-    props.form === undefined ? undefined : readValue(props.form as MaybeAccessor<string | undefined>)
+    formInput === undefined ? undefined : readValue(formInput as MaybeAccessor<string | undefined>)
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<HTMLButtonElement>,
     (node) => button(node),
@@ -106,7 +116,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
     prop: checkedProp,
     defaultProp: defaultChecked,
     caller: SWITCH_NAME,
-    ...(props.onCheckedChange ? { onChange: props.onCheckedChange } : {}),
+    ...(onCheckedChange ? { onChange: onCheckedChange } : {}),
   }
   const [checked, setChecked] = useControllableState<boolean>(controllableStateProps)
   let hasConsumerStoppedPropagation = false
@@ -175,17 +185,12 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
       'data-state': prop(() => getState(checked())),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
     },
-    () => props as Record<string, unknown>,
+    () => buttonProps as Record<string, unknown>,
     {
       __scopeSwitch: undefined,
-      checked: undefined,
-      defaultChecked: undefined,
-      form: undefined,
-      name: undefined,
       onCheckedChange: undefined,
       onClick: handleClick,
       ref: undefined,
-      required: undefined,
       value: prop(value),
     },
   )
@@ -206,7 +211,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
     ) : null) as unknown as FictNode
 
   return (
-    <SwitchProvider scope={props.__scopeSwitch} checked={checked} disabled={disabled}>
+    <SwitchProvider scope={__scopeSwitch} checked={checked} disabled={disabled}>
       <>
         <Primitive.button {...switchProps} ref={composedRefs} />
         {bubbleInputNode}
@@ -234,10 +239,11 @@ function SwitchThumb(props: ScopedProps<SwitchThumbProps>): FictNode {
 SwitchThumb.displayName = THUMB_NAME
 
 function SwitchBubbleInput(props: SwitchBubbleInputProps): FictNode {
+  const { form: formProp, ...inputRestProps } = props
   const controlSize = useSize(props.control)
 
   const inputProps = mergeProps(
-    () => props as Record<string, unknown>,
+    () => inputRestProps as Record<string, unknown>,
     {
       'aria-hidden': true,
       checked: prop(props.checked),
@@ -245,8 +251,8 @@ function SwitchBubbleInput(props: SwitchBubbleInputProps): FictNode {
       bubbles: undefined,
       children: undefined,
       disabled: prop(() => (props.disabled === undefined ? undefined : Boolean(readValue(props.disabled)))),
-      form: prop(() =>
-        props.form === undefined ? undefined : readValue(props.form as MaybeAccessor<string | undefined>),
+      'attr:form': prop(() =>
+        formProp === undefined ? undefined : readValue(formProp as MaybeAccessor<string | undefined>),
       ),
       name: prop(() =>
         props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>),

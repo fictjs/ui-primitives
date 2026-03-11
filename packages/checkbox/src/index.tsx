@@ -371,7 +371,7 @@ function CheckboxBubbleInput(props: ScopedProps<CheckboxBubbleInputProps>): Fict
       'aria-hidden': true,
       defaultChecked: prop(context.defaultChecked),
       disabled: prop(context.disabled),
-      form: prop(context.form),
+      'attr:form': prop(context.form),
       name: prop(context.name),
       required: prop(context.required),
       value: prop(context.value),

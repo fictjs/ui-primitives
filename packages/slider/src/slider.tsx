@@ -779,6 +779,7 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
 SliderThumb.displayName = THUMB_NAME
 
 function SliderBubbleInput(props: ScopedProps<SliderBubbleInputProps>): FictNode {
+  const { form: formProp, ...inputRestProps } = props
   const ref = createSignal<HTMLInputElement | null>(null)
   const previousValue = usePrevious(props.value)
 
@@ -803,15 +804,15 @@ function SliderBubbleInput(props: ScopedProps<SliderBubbleInputProps>): FictNode
   })
 
   const inputProps = mergeProps(
-    () => props as Record<string, unknown>,
+    () => inputRestProps as Record<string, unknown>,
     {
       __scopeSlider: undefined,
       defaultValue: prop(() => {
         const nextValue = readValue(props.value)
         return nextValue === undefined ? '' : String(nextValue)
       }),
-      form: prop(() =>
-        props.form === undefined ? undefined : readValue(props.form as MaybeAccessor<string | undefined>),
+      'attr:form': prop(() =>
+        formProp === undefined ? undefined : readValue(formProp as MaybeAccessor<string | undefined>),
       ),
       name: prop(() =>
         props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>),

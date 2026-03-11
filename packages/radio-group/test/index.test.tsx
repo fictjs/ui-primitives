@@ -143,4 +143,33 @@ describe('@fictjs/radio-group', () => {
     expect(item.disabled).toBe(true)
     expect(item.getAttribute('data-disabled')).toBe('')
   })
+
+  it('keeps form association props on the hidden radio input instead of the button', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(() => (
+      <>
+        <form id="billing-form" />
+        <RadioGroup name="plan" required defaultValue="pro">
+          <RadioGroupItem data-testid="item" form="billing-form" value="pro">
+            Pro
+          </RadioGroupItem>
+        </RadioGroup>
+      </>
+    ), container)
+
+    await waitForUpdates()
+
+    const button = container.querySelector('[data-testid="item"]') as HTMLButtonElement
+    const input = container.querySelector('input[type="radio"]') as HTMLInputElement
+
+    expect(button.hasAttribute('form')).toBe(false)
+    expect(button.hasAttribute('name')).toBe(false)
+    expect(button.hasAttribute('required')).toBe(false)
+    expect(input.getAttribute('form')).toBe('billing-form')
+    expect(input.getAttribute('name')).toBe('plan')
+    expect(input.hasAttribute('required')).toBe(true)
+    expect(input.value).toBe('pro')
+  })
 })

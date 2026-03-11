@@ -83,8 +83,11 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
   const {
     __scopeRadio,
     checked: checkedProp = false,
+    form: formInput,
+    name: nameInput,
     required,
     onCheck,
+    value: valueInput,
     ...radioProps
   } = props
   const button = createSignal<HTMLButtonElement | null>(null)
@@ -97,13 +100,13 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
   const requiredValue = () =>
     required === undefined ? undefined : Boolean(readValue(required as MaybeAccessor<boolean | undefined>))
   const form = () =>
-    props.form === undefined ? undefined : readValue(props.form as MaybeAccessor<string | undefined>)
+    formInput === undefined ? undefined : readValue(formInput as MaybeAccessor<string | undefined>)
   const name = () =>
-    props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>)
+    nameInput === undefined ? undefined : readValue(nameInput as MaybeAccessor<string | undefined>)
   const value = () =>
-    props.value === undefined
+    valueInput === undefined
       ? 'on'
-      : (readValue(props.value as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>) ??
+      : (readValue(valueInput as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>) ??
           'on')
   const hasConsumerStoppedPropagationRef = { current: false }
   const isFormControl = () => {
@@ -123,8 +126,6 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
       __scopeRadio: undefined,
       checked: undefined,
       disabled: prop(() => (disabled() ? true : undefined)),
-      form: prop(form),
-      name: prop(name),
       onCheck: undefined,
       ref: undefined,
       required: undefined,
@@ -153,11 +154,11 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
         checked={checked}
         control={button}
         disabled={props.disabled}
-        form={props.form}
-        name={props.name}
+        form={formInput}
+        name={nameInput}
         required={required}
         style={{ transform: 'translateX(-100%)' }}
-        value={props.value}
+        value={valueInput}
       />
     ) : null) as unknown as FictNode
 
@@ -206,6 +207,7 @@ function RadioIndicator(props: ScopedProps<RadioIndicatorProps>): FictNode {
 RadioIndicator.displayName = INDICATOR_NAME
 
 function RadioBubbleInput(props: RadioBubbleInputProps): FictNode {
+  const { form: formProp, ...inputRestProps } = props
   const ref = createSignal<HTMLInputElement | null>(null)
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<HTMLInputElement>,
@@ -236,7 +238,7 @@ function RadioBubbleInput(props: RadioBubbleInputProps): FictNode {
   })
 
   const inputProps = mergeProps(
-    () => props as Record<string, unknown>,
+    () => inputRestProps as Record<string, unknown>,
     {
       'aria-hidden': true,
       bubbles: undefined,
@@ -245,8 +247,8 @@ function RadioBubbleInput(props: RadioBubbleInputProps): FictNode {
       disabled: prop(() =>
         props.disabled === undefined ? undefined : Boolean(readValue(props.disabled as MaybeAccessor<unknown>)),
       ),
-      form: prop(() =>
-        props.form === undefined ? undefined : readValue(props.form as MaybeAccessor<string | undefined>),
+      'attr:form': prop(() =>
+        formProp === undefined ? undefined : readValue(formProp as MaybeAccessor<string | undefined>),
       ),
       name: prop(() =>
         props.name === undefined ? undefined : readValue(props.name as MaybeAccessor<string | undefined>),
