@@ -132,6 +132,22 @@ importers:
         specifier: 'catalog:'
         version: 4.0.18(@types/node@25.3.5)(jiti@2.6.1)(jsdom@28.1.0)(yaml@2.8.2)
 
+  apps/primitives-preview:
+    dependencies:
+      '@fictjs/radix-ui':
+        specifier: workspace:*
+        version: link:../../packages/radix-ui
+      '@fictjs/runtime':
+        specifier: ^0.17.0
+        version: 0.17.0
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: ^7.3.1
+        version: 7.3.1(@types/node@25.3.5)(jiti@2.6.1)(yaml@2.8.2)
+
   libs/fict-remove-scroll:
     dependencies:
       '@fictjs/fict-remove-scroll-bar':

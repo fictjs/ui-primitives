@@ -1,0 +1,19 @@
+{
+  "name": "@fictjs/primitives-preview",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fictjs/radix-ui": "workspace:*",
+    "@fictjs/runtime": "^0.17.0"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "^7.3.1"
+  }
+}
