@@ -1,9 +1,9 @@
-import { DropdownMenu, Button, IconButton, Text, Code, Table } from '@fictjs/radix-ui-themes';
-import { DotsHorizontalIcon } from '@radix-ui/react-icons';
-import { dropdownMenuContentPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { DropdownMenuContentDemo } from '../_components';
-import { accentColorsGrouped } from '../_utils';
+import { DotsHorizontalIcon } from '@radix-ui/react-icons'
+import { Button, Code, DropdownMenu, IconButton, Table, Text } from '@fictjs/radix-ui-themes'
+import { dropdownMenuContentPropDefs } from '@fictjs/radix-ui-themes/props'
+
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
 
 export default function DropdownMenuPage() {
   return (
@@ -15,7 +15,7 @@ export default function DropdownMenuPage() {
             <Table.Row>
               <Table.ColumnHeaderCell />
               {dropdownMenuContentPropDefs.size.values.map((size) => (
-                <Table.ColumnHeaderCell key={size}>size {size}</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell key={size}>{`size ${size}`}</Table.ColumnHeaderCell>
               ))}
               <Table.ColumnHeaderCell>+ high-contrast</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>gray</Table.ColumnHeaderCell>
@@ -28,45 +28,25 @@ export default function DropdownMenuPage() {
                 <Table.RowHeaderCell>{variant}</Table.RowHeaderCell>
                 {dropdownMenuContentPropDefs.size.values.map((size) => (
                   <Table.Cell key={size}>
-                    <DropdownMenu.Root>
-                      <DropdownMenu.Trigger>
-                        <Button size={size} variant="soft" color="gray">
-                          More <DropdownMenu.TriggerIcon />
-                        </Button>
-                      </DropdownMenu.Trigger>
-                      <DropdownMenuContentDemo size={size} variant={variant} />
-                    </DropdownMenu.Root>
+                    <Button size={size} variant="soft" color="gray">
+                      More <DropdownMenu.TriggerIcon />
+                    </Button>
                   </Table.Cell>
                 ))}
                 <Table.Cell>
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger>
-                      <Button variant="soft" color="gray">
-                        More <DropdownMenu.TriggerIcon />
-                      </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenuContentDemo variant={variant} highContrast />
-                  </DropdownMenu.Root>
+                  <Button variant="soft" color="gray" highContrast>
+                    More <DropdownMenu.TriggerIcon />
+                  </Button>
                 </Table.Cell>
                 <Table.Cell>
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger>
-                      <Button variant="soft" color="gray">
-                        More <DropdownMenu.TriggerIcon />
-                      </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenuContentDemo variant={variant} color="gray" />
-                  </DropdownMenu.Root>
+                  <Button variant="soft" color="gray">
+                    More <DropdownMenu.TriggerIcon />
+                  </Button>
                 </Table.Cell>
                 <Table.Cell>
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger>
-                      <Button variant="soft" color="gray">
-                        More <DropdownMenu.TriggerIcon />
-                      </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenuContentDemo variant={variant} color="gray" highContrast />
-                  </DropdownMenu.Root>
+                  <Button variant="soft" color="gray" highContrast>
+                    More <DropdownMenu.TriggerIcon />
+                  </Button>
                 </Table.Cell>
               </Table.Row>
             ))}
@@ -103,22 +83,12 @@ export default function DropdownMenuPage() {
                       <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
                       {dropdownMenuContentPropDefs.variant.values.map((variant) => (
                         <Table.Cell key={variant}>
-                          <DropdownMenu.Root>
-                            <DropdownMenu.Trigger>
-                              <IconButton variant="soft" color="gray">
-                                <DotsHorizontalIcon />
-                              </IconButton>
-                            </DropdownMenu.Trigger>
-                            <DropdownMenuContentDemo variant={variant} color={color} />
-                          </DropdownMenu.Root>
-                          <DropdownMenu.Root>
-                            <DropdownMenu.Trigger>
-                              <IconButton variant="soft" color="gray" ml="2">
-                                <DotsHorizontalIcon />
-                              </IconButton>
-                            </DropdownMenu.Trigger>
-                            <DropdownMenuContentDemo variant={variant} color={color} highContrast />
-                          </DropdownMenu.Root>
+                          <IconButton variant="soft" color={color}>
+                            <DotsHorizontalIcon />
+                          </IconButton>
+                          <IconButton variant="soft" color={color} highContrast ml="2">
+                            <DotsHorizontalIcon />
+                          </IconButton>
                         </Table.Cell>
                       ))}
                     </Table.Row>
@@ -130,5 +100,5 @@ export default function DropdownMenuPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }
