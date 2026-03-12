@@ -5,7 +5,7 @@ import {
   type FictNode,
 } from '@fictjs/runtime'
 
-type Scope = { [scopeName: string]: BaseContext<unknown>[] } | undefined
+type Scope<_C = unknown> = { [scopeName: string]: BaseContext<unknown>[] } | undefined
 type ScopeHook = (scope: Scope) => { [scopeProp: string]: Scope }
 interface CreateScope {
   scopeName: string;
@@ -52,7 +52,7 @@ function createContextScope(scopeName: string, createContextScopeDeps: CreateSco
     function Provider(
       props: ContextValueType & {
         children?: FictNode | FictNode[]
-        scope?: Scope
+        scope?: Scope<ContextValueType | undefined>
       },
     ) {
       const { children, scope, ...context } = props
@@ -65,7 +65,7 @@ function createContextScope(scopeName: string, createContextScopeDeps: CreateSco
       })
     }
 
-    function useContext(consumerName: string, scope: Scope) {
+    function useContext(consumerName: string, scope: Scope<ContextValueType | undefined>) {
       const Context = (scope?.[scopeName]?.[index] || BaseContext) as BaseContext<
         ContextValueType | undefined
       >
