@@ -14,6 +14,9 @@ type PropDefsWithClassName<T> =
 
 type EnumPropDef = Extract<PropDef, { type: 'enum' }>
 type StringLikePropDef = Extract<PropDef, { type: 'string' | 'enum | string' }>
+type PropsRecord = Record<string | symbol, unknown>
+
+const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
 function mergePropDefs<T extends Record<string, PropDef>[]>(...args: T): Record<string, PropDef> {
   return Object.assign({}, ...args)
@@ -33,6 +36,66 @@ function hasClassName(propDef: PropDef): propDef is PropDef & { className: strin
   )
 }
 
+function isPropGetter(value: unknown): value is () => unknown {
+  return (
+    typeof value === 'function' &&
+    (value as (() => unknown) & { [PROP_GETTER_MARKER]?: boolean })[PROP_GETTER_MARKER] === true
+  )
+}
+
+function readValue<T>(value: T): T {
+  if (isPropGetter(value)) {
+    return value() as T
+  }
+
+  return value
+}
+
+function copyPropsPreservingGetters(source: PropsRecord): Record<string, unknown> {
+  const target: Record<string, unknown> = {}
+
+  for (const key of Reflect.ownKeys(source)) {
+    const descriptor = Object.getOwnPropertyDescriptor(source, key)
+    if (!descriptor) {
+      continue
+    }
+
+    if ('get' in descriptor && typeof descriptor.get === 'function' && !('value' in descriptor)) {
+      Object.defineProperty(target, key, {
+        configurable: true,
+        enumerable: descriptor.enumerable ?? true,
+        get: () => descriptor.get?.call(source),
+      })
+      continue
+    }
+
+    Object.defineProperty(target, key, {
+      configurable: true,
+      enumerable: descriptor.enumerable ?? true,
+      value: descriptor.value,
+      writable: true,
+    })
+  }
+
+  return target
+}
+
+function setPropValue(target: PropsRecord, key: string | symbol, value: unknown): void {
+  const descriptor = Object.getOwnPropertyDescriptor(target, key)
+
+  if (!descriptor || ('value' in descriptor && descriptor.writable)) {
+    target[key] = value
+    return
+  }
+
+  Object.defineProperty(target, key, {
+    configurable: true,
+    enumerable: descriptor.enumerable ?? true,
+    writable: true,
+    value,
+  })
+}
+
 /**
  * Takes props, checks them against prop defs that have a `className` on them,
  * adds necessary CSS classes and inline styles, and returns the props without
@@ -48,11 +111,11 @@ function extractProps<
 ): Omit<P & { className?: string; style?: CSSProperties }, PropDefsWithClassName<T[number]>> {
   let className: string | undefined
   let style: ReturnType<typeof mergeStyles>
-  const extractedProps = { ...props } as Record<string, any>
+  const extractedProps = copyPropsPreservingGetters(props as PropsRecord) as Record<string, any>
   const allPropDefs = mergePropDefs(...propDefs)
 
   for (const key in allPropDefs) {
-    let value = extractedProps[key]
+    let value = readValue(extractedProps[key])
     const propDef = allPropDefs[key]
     if (propDef === undefined) {
       continue
@@ -73,7 +136,7 @@ function extractProps<
     }
 
     // Apply the value with defaults
-    extractedProps[key] = value
+    setPropValue(extractedProps, key, value)
 
     if (hasClassName(propDef)) {
       delete extractedProps[key]
@@ -140,8 +203,8 @@ function extractProps<
     }
   }
 
-  extractedProps.className = classNames(className, props.className)
-  extractedProps.style = mergeStyles(style, props.style)
+  setPropValue(extractedProps, 'className', classNames(className, props.className))
+  setPropValue(extractedProps, 'style', mergeStyles(style, props.style))
   return extractedProps as Omit<
     P & { className?: string; style?: CSSProperties },
     PropDefsWithClassName<T[number]>

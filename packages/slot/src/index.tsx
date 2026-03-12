@@ -89,16 +89,58 @@ function readValue<T>(value: T): T {
   return value
 }
 
-function normalizeProps(source: Record<string, unknown> | null | undefined): PropsRecord {
+function normalizeProps(
+  source: Record<string, unknown> | null | undefined,
+  excluded: Iterable<PropertyKey> = [],
+): PropsRecord {
   const next: PropsRecord = {}
   if (!source) return next
+  const excludedKeys = new Set(excluded)
 
   for (const key of Reflect.ownKeys(source)) {
+    if (excludedKeys.has(key)) continue
+
     const normalizedKey = typeof key === 'string' ? normalizePropName(key) : key
-    next[normalizedKey] = (source as PropsRecord)[key]
+    const descriptor = Object.getOwnPropertyDescriptor(source, key)
+    if (!descriptor) continue
+
+    if ('value' in descriptor) {
+      Object.defineProperty(next, normalizedKey, {
+        configurable: true,
+        enumerable: descriptor.enumerable ?? true,
+        writable: descriptor.writable ?? true,
+        value: descriptor.value,
+      })
+      continue
+    }
+
+    const accessorDescriptor: PropertyDescriptor = {
+      configurable: true,
+      enumerable: descriptor.enumerable ?? true,
+    }
+
+    if (descriptor.get) {
+      accessorDescriptor.get = descriptor.get
+    }
+
+    if (descriptor.set) {
+      accessorDescriptor.set = descriptor.set
+    }
+
+    Object.defineProperty(next, normalizedKey, accessorDescriptor)
   }
 
   return next
+}
+
+function copyPropsPreservingDescriptors(target: PropsRecord, source: PropsRecord): PropsRecord {
+  for (const key of Reflect.ownKeys(source)) {
+    const descriptor = Object.getOwnPropertyDescriptor(source, key)
+    if (!descriptor) continue
+    Object.defineProperty(target, key, descriptor)
+  }
+
+  return target
 }
 
 function toClassName(value: unknown): string {
@@ -128,7 +170,7 @@ function isEventProp(name: string): boolean {
 }
 
 function mergeProps(slotProps: PropsRecord, childProps: PropsRecord): PropsRecord {
-  const overrideProps: PropsRecord = { ...childProps }
+  const overrideProps: PropsRecord = copyPropsPreservingDescriptors({}, childProps)
 
   for (const key of Reflect.ownKeys(childProps)) {
     if (typeof key !== 'string') continue
@@ -182,7 +224,7 @@ function mergeProps(slotProps: PropsRecord, childProps: PropsRecord): PropsRecor
     }
   }
 
-  return { ...slotProps, ...overrideProps }
+  return copyPropsPreservingDescriptors(copyPropsPreservingDescriptors({}, slotProps), overrideProps)
 }
 
 function cloneVNode(
@@ -190,10 +232,10 @@ function cloneVNode(
   props: PropsRecord,
   children?: FictNode | FictNode[],
 ): FictVNode {
-  const nextProps = {
-    ...normalizeProps(node.props as Record<string, unknown> | null | undefined),
-    ...props,
-  }
+  const nextProps = copyPropsPreservingDescriptors(
+    normalizeProps(node.props as Record<string, unknown> | null | undefined),
+    props,
+  )
 
   if (children !== undefined) {
     nextProps.children = children
@@ -217,14 +259,15 @@ function isSlottable(child: FictNode): child is FictVNode {
 
 function createSlotClone(ownerName: string) {
   const SlotClone = (props: SlotCloneProps): FictNode => {
-    const { children, ref: forwardedRef, ...slotProps } = props
-    const child = getSingleChild(children)
+    const child = getSingleChild(props.children)
+    const forwardedRef = props.ref
+    const slotProps = normalizeProps(props as Record<string, unknown>, ['children', 'ref'])
 
     if (!child) return null
     if (!isVNode(child)) return child
 
     const mergedProps = mergeProps(
-      normalizeProps(slotProps as Record<string, unknown>),
+      slotProps,
       normalizeProps(child.props as Record<string, unknown> | null | undefined),
     )
 
@@ -246,8 +289,9 @@ function createSlot(ownerName: string) {
   const SlotClone = createSlotClone(ownerName)
 
   const Slot = (props: SlotProps & { ref?: SlotRef }): FictNode => {
-    const { children, ref: forwardedRef, ...slotProps } = props
-    const childrenArray = flattenChildren(children)
+    const forwardedRef = props.ref
+    const childrenArray = flattenChildren(props.children)
+    const slotProps = normalizeProps(props as Record<string, unknown>, ['children', 'ref'])
     const slottable = childrenArray.find(isSlottable)
 
     if (slottable) {
@@ -270,15 +314,15 @@ function createSlot(ownerName: string) {
       })
 
       return (
-        <SlotClone {...(slotProps as Record<string, unknown>)} ref={forwardedRef}>
+        <SlotClone {...slotProps} ref={forwardedRef}>
           {cloneVNode(newElement, {}, newChildren)}
         </SlotClone>
       )
     }
 
     return (
-      <SlotClone {...(slotProps as Record<string, unknown>)} ref={forwardedRef}>
-        {children}
+      <SlotClone {...slotProps} ref={forwardedRef}>
+        {props.children}
       </SlotClone>
     )
   }

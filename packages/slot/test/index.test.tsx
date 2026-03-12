@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createRef, render } from '@fictjs/runtime'
+import { createRef, prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Slot, Slottable } from '../src/index.js'
 
@@ -93,5 +94,32 @@ describe('@fictjs/slot', () => {
     )
 
     expect(container.innerHTML).toBe('')
+  })
+
+  it('preserves reactive slot-side props on the slotted child', async () => {
+    const container = document.createElement('div')
+    const state = createSignal<'open' | 'closed'>('open')
+    document.body.appendChild(container)
+
+    render(
+      () => (
+        <Slot data-state={prop(() => state())}>
+          <button data-testid="trigger" type="button">
+            Trigger
+          </button>
+        </Slot>
+      ),
+      container,
+    )
+
+    await Promise.resolve()
+
+    const button = container.querySelector('[data-testid="trigger"]')
+    expect(button?.getAttribute('data-state')).toBe('open')
+
+    state('closed')
+    await Promise.resolve()
+
+    expect(button?.getAttribute('data-state')).toBe('closed')
   })
 })

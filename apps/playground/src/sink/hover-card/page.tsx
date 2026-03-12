@@ -8,9 +8,9 @@ export default function HoverCardPage() {
       <DocsSectionBody>
         <HoverCard.Root>
           <HoverCard.Trigger>
-            <Link>A fancy link</Link>
+            <Link id="hover-card-demo-trigger">A fancy link</Link>
           </HoverCard.Trigger>
-          <HoverCard.Content width="200px">
+          <HoverCard.Content id="hover-card-demo-content" width="200px">
             <Text as="p" size="2">
               Jan Tschichold was a German calligrapher, typographer and book designer. He played a
               significant role in the development of graphic design in the 20th century.

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from 'fict'
 
-import { Avatar, Button, CheckboxGroup, Theme, ThemePanel } from '../src/index.js'
+import { Avatar, Button, CheckboxGroup, TabNav, Theme, ThemePanel } from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
@@ -151,5 +151,33 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
       '<Theme accentColor="teal" radius="large">',
     )
+  })
+
+  it('renders tab nav links without crashing when props are getter-backed', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <TabNav.Root size="1">
+            <TabNav.Link href="/account" active>
+              Account
+            </TabNav.Link>
+            <TabNav.Link href="/documents">Documents</TabNav.Link>
+          </TabNav.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const root = container.querySelector('.rt-TabNavRoot')
+    const links = Array.from(container.querySelectorAll('.rt-TabNavLink'))
+
+    expect(root).not.toBeNull()
+    expect(links).toHaveLength(2)
+    expect(links[0]?.getAttribute('data-active')).toBe('true')
   })
 })

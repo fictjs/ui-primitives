@@ -150,6 +150,35 @@ describe('@fictjs/hover-card', () => {
     expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
   })
 
+  it('closes after leaving the current trigger once the card is open', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    mount(
+      () => (
+        <HoverCard openDelay={0} closeDelay={20}>
+          <Trigger data-testid="trigger">Profile</Trigger>
+          <HoverCardPortal container={portalRoot}>
+            <Content data-testid="content">Preview</Content>
+          </HoverCardPortal>
+        </HoverCard>
+      ),
+      container,
+    )
+
+    const initialTrigger = container.querySelector('[data-testid="trigger"]') as HTMLAnchorElement
+    pointerEvent(initialTrigger, 'pointerenter')
+    await advance(0)
+
+    const currentTrigger = container.querySelector('[data-testid="trigger"]') as HTMLAnchorElement
+    expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    pointerEvent(currentTrigger, 'pointerleave')
+    await advance(20)
+    expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
   it('supports forced mounting and renders the arrow inside the portal', async () => {
     const container = document.createElement('div')
     const portalRoot = document.createElement('div')
