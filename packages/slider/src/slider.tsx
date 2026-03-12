@@ -731,10 +731,7 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
     const dimension = size()?.[orientation.size()]
     return dimension ? getThumbInBoundsOffset(dimension, percent(), orientation.direction()) : 0
   }
-  const isFormControl = () => {
-    const thumbNode = thumb()
-    return thumbNode ? Boolean(context.form() || thumbNode.closest('form')) : true
-  }
+  const isFormControl = createSignal(false)
   const label = () => getLabel(index(), context.values().length)
   const wrapperStyle = () => ({
     transform: 'var(--radix-slider-thumb-transform)',
@@ -773,28 +770,31 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
     const thumbNode = thumb()
     if (!thumbNode) return
 
+    isFormControl(Boolean(context.form() || thumbNode.closest('form')))
     context.thumbs.add(thumbNode)
     return () => {
+      isFormControl(false)
       context.thumbs.delete(thumbNode)
     }
   })
 
-  const bubbleInputNode = (isFormControl() ? (
-    <SliderBubbleInput
-      __scopeSlider={props.__scopeSlider}
-      name={() => {
-        const itemName =
-          props.name === undefined
-            ? context.name()
-            : readValue(props.name as MaybeAccessor<string | undefined>)
+  const bubbleInputNode = (() =>
+    isFormControl() ? (
+      <SliderBubbleInput
+        __scopeSlider={props.__scopeSlider}
+        name={() => {
+          const itemName =
+            props.name === undefined
+              ? context.name()
+              : readValue(props.name as MaybeAccessor<string | undefined>)
 
-        if (!itemName) return undefined
-        return context.values().length > 1 ? `${itemName}[]` : itemName
-      }}
-      form={context.form}
-      value={value}
-    />
-  ) : null) as unknown as FictNode
+          if (!itemName) return undefined
+          return context.values().length > 1 ? `${itemName}[]` : itemName
+        }}
+        form={context.form}
+        value={value}
+      />
+    ) : null) as unknown as FictNode
 
   return (
     <span style={wrapperStyle()}>
@@ -823,28 +823,28 @@ function SliderBubbleInput(props: ScopedProps<SliderBubbleInputProps>): FictNode
     const input = ref()
     const nextValue = readValue(props.value)
     const prevValue = previousValue()
+    const nextValueString = nextValue === undefined ? '' : String(nextValue)
 
     if (!input) return
 
-    if (!Object.is(prevValue, nextValue)) {
-      const descriptor = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')
-      const setValue = descriptor?.set
+    const descriptor = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')
+    const setValue = descriptor?.set
+    if (input.value !== nextValueString) {
       if (setValue) {
-        setValue.call(input, nextValue === undefined ? '' : String(nextValue))
+        setValue.call(input, nextValueString)
       } else {
-        input.value = nextValue === undefined ? '' : String(nextValue)
+        input.value = nextValueString
       }
+    }
 
+    if (!Object.is(prevValue, nextValue)) {
       input.dispatchEvent(new Event('input', { bubbles: true }))
     }
   })
 
   const inputProps = mergeProps(() => inputRestProps as Record<string, unknown>, {
     __scopeSlider: undefined,
-    defaultValue: prop(() => {
-      const nextValue = readValue(props.value)
-      return nextValue === undefined ? '' : String(nextValue)
-    }),
+    defaultValue: undefined,
     'attr:form': prop(() =>
       formProp === undefined ? undefined : readValue(formProp as MaybeAccessor<string | undefined>),
     ),
@@ -858,7 +858,10 @@ function SliderBubbleInput(props: ScopedProps<SliderBubbleInputProps>): FictNode
       display: 'none',
       ...readStyle(props.style),
     })),
-    value: undefined,
+    value: prop(() => {
+      const nextValue = readValue(props.value)
+      return nextValue === undefined ? '' : String(nextValue)
+    }),
   })
 
   return (

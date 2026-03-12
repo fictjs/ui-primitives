@@ -58,7 +58,7 @@ describe('@fictjs/slider', () => {
     document.body.innerHTML = ''
   })
 
-  it('updates a single-thumb slider from pointer interactions and mirrors the value to the bubble input', async () => {
+  it('updates a single-thumb slider from pointer interactions without rendering a bubble input outside forms', async () => {
     const container = document.createElement('div')
     document.body.append(container)
     const onValueCommit = vi.fn()
@@ -79,7 +79,6 @@ describe('@fictjs/slider', () => {
 
     const slider = container.querySelector('[data-orientation="horizontal"]') as HTMLSpanElement
     const range = container.querySelector('[data-testid="range"]') as HTMLSpanElement
-    const bubbleInput = container.querySelector('input') as HTMLInputElement
 
     Object.defineProperty(slider, 'getBoundingClientRect', {
       value: () =>
@@ -103,8 +102,34 @@ describe('@fictjs/slider', () => {
 
     expect(range.style.left).toBe('0%')
     expect(range.style.right).toBe('50%')
-    expect(bubbleInput.value).toBe('50')
+    expect(container.querySelector('input')).toBeNull()
     expect(onValueCommit).toHaveBeenCalledWith([50])
+  })
+
+  it('renders a bubble input with the current value when the slider participates in a form', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <form>
+          <Root defaultValue={[25]} max={100} name="volume">
+            <Track data-testid="track">
+              <Range data-testid="range" />
+            </Track>
+            <Thumb />
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const bubbleInput = container.querySelector('input') as HTMLInputElement
+
+    expect(bubbleInput.name).toBe('volume')
+    expect(bubbleInput.value).toBe('25')
   })
 
   it('steps the focused thumb with keyboard input', async () => {
