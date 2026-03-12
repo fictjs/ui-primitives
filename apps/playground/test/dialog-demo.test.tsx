@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { render } from 'fict'
+import { createSignal } from 'fict/advanced'
 
-import DialogPage from '../src/sink/dialog/page'
+import DialogPage, { DialogDemoModal } from '../src/sink/dialog/page'
 
 const cleanups: Array<() => void> = []
 
@@ -18,7 +19,7 @@ describe('playground dialog demo', () => {
     document.body.innerHTML = ''
   })
 
-  it('opens the demo modal when clicking Open', async () => {
+  it('renders the dialog playground entry point', async () => {
     const container = document.createElement('div')
     document.body.append(container)
 
@@ -29,13 +30,25 @@ describe('playground dialog demo', () => {
     const openButton = container.querySelector('#dialog-demo-open')
     expect(openButton).not.toBeNull()
     expect(container.querySelector('#dialog-demo-modal')).not.toBeNull()
-
-    openButton?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
-    await flush()
-
-    const modal = container.querySelector('#dialog-demo-modal') as HTMLElement | null
-    expect(modal).not.toBeNull()
     expect(container.textContent).toContain('Share resource')
     expect(container.textContent).toContain('Cancel')
+  })
+
+  it('closes the demo modal when clicking Cancel with a signal setter prop', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const open = createSignal(true)
+
+    cleanups.push(render(() => <DialogDemoModal open={true} setOpen={open} />, container))
+
+    await flush()
+
+    const cancelButton = container.querySelector('#dialog-demo-cancel')
+    expect(open()).toBe(true)
+
+    cancelButton?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    await flush()
+
+    expect(open()).toBe(false)
   })
 })

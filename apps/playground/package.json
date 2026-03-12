@@ -8,6 +8,8 @@
     "build": "pnpm --filter @fictjs/radix-ui build && pnpm --filter @fictjs/radix-ui-themes build && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4100",
     "lint": "eslint . --max-warnings=0",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "pnpm --filter @fictjs/radix-ui build && pnpm --filter @fictjs/radix-ui-themes build && tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
@@ -20,6 +22,7 @@
     "@fictjs/vite-plugin": "^0.17.0",
     "@types/node": "catalog:",
     "typescript": "catalog:",
+    "vitest": "catalog:",
     "vite": "^7.3.1"
   }
 }

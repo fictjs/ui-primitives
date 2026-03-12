@@ -29,6 +29,7 @@ const softButtonStyle = {
 
 export default function DialogPage() {
   const open = createSignal(false);
+  const setOpen = (value: boolean) => open(value);
 
   return (
     <section>
@@ -40,15 +41,16 @@ export default function DialogPage() {
           Open
         </button>
 
-        <DialogDemoModal open={open()} setOpen={open} />
+        <DialogDemoModal open={open()} setOpen={setOpen} />
       </Box>
     </section>
   );
 }
 
-function DialogDemoModal(props: { open: boolean; setOpen: (value: boolean) => void }) {
+export function DialogDemoModal(props: { open: boolean; setOpen: (value: boolean) => void }) {
   return (
     <div
+      id="dialog-demo-overlay"
       style={{
         position: 'fixed',
         inset: '0',
