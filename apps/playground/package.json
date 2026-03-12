@@ -9,6 +9,8 @@
     "preview": "vite preview --host 0.0.0.0 --port 4100",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "test:watch": "vitest",
     "typecheck": "pnpm --filter @fictjs/radix-ui build && pnpm --filter @fictjs/radix-ui-themes build && tsc --noEmit -p tsconfig.json"
   },
@@ -19,6 +21,7 @@
     "fict": "^0.17.0"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:",
     "@fictjs/vite-plugin": "^0.17.0",
     "@types/node": "catalog:",
     "typescript": "catalog:",

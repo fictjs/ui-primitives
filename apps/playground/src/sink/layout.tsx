@@ -3,59 +3,7 @@ import NextLink from 'next/link'
 import { Box, Container, Flex, Grid, Heading, Link, Reset, Separator } from '@fictjs/radix-ui-themes'
 
 import { RadixLogo } from './radix-logo'
-
-const NAV_ITEMS = [
-  { label: 'Alert Dialog', href: 'alert-dialog' },
-  { label: 'Aspect Ratio', href: 'aspect-ratio' },
-  { label: 'Avatar', href: 'avatar' },
-  { label: 'Badge', href: 'badge' },
-  { label: 'Blockquote', href: 'blockquote' },
-  { label: 'Button', href: 'button' },
-  { label: 'Callout', href: 'callout' },
-  { label: 'Card', href: 'card' },
-  { label: 'Checkbox', href: 'checkbox' },
-  { label: 'Checkbox Cards', href: 'checkbox-cards' },
-  { label: 'Checkbox Group', href: 'checkbox-group' },
-  { label: 'Code', href: 'code' },
-  { label: 'Container', href: 'container' },
-  { label: 'Context Menu', href: 'context-menu' },
-  { label: 'Cursors', href: 'cursors' },
-  { label: 'Data List', href: 'data-list' },
-  { label: 'Dialog', href: 'dialog' },
-  { label: 'Dropdown Menu', href: 'dropdown-menu' },
-  { label: 'Grid', href: 'grid' },
-  { label: 'Heading', href: 'heading' },
-  { label: 'Hover Card', href: 'hover-card' },
-  { label: 'Icon Button', href: 'icon-button' },
-  { label: 'Kbd', href: 'kbd' },
-  { label: 'Link', href: 'link' },
-  { label: 'Mixed Nested Themes Test', href: 'mixed-nested-themes-test' },
-  { label: 'Nested Appearances Test', href: 'nested-appearances-test' },
-  { label: 'Nested Colors Test', href: 'nested-colors-test' },
-  { label: 'Playground', href: 'playground' },
-  { label: 'Popover', href: 'popover' },
-  { label: 'Progress', href: 'progress' },
-  { label: 'Radio', href: 'radio' },
-  { label: 'Radio Cards', href: 'radio-cards' },
-  { label: 'Radio Group', href: 'radio-group' },
-  { label: 'Scroll Area', href: 'scroll-area' },
-  { label: 'Segmented Control', href: 'segmented-control' },
-  { label: 'Select', href: 'select' },
-  { label: 'Separator', href: 'separator' },
-  { label: 'Shadow Tokens', href: 'shadow-tokens' },
-  { label: 'Skeleton', href: 'skeleton' },
-  { label: 'Slider', href: 'slider' },
-  { label: 'Spinner', href: 'spinner' },
-  { label: 'Switch', href: 'switch' },
-  { label: 'Tab Nav', href: 'tab-nav' },
-  { label: 'Table', href: 'table' },
-  { label: 'Tabs', href: 'tabs' },
-  { label: 'Text', href: 'text' },
-  { label: 'Text Area', href: 'text-area' },
-  { label: 'Text Field', href: 'text-field' },
-  { label: 'Tooltip', href: 'tooltip' },
-  { label: 'Typography', href: 'typography' }
-] satisfies { label: string; href: string }[]
+import { sinkRoutes } from './routes'
 
 export default function SinkLayout(props: { children: React.ReactNode }) {
   return (
@@ -112,7 +60,7 @@ function NavigationMenu() {
       <Flex direction="column" gap="1" asChild>
         <Reset>
           <ul>
-            {NAV_ITEMS.map((item) => (
+            {sinkRoutes.map((item) => (
               <Box display="contents" asChild key={item.label}>
                 <li>
                   <Link asChild highContrast>
