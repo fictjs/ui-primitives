@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "fict",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "strict": true,
+    "target": "ES2022",
+    "types": ["vite/client"],
+    "paths": {
+      "@radix-ui/react-icons": ["./src/compat/radix-icons.tsx"],
+      "@fictjs/radix-ui": ["../../packages/radix-ui/dist/index.d.ts"],
+      "@fictjs/radix-ui/internal": ["../../packages/radix-ui/dist/internal.d.ts"],
+      "@fictjs/radix-ui-themes": ["../../libs/radix-ui-themes/dist/index.d.ts"],
+      "@fictjs/radix-ui-themes/props": ["../../libs/radix-ui-themes/dist/props/index.d.ts"],
+      "@fictjs/radix-ui-themes/helpers": ["../../libs/radix-ui-themes/dist/helpers/index.d.ts"],
+      "next/link": ["./src/compat/next-link.tsx"],
+      "next/navigation": ["./src/compat/next-navigation.ts"],
+      "react": ["./src/compat/react.tsx"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
+}

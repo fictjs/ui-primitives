@@ -1,0 +1,25 @@
+{
+  "name": "@fictjs/radix-ui-themes-playground",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @fictjs/radix-ui build && pnpm --filter @fictjs/radix-ui-themes build && vite --host 0.0.0.0 --port 3100",
+    "build": "pnpm --filter @fictjs/radix-ui build && pnpm --filter @fictjs/radix-ui-themes build && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4100",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "pnpm --filter @fictjs/radix-ui build && pnpm --filter @fictjs/radix-ui-themes build && tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fictjs/radix-ui": "workspace:*",
+    "@fictjs/radix-ui-themes": "workspace:*",
+    "@fictjs/runtime": "catalog:",
+    "fict": "^0.17.0"
+  },
+  "devDependencies": {
+    "@fictjs/vite-plugin": "^0.17.0",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "^7.3.1"
+  }
+}
