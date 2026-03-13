@@ -50,7 +50,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@fictjs/primitive": "workspace:*"
+    "@fictjs/primitive": "workspace:*",
+    "@fictjs/use-layout-effect": "workspace:*"
   },
   "peerDependencies": {
     "@fictjs/runtime": ">=0.17.0"

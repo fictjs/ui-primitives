@@ -48,4 +48,16 @@ describe('@fictjs/arrow', () => {
     expect(svg.querySelector('rect')).not.toBeNull()
     expect(svg.querySelector('polygon')).toBeNull()
   })
+
+  it('applies class and className props to the rendered svg element', async () => {
+    const container = document.createElement('div')
+
+    render(() => <Arrow data-testid="arrow" class="slot-class" className="theme-class" />, container)
+
+    await Promise.resolve()
+
+    const svg = container.querySelector('[data-testid="arrow"]') as SVGSVGElement
+
+    expect(svg.getAttribute('class')).toBe('slot-class theme-class')
+  })
 })
