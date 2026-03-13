@@ -130,6 +130,66 @@ describe('@fictjs/tooltip', () => {
     expect(content.getAttribute('data-state')).toBe('delayed-open')
   })
 
+  it('does not keep rescheduling delayed open while the pointer is already over the trigger', async () => {
+    vi.useFakeTimers()
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <TooltipProvider delayDuration={500} disableHoverableContent>
+          <Tooltip>
+            <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
+            <TooltipContent data-testid="content">Tooltip</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    pointerMove(trigger)
+    await flushEffects()
+    expect(vi.getTimerCount()).toBe(1)
+
+    pointerMove(trigger)
+    await flushEffects()
+    expect(vi.getTimerCount()).toBe(1)
+
+    await advance(500)
+    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+  })
+
+  it('cancels a pending delayed open when the trigger is clicked before the timer fires', async () => {
+    vi.useFakeTimers()
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <TooltipProvider delayDuration={500} disableHoverableContent>
+          <Tooltip>
+            <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
+            <TooltipContent data-testid="content">Tooltip</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    pointerMove(trigger)
+    await flushEffects()
+    trigger.click()
+    await flushEffects()
+    expect(vi.getTimerCount()).toBe(0)
+
+    await advance(500)
+    expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
   it('opens on focus and closes on blur', async () => {
     const container = document.createElement('div')
     document.body.append(container)

@@ -133,7 +133,8 @@ function transformOrigin(options: { arrowWidth: number; arrowHeight: number }): 
     options,
     fn(data) {
       const { placement, rects, middlewareData } = data
-      const cannotCenterArrow = middlewareData.arrow?.centerOffset !== 0
+      const cannotCenterArrow =
+        middlewareData.arrow?.centerOffset !== undefined && middlewareData.arrow.centerOffset !== 0
       const isArrowHidden = cannotCenterArrow
       const arrowWidth = isArrowHidden ? 0 : options.arrowWidth
       const arrowHeight = isArrowHidden ? 0 : options.arrowHeight
@@ -349,6 +350,17 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
   })
 
   useLayoutEffect(() => {
+    arrow()
+    arrowSize()
+
+    if (!context.anchor() || !content() || !arrow()) {
+      return
+    }
+
+    floating.update()
+  })
+
+  useLayoutEffect(() => {
     const currentContent = content()
     if (!currentContent) {
       contentZIndex(undefined)
@@ -424,7 +436,10 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
         onArrowChange={arrow}
         arrowX={() => floating.middlewareData().arrow?.x}
         arrowY={() => floating.middlewareData().arrow?.y}
-        shouldHideArrow={() => floating.middlewareData().arrow?.centerOffset !== 0}
+        shouldHideArrow={() => {
+          const centerOffset = floating.middlewareData().arrow?.centerOffset
+          return centerOffset !== undefined && centerOffset !== 0
+        }}
       >
         <Primitive.div {...(primitiveProps as Record<string, unknown>)} ref={composedRefs} />
       </PopperContentProvider>

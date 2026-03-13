@@ -253,6 +253,10 @@ function Tooltip(props: ScopedProps<TooltipProps>): FictNode {
     return wasOpenDelayedRef.current ? 'delayed-open' : 'instant-open'
   }
   const handleOpen = () => {
+    if (open() && openTimerRef.current === 0) {
+      return
+    }
+
     window.clearTimeout(openTimerRef.current)
     openTimerRef.current = 0
     wasOpenDelayedRef.current = false
@@ -264,6 +268,10 @@ function Tooltip(props: ScopedProps<TooltipProps>): FictNode {
     setOpen(false)
   }
   const handleDelayedOpen = () => {
+    if (open() || openTimerRef.current !== 0) {
+      return
+    }
+
     window.clearTimeout(openTimerRef.current)
     openTimerRef.current = window.setTimeout(() => {
       wasOpenDelayedRef.current = true
@@ -293,6 +301,10 @@ function Tooltip(props: ScopedProps<TooltipProps>): FictNode {
           trigger.current = nextTrigger
         }}
         onTriggerEnter={() => {
+          if (open()) {
+            return
+          }
+
           if (providerContext.isOpenDelayedRef.current) {
             handleDelayedOpen()
           } else {
@@ -361,16 +373,16 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
           }
 
           if (!hasPointerMoveOpenedRef.current && !providerContext.isPointerInTransitRef.current) {
-            context.onTriggerEnter()
             hasPointerMoveOpenedRef.current = true
+            context.onTriggerEnter()
           }
         },
       ),
       onPointerLeave: composeEventHandlers<PointerEvent>(
         props.onPointerLeave as ((event: PointerEvent) => void) | undefined,
         () => {
-          context.onTriggerLeave()
           hasPointerMoveOpenedRef.current = false
+          context.onTriggerLeave()
         },
       ),
       onPointerDown: composeEventHandlers<PointerEvent>(

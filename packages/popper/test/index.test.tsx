@@ -256,4 +256,37 @@ describe('@fictjs/popper', () => {
       strategy: 'referenceHidden',
     })
   })
+
+  it('keeps the arrow visible until middleware reports that centering failed', async () => {
+    useSizeMock.mockImplementation(() => () => ({ width: 12, height: 6 }))
+
+    floatingUiMocks.useFloating.mockImplementation(() =>
+      createFloatingResult({
+        placement: 'bottom',
+        middlewareData: {},
+      }),
+    )
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor data-testid="anchor" />
+          <PopperContent>
+            <PopperArrow data-testid="arrow" />
+          </PopperContent>
+        </Popper>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const arrow = container.querySelector('[data-testid="arrow"]') as SVGSVGElement
+    const arrowWrapper = arrow.parentElement as HTMLSpanElement
+
+    expect(arrowWrapper.style.visibility).toBe('')
+  })
 })
