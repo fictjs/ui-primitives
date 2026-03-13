@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -166,8 +166,11 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
     ...(props.onCheckedChange ? { onChange: props.onCheckedChange } : {}),
   }
   const [checked, setChecked] = useControllableState<CheckedState>(controllableStateProps)
-  const initialDefaultChecked = normalizeChecked(checked())
-  let previousBubbleChecked = checked()
+  const updateChecked: SetStateFn<CheckedState> = (nextChecked) => {
+    setChecked(nextChecked)
+  }
+  const initialDefaultChecked = normalizeChecked(untrack(() => checked()))
+  let previousBubbleChecked = untrack(() => checked())
 
   useLayoutEffect(() => {
     const currentControl = control()
@@ -210,7 +213,7 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
       name={name}
       required={required}
       setBubbleInput={bubbleInput}
-      setChecked={setChecked}
+      setChecked={updateChecked}
       setControl={control}
       value={value}
     >
@@ -227,7 +230,7 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLButtonElement>, (node) =>
     context.setControl(node),
   )
-  const initialCheckedState = context.checked()
+  const initialCheckedState = untrack(() => context.checked())
 
   useLayoutEffect(() => {
     const formElement = context.control()?.form
