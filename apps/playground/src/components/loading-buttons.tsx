@@ -1,74 +1,14 @@
-import { createSignal } from 'fict/advanced';
 import { ArrowRightIcon, StarIcon } from '@radix-ui/react-icons';
 import { Button, Em, Flex, IconButton, Spinner, Text } from '@fictjs/radix-ui-themes';
 import { buttonPropDefs } from '@fictjs/radix-ui-themes/props';
-import { mapButtonSizeToSpinnerSize, mapResponsiveProp } from '@fictjs/radix-ui-themes/helpers';
 
 export function LoadingButtons() {
-  const [loading1, onClick1] = useLoading();
-  const [loading2, onClick2] = useLoading();
-  const [loading3, onClick3] = useLoading();
-  const [loading4, onClick4] = useLoading();
-
   return (
     <Flex direction="column" gap="5">
-      {buttonPropDefs.size.values.map((size) => (
-        <Flex key={size} gap="5">
-          <Flex direction="column" align="center" gap="5">
-            {([undefined, 'ghost'] as const).map((variant, i) => (
-              <IconButton
-                key={i}
-                loading={loading1()}
-                onClick={onClick1}
-                size={size}
-                variant={variant}
-              >
-                <StarIcon
-                  width={mapButtonSizeToIconSize(size)}
-                  height={mapButtonSizeToIconSize(size)}
-                />
-              </IconButton>
-            ))}
-          </Flex>
-
-          <Flex direction="column" align="center" gap="5">
-            {([undefined, 'ghost'] as const).map((variant, i) => (
-              <Button key={i} loading={loading2()} onClick={onClick2} size={size} variant={variant}>
-                Continue
-              </Button>
-            ))}
-          </Flex>
-
-          <Flex direction="column" align="center" gap="5">
-            {([undefined, 'ghost'] as const).map((variant, i) => (
-              <Button key={i} loading={loading3()} onClick={onClick3} size={size} variant={variant}>
-                Continue
-                <ArrowRightIcon
-                  width={mapButtonSizeToIconSize(size)}
-                  height={mapButtonSizeToIconSize(size)}
-                />
-              </Button>
-            ))}
-          </Flex>
-
-          <Flex direction="column" align="center" gap="5">
-            {([undefined, 'ghost'] as const).map((variant, i) => (
-              <Button key={i} disabled={loading4()} onClick={onClick4} size={size} variant={variant}>
-                Continue
-                <Spinner
-                  loading={loading4()}
-                  size={mapResponsiveProp(size, mapButtonSizeToSpinnerSize)}
-                >
-                  <ArrowRightIcon
-                    width={mapButtonSizeToIconSize(size)}
-                    height={mapButtonSizeToIconSize(size)}
-                  />
-                </Spinner>
-              </Button>
-            ))}
-          </Flex>
-        </Flex>
-      ))}
+      <LoadingButtonRow size="1" />
+      <LoadingButtonRow size="2" />
+      <LoadingButtonRow size="3" />
+      <LoadingButtonRow size="4" />
 
       <Text as="p">
         Lorem ipsum, dolor sit amet{' '}
@@ -85,23 +25,55 @@ export function LoadingButtons() {
   );
 }
 
-function mapButtonSizeToIconSize(size: (typeof buttonPropDefs.size.values)[number]) {
-  switch (size) {
-    case '1':
-    case '2':
-      return '16';
-    case '3':
-      return '18';
-    case '4':
-      return '20';
-  }
-}
+function LoadingButtonRow({ size }: { size: (typeof buttonPropDefs.size.values)[number] }) {
+  const iconSize = size === '3' ? '18' : size === '4' ? '20' : '16';
+  const spinnerSize = size === '1' ? '1' : size === '4' ? '3' : '2';
 
-function useLoading() {
-  const loading = createSignal(false);
-  const handleClick = () => {
-    loading(true);
-    setTimeout(() => loading(false), 2000);
-  };
-  return [loading, handleClick] as const;
+  return (
+    <Flex gap="5">
+      <Flex direction="column" align="center" gap="5">
+        <IconButton loading size={size}>
+          <StarIcon width={iconSize} height={iconSize} />
+        </IconButton>
+        <IconButton loading size={size} variant="ghost">
+          <StarIcon width={iconSize} height={iconSize} />
+        </IconButton>
+      </Flex>
+
+      <Flex direction="column" align="center" gap="5">
+        <Button loading size={size}>
+          Continue
+        </Button>
+        <Button loading size={size} variant="ghost">
+          Continue
+        </Button>
+      </Flex>
+
+      <Flex direction="column" align="center" gap="5">
+        <Button loading size={size}>
+          Continue
+          <ArrowRightIcon width={iconSize} height={iconSize} />
+        </Button>
+        <Button loading size={size} variant="ghost">
+          Continue
+          <ArrowRightIcon width={iconSize} height={iconSize} />
+        </Button>
+      </Flex>
+
+      <Flex direction="column" align="center" gap="5">
+        <Button disabled size={size}>
+          Continue
+          <Spinner size={spinnerSize}>
+            <ArrowRightIcon width={iconSize} height={iconSize} />
+          </Spinner>
+        </Button>
+        <Button disabled size={size} variant="ghost">
+          Continue
+          <Spinner size={spinnerSize}>
+            <ArrowRightIcon width={iconSize} height={iconSize} />
+          </Spinner>
+        </Button>
+      </Flex>
+    </Flex>
+  );
 }

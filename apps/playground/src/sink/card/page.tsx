@@ -47,23 +47,10 @@ export default function CardPage() {
               Here are all your contacts:
             </Text>
             <Flex direction="column" gap="3">
-              {Array.from({ length: 4 }, (_, i) => (
-                <Card key={i} variant="surface" asChild>
-                  <a href="#some-page">
-                    <Flex align="center" gap="2">
-                      <Avatar src="/avatar.svg" fallback="D" />
-                      <div>
-                        <Text as="p" size="2" weight="medium">
-                          Poppy Nichols
-                        </Text>
-                        <Text as="p" color="gray" size="1">
-                          poppy.nichols@gmail.com
-                        </Text>
-                      </div>
-                    </Flex>
-                  </a>
-                </Card>
-              ))}
+              <ContactCard variant="surface" />
+              <ContactCard variant="surface" />
+              <ContactCard variant="surface" />
+              <ContactCard variant="surface" />
             </Flex>
           </div>
           <div>
@@ -72,23 +59,10 @@ export default function CardPage() {
               Here are all your contacts:
             </Text>
             <Flex direction="column" gap="3">
-              {Array.from({ length: 4 }, (_, i) => (
-                <Card key={i} variant="classic" asChild>
-                  <a href="#some-page">
-                    <Flex align="center" gap="2">
-                      <Avatar src="/avatar.svg" fallback="D" />
-                      <div>
-                        <Text as="p" size="2" weight="medium">
-                          Poppy Nichols
-                        </Text>
-                        <Text as="p" color="gray" size="1">
-                          poppy.nichols@gmail.com
-                        </Text>
-                      </div>
-                    </Flex>
-                  </a>
-                </Card>
-              ))}
+              <ContactCard variant="classic" />
+              <ContactCard variant="classic" />
+              <ContactCard variant="classic" />
+              <ContactCard variant="classic" />
             </Flex>
           </div>
           <div>
@@ -97,23 +71,10 @@ export default function CardPage() {
               Here are all your contacts:
             </Text>
             <Flex direction="column" gap="5">
-              {Array.from({ length: 4 }, (_, i) => (
-                <Card key={i} variant="ghost" asChild>
-                  <a href="#some-page">
-                    <Flex align="center" gap="2">
-                      <Avatar src="/avatar.svg" fallback="D" />
-                      <div>
-                        <Text as="p" size="2" weight="medium">
-                          Poppy Nichols
-                        </Text>
-                        <Text as="p" color="gray" size="1">
-                          poppy.nichols@gmail.com
-                        </Text>
-                      </div>
-                    </Flex>
-                  </a>
-                </Card>
-              ))}
+              <ContactCard variant="ghost" />
+              <ContactCard variant="ghost" />
+              <ContactCard variant="ghost" />
+              <ContactCard variant="ghost" />
             </Flex>
           </div>
         </Grid>
@@ -141,5 +102,25 @@ export default function CardPage() {
         </Table.Root>
       </DocsSectionBody>
     </DocsSection>
+  );
+}
+
+function ContactCard({ variant }: { variant: (typeof cardPropDefs.variant.values)[number] }) {
+  return (
+    <Card variant={variant}>
+      <a href="#some-page" style={{ color: 'inherit', textDecoration: 'none' }}>
+        <Flex align="center" gap="2">
+          <Avatar src="/avatar.svg" fallback="D" />
+          <div>
+            <Text as="p" size="2" weight="medium">
+              Poppy Nichols
+            </Text>
+            <Text as="p" color="gray" size="1">
+              poppy.nichols@gmail.com
+            </Text>
+          </div>
+        </Flex>
+      </a>
+    </Card>
   );
 }
