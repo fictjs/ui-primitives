@@ -4,6 +4,7 @@ import { composeRefs, type PossibleRef } from '@fictjs/compose-refs'
 
 type PropsRecord = Record<PropertyKey, unknown>
 type SlotRef = PossibleRef<Element>
+type InlineStylableElement = Element & ElementCSSInlineStyle
 
 type SlotProps = JSX.IntrinsicElements['div'] & {
   children?: FictNode | FictNode[]
@@ -31,6 +32,10 @@ const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
 function isVNode(node: unknown): node is FictVNode {
   return !!node && typeof node === 'object' && 'type' in (node as FictVNode)
+}
+
+function isElementNode(node: unknown): node is Element {
+  return typeof Element !== 'undefined' && node instanceof Element
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -257,6 +262,87 @@ function isSlottable(child: FictNode): child is FictVNode {
   return (child.type as Partial<SlottableComponent>).__fictSlotId === SLOTTABLE_IDENTIFIER
 }
 
+function applySlotPropsToElement(element: Element, slotProps: PropsRecord, forwardedRef?: SlotRef): Element {
+  const originalClassName = element.getAttribute('class') ?? ''
+  const originalStyle = element.getAttribute('style') ?? ''
+  const styleTarget =
+    'style' in element ? (element as InlineStylableElement) : null
+
+  for (const key of Reflect.ownKeys(slotProps)) {
+    if (typeof key !== 'string') {
+      continue
+    }
+
+    const value = readValue(slotProps[key])
+
+    if (key === 'class') {
+      const nextClassName = [toClassName(value), originalClassName].filter(Boolean).join(' ')
+      if (nextClassName) {
+        element.setAttribute('class', nextClassName)
+      } else {
+        element.removeAttribute('class')
+      }
+      continue
+    }
+
+    if (key === 'style') {
+      const nextStyle = mergeStyle(value, originalStyle)
+      if (!nextStyle) {
+        element.removeAttribute('style')
+        continue
+      }
+
+      if (typeof nextStyle === 'string') {
+        element.setAttribute('style', nextStyle)
+        continue
+      }
+
+      if (!styleTarget) {
+        element.setAttribute('style', String(nextStyle))
+        continue
+      }
+
+      element.setAttribute('style', originalStyle)
+      for (const [styleName, styleValue] of Object.entries(nextStyle)) {
+        styleTarget.style.setProperty(styleName, String(styleValue))
+      }
+      continue
+    }
+
+    if (isEventProp(key)) {
+      if (typeof value === 'function') {
+        const eventName = key.startsWith('oncapture:') ? key.slice('oncapture:'.length) : key.slice(2)
+        element.addEventListener(eventName.toLowerCase(), value as EventListener)
+      }
+      continue
+    }
+
+    if (value === undefined || value === null || value === false) {
+      element.removeAttribute(key)
+      continue
+    }
+
+    try {
+      ;(element as unknown as PropsRecord)[key] = value
+    } catch {
+      // Fall back to attribute writes for readonly DOM properties.
+    }
+
+    if (value === true) {
+      element.setAttribute(key, '')
+      continue
+    }
+
+    element.setAttribute(key, String(value))
+  }
+
+  if (forwardedRef) {
+    composeRefs(forwardedRef)(element)
+  }
+
+  return element
+}
+
 function createSlotClone(ownerName: string) {
   const SlotClone = (props: SlotCloneProps): FictNode => {
     const child = getSingleChild(props.children)
@@ -288,7 +374,7 @@ function createSlotClone(ownerName: string) {
 function createSlot(ownerName: string) {
   const SlotClone = createSlotClone(ownerName)
 
-  const Slot = (props: SlotProps & { ref?: SlotRef }): FictNode => {
+    const Slot = (props: SlotProps & { ref?: SlotRef }): FictNode => {
     const forwardedRef = props.ref
     const childrenArray = flattenChildren(props.children)
     const slotProps = normalizeProps(props as Record<string, unknown>, ['children', 'ref'])
@@ -300,6 +386,9 @@ function createSlot(ownerName: string) {
       )
 
       if (!newElement || !isVNode(newElement)) {
+        if (isElementNode(newElement)) {
+          return applySlotPropsToElement(newElement, slotProps, forwardedRef)
+        }
         return null
       }
 
@@ -318,6 +407,11 @@ function createSlot(ownerName: string) {
           {cloneVNode(newElement, {}, newChildren)}
         </SlotClone>
       )
+    }
+
+    const directChild = getSingleChild(props.children)
+    if (isElementNode(directChild)) {
+      return applySlotPropsToElement(directChild, slotProps, forwardedRef)
     }
 
     return (

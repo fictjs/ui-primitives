@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { Slot } from './slot.js';
 import { gridPropDefs } from './grid.props.js';
 import { extractProps } from '../helpers/extract-props.js';
+import { renderChildren } from '../helpers/render-children.js';
 import { layoutPropDefs } from '../props/layout.props.js';
 import { marginPropDefs } from '../props/margin.props.js';
 
@@ -20,13 +21,18 @@ type GridProps = CommonGridProps & (GridSpanProps | GridDivProps);
 
 const Grid = React.forwardRef<GridElement, GridProps>((props, forwardedRef) => {
   const {
+    children: _children,
     className,
     asChild,
     as: Tag = 'div',
     ...gridProps
   } = extractProps(props, gridPropDefs, layoutPropDefs, marginPropDefs);
   const Comp = asChild ? Slot : Tag;
-  return <Comp {...gridProps} ref={React.coerceRef(forwardedRef)} class={classNames('rt-Grid', className)} />;
+  return (
+    <Comp {...gridProps} ref={React.coerceRef(forwardedRef)} class={classNames('rt-Grid', className)}>
+      {renderChildren(props.children)}
+    </Comp>
+  );
 });
 Grid.displayName = 'Grid';
 

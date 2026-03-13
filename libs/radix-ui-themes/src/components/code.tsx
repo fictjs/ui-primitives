@@ -4,6 +4,7 @@ import { Slot } from '@fictjs/radix-ui';
 
 import { codePropDefs } from './code.props.js';
 import { extractProps } from '../helpers/extract-props.js';
+import { renderChildren } from '../helpers/render-children.js';
 import { marginPropDefs } from '../props/margin.props.js';
 
 import type { MarginProps } from '../props/margin.props.js';
@@ -15,7 +16,7 @@ type CodeOwnProps = GetPropDefTypes<typeof codePropDefs>;
 interface CodeProps
   extends ComponentPropsWithout<'code', RemovedProps>, MarginProps, CodeOwnProps {}
 const Code = React.forwardRef<CodeElement, CodeProps>((props, forwardedRef) => {
-  const { asChild, className, color, ...codeProps } = extractProps(
+  const { asChild, children: _children, className, color, ...codeProps } = extractProps(
     props,
     codePropDefs,
     marginPropDefs,
@@ -29,7 +30,9 @@ const Code = React.forwardRef<CodeElement, CodeProps>((props, forwardedRef) => {
       {...codeProps}
       ref={React.coerceRef(forwardedRef)}
       class={classNames('rt-reset', 'rt-Code', className)}
-    />
+    >
+      {renderChildren(props.children)}
+    </Comp>
   );
 });
 Code.displayName = 'Code';

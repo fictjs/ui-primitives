@@ -122,4 +122,31 @@ describe('@fictjs/slot', () => {
 
     expect(button?.getAttribute('data-state')).toBe('closed')
   })
+
+  it('applies slot props directly onto DOM element children', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const anchor = document.createElement('a')
+    anchor.href = '#direct-child'
+    anchor.textContent = 'Direct child'
+    anchor.className = 'child'
+
+    render(
+      () => (
+        <Slot class="slot" data-slot="root">
+          {anchor}
+        </Slot>
+      ),
+      container,
+    )
+
+    await Promise.resolve()
+
+    const link = container.querySelector('a')
+    expect(link).not.toBeNull()
+    expect(link?.className).toBe('slot child')
+    expect(link?.getAttribute('data-slot')).toBe('root')
+    expect(container.querySelector('div')).toBeNull()
+  })
 })

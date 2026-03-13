@@ -2,12 +2,19 @@ import * as React from '../helpers/element.js';
 import classNames from 'classnames';
 
 import { BaseButton } from './_internal/base-button.js';
+import { renderChildren } from '../helpers/render-children.js';
 
 type IconButtonElement = React.ElementRef<typeof BaseButton>;
 interface IconButtonProps extends React.ComponentPropsWithoutRef<typeof BaseButton> {}
 const IconButton = React.forwardRef<IconButtonElement, IconButtonProps>(
-  ({ className, ...props }, forwardedRef) => (
-    <BaseButton {...props} ref={React.coerceRef(forwardedRef)} class={classNames('rt-IconButton', className)} />
+  (props, forwardedRef) => (
+    <BaseButton
+      {...props}
+      ref={React.coerceRef(forwardedRef)}
+      className={classNames('rt-IconButton', (props as { className?: string }).className)}
+    >
+      {renderChildren((props as { children?: React.ReactNode }).children)}
+    </BaseButton>
   ),
 );
 IconButton.displayName = 'IconButton';

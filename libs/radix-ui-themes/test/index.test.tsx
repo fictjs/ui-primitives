@@ -5,7 +5,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { prop, render } from 'fict'
 import { createSignal } from 'fict/advanced'
 
-import { Avatar, Button, CheckboxGroup, Popover, TabNav, Theme, ThemePanel } from '../src/index.js'
+import {
+  Avatar,
+  Button,
+  Card,
+  CheckboxGroup,
+  IconButton,
+  Kbd,
+  Link,
+  Popover,
+  TabNav,
+  Theme,
+  ThemePanel,
+} from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
@@ -210,6 +222,63 @@ describe('@fictjs/radix-ui-themes', () => {
     expanded(false)
     await flushEffects()
     expect(button.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('renders slotted themed children through asChild wrappers', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Card asChild>
+            <a data-testid="card-child" href="#card">
+              Card
+            </a>
+          </Card>
+          <Button asChild>
+            <a data-testid="button-child" href="#button">
+              Action
+            </a>
+          </Button>
+          <IconButton asChild>
+            <button data-testid="icon-button-child" type="button" aria-label="Open">
+              +
+            </button>
+          </IconButton>
+          <Link asChild>
+            <button data-testid="link-child" type="button">
+              Link
+            </button>
+          </Link>
+          <Kbd asChild>
+            <button data-testid="kbd-child" type="button">
+              Enter
+            </button>
+          </Kbd>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const card = container.querySelector('[data-testid="card-child"]')
+    const button = container.querySelector('[data-testid="button-child"]')
+    const iconButton = container.querySelector('[data-testid="icon-button-child"]')
+    const link = container.querySelector('[data-testid="link-child"]')
+    const kbd = container.querySelector('[data-testid="kbd-child"]')
+
+    expect(card?.textContent).toBe('Card')
+    expect(card?.className).toContain('rt-Card')
+    expect(button?.textContent).toBe('Action')
+    expect(button?.className).toContain('rt-BaseButton')
+    expect(iconButton?.getAttribute('aria-label')).toBe('Open')
+    expect(iconButton?.className).toContain('rt-IconButton')
+    expect(link?.textContent).toBe('Link')
+    expect(link?.className).toContain('rt-Text')
+    expect(kbd?.textContent).toBe('Enter')
+    expect(kbd?.className).toContain('rt-Kbd')
   })
 
   it('closes themed popover content when the trigger is pressed again', async () => {

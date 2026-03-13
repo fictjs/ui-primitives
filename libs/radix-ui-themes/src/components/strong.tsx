@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { Slot } from '@fictjs/radix-ui';
 
 import { extractProps } from '../helpers/extract-props.js';
+import { renderChildren } from '../helpers/render-children.js';
 import { strongPropDefs } from './strong.props.js';
 
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
@@ -12,10 +13,15 @@ type StrongElement = React.ElementRef<'strong'>;
 type StrongOwnProps = GetPropDefTypes<typeof strongPropDefs>;
 interface StrongProps extends ComponentPropsWithout<'strong', RemovedProps>, StrongOwnProps {}
 const Strong = React.forwardRef<StrongElement, StrongProps>((props, forwardedRef) => {
-  const { asChild, className, ...strongProps } = extractProps(props, strongPropDefs);
+  const { asChild, children: _children, className, ...strongProps } = extractProps(
+    props,
+    strongPropDefs,
+  );
   const Comp = asChild ? Slot.Root : 'strong';
   return (
-    <Comp {...strongProps} ref={React.coerceRef(forwardedRef)} class={classNames('rt-Strong', className)} />
+    <Comp {...strongProps} ref={React.coerceRef(forwardedRef)} class={classNames('rt-Strong', className)}>
+      {renderChildren(props.children)}
+    </Comp>
   );
 });
 Strong.displayName = 'Strong';

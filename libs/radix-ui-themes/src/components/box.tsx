@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { Slot } from './slot.js';
 import { boxPropDefs } from './box.props.js';
 import { extractProps } from '../helpers/extract-props.js';
+import { renderChildren } from '../helpers/render-children.js';
 import { layoutPropDefs } from '../props/layout.props.js';
 import { marginPropDefs } from '../props/margin.props.js';
 
@@ -20,13 +21,18 @@ type BoxProps = CommonBoxProps & (BoxSpanProps | BoxDivProps);
 
 const Box = React.forwardRef<BoxElement, BoxProps>((props, forwardedRef) => {
   const {
+    children: _children,
     className,
     asChild,
     as: Tag = 'div',
     ...boxProps
   } = extractProps(props, boxPropDefs, layoutPropDefs, marginPropDefs);
   const Comp = asChild ? Slot : Tag;
-  return <Comp {...boxProps} ref={React.coerceRef(forwardedRef)} class={classNames('rt-Box', className)} />;
+  return (
+    <Comp {...boxProps} ref={React.coerceRef(forwardedRef)} class={classNames('rt-Box', className)}>
+      {renderChildren(props.children)}
+    </Comp>
+  );
 });
 Box.displayName = 'Box';
 
