@@ -50,6 +50,36 @@ function pointerMove(target: Element): void {
   )
 }
 
+function pointerLeave(target: Element): void {
+  target.dispatchEvent(
+    new PointerEvent('pointerleave', {
+      bubbles: true,
+      cancelable: true,
+      pointerType: 'mouse',
+    }),
+  )
+}
+
+function pointerDown(target: Element): void {
+  target.dispatchEvent(
+    new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      pointerType: 'mouse',
+    }),
+  )
+}
+
+function pointerUp(target: Document): void {
+  target.dispatchEvent(
+    new PointerEvent('pointerup', {
+      bubbles: true,
+      cancelable: true,
+      pointerType: 'mouse',
+    }),
+  )
+}
+
 function pressEscape(target: Document): void {
   target.dispatchEvent(
     new KeyboardEvent('keydown', {
@@ -188,6 +218,40 @@ describe('@fictjs/tooltip', () => {
 
     await advance(500)
     expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it('does not reschedule delayed open from pointer moves fired after a click until the pointer leaves', async () => {
+    vi.useFakeTimers()
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <TooltipProvider delayDuration={500} disableHoverableContent>
+          <Tooltip>
+            <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
+            <TooltipContent data-testid="content">Tooltip</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    pointerDown(trigger)
+    pointerUp(document)
+    trigger.click()
+    await flushEffects()
+
+    pointerMove(trigger)
+    await flushEffects()
+    expect(vi.getTimerCount()).toBe(0)
+
+    pointerLeave(trigger)
+    pointerMove(trigger)
+    await flushEffects()
+    expect(vi.getTimerCount()).toBe(1)
   })
 
   it('opens on focus and closes on blur', async () => {

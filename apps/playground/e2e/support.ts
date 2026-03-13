@@ -5,6 +5,7 @@ import { sinkRoutes } from '../src/sink/routes'
 const ignoredConsoleErrors = [
   /Failed to load resource: the server responded with a status of 404/,
 ] as const
+const trackedConsoleWarnings = [/^\[fict\] cycle guard:/] as const
 
 export function trackBrowserErrors(page: Page) {
   const pageErrors: string[] = []
@@ -15,11 +16,14 @@ export function trackBrowserErrors(page: Page) {
   }
 
   const handleConsole = (message: { type(): string; text(): string }) => {
-    if (message.type() !== 'error') {
+    const text = message.text()
+    const isTrackedWarning =
+      message.type() === 'warning' && trackedConsoleWarnings.some((pattern) => pattern.test(text))
+
+    if (message.type() !== 'error' && !isTrackedWarning) {
       return
     }
 
-    const text = message.text()
     if (ignoredConsoleErrors.some((pattern) => pattern.test(text))) {
       return
     }

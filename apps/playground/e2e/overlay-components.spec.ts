@@ -56,10 +56,20 @@ test('tooltip trigger clicks do not re-enter delayed open loops on the sink page
   const tracker = trackBrowserErrors(page)
 
   await page.goto('/#/sink', { waitUntil: 'networkidle' })
-  await page.locator('#tooltip-demo-trigger').click()
+  const trigger = page.locator('#tooltip-demo-trigger')
+  await trigger.click()
+  const box = await trigger.boundingBox()
+  if (!box) {
+    throw new Error('Unable to measure tooltip trigger after clicking it')
+  }
+
+  for (let index = 0; index < 24; index++) {
+    await page.mouse.move(box.x + box.width / 2 + (index % 4), box.y + box.height / 2 + (index % 6))
+  }
+
   await page.waitForTimeout(900)
   await page.mouse.move(8, 8)
-  await page.locator('#tooltip-demo-trigger').hover()
+  await trigger.hover()
   await expect(page.locator('.rt-TooltipContent')).toContainText('The quick brown fox')
 
   tracker.stop()

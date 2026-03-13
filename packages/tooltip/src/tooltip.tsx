@@ -344,6 +344,7 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
   const popperScope = usePopperScope(__scopeTooltip)
   const isPointerDownRef = { current: false }
   const hasPointerMoveOpenedRef = { current: false }
+  const suppressPointerMoveRef = { current: false }
   const handlePointerUp = () => {
     isPointerDownRef.current = false
   }
@@ -372,6 +373,10 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
             return
           }
 
+          if (suppressPointerMoveRef.current) {
+            return
+          }
+
           if (!hasPointerMoveOpenedRef.current && !providerContext.isPointerInTransitRef.current) {
             hasPointerMoveOpenedRef.current = true
             context.onTriggerEnter()
@@ -382,6 +387,7 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
         props.onPointerLeave as ((event: PointerEvent) => void) | undefined,
         () => {
           hasPointerMoveOpenedRef.current = false
+          suppressPointerMoveRef.current = false
           context.onTriggerLeave()
         },
       ),
@@ -393,6 +399,8 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
           }
 
           isPointerDownRef.current = true
+          hasPointerMoveOpenedRef.current = true
+          suppressPointerMoveRef.current = true
           document.addEventListener('pointerup', handlePointerUp, { once: true })
         },
       ),
@@ -406,11 +414,18 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
       ),
       onBlur: composeEventHandlers<FocusEvent>(
         props.onBlur as ((event: FocusEvent) => void) | undefined,
-        context.onClose,
+        () => {
+          suppressPointerMoveRef.current = false
+          context.onClose()
+        },
       ),
       onClick: composeEventHandlers<MouseEvent>(
         props.onClick as ((event: MouseEvent) => void) | undefined,
-        context.onClose,
+        () => {
+          hasPointerMoveOpenedRef.current = true
+          suppressPointerMoveRef.current = true
+          context.onClose()
+        },
       ),
       ref: undefined,
     },
