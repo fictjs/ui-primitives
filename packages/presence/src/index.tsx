@@ -7,6 +7,10 @@ type MaybeAccessor<T> = T | (() => T)
 type PresenceState = 'mounted' | 'unmountSuspended' | 'unmounted'
 type PresenceEvent = 'MOUNT' | 'UNMOUNT' | 'ANIMATION_OUT' | 'ANIMATION_END'
 
+const SIGNAL_MARKER = Symbol.for('fict:signal')
+const COMPUTED_MARKER = Symbol.for('fict:computed')
+const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+
 interface PresenceProps {
   children: FictNode | ((props: { present: boolean }) => FictNode)
   present: MaybeAccessor<boolean>
@@ -28,12 +32,28 @@ const PRESENCE_MACHINE: StateMachine = {
   },
 }
 
+function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
+  return (
+    typeof value === 'function' &&
+    (value.length === 0 ||
+      (value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
+      (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
+      (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
+  )
+}
+
 function readValue<T>(value: MaybeAccessor<T>): T {
-  if (typeof value === 'function' && value.length === 0) {
-    return (value as () => T)()
+  let currentValue: unknown = value
+
+  for (
+    let depth = 0;
+    depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>);
+    depth += 1
+  ) {
+    currentValue = (currentValue as () => unknown)()
   }
 
-  return value as T
+  return currentValue as T
 }
 
 function isVNode(node: unknown): node is FictVNode {

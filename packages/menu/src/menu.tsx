@@ -1,4 +1,11 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import {
+  createContext as createRuntimeContext,
+  mergeProps,
+  prop,
+  useContext as useRuntimeContext,
+  type FictNode,
+  type JSX,
+} from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -90,9 +97,6 @@ const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
 const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME)
 const [MenuProvider, useMenuContext] = createMenuContext<MenuContextValue>(MENU_NAME)
-const [PortalProvider, usePortalContext] = createMenuContext<PortalContextValue>(PORTAL_NAME, {
-  forceMount: undefined,
-})
 const [MenuContentProvider, useMenuContentContext] =
   createMenuContext<MenuContentContextValue>(CONTENT_NAME)
 const [MenuRadioGroupProvider, useMenuRadioGroupContext] =
@@ -102,6 +106,9 @@ const [MenuItemIndicatorProvider, useMenuItemIndicatorContext] =
     checked: () => false,
   })
 const [MenuSubProvider, useMenuSubContext] = createMenuContext<MenuSubContextValue>(SUB_NAME)
+const MenuPortalContext = createRuntimeContext<PortalContextValue>({
+  forceMount: undefined,
+})
 
 type MenuProps = {
   children?: FictNode | FictNode[]
@@ -161,18 +168,24 @@ type MenuSubProps = {
 type MenuSubTriggerProps = MenuItemProps
 type MenuSubContentProps = MenuContentProps
 
-function readValue<T>(value: MaybeAccessor<T>): T {
-  if (
+function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
+  return (
     typeof value === 'function' &&
     (value.length === 0 ||
       (value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
       (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
       (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
-  ) {
-    return (value as () => T)()
+  )
+}
+
+function readValue<T>(value: MaybeAccessor<T>): T {
+  let currentValue: unknown = value
+
+  for (let depth = 0; depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>); depth += 1) {
+    currentValue = (currentValue as () => unknown)()
   }
 
-  return value as T
+  return currentValue as T
 }
 
 function readStyle(value: unknown): StyleRecord {
@@ -275,24 +288,18 @@ function MenuPortal(props: ScopedProps<MenuPortalProps>): FictNode {
         }
 
   return (
-    <PortalProvider
-      scope={props.__scopeMenu as Scope<PortalContextValue | undefined>}
-      forceMount={forceMount}
-    >
+    <MenuPortalContext.Provider value={{ forceMount }}>
       <Presence present={() => Boolean(forceMount || context.open())}>
         <PortalPrimitive {...portalProps}>{props.children}</PortalPrimitive>
       </Presence>
-    </PortalProvider>
+    </MenuPortalContext.Provider>
   )
 }
 
 MenuPortal.displayName = PORTAL_NAME
 
 function MenuContent(props: ScopedProps<MenuContentProps>): FictNode {
-  const portalContext = usePortalContext(
-    PORTAL_NAME,
-    props.__scopeMenu as Scope<PortalContextValue | undefined>,
-  )
+  const portalContext = useRuntimeContext(MenuPortalContext)
   const menuContext = useMenuContext(
     CONTENT_NAME,
     props.__scopeMenu as Scope<MenuContextValue | undefined>,
@@ -334,16 +341,20 @@ function MenuContent(props: ScopedProps<MenuContentProps>): FictNode {
   }
 
   return (
-    <Presence present={() => Boolean(forceMount || menuContext.open())}>
-      <MenuContentProvider
-        scope={props.__scopeMenu as Scope<MenuContentContextValue | undefined>}
-        contentId={menuContext.contentId}
-        contentRef={contentRef}
-        focusItem={focusItem}
-      >
-        <MenuContentImpl {...props} />
-      </MenuContentProvider>
-    </Presence>
+    <>
+      {() =>
+        Boolean(forceMount || menuContext.open()) ? (
+          <MenuContentProvider
+            scope={props.__scopeMenu as Scope<MenuContentContextValue | undefined>}
+            contentId={menuContext.contentId}
+            contentRef={contentRef}
+            focusItem={focusItem}
+          >
+            <MenuContentImpl {...props} />
+          </MenuContentProvider>
+        ) : null
+      }
+    </>
   )
 }
 
@@ -568,7 +579,6 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
       closeOnSelect: undefined,
       disabled: undefined,
       onSelect: undefined,
-      role: undefined,
     },
   )
   const primitivePropsRef = { current: null as HTMLElement | null }
@@ -685,9 +695,7 @@ function MenuItemIndicator(props: ScopedProps<MenuItemIndicatorProps>): FictNode
     indicatorContext.checked() === 'indeterminate'
 
   return (
-    <Presence present={present}>
-      <Primitive.div {...(props as Record<string, unknown>)} />
-    </Presence>
+    <>{() => (present() ? <Primitive.div {...(props as Record<string, unknown>)} /> : null)}</>
   )
 }
 
@@ -723,7 +731,12 @@ function MenuSub(props: ScopedProps<MenuSubProps>): FictNode {
   const triggerRef = { current: null as HTMLElement | null }
 
   return (
-    <Menu open={open} onOpenChange={setOpen} modal={false} __scopeMenu={props.__scopeMenu}>
+    <Menu
+      open={prop(open)}
+      onOpenChange={setOpen}
+      modal={false}
+      __scopeMenu={props.__scopeMenu}
+    >
       <MenuSubProvider
         scope={props.__scopeMenu as Scope<MenuSubContextValue | undefined>}
         open={open}

@@ -4,7 +4,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 
-import { Content, Item, ItemIndicator, ItemText, Root, Trigger, Value } from '../src/index.js'
+import {
+  Content,
+  Item,
+  ItemIndicator,
+  ItemText,
+  Portal,
+  Root,
+  Trigger,
+  Value,
+} from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -104,5 +113,39 @@ describe('@fictjs/select', () => {
     await waitForEffects()
 
     expect(container.querySelector('[data-testid="indicator"]')?.textContent).toBe('x')
+  })
+
+  it('closes portaled content after selecting an item when mounted in document.body', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root defaultOpen>
+          <Trigger data-testid="trigger">
+            <Value data-testid="value" placeholder="Choose one" />
+          </Trigger>
+          <Portal>
+            <Content data-testid="content">
+              <Item value="apple" data-testid="item-apple">
+                <ItemText>Apple</ItemText>
+              </Item>
+              <Item value="orange" data-testid="item-orange">
+                <ItemText>Orange</ItemText>
+              </Item>
+            </Content>
+          </Portal>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    click(document.querySelector('[data-testid="item-orange"]') as HTMLDivElement)
+    await waitForEffects()
+    await waitForEffects()
+
+    expect(document.querySelector('[data-testid="content"]')).toBeNull()
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
   })
 })

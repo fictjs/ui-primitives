@@ -1,3 +1,4 @@
+import { prop } from 'fict'
 import classNames from 'classnames'
 
 import { getResponsiveClassNames, getResponsiveStyles } from './get-responsive-styles.js'
@@ -64,7 +65,8 @@ function copyPropsPreservingGetters(source: PropsRecord): Record<string, unknown
       Object.defineProperty(target, key, {
         configurable: true,
         enumerable: descriptor.enumerable ?? true,
-        get: () => descriptor.get?.call(source),
+        value: prop(() => descriptor.get?.call(source)),
+        writable: true,
       })
       continue
     }

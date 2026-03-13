@@ -11,7 +11,7 @@ import {
   selectTriggerPropDefs,
   selectContentPropDefs,
 } from './select.props.js'
-import { useThemeContext, Theme } from './theme.js'
+import { ThemeContext, useThemeContext } from './theme.js'
 
 import type { MarginProps } from '../props/margin.props.js'
 import type { GetPropDefTypes } from '../props/prop-def.js'
@@ -99,14 +99,30 @@ const SelectContent = React.forwardRef<SelectContentElement, SelectContentProps>
 
     return (
       <SelectPrimitive.Portal container={container}>
-        <Theme asChild>
-          <SelectPrimitive.Content
-            data-accent-color={resolvedColor}
-            {...contentProps}
-            ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLDivElement>)}
-            class={classNames('rt-SelectContent', 'rt-PopperContent', className)}
-          />
-        </Theme>
+        <SelectPrimitive.Content
+          data-is-root-theme="false"
+          data-accent-color={resolvedColor}
+          data-gray-color={themeContext.resolvedGrayColor}
+          data-has-background="false"
+          data-panel-background={themeContext.panelBackground}
+          data-radius={themeContext.radius}
+          data-scaling={themeContext.scaling}
+          asChild={false}
+          {...contentProps}
+          ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLDivElement>)}
+          class={classNames(
+            'radix-themes',
+            {
+              light: themeContext.appearance === 'light',
+              dark: themeContext.appearance === 'dark',
+            },
+            'rt-SelectContent',
+            'rt-PopperContent',
+            className,
+          )}
+        >
+          <ThemeContext.Provider value={themeContext}>{props.children}</ThemeContext.Provider>
+        </SelectPrimitive.Content>
       </SelectPrimitive.Portal>
     )
   },

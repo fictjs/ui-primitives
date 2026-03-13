@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useControllableState, useControllableStateReducer } from '../src/index.js'
@@ -43,6 +43,56 @@ describe('@fictjs/use-controllable-state', () => {
     setValue?.('second')
     expect(value?.()).toBe('first')
     expect(onChange).toHaveBeenCalledWith('second')
+  })
+
+  it('treats prop getters as controlled values', () => {
+    const controlled = createSignal('first')
+    let value: (() => string) | undefined
+    let setValue: ((next: string) => void) | undefined
+    const onChange = vi.fn()
+
+    render(() => {
+      ;[value, setValue] = useControllableState({
+        prop: prop(() => controlled()),
+        defaultProp: 'fallback',
+        onChange,
+      })
+      return <div />
+    }, document.createElement('div'))
+
+    expect(value?.()).toBe('first')
+
+    controlled('second')
+    expect(value?.()).toBe('second')
+
+    setValue?.('third')
+    expect(value?.()).toBe('second')
+    expect(onChange).toHaveBeenCalledWith('third')
+  })
+
+  it('unwraps prop getters that return accessors', () => {
+    const controlled = createSignal('first')
+    let value: (() => string) | undefined
+    let setValue: ((next: string) => void) | undefined
+    const onChange = vi.fn()
+
+    render(() => {
+      ;[value, setValue] = useControllableState({
+        prop: prop(() => controlled),
+        defaultProp: 'fallback',
+        onChange,
+      })
+      return <div />
+    }, document.createElement('div'))
+
+    expect(value?.()).toBe('first')
+
+    controlled('second')
+    expect(value?.()).toBe('second')
+
+    setValue?.('third')
+    expect(value?.()).toBe('second')
+    expect(onChange).toHaveBeenCalledWith('third')
   })
 
   it('updates reducer state for uncontrolled usage', () => {

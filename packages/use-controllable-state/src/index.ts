@@ -1,13 +1,30 @@
 type MaybeAccessor<T> = T | (() => T)
 
-function readValue<T>(value: MaybeAccessor<T>): T {
-  if (typeof value === 'function' && value.length === 0) {
-    return (value as () => T)()
-  }
+const SIGNAL_MARKER = Symbol.for('fict:signal')
+const COMPUTED_MARKER = Symbol.for('fict:computed')
+const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
-  return value as T
+function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
+  return (
+    typeof value === 'function' &&
+    (value.length === 0 ||
+      (value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
+      (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
+      (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
+  )
 }
 
+function readValue<T>(value: MaybeAccessor<T>): T {
+  let currentValue: unknown = value
+
+  for (let depth = 0; depth < 10 && isReadableAccessor(currentValue); depth += 1) {
+    currentValue = (currentValue as () => unknown)()
+  }
+
+  return currentValue as T
+}
+
+import { untrack } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useEffectEvent } from '@fictjs/use-effect-event'
@@ -44,9 +61,9 @@ function useControllableState<T>({
     return currentProp !== undefined ? currentProp : uncontrolled()
   }
 
-  let lastMode = controlledState() !== undefined
+  let lastMode = untrack(() => controlledState() !== undefined)
   useLayoutEffect(() => {
-    const nextMode = controlledState() !== undefined
+    const nextMode = untrack(() => controlledState() !== undefined)
 
     if (process.env.NODE_ENV !== 'production' && lastMode !== nextMode) {
       const from = lastMode ? 'controlled' : 'uncontrolled'
@@ -116,9 +133,9 @@ function useControllableStateReducer<T, S extends object, I extends object, A ex
   }
   const internalState = createSignal<S & { state: T }>(createInitialState())
 
-  let lastMode = controlledState() !== undefined
+  let lastMode = untrack(() => controlledState() !== undefined)
   useLayoutEffect(() => {
-    const nextMode = controlledState() !== undefined
+    const nextMode = untrack(() => controlledState() !== undefined)
 
     if (process.env.NODE_ENV !== 'production' && lastMode !== nextMode) {
       const from = lastMode ? 'controlled' : 'uncontrolled'

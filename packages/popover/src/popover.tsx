@@ -20,7 +20,6 @@ import {
   type PopperContentProps as PopperContentPrimitiveProps,
 } from '@fictjs/popper'
 import { Portal as PortalPrimitive, type PortalProps as PortalPrimitiveProps } from '@fictjs/portal'
-import { Presence } from '@fictjs/presence'
 import { Primitive } from '@fictjs/primitive'
 import { useControllableState } from '@fictjs/use-controllable-state'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
@@ -108,18 +107,24 @@ type PopoverCloseProps = PrimitiveButtonProps
 
 type PopoverArrowProps = PopperArrowPrimitiveProps
 
-function readValue<T>(value: MaybeAccessor<T>): T {
-  if (
+function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
+  return (
     typeof value === 'function' &&
     (value.length === 0 ||
       (value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
       (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
       (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
-  ) {
-    return (value as () => T)()
+  )
+}
+
+function readValue<T>(value: MaybeAccessor<T>): T {
+  let currentValue: unknown = value
+
+  for (let depth = 0; depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>); depth += 1) {
+    currentValue = (currentValue as () => unknown)()
   }
 
-  return value as T
+  return currentValue as T
 }
 
 function readStyle(value: MaybeAccessor<unknown> | undefined): StyleRecord {
@@ -287,13 +292,17 @@ function PopoverContent(props: ScopedProps<PopoverContentProps>): FictNode {
     )
 
   return (
-    <Presence present={present}>
-      {context.modal() ? (
-        <PopoverContentModal {...(contentProps as ScopedProps<PopoverContentTypeProps>)} />
-      ) : (
-        <PopoverContentNonModal {...(contentProps as ScopedProps<PopoverContentTypeProps>)} />
-      )}
-    </Presence>
+    <>
+      {() =>
+        present() ? (
+          context.modal() ? (
+            <PopoverContentModal {...(contentProps as ScopedProps<PopoverContentTypeProps>)} />
+          ) : (
+            <PopoverContentNonModal {...(contentProps as ScopedProps<PopoverContentTypeProps>)} />
+          )
+        ) : null
+      }
+    </>
   )
 }
 

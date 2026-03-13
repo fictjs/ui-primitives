@@ -8,7 +8,7 @@ export default function TooltipPage() {
       <DocsSectionBody>
         <Flex gap="5">
           <Tooltip content="The quick brown fox">
-            <Button variant="solid" size="1">
+            <Button id="tooltip-demo-trigger" variant="solid" size="1">
               Singleline
             </Button>
           </Tooltip>

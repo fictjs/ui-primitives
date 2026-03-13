@@ -2,6 +2,7 @@ import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { Button, Code, DropdownMenu, IconButton, Table, Text } from '@fictjs/radix-ui-themes'
 import { dropdownMenuContentPropDefs } from '@fictjs/radix-ui-themes/props'
 
+import { DropdownMenuContentDemo } from '../_components'
 import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 import { accentColorsGrouped } from '../_utils'
 
@@ -10,6 +11,20 @@ export default function DropdownMenuPage() {
     <DocsSection>
       <DocsSectionHeading>DropdownMenu</DocsSectionHeading>
       <DocsSectionBody>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <Button id="dropdown-menu-demo-trigger" variant="solid">
+              More <DropdownMenu.TriggerIcon />
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenuContentDemo id="dropdown-menu-demo-content" variant="solid" />
+        </DropdownMenu.Root>
+
+        <Text as="p" my="5" color="gray">
+          The interactive demo above is the reference menu for E2E coverage. The tables below keep
+          the visual prop matrix.
+        </Text>
+
         <Table.Root>
           <Table.Header>
             <Table.Row>

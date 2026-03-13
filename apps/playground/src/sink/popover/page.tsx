@@ -9,9 +9,11 @@ export default function PopoverPage() {
       <DocsSectionBody>
         <Popover.Root>
           <Popover.Trigger>
-            <Button variant="solid">Popover</Button>
+            <Button id="popover-demo-trigger" variant="solid">
+              Popover
+            </Button>
           </Popover.Trigger>
-          <Popover.Content width="200px">
+          <Popover.Content id="popover-demo-content" width="200px">
             <Text as="p" size="2" mb="2">
               Jan Tschichold was a German calligrapher, typographer and book designer. He played a
               significant role in the development of graphic design in the 20th century.

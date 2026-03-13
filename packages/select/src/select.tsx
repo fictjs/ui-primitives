@@ -68,6 +68,7 @@ const ARROW_NAME = 'SelectArrow'
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+const READ_VALUE_DEPTH_LIMIT = 10
 
 const [createSelectContext, createSelectScope] = createContextScope(SELECT_NAME, [createMenuScope])
 const [SelectProvider, useSelectContext] = createSelectContext<SelectContextValue>(SELECT_NAME)
@@ -106,18 +107,24 @@ type SelectScrollDownButtonProps = PrimitiveButtonProps
 type SelectSeparatorProps = MenuSeparatorProps
 type SelectArrowProps = MenuArrowProps
 
-function readValue<T>(value: MaybeAccessor<T>): T {
-  if (
+function isReadableAccessor(value: unknown): value is () => unknown {
+  const taggedValue = value as unknown as Record<symbol, unknown>
+
+  return (
     typeof value === 'function' &&
     (value.length === 0 ||
-      (value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
-      (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
-      (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
-  ) {
-    return (value as () => T)()
+      taggedValue[SIGNAL_MARKER] === true ||
+      taggedValue[COMPUTED_MARKER] === true ||
+      taggedValue[PROP_GETTER_MARKER] === true)
+  )
+}
+
+function readValue<T>(value: MaybeAccessor<T>, depth = 0): T {
+  if (!isReadableAccessor(value) || depth >= READ_VALUE_DEPTH_LIMIT) {
+    return value as T
   }
 
-  return value as T
+  return readValue(value(), depth + 1)
 }
 
 function Select(props: ScopedProps<SelectProps>): FictNode {

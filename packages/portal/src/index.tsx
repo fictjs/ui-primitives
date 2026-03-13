@@ -4,10 +4,8 @@ import {
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Primitive } from '@fictjs/primitive'
-import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
 type PortalProps = JSX.IntrinsicElements['div'] & {
   container?: Element | DocumentFragment | null
@@ -15,14 +13,8 @@ type PortalProps = JSX.IntrinsicElements['div'] & {
 
 function Portal(props: PortalProps): FictNode {
   const { container: containerProp, ...portalProps } = props
-  const mounted = createSignal(false)
 
-  useLayoutEffect(() => {
-    mounted(true)
-  })
-
-  const resolveContainer = () =>
-    containerProp ?? (mounted() ? (globalThis.document?.body ?? null) : null)
+  const resolveContainer = () => containerProp ?? globalThis.document?.body ?? null
 
   return (
     <>

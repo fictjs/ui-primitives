@@ -72,6 +72,7 @@ const SUB_CONTENT_NAME = 'ContextMenuSubContent'
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+const READ_VALUE_DEPTH_LIMIT = 10
 
 const [createContextMenuContext, createContextMenuScope] = createContextScope(CONTEXT_MENU_NAME, [
   createMenuScope,
@@ -104,18 +105,24 @@ type ContextMenuSubProps = MenuSubProps
 type ContextMenuSubTriggerProps = MenuSubTriggerProps
 type ContextMenuSubContentProps = MenuSubContentProps
 
-function readValue<T>(value: MaybeAccessor<T>): T {
-  if (
+function isReadableAccessor(value: unknown): value is () => unknown {
+  const taggedValue = value as unknown as Record<symbol, unknown>
+
+  return (
     typeof value === 'function' &&
     (value.length === 0 ||
-      (value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
-      (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
-      (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
-  ) {
-    return (value as () => T)()
+      taggedValue[SIGNAL_MARKER] === true ||
+      taggedValue[COMPUTED_MARKER] === true ||
+      taggedValue[PROP_GETTER_MARKER] === true)
+  )
+}
+
+function readValue<T>(value: MaybeAccessor<T>, depth = 0): T {
+  if (!isReadableAccessor(value) || depth >= READ_VALUE_DEPTH_LIMIT) {
+    return value as T
   }
 
-  return value as T
+  return readValue(value(), depth + 1)
 }
 
 function readStyle(value: unknown): StyleRecord {

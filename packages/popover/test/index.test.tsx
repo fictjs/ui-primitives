@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 const hideOthersMock = vi.hoisted(() => vi.fn(() => () => {}))
 
@@ -223,5 +224,154 @@ describe('@fictjs/popover', () => {
     expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
     expect(document.body.style.pointerEvents).toBe('')
     expect(document.activeElement).toBe(trigger)
+  })
+
+  it('closes when the trigger is pressed a second time', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    mount(
+      () => (
+        <Popover>
+          <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+          <PopoverPortal container={portalRoot}>
+            <PopoverContent data-testid="content">Content</PopoverContent>
+          </PopoverPortal>
+        </Popover>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    click(trigger)
+    await waitForEffects()
+    expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+
+    click(trigger)
+    await waitForEffects()
+
+    expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('closes when composed through a custom trigger component', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    function TriggerButton(props: { 'data-testid'?: string; children?: unknown }) {
+      return (
+        <button type="button" data-testid={props['data-testid']}>
+          {props.children}
+        </button>
+      )
+    }
+
+    mount(
+      () => (
+        <Popover>
+          <PopoverTrigger>
+            <TriggerButton data-testid="trigger">Toggle</TriggerButton>
+          </PopoverTrigger>
+          <PopoverPortal container={portalRoot}>
+            <PopoverContent data-testid="content">Content</PopoverContent>
+          </PopoverPortal>
+        </Popover>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    click(trigger)
+    await waitForEffects()
+    expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    const nextTrigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    click(nextTrigger)
+    await waitForEffects()
+
+    expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it('closes when composed through a forwardRef trigger component', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    function ForwardRefTriggerButton(props: {
+      'data-testid'?: string
+      children?: unknown
+      ref?: { current: HTMLButtonElement | null } | ((node: HTMLButtonElement | null) => void)
+    }) {
+      return (
+        <button type="button" data-testid={props['data-testid']} ref={props.ref as never}>
+          {props.children}
+        </button>
+      )
+    }
+
+    mount(
+      () => (
+        <Popover>
+          <PopoverTrigger>
+            <ForwardRefTriggerButton data-testid="trigger">Toggle</ForwardRefTriggerButton>
+          </PopoverTrigger>
+          <PopoverPortal container={portalRoot}>
+            <PopoverContent data-testid="content">Content</PopoverContent>
+          </PopoverPortal>
+        </Popover>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    click(trigger)
+    await waitForEffects()
+    expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    const nextTrigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    click(nextTrigger)
+    await waitForEffects()
+
+    expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it('closes portal content when controlled open changes to false', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+    const open = createSignal(false)
+
+    mount(
+      () => (
+        <Popover open={open} onOpenChange={open}>
+          <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+          <PopoverPortal container={portalRoot}>
+            <PopoverContent data-testid="content">Content</PopoverContent>
+          </PopoverPortal>
+        </Popover>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    click(trigger)
+    await waitForEffects()
+    expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    open(false)
+    await waitForEffects()
+
+    expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
   })
 })

@@ -103,4 +103,63 @@ describe('@fictjs/dropdown-menu', () => {
     expect(container.querySelector('[data-testid="content"]')).toBeNull()
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
   })
+
+  it('closes portaled content after selecting an item in a custom portal container', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    mount(
+      () => (
+        <DropdownMenu defaultOpen>
+          <Trigger data-testid="trigger">Open</Trigger>
+          <Portal container={portalRoot}>
+            <Content data-testid="content">
+              <Item data-testid="item">Item</Item>
+            </Content>
+          </Portal>
+        </DropdownMenu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    click(portalRoot.querySelector('[data-testid="item"]') as HTMLDivElement)
+    await waitForEffects()
+    await waitForEffects()
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('closes portaled content after selecting an item when mounted in document.body', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <DropdownMenu defaultOpen>
+          <Trigger data-testid="trigger">Open</Trigger>
+          <Portal>
+            <Content data-testid="content">
+              <Item data-testid="item">Item</Item>
+            </Content>
+          </Portal>
+        </DropdownMenu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    click(document.querySelector('[data-testid="item"]') as HTMLDivElement)
+    await waitForEffects()
+    await waitForEffects()
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    expect(document.querySelector('[data-testid="content"]')).toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+  })
 })

@@ -57,18 +57,24 @@ const DismissableLayerContext = createContext({
   layersWithOutsidePointerEventsDisabled: new Set<DismissableLayerElement>(),
 })
 
-function readValue<T>(value: MaybeAccessor<T>): T {
-  if (
+function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
+  return (
     typeof value === 'function' &&
     (value.length === 0 ||
       (value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
       (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
       (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
-  ) {
-    return (value as () => T)()
+  )
+}
+
+function readValue<T>(value: MaybeAccessor<T>): T {
+  let currentValue: unknown = value
+
+  for (let depth = 0; depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>); depth += 1) {
+    currentValue = (currentValue as () => unknown)()
   }
 
-  return value as T
+  return currentValue as T
 }
 
 function readStyle(value: unknown): StyleRecord {

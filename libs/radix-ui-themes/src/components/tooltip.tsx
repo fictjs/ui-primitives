@@ -3,9 +3,9 @@ import classNames from 'classnames';
 import { Tooltip as TooltipPrimitive } from '@fictjs/radix-ui';
 
 import { Text } from './text.js';
-import { Theme } from './theme.js';
 import { extractProps } from '../helpers/extract-props.js';
 import { tooltipPropDefs } from './tooltip.props.js';
+import { Theme } from './theme.js';
 
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
 import type { GetPropDefTypes } from '../props/prop-def.js';
@@ -43,8 +43,8 @@ const Tooltip = React.forwardRef<TooltipElement, TooltipProps>((props, forwarded
           <TooltipPrimitive.Content
             sideOffset={4}
             collisionPadding={10}
+            asChild={false}
             {...tooltipContentProps}
-           
             ref={React.coerceRef(forwardedRef)}
             class={classNames('rt-TooltipContent', className)}
           >

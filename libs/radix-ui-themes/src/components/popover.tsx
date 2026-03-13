@@ -5,7 +5,7 @@ import { Popover as PopoverPrimitive } from '@fictjs/radix-ui';
 import { extractProps } from '../helpers/extract-props.js';
 import { requireReactElement } from '../helpers/require-react-element.js';
 import { popoverContentPropDefs } from './popover.props.js';
-import { Theme } from './theme.js';
+import { ThemeContext, useThemeContext } from './theme.js';
 
 import type { PopoverContentOwnProps } from './popover.props.js';
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
@@ -39,22 +39,39 @@ interface PopoverContentProps
 }
 const PopoverContent = React.forwardRef<PopoverContentElement, PopoverContentProps>(
   (props, forwardedRef) => {
-    const { className, forceMount, container, ...contentProps } = extractProps(
+    const themeContext = useThemeContext();
+    const { className, forceMount, container, children, ...contentProps } = extractProps(
       props,
       popoverContentPropDefs,
     );
     return (
       <PopoverPrimitive.Portal container={container} forceMount={forceMount}>
-        <Theme asChild>
-          <PopoverPrimitive.Content
-            align="start"
-            sideOffset={8}
-            collisionPadding={10}
-            {...contentProps}
-            ref={React.coerceRef(forwardedRef)}
-            class={classNames('rt-PopperContent', 'rt-PopoverContent', className)}
-          />
-        </Theme>
+        <PopoverPrimitive.Content
+          align="start"
+          sideOffset={8}
+          collisionPadding={10}
+          {...contentProps}
+          ref={React.coerceRef(forwardedRef)}
+          data-is-root-theme="false"
+          data-accent-color={themeContext.accentColor}
+          data-gray-color={themeContext.resolvedGrayColor}
+          data-has-background="false"
+          data-panel-background={themeContext.panelBackground}
+          data-radius={themeContext.radius}
+          data-scaling={themeContext.scaling}
+          class={classNames(
+            'radix-themes',
+            {
+              light: themeContext.appearance === 'light',
+              dark: themeContext.appearance === 'dark',
+            },
+            'rt-PopperContent',
+            'rt-PopoverContent',
+            className,
+          )}
+        >
+          <ThemeContext.Provider value={themeContext}>{children}</ThemeContext.Provider>
+        </PopoverPrimitive.Content>
       </PopoverPrimitive.Portal>
     );
   },

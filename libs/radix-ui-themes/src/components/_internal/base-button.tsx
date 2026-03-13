@@ -20,15 +20,23 @@ interface BaseButtonProps
   extends ComponentPropsWithout<'button', RemovedProps>, MarginProps, BaseButtonOwnProps {}
 const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, forwardedRef) => {
   const { size = baseButtonPropDefs.size.default } = props;
-  const {
-    className,
-    children,
-    asChild,
-    color,
-    radius,
-    disabled = props.loading,
-    ...baseButtonProps
-  } = extractProps(props, baseButtonPropDefs, marginPropDefs);
+  const extractedProps = extractProps(props, baseButtonPropDefs, marginPropDefs) as BaseButtonProps & {
+    className?: string;
+  };
+  const className = extractedProps.className;
+  const children = extractedProps.children;
+  const asChild = extractedProps.asChild;
+  const color = extractedProps.color;
+  const radius = extractedProps.radius;
+  const disabled = extractedProps.disabled ?? props.loading;
+  const baseButtonProps = omitPropsPreservingDescriptors(extractedProps as Record<string, unknown>, [
+    'className',
+    'children',
+    'asChild',
+    'color',
+    'radius',
+    'disabled',
+  ]);
   const Comp = asChild ? Slot.Root : 'button';
   let child = children;
   if (props.loading) {
@@ -92,4 +100,27 @@ function renderLoadingButtonContents(children: React.ReactNode, size: BaseButton
       </Flex>
     </>
   );
+}
+
+function omitPropsPreservingDescriptors(
+  source: Record<string, unknown>,
+  omittedKeys: string[],
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  const omitted = new Set(omittedKeys);
+
+  for (const key of Reflect.ownKeys(source)) {
+    if (typeof key === 'string' && omitted.has(key)) {
+      continue;
+    }
+
+    const descriptor = Object.getOwnPropertyDescriptor(source, key);
+    if (!descriptor) {
+      continue;
+    }
+
+    Object.defineProperty(result, key, descriptor);
+  }
+
+  return result;
 }

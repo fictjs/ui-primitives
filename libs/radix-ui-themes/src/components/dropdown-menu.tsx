@@ -9,7 +9,7 @@ import {
   dropdownMenuCheckboxItemPropDefs,
   dropdownMenuRadioItemPropDefs,
 } from './dropdown-menu.props.js';
-import { Theme, useThemeContext } from './theme.js';
+import { ThemeContext, useThemeContext } from './theme.js';
 import { ChevronDownIcon, ThickCheckIcon, ThickChevronRightIcon } from './icons.js';
 import { extractProps } from '../helpers/extract-props.js';
 import { requireReactElement } from '../helpers/require-react-element.js';
@@ -50,6 +50,12 @@ interface DropdownMenuContentProps
     DropdownMenuContentContextValue {
   container?: React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Portal>['container'];
 }
+type LazyMenuChildren = React.ReactNode | (() => React.ReactNode);
+function DropdownMenuLazyChildren({ children }: { children: LazyMenuChildren }) {
+  return typeof children === 'function'
+    ? (children as () => React.ReactNode)()
+    : children;
+}
 const DropdownMenuContent = React.forwardRef<DropdownMenuContentElement, DropdownMenuContentProps>(
   (props, forwardedRef) => {
     const themeContext = useThemeContext();
@@ -65,26 +71,39 @@ const DropdownMenuContent = React.forwardRef<DropdownMenuContentElement, Dropdow
     const resolvedColor = color || themeContext.accentColor;
     return (
       <DropdownMenuPrimitive.Portal container={container} forceMount={forceMount}>
-        <Theme asChild>
-          <DropdownMenuPrimitive.Content
-            data-accent-color={resolvedColor}
-            {...contentProps}
-           
-            ref={React.coerceRef(forwardedRef)}
-            class={classNames(
-              'rt-PopperContent',
-              'rt-BaseMenuContent',
-              'rt-DropdownMenuContent',
-              className,
-            )}
-          >
+        <DropdownMenuPrimitive.Content
+          data-is-root-theme="false"
+          data-accent-color={resolvedColor}
+          data-gray-color={themeContext.resolvedGrayColor}
+          data-has-background="false"
+          data-panel-background={themeContext.panelBackground}
+          data-radius={themeContext.radius}
+          data-scaling={themeContext.scaling}
+          asChild={false}
+          {...contentProps}
+          ref={React.coerceRef(forwardedRef)}
+          class={classNames(
+            'radix-themes',
+            {
+              light: themeContext.appearance === 'light',
+              dark: themeContext.appearance === 'dark',
+            },
+            'rt-PopperContent',
+            'rt-BaseMenuContent',
+            'rt-DropdownMenuContent',
+            className,
+          )}
+        >
+          <ThemeContext.Provider value={themeContext}>
             <div class={classNames('rt-BaseMenuViewport', 'rt-DropdownMenuViewport')}>
-              <DropdownMenuContentContext.Provider value={{ size, variant, color: resolvedColor, highContrast }}>
-                {children}
+              <DropdownMenuContentContext.Provider
+                value={{ size, variant, color: resolvedColor, highContrast }}
+              >
+                <DropdownMenuLazyChildren children={children as LazyMenuChildren} />
               </DropdownMenuContentContext.Provider>
             </div>
-          </DropdownMenuPrimitive.Content>
-        </Theme>
+          </ThemeContext.Provider>
+        </DropdownMenuPrimitive.Content>
       </DropdownMenuPrimitive.Portal>
     );
   },
@@ -301,31 +320,45 @@ const DropdownMenuSubContent = React.forwardRef<
   DropdownMenuSubContentElement,
   DropdownMenuSubContentProps
 >((props, forwardedRef) => {
+  const themeContext = useThemeContext();
   const { size, variant, color, highContrast } = useContext(DropdownMenuContentContext);
-  const { className, children, container, forceMount, ...subContentProps } = extractProps(
+  const { className, container, ...subContentProps } = extractProps(
     { size, variant, color, highContrast, ...props },
     dropdownMenuContentPropDefs,
   );
   return (
-    <DropdownMenuPrimitive.Portal container={container} forceMount={forceMount}>
-      <Theme asChild>
-        <DropdownMenuPrimitive.SubContent
-          data-accent-color={color}
-          {...subContentProps}
-         
-          ref={React.coerceRef(forwardedRef)}
-          class={classNames(
-            'rt-PopperContent',
-            'rt-BaseMenuContent',
-            'rt-BaseMenuSubContent',
-            'rt-DropdownMenuContent',
-            'rt-DropdownMenuSubContent',
-            className,
-          )}
-        >
-          <div class={classNames('rt-BaseMenuViewport', 'rt-DropdownMenuViewport')}>{children}</div>
-        </DropdownMenuPrimitive.SubContent>
-      </Theme>
+    <DropdownMenuPrimitive.Portal container={container} forceMount={props.forceMount}>
+      <DropdownMenuPrimitive.SubContent
+        data-is-root-theme="false"
+        data-accent-color={color}
+        data-gray-color={themeContext.resolvedGrayColor}
+        data-has-background="false"
+        data-panel-background={themeContext.panelBackground}
+        data-radius={themeContext.radius}
+        data-scaling={themeContext.scaling}
+        asChild={false}
+        {...subContentProps}
+        ref={React.coerceRef(forwardedRef)}
+        class={classNames(
+          'radix-themes',
+          {
+            light: themeContext.appearance === 'light',
+            dark: themeContext.appearance === 'dark',
+          },
+          'rt-PopperContent',
+          'rt-BaseMenuContent',
+          'rt-BaseMenuSubContent',
+          'rt-DropdownMenuContent',
+          'rt-DropdownMenuSubContent',
+          className,
+        )}
+      >
+        <ThemeContext.Provider value={themeContext}>
+          <div class={classNames('rt-BaseMenuViewport', 'rt-DropdownMenuViewport')}>
+            <DropdownMenuLazyChildren children={props.children as LazyMenuChildren} />
+          </div>
+        </ThemeContext.Provider>
+      </DropdownMenuPrimitive.SubContent>
     </DropdownMenuPrimitive.Portal>
   );
 });

@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Presence } from '../src/index.js'
@@ -95,6 +95,27 @@ describe('@fictjs/presence', () => {
     currentNode.style.animationName = 'fade-out'
     dispatchAnimationEvent(currentNode, 'animationstart', 'fade-out')
     dispatchAnimationEvent(currentNode, 'animationend', 'fade-out')
+    await flushMicrotasks()
+
+    expect(container.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it('supports nested prop getters for present state', async () => {
+    const present = createSignal(true)
+    const container = document.createElement('div')
+
+    render(
+      () => (
+        <Presence present={prop(() => present)}>
+          <div data-testid="content">Nested</div>
+        </Presence>
+      ),
+      container,
+    )
+
+    expect(container.querySelector('[data-testid="content"]')?.textContent).toBe('Nested')
+
+    present(false)
     await flushMicrotasks()
 
     expect(container.querySelector('[data-testid="content"]')).toBeNull()

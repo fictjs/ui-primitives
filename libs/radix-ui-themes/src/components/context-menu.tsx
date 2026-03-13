@@ -9,7 +9,7 @@ import {
   contextMenuCheckboxItemPropDefs,
   contextMenuRadioItemPropDefs,
 } from './context-menu.props.js';
-import { Theme, useThemeContext } from './theme.js';
+import { ThemeContext, useThemeContext } from './theme.js';
 import { ThickCheckIcon, ThickChevronRightIcon } from './icons.js';
 import { extractProps } from '../helpers/extract-props.js';
 import { requireReactElement } from '../helpers/require-react-element.js';
@@ -49,6 +49,12 @@ interface ContextMenuContentProps
     ContextMenuContentContextValue {
   container?: React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Portal>['container'];
 }
+type LazyMenuChildren = React.ReactNode | (() => React.ReactNode);
+function ContextMenuLazyChildren({ children }: { children: LazyMenuChildren }) {
+  return typeof children === 'function'
+    ? (children as () => React.ReactNode)()
+    : children;
+}
 const ContextMenuContent = React.forwardRef<ContextMenuContentElement, ContextMenuContentProps>(
   (props, forwardedRef) => {
     const themeContext = useThemeContext();
@@ -64,26 +70,39 @@ const ContextMenuContent = React.forwardRef<ContextMenuContentElement, ContextMe
     const resolvedColor = color || themeContext.accentColor;
     return (
       <ContextMenuPrimitive.Portal container={container} forceMount={forceMount}>
-        <Theme asChild>
-          <ContextMenuPrimitive.Content
-            data-accent-color={resolvedColor}
-            {...contentProps}
-            
-            ref={React.coerceRef(forwardedRef)}
-            class={classNames(
-              'rt-PopperContent',
-              'rt-BaseMenuContent',
-              'rt-ContextMenuContent',
-              className,
-            )}
-          >
+        <ContextMenuPrimitive.Content
+          data-is-root-theme="false"
+          data-accent-color={resolvedColor}
+          data-gray-color={themeContext.resolvedGrayColor}
+          data-has-background="false"
+          data-panel-background={themeContext.panelBackground}
+          data-radius={themeContext.radius}
+          data-scaling={themeContext.scaling}
+          asChild={false}
+          {...contentProps}
+          ref={React.coerceRef(forwardedRef)}
+          class={classNames(
+            'radix-themes',
+            {
+              light: themeContext.appearance === 'light',
+              dark: themeContext.appearance === 'dark',
+            },
+            'rt-PopperContent',
+            'rt-BaseMenuContent',
+            'rt-ContextMenuContent',
+            className,
+          )}
+        >
+          <ThemeContext.Provider value={themeContext}>
             <div class={classNames('rt-BaseMenuViewport', 'rt-ContextMenuViewport')}>
-              <ContextMenuContentContext.Provider value={{ size, variant, color: resolvedColor, highContrast }}>
-                {children}
+              <ContextMenuContentContext.Provider
+                value={{ size, variant, color: resolvedColor, highContrast }}
+              >
+                <ContextMenuLazyChildren children={children as LazyMenuChildren} />
               </ContextMenuContentContext.Provider>
             </div>
-          </ContextMenuPrimitive.Content>
-        </Theme>
+          </ThemeContext.Provider>
+        </ContextMenuPrimitive.Content>
       </ContextMenuPrimitive.Portal>
     );
   },
@@ -301,31 +320,45 @@ const ContextMenuSubContent = React.forwardRef<
   ContextMenuSubContentElement,
   ContextMenuSubContentProps
 >((props, forwardedRef) => {
+  const themeContext = useThemeContext();
   const { size, variant, color, highContrast } = useContext(ContextMenuContentContext);
-  const { className, children, container, forceMount, ...subContentProps } = extractProps(
+  const { className, container, ...subContentProps } = extractProps(
     { size, variant, color, highContrast, ...props },
     contextMenuContentPropDefs,
   );
   return (
-    <ContextMenuPrimitive.Portal container={container} forceMount={forceMount}>
-      <Theme asChild>
-        <ContextMenuPrimitive.SubContent
-          data-accent-color={color}
-          {...subContentProps}
-         
-          ref={React.coerceRef(forwardedRef)}
-          class={classNames(
-            'rt-PopperContent',
-            'rt-BaseMenuContent',
-            'rt-BaseMenuSubContent',
-            'rt-ContextMenuContent',
-            'rt-ContextMenuSubContent',
-            className,
-          )}
-        >
-          <div class={classNames('rt-BaseMenuViewport', 'rt-ContextMenuViewport')}>{children}</div>
-        </ContextMenuPrimitive.SubContent>
-      </Theme>
+    <ContextMenuPrimitive.Portal container={container} forceMount={props.forceMount}>
+      <ContextMenuPrimitive.SubContent
+        data-is-root-theme="false"
+        data-accent-color={color}
+        data-gray-color={themeContext.resolvedGrayColor}
+        data-has-background="false"
+        data-panel-background={themeContext.panelBackground}
+        data-radius={themeContext.radius}
+        data-scaling={themeContext.scaling}
+        asChild={false}
+        {...subContentProps}
+        ref={React.coerceRef(forwardedRef)}
+        class={classNames(
+          'radix-themes',
+          {
+            light: themeContext.appearance === 'light',
+            dark: themeContext.appearance === 'dark',
+          },
+          'rt-PopperContent',
+          'rt-BaseMenuContent',
+          'rt-BaseMenuSubContent',
+          'rt-ContextMenuContent',
+          'rt-ContextMenuSubContent',
+          className,
+        )}
+      >
+        <ThemeContext.Provider value={themeContext}>
+          <div class={classNames('rt-BaseMenuViewport', 'rt-ContextMenuViewport')}>
+            <ContextMenuLazyChildren children={props.children as LazyMenuChildren} />
+          </div>
+        </ThemeContext.Provider>
+      </ContextMenuPrimitive.SubContent>
     </ContextMenuPrimitive.Portal>
   );
 });

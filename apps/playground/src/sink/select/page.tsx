@@ -13,6 +13,13 @@ export default function SelectPage() {
     <DocsSection>
       <DocsSectionHeading>Select</DocsSectionHeading>
       <DocsSectionBody>
+        <Select.Root defaultValue="apple" size="2">
+          <Select.Trigger id="select-demo-trigger" />
+          <Select.Content id="select-demo-content">
+            <SelectItemsDemo />
+          </Select.Content>
+        </Select.Root>
+
         <Text as="p" my="5">
           Trigger variants:
         </Text>
