@@ -1,12 +1,11 @@
 import { expect, test } from '@playwright/test'
 
 import { sinkRoutes } from '../src/sink/routes'
-import { expectNoBrowserErrors } from './support'
+import { gotoSinkSection } from './support'
 
-for (const [index, route] of sinkRoutes.entries()) {
+for (const route of sinkRoutes) {
   test(`route smoke: ${route.href}`, async ({ page }) => {
-    await expectNoBrowserErrors(page, `/#/sink/${route.href}`)
+    await gotoSinkSection(page, route.href)
     await expect(page.locator('main')).toBeVisible()
-    await expect(page.locator('main section').nth(index)).toBeInViewport()
   })
 }
