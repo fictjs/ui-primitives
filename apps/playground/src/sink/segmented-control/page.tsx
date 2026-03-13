@@ -7,6 +7,13 @@ export default function SegmentedControlPage() {
     <DocsSection>
       <DocsSectionHeading>Segmented Control</DocsSectionHeading>
       <DocsSectionBody>
+        <Box id="segmented-control-demo" mb="6">
+          <SegmentedControl.Root defaultValue="1">
+            <SegmentedControl.Item value="1">One</SegmentedControl.Item>
+            <SegmentedControl.Item value="2">Two</SegmentedControl.Item>
+            <SegmentedControl.Item value="3">Three</SegmentedControl.Item>
+          </SegmentedControl.Root>
+        </Box>
         <Table.Root>
           <Table.Header>
             <Table.Row>

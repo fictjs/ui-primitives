@@ -80,23 +80,28 @@ interface SegmentedControlItemProps
     SegmentedControlItemOwnProps {}
 
 const SegmentedControlItem = React.forwardRef<HTMLButtonElement, SegmentedControlItemProps>(
-  ({ children, className, ...props }, forwardedRef) => (
-    <ToggleGroupPrimitive.Item
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-reset', 'rt-SegmentedControlItem', className)}
-      {...props}
-      disabled={false}
-     
-    >
-      <span class="rt-SegmentedControlItemSeparator" />
-      <span class="rt-SegmentedControlItemLabel">
-        <span class="rt-SegmentedControlItemLabelActive">{children}</span>
-        <span class="rt-SegmentedControlItemLabelInactive" aria-hidden>
-          {children}
+  ({ children, className, ...props }, forwardedRef) => {
+    const itemLabel =
+      typeof children === 'string' || typeof children === 'number' ? String(children) : undefined;
+
+    return (
+      <ToggleGroupPrimitive.Item
+        ref={React.coerceRef(forwardedRef)}
+        class={classNames('rt-reset', 'rt-SegmentedControlItem', className)}
+        aria-label={props['aria-label'] ?? itemLabel}
+        {...props}
+        disabled={false}
+      >
+        <span class="rt-SegmentedControlItemSeparator" />
+        <span class="rt-SegmentedControlItemLabel">
+          <span class="rt-SegmentedControlItemLabelActive">{children}</span>
+          <span class="rt-SegmentedControlItemLabelInactive" aria-hidden="true">
+            {children}
+          </span>
         </span>
-      </span>
-    </ToggleGroupPrimitive.Item>
-  ),
+      </ToggleGroupPrimitive.Item>
+    );
+  },
 );
 
 SegmentedControlItem.displayName = 'SegmentedControl.Item';

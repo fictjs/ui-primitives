@@ -134,6 +134,9 @@ function Tabs(props: ScopedProps<TabsProps>): FictNode {
     caller: TABS_NAME,
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
+  const handleValueChange = (nextValue: string) => {
+    setValue(nextValue)
+  }
   const primitiveProps = mergeProps(
     {
       dir: prop(dir),
@@ -157,7 +160,7 @@ function Tabs(props: ScopedProps<TabsProps>): FictNode {
       activationMode={activationMode}
       baseId={baseId}
       dir={dir}
-      onValueChange={setValue}
+      onValueChange={handleValueChange}
       orientation={orientation}
       value={value}
     >

@@ -425,18 +425,26 @@ function ToggleGroupItem(props: ScopedProps<ToggleGroupItemProps>): FictNode {
 
   const itemImplProps = mergeProps(() => props as Record<string, unknown>, {
     __scopeToggleGroup: props.__scopeToggleGroup,
-    disabled: disabled() ? true : undefined,
+    disabled: prop(() => (disabled() ? true : undefined)),
     pressed,
     ref: (node: ToggleGroupItemElement | null) => {
       itemRef.current = node
       setRef(props.ref as PossibleRef<ToggleGroupItemElement>, node)
     },
-    ...(context.rovingFocus() ? { tabIndex: isCurrentTabStop() ? 0 : -1 } : {}),
+    ...(context.rovingFocus()
+      ? {
+          tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
+        }
+      : {}),
     onFocus: composeEventHandlers<FocusEvent>(
       props.onFocus as ((event: FocusEvent) => void) | undefined,
       () => {
         if (context.rovingFocus() && !disabled()) {
-          context.setCurrentTabStop(props.value)
+          setTimeout(() => {
+            if (context.rovingFocus() && !disabled()) {
+              context.setCurrentTabStop(props.value)
+            }
+          })
         }
       },
     ),

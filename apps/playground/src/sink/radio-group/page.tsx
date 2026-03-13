@@ -8,6 +8,12 @@ export default function RadioGroupPage() {
     <DocsSection>
       <DocsSectionHeading>RadioGroup</DocsSectionHeading>
       <DocsSectionBody>
+        <Box id="radio-group-demo" mb="6">
+          <RadioGroup.Root defaultValue="1" size="2">
+            <RadioGroup.Item value="1">Agree to Terms and Conditions</RadioGroup.Item>
+            <RadioGroup.Item value="2">Disagree with Terms and Conditions</RadioGroup.Item>
+          </RadioGroup.Root>
+        </Box>
         <Grid columns="2" gap="9">
           <div>
             <Table.Root>
@@ -99,18 +105,8 @@ export default function RadioGroupPage() {
 
               <RadioGroup.Root defaultValue="1" size="1">
                 <Flex direction="column" gap="1">
-                  <Text as="label" size="1">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="1" />
-                      <Text>Agree to Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
-                  <Text as="label" size="1">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="2" />
-                      <Text>Disagree with Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
+                  <RadioGroup.Item value="1">Agree to Terms and Conditions</RadioGroup.Item>
+                  <RadioGroup.Item value="2">Disagree with Terms and Conditions</RadioGroup.Item>
                 </Flex>
               </RadioGroup.Root>
 
@@ -118,18 +114,8 @@ export default function RadioGroupPage() {
 
               <RadioGroup.Root defaultValue="1" size="1">
                 <Flex direction="column" gap="1">
-                  <Text as="label" size="2">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="1" />
-                      <Text>Agree to Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
-                  <Text as="label" size="2">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="2" />
-                      <Text>Disagree with Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
+                  <RadioGroup.Item value="1">Agree to Terms and Conditions</RadioGroup.Item>
+                  <RadioGroup.Item value="2">Disagree with Terms and Conditions</RadioGroup.Item>
                 </Flex>
               </RadioGroup.Root>
 
@@ -137,18 +123,8 @@ export default function RadioGroupPage() {
 
               <RadioGroup.Root defaultValue="1" size="2">
                 <Flex direction="column" gap="1">
-                  <Text as="label" size="2">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="1" />
-                      <Text>Agree to Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
-                  <Text as="label" size="2">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="2" />
-                      <Text>Disagree with Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
+                  <RadioGroup.Item value="1">Agree to Terms and Conditions</RadioGroup.Item>
+                  <RadioGroup.Item value="2">Disagree with Terms and Conditions</RadioGroup.Item>
                 </Flex>
               </RadioGroup.Root>
 
@@ -156,18 +132,8 @@ export default function RadioGroupPage() {
 
               <RadioGroup.Root defaultValue="1" size="2">
                 <Flex direction="column" gap="1">
-                  <Text as="label" size="3">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="1" />
-                      <Text>Agree to Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
-                  <Text as="label" size="3">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="2" />
-                      <Text>Disagree with Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
+                  <RadioGroup.Item value="1">Agree to Terms and Conditions</RadioGroup.Item>
+                  <RadioGroup.Item value="2">Disagree with Terms and Conditions</RadioGroup.Item>
                 </Flex>
               </RadioGroup.Root>
 
@@ -175,18 +141,8 @@ export default function RadioGroupPage() {
 
               <RadioGroup.Root defaultValue="1" size="3">
                 <Flex direction="column" gap="1">
-                  <Text as="label" size="3">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="1" />
-                      <Text>Agree to Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
-                  <Text as="label" size="3">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="2" />
-                      <Text>Disagree with Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
+                  <RadioGroup.Item value="1">Agree to Terms and Conditions</RadioGroup.Item>
+                  <RadioGroup.Item value="2">Disagree with Terms and Conditions</RadioGroup.Item>
                 </Flex>
               </RadioGroup.Root>
 
@@ -194,18 +150,8 @@ export default function RadioGroupPage() {
 
               <RadioGroup.Root defaultValue="1" size="3">
                 <Flex direction="column" gap="1">
-                  <Text as="label" size="4">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="1" />
-                      <Text>Agree to Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
-                  <Text as="label" size="4">
-                    <Flex gap="2">
-                      <RadioGroup.Item value="2" />
-                      <Text>Disagree with Terms and Conditions</Text>
-                    </Flex>
-                  </Text>
+                  <RadioGroup.Item value="1">Agree to Terms and Conditions</RadioGroup.Item>
+                  <RadioGroup.Item value="2">Disagree with Terms and Conditions</RadioGroup.Item>
                 </Flex>
               </RadioGroup.Root>
 

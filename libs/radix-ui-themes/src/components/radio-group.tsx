@@ -9,6 +9,7 @@ import { radioGroupRootPropDefs } from './radio-group.props.js'
 import { Text } from './text.js'
 import { extractProps } from '../helpers/extract-props.js'
 import { marginPropDefs } from '../props/margin.props.js'
+import { baseRadioPropDefs } from './_internal/base-radio.props.js'
 
 import type { MarginProps } from '../props/margin.props.js'
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
@@ -57,17 +58,44 @@ interface RadioGroupItemProps
 const RadioGroupItem = React.forwardRef<RadioGroupItemElement, RadioGroupItemProps>(
   ({ children, className, style, ...props }, forwardedRef) => {
     const { size } = useContext(RadioGroupStyleContext)
+    const setForwardedRef = React.coerceRef(forwardedRef)
+    const itemLabel =
+      typeof children === 'string' || typeof children === 'number' ? String(children) : undefined
+    let itemNode: HTMLButtonElement | null = null
+    const handleItemRef = (node: RadioGroupItemElement | null) => {
+      itemNode = node as HTMLButtonElement | null
+      setForwardedRef?.(node)
+    }
 
     if (children) {
       return (
-        <Text as="label" size={size} class={classNames('rt-RadioGroupItem', className)} style={style}>
-          <RadioGroupItemRadio {...props} ref={React.coerceRef(forwardedRef)} />
+        <Text
+          as="label"
+          size={size}
+          class={classNames('rt-RadioGroupItem', className)}
+          style={style}
+          onClick={(event) => {
+            const target = event.target
+            if (!itemNode || target === itemNode || itemNode.contains(target as Node)) {
+              return
+            }
+
+            event.preventDefault()
+            itemNode.focus()
+            itemNode.click()
+          }}
+        >
+          <RadioGroupItemRadio
+            {...props}
+            aria-label={props['aria-label'] ?? itemLabel}
+            ref={handleItemRef}
+          />
           <span class="rt-RadioGroupItemInner">{children}</span>
         </Text>
       )
     }
 
-    return <RadioGroupItemRadio {...props} ref={React.coerceRef(forwardedRef)} class={className} style={style} />
+    return <RadioGroupItemRadio {...props} ref={handleItemRef} class={className} style={style} />
   },
 )
 
@@ -78,14 +106,18 @@ interface RadioGroupItemRadioProps extends ComponentPropsWithout<typeof RadioGro
 const RadioGroupItemRadio = React.forwardRef<RadioGroupItemRadioElement, RadioGroupItemRadioProps>(
   ({ className, ...props }, forwardedRef) => {
     const context = useContext(RadioGroupStyleContext)
-    const { color } = extractProps({ ...props, ...context }, radioGroupRootPropDefs, marginPropDefs)
+    const { className: radioClassName, color, ...radioProps } = extractProps(
+      { ...context, ...props, className },
+      baseRadioPropDefs,
+      marginPropDefs,
+    )
 
     return (
       <RadioGroupPrimitive.Item
-        {...props}
+        {...radioProps}
         data-accent-color={color}
         ref={React.coerceRef(forwardedRef)}
-        class={classNames('rt-reset', 'rt-BaseRadioRoot', className)}
+        class={classNames('rt-reset', 'rt-BaseRadioRoot', radioClassName)}
       />
     )
   },

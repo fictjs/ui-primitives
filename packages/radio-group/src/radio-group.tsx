@@ -177,6 +177,9 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
     caller: RADIO_GROUP_NAME,
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
+  const handleValueChange = (nextValue: string) => {
+    setValue(nextValue)
+  }
   const currentTabStop = createSignal<string | null>(null)
   const items: RadioGroupItemRecord[] = []
 
@@ -272,7 +275,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
       getItems={getItems}
       loop={loop}
       name={name}
-      onValueChange={setValue}
+      onValueChange={handleValueChange}
       orientation={orientation}
       registerItem={registerItem}
       required={required}
@@ -320,7 +323,7 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
     () => itemProps as Record<string, unknown>,
     {
       checked,
-      disabled: disabled() ? true : undefined,
+      disabled: prop(() => (disabled() ? true : undefined)),
       name: context.name,
       onCheck: () => {
         context.onValueChange(value)
@@ -328,12 +331,16 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
       },
       ref: composedRefs,
       required: context.required,
-      tabIndex: isCurrentTabStop() ? 0 : -1,
+      tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
       onFocus: composeEventHandlers<FocusEvent>(
         props.onFocus as ((event: FocusEvent) => void) | undefined,
         () => {
           if (!disabled()) {
-            context.setCurrentTabStop(value)
+            setTimeout(() => {
+              if (!disabled()) {
+                context.setCurrentTabStop(value)
+              }
+            })
           }
         },
       ),

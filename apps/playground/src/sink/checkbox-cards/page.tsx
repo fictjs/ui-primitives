@@ -9,6 +9,15 @@ export default function CheckboxCardsPage() {
     <DocsSection>
       <DocsSectionHeading>CheckboxCards</DocsSectionHeading>
       <DocsSectionBody>
+        <Box id="checkbox-cards-demo" mb="6">
+          <CheckboxCards.Root columns="3" defaultValue={['0']}>
+            <CheckboxCards.Item value="0">Node.js</CheckboxCards.Item>
+            <CheckboxCards.Item value="1" disabled>
+              Ruby
+            </CheckboxCards.Item>
+            <CheckboxCards.Item value="2">Go</CheckboxCards.Item>
+          </CheckboxCards.Root>
+        </Box>
         <Table.Root>
           <Table.Body>
             {checkboxCardsRootPropDefs.variant.values.map((variant, index) => (
