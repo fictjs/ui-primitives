@@ -34,30 +34,81 @@ const historyFallback = () => ({
 })
 
 export default defineConfig(() => {
-  const useBuiltThemes = true
+  const useBuiltPackages = true
+  const rootRuntimeDir = resolve(
+    currentDir,
+    useBuiltPackages ? '../../../packages/runtime/dist' : '../../../packages/runtime/src',
+  )
+  const rootFictDir = resolve(
+    currentDir,
+    useBuiltPackages ? '../../../packages/fict/dist' : '../../../packages/fict/src',
+  )
 
   return {
     plugins: [
       historyFallback(),
       fict({
-        exclude: ['**/libs/radix-ui-themes/src/**'],
+        exclude: useBuiltPackages ? ['**/dist/**'] : [],
       }),
     ],
     resolve: {
       alias: [
         {
           find: '@fictjs/radix-ui/internal',
-          replacement: resolve(currentDir, '../../packages/radix-ui/dist/internal.js'),
+          replacement: resolve(
+            currentDir,
+            useBuiltPackages
+              ? '../../packages/radix-ui/dist/internal.js'
+              : '../../packages/radix-ui/src/internal.ts',
+          ),
+        },
+        {
+          find: '@fictjs/runtime/internal/list',
+          replacement: resolve(
+            rootRuntimeDir,
+            useBuiltPackages ? 'internal-list.js' : 'internal/list.ts',
+          ),
+        },
+        {
+          find: '@fictjs/runtime/internal',
+          replacement: resolve(rootRuntimeDir, useBuiltPackages ? 'internal.js' : 'internal.ts'),
+        },
+        {
+          find: '@fictjs/runtime/advanced',
+          replacement: resolve(rootRuntimeDir, useBuiltPackages ? 'advanced.js' : 'advanced.ts'),
+        },
+        {
+          find: '@fictjs/runtime/jsx-runtime',
+          replacement: resolve(
+            rootRuntimeDir,
+            useBuiltPackages ? 'jsx-runtime.js' : 'jsx-runtime.ts',
+          ),
+        },
+        {
+          find: '@fictjs/runtime/jsx-dev-runtime',
+          replacement: resolve(
+            rootRuntimeDir,
+            useBuiltPackages ? 'jsx-dev-runtime.js' : 'jsx-dev-runtime.ts',
+          ),
+        },
+        {
+          find: '@fictjs/runtime',
+          replacement: resolve(rootRuntimeDir, useBuiltPackages ? 'index.js' : 'index.ts'),
         },
         {
           find: '@fictjs/radix-ui',
-          replacement: resolve(currentDir, '../../packages/radix-ui/dist/index.js'),
+          replacement: resolve(
+            currentDir,
+            useBuiltPackages
+              ? '../../packages/radix-ui/dist/index.js'
+              : '../../packages/radix-ui/src/index.ts',
+          ),
         },
         {
           find: '@fictjs/radix-ui-themes/styles.css',
           replacement: resolve(
             currentDir,
-            useBuiltThemes
+            useBuiltPackages
               ? '../../libs/radix-ui-themes/styles.css'
               : '../../libs/radix-ui-themes/src/styles/index.css',
           ),
@@ -66,7 +117,7 @@ export default defineConfig(() => {
           find: '@fictjs/radix-ui-themes/props',
           replacement: resolve(
             currentDir,
-            useBuiltThemes
+            useBuiltPackages
               ? '../../libs/radix-ui-themes/dist/props/index.js'
               : '../../libs/radix-ui-themes/src/props/index.ts',
           ),
@@ -75,7 +126,7 @@ export default defineConfig(() => {
           find: '@fictjs/radix-ui-themes/helpers',
           replacement: resolve(
             currentDir,
-            useBuiltThemes
+            useBuiltPackages
               ? '../../libs/radix-ui-themes/dist/helpers/index.js'
               : '../../libs/radix-ui-themes/src/helpers/index.ts',
           ),
@@ -84,7 +135,7 @@ export default defineConfig(() => {
           find: '@fictjs/radix-ui-themes',
           replacement: resolve(
             currentDir,
-            useBuiltThemes
+            useBuiltPackages
               ? '../../libs/radix-ui-themes/dist/index.js'
               : '../../libs/radix-ui-themes/src/index.ts',
           ),
@@ -92,6 +143,29 @@ export default defineConfig(() => {
         {
           find: '@radix-ui/react-icons',
           replacement: resolve(currentDir, './src/compat/radix-icons.tsx'),
+        },
+        {
+          find: 'fict/advanced',
+          replacement: resolve(rootFictDir, useBuiltPackages ? 'advanced.js' : 'advanced.ts'),
+        },
+        {
+          find: 'fict/jsx-runtime',
+          replacement: resolve(rootFictDir, useBuiltPackages ? 'jsx-runtime.js' : 'jsx-runtime.ts'),
+        },
+        {
+          find: 'fict/jsx-dev-runtime',
+          replacement: resolve(
+            rootFictDir,
+            useBuiltPackages ? 'jsx-dev-runtime.js' : 'jsx-dev-runtime.ts',
+          ),
+        },
+        {
+          find: 'fict/plus',
+          replacement: resolve(rootFictDir, useBuiltPackages ? 'plus.js' : 'plus.ts'),
+        },
+        {
+          find: 'fict',
+          replacement: resolve(rootFictDir, useBuiltPackages ? 'index.js' : 'index.ts'),
         },
         { find: 'next/link', replacement: resolve(currentDir, './src/compat/next-link.tsx') },
         {
