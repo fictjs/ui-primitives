@@ -4,7 +4,14 @@ import { Theme, ThemePanel } from '@fictjs/radix-ui-themes'
 
 import Sink from './sink/page.js'
 import SinkLayout from './sink/layout.js'
-import { sinkRoutes } from './sink/routes.js'
+
+function normalizeHeading(text: string) {
+  return text
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+}
 
 export default function App() {
   createEffect(() => {
@@ -25,22 +32,15 @@ export default function App() {
       let attempts = 0
 
       const scrollToTarget = () => {
-        const routeIndex = sinkRoutes.findIndex((route) => route.href === slug)
-        if (routeIndex !== -1) {
-          const targetSection = Array.from(document.querySelectorAll('main section')).at(routeIndex)
-          if (targetSection) {
-            targetSection.scrollIntoView({ block: 'start', behavior: 'auto' })
-            return true
-          }
-        }
-
-        const targetHeading = Array.from(document.querySelectorAll('h2')).find((heading) => {
-          const label = heading.textContent?.trim().toLowerCase().replace(/\s+/g, '-')
-          return label === slug
-        })
+        const targetHeading = Array.from(document.querySelectorAll('main section h2')).find(
+          (heading) => {
+            const label = heading.textContent ? normalizeHeading(heading.textContent) : ''
+            return label === slug
+          },
+        )
 
         if (targetHeading) {
-          targetHeading.scrollIntoView({ block: 'start', behavior: 'auto' })
+          targetHeading.closest('section')?.scrollIntoView({ block: 'start', behavior: 'auto' })
           return true
         }
 
