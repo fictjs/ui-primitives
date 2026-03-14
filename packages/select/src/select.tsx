@@ -37,6 +37,7 @@ type SelectContextValue = {
   onValueChange(value: string): void
   open: () => boolean
   onOpenChange(open: boolean): void
+  disabled: () => boolean
   triggerId: () => string
   contentId: () => string
   selectedText: () => string
@@ -81,6 +82,7 @@ type SelectProps = {
   open?: MaybeAccessor<boolean | undefined>
   defaultOpen?: MaybeAccessor<boolean | undefined>
   onOpenChange?: (open: boolean) => void
+  disabled?: MaybeAccessor<boolean | undefined>
   value?: MaybeAccessor<string | undefined>
   defaultValue?: MaybeAccessor<string | undefined>
   onValueChange?: (value: string) => void
@@ -145,6 +147,10 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
     props.open === undefined
       ? undefined
       : readValue(props.open as MaybeAccessor<boolean | undefined>)
+  const disabled = () =>
+    props.disabled === undefined
+      ? false
+      : Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? false
@@ -174,6 +180,7 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
       onValueChange={onValueChange}
       open={open}
       onOpenChange={setOpen}
+      disabled={disabled}
       triggerId={triggerId}
       contentId={contentId}
       selectedText={selectedText}
@@ -206,7 +213,10 @@ function SelectTrigger(props: ScopedProps<SelectTriggerProps>): FictNode {
       'aria-haspopup': 'listbox',
       'aria-expanded': prop(() => String(context.open())),
       'aria-controls': prop(() => (context.open() ? context.contentId() : undefined)),
+      'aria-disabled': prop(() => (context.disabled() ? 'true' : undefined)),
+      'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
       'data-state': prop(() => (context.open() ? 'open' : 'closed')),
+      disabled: prop(() => (context.disabled() ? true : undefined)),
     },
     () => props as Record<string, unknown>,
     {
@@ -214,12 +224,14 @@ function SelectTrigger(props: ScopedProps<SelectTriggerProps>): FictNode {
       onClick: composeEventHandlers<MouseEvent>(
         props.onClick as ((event: MouseEvent) => void) | undefined,
         () => {
+          if (context.disabled()) return
           context.onOpenChange(!context.open())
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
         props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
         (event) => {
+          if (context.disabled()) return
           if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
             context.onOpenChange(true)

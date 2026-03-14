@@ -115,6 +115,37 @@ describe('@fictjs/select', () => {
     expect(container.querySelector('[data-testid="indicator"]')?.textContent).toBe('x')
   })
 
+  it('does not open content when the select root is disabled', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root disabled>
+          <Trigger data-testid="trigger">
+            <Value data-testid="value" placeholder="Choose one" />
+          </Trigger>
+          <Content data-testid="content">
+            <Item value="apple" data-testid="item-apple">
+              <ItemText>Apple</ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    expect(trigger.disabled).toBe(true)
+
+    click(trigger)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
   it('closes portaled content after selecting an item when mounted in document.body', async () => {
     const container = document.createElement('div')
     document.body.append(container)

@@ -72,8 +72,8 @@ export default function SelectPage() {
                 </Table.Cell>
                 <Table.Cell />
                 <Table.Cell>
-                  <Select.Root defaultValue="apple" size="2">
-                    <Select.Trigger variant={variant} disabled />
+                  <Select.Root defaultValue="apple" size="2" disabled>
+                    <Select.Trigger variant={variant} />
                     <Select.Content>
                       <SelectItemsDemo />
                     </Select.Content>
