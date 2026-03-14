@@ -1,4 +1,4 @@
-import { Box, Text, Code, Grid, Flex, Table } from '@fictjs/radix-ui-themes';
+import { Text, Code, Grid, Flex, Table } from '@fictjs/radix-ui-themes';
 import { tabsListPropDefs } from '@fictjs/radix-ui-themes/props';
 import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
 import { TabNavDemo } from '../tab-nav-demo';
@@ -8,9 +8,6 @@ export default function TabNavPage() {
     <DocsSection>
       <DocsSectionHeading>Tab Nav</DocsSectionHeading>
       <DocsSectionBody>
-        <Box id="tab-nav-demo" mb="6">
-          <TabNavDemo size="2" />
-        </Box>
         <Table.Root>
           <Table.Body>
             {tabsListPropDefs.size.values.map((size) => (

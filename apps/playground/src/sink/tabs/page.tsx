@@ -7,24 +7,6 @@ export default function TabsPage() {
     <DocsSection>
       <DocsSectionHeading>Tabs</DocsSectionHeading>
       <DocsSectionBody>
-        <Box id="tabs-demo" mb="6">
-          <Tabs.Root defaultValue="account" activationMode="manual">
-            <Tabs.List size="2">
-              <Tabs.Trigger value="account">Account</Tabs.Trigger>
-              <Tabs.Trigger value="documents">Documents</Tabs.Trigger>
-              <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
-            </Tabs.List>
-            <Tabs.Content value="account">
-              <Box py="5">Account</Box>
-            </Tabs.Content>
-            <Tabs.Content value="documents">
-              <Box py="5">Documents</Box>
-            </Tabs.Content>
-            <Tabs.Content value="settings">
-              <Box py="5">Settings</Box>
-            </Tabs.Content>
-          </Tabs.Root>
-        </Box>
         <Table.Root>
           <Table.Body>
             {tabsListPropDefs.size.values.map((size) => (

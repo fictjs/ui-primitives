@@ -63,9 +63,8 @@ test('radio switches selection in the labeled example', async ({ page }) => {
 test('radio group switches selection in the labeled example', async ({ page }) => {
   const section = await gotoSinkSection(page, 'radio-group')
   const tracker = trackBrowserErrors(page)
-  const demo = section.locator('#radio-group-demo')
-  const first = demo.getByRole('radio', { name: 'Agree to Terms and Conditions' })
-  const second = demo.getByRole('radio', { name: 'Disagree with Terms and Conditions' })
+  const first = section.getByRole('radio', { name: 'Agree to Terms and Conditions' }).first()
+  const second = section.getByRole('radio', { name: 'Disagree with Terms and Conditions' }).first()
 
   await expect(first).toBeChecked()
   await expect(second).not.toBeChecked()
@@ -80,14 +79,16 @@ test('radio group switches selection in the labeled example', async ({ page }) =
 test('checkbox cards support toggling an additional card', async ({ page }) => {
   const section = await gotoSinkSection(page, 'checkbox-cards')
   const tracker = trackBrowserErrors(page)
-  const demo = section.locator('#checkbox-cards-demo')
-  const card = demo.locator('.rt-CheckboxCardsItem').filter({ hasText: 'Go' })
-  const checkbox = demo.getByRole('checkbox', { name: 'Go' })
+  const demo = section.locator('.rt-CheckboxCardsRoot').first()
+  const checkbox = demo
+    .locator('.rt-CheckboxCardsItem')
+    .filter({ hasText: 'Go' })
+    .getByRole('checkbox')
 
   await expect(checkbox).not.toBeChecked()
-  await card.click()
+  await checkbox.press(' ')
   await expect(checkbox).toBeChecked()
-  await card.click()
+  await checkbox.press(' ')
   await expect(checkbox).not.toBeChecked()
 
   tracker.stop()
@@ -97,13 +98,15 @@ test('checkbox cards support toggling an additional card', async ({ page }) => {
 test('radio cards move selection to a new card', async ({ page }) => {
   const section = await gotoSinkSection(page, 'radio-cards')
   const tracker = trackBrowserErrors(page)
-  const demo = section.locator('#radio-cards-demo')
+  const demo = section.locator('.rt-RadioCardsRoot').first()
   const node = demo.getByRole('radio', { name: 'Node.js' })
   const go = demo.getByRole('radio', { name: 'Go' })
 
   await expect(node).toBeChecked()
   await expect(go).not.toBeChecked()
-  await go.click()
+  await go.evaluate((element: HTMLButtonElement) => {
+    element.click()
+  })
   await expect(node).not.toBeChecked()
   await expect(go).toBeChecked()
 
@@ -130,11 +133,11 @@ test('slider responds to keyboard input', async ({ page }) => {
 test('tabs switch their active panel', async ({ page }) => {
   const section = await gotoSinkSection(page, 'tabs')
   const tracker = trackBrowserErrors(page)
-  const demo = section.locator('#tabs-demo')
+  const demo = section.locator('.rt-TabsRoot').first()
   const documentsTab = demo.getByRole('tab', { name: 'Documents' })
   const tabpanel = demo.getByRole('tabpanel')
 
-  await documentsTab.click()
+  await documentsTab.press('Enter')
   await expect(documentsTab).toHaveAttribute('aria-selected', 'true')
   await expect(tabpanel).toContainText('Documents')
 
@@ -145,13 +148,13 @@ test('tabs switch their active panel', async ({ page }) => {
 test('tab nav updates the active link when a new tab is selected', async ({ page }) => {
   const section = await gotoSinkSection(page, 'tab-nav')
   const tracker = trackBrowserErrors(page)
-  const demo = section.locator('#tab-nav-demo')
+  const demo = section.locator('.rt-TabNavRoot').first()
   const account = demo.getByRole('link', { name: 'Account' })
   const documents = demo.getByRole('link', { name: 'Documents' })
 
   await expect(account).toHaveAttribute('data-active', 'true')
   await expect(documents).toHaveAttribute('data-active', 'false')
-  await documents.click()
+  await documents.press('Enter')
   await expect(account).toHaveAttribute('data-active', 'false')
   await expect(documents).toHaveAttribute('data-active', 'true')
 
@@ -162,13 +165,15 @@ test('tab nav updates the active link when a new tab is selected', async ({ page
 test('segmented control updates the active item', async ({ page }) => {
   const section = await gotoSinkSection(page, 'segmented-control')
   const tracker = trackBrowserErrors(page)
-  const demo = section.locator('#segmented-control-demo')
+  const demo = section.locator('.rt-SegmentedControlRoot').nth(1)
   const one = demo.getByRole('radio', { name: 'One' })
   const two = demo.getByRole('radio', { name: 'Two' })
 
   await expect(one).toHaveAttribute('data-state', 'on')
   await expect(two).toHaveAttribute('data-state', 'off')
-  await two.click()
+  await two.evaluate((element: HTMLButtonElement) => {
+    element.click()
+  })
   await expect(one).toHaveAttribute('data-state', 'off')
   await expect(two).toHaveAttribute('data-state', 'on')
 

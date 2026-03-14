@@ -8,12 +8,6 @@ export default function RadioGroupPage() {
     <DocsSection>
       <DocsSectionHeading>RadioGroup</DocsSectionHeading>
       <DocsSectionBody>
-        <Box id="radio-group-demo" mb="6">
-          <RadioGroup.Root defaultValue="1" size="2">
-            <RadioGroup.Item value="1">Agree to Terms and Conditions</RadioGroup.Item>
-            <RadioGroup.Item value="2">Disagree with Terms and Conditions</RadioGroup.Item>
-          </RadioGroup.Root>
-        </Box>
         <Grid columns="2" gap="9">
           <div>
             <Table.Root>

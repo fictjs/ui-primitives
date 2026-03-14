@@ -9,15 +9,6 @@ export default function RadioCardsPage() {
     <DocsSection>
       <DocsSectionHeading>RadioCards</DocsSectionHeading>
       <DocsSectionBody>
-        <Box id="radio-cards-demo" mb="6">
-          <RadioCards.Root columns="3" defaultValue="0">
-            <RadioCards.Item value="0">Node.js</RadioCards.Item>
-            <RadioCards.Item value="1" disabled>
-              Ruby
-            </RadioCards.Item>
-            <RadioCards.Item value="2">Go</RadioCards.Item>
-          </RadioCards.Root>
-        </Box>
         <Table.Root>
           <Table.Body>
             {radioCardsRootPropDefs.variant.values.map((variant, index) => (
