@@ -110,40 +110,38 @@ export default function IconButtonPage() {
               See colors & variants combinations
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
+          {accentColorsGrouped.map(({ label, values }) => [
+            <Text key={`${label}-heading`} as="p" weight="bold" mt="6" mb="4">
+              {label}
+            </Text>,
+            <Table.Root key={`${label}-table`}>
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell />
+                  {iconButtonPropDefs.variant.values.map((variant) => (
+                    <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
+                  ))}
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {values.map((color) => (
+                  <Table.Row key={color}>
+                    <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
                     {iconButtonPropDefs.variant.values.map((variant) => (
-                      <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
+                      <Table.Cell key={variant}>
+                        <IconButton variant={variant} color={color}>
+                          <Share2Icon />
+                        </IconButton>
+                        <IconButton variant={variant} color={color} highContrast ml="2">
+                          <Share2Icon />
+                        </IconButton>
+                      </Table.Cell>
                     ))}
                   </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
-                      {iconButtonPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant}>
-                          <IconButton variant={variant} color={color}>
-                            <Share2Icon />
-                          </IconButton>
-                          <IconButton variant={variant} color={color} highContrast ml="2">
-                            <Share2Icon />
-                          </IconButton>
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+                ))}
+              </Table.Body>
+            </Table.Root>,
+          ])}
         </details>
       </DocsSectionBody>
     </DocsSection>
