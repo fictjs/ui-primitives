@@ -1,9 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { render } from 'fict'
-import { createSignal } from 'fict/advanced'
 
-import DialogPage, { DialogDemoModal } from '../src/sink/dialog/page'
+import DialogPage from '../src/sink/dialog/page'
 
 const cleanups: Array<() => void> = []
 
@@ -19,7 +18,7 @@ describe('playground dialog demo', () => {
     document.body.innerHTML = ''
   })
 
-  it('renders the dialog playground entry point', async () => {
+  it('renders theme buttons with class-based styling and closes from cancel', async () => {
     const container = document.createElement('div')
     document.body.append(container)
 
@@ -27,28 +26,30 @@ describe('playground dialog demo', () => {
 
     await flush()
 
-    const openButton = container.querySelector('#dialog-demo-open')
+    const openButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Open',
+    )
     expect(openButton).not.toBeNull()
-    expect(container.querySelector('#dialog-demo-modal')).not.toBeNull()
-    expect(container.textContent).toContain('Share resource')
-    expect(container.textContent).toContain('Cancel')
-  })
+    expect(openButton?.getAttribute('class')).toContain('rt-Button')
+    expect(openButton?.getAttribute('style')).toBeNull()
 
-  it('closes the demo modal when clicking Cancel with a signal setter prop', async () => {
-    const container = document.createElement('div')
-    document.body.append(container)
-    const open = createSignal(true)
-
-    cleanups.push(render(() => <DialogDemoModal open={true} setOpen={open} />, container))
-
+    openButton?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
     await flush()
 
-    const cancelButton = container.querySelector('#dialog-demo-cancel')
-    expect(open()).toBe(true)
+    const content = document.body.querySelector('[role="dialog"]')
+    expect(content).not.toBeNull()
+    expect(document.body.textContent).toContain('Share resource')
+
+    const cancelButton = Array.from(document.body.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Cancel',
+    )
+    expect(cancelButton).not.toBeNull()
+    expect(cancelButton?.getAttribute('class')).toContain('rt-Button')
+    expect(cancelButton?.getAttribute('style')).toBeNull()
 
     cancelButton?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
     await flush()
 
-    expect(open()).toBe(false)
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull()
   })
 })

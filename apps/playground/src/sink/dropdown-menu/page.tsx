@@ -11,20 +11,6 @@ export default function DropdownMenuPage() {
     <DocsSection>
       <DocsSectionHeading>DropdownMenu</DocsSectionHeading>
       <DocsSectionBody>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger>
-            <Button id="dropdown-menu-demo-trigger" variant="solid">
-              More <DropdownMenu.TriggerIcon />
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenuContentDemo id="dropdown-menu-demo-content" variant="solid" />
-        </DropdownMenu.Root>
-
-        <Text as="p" my="5" color="gray">
-          The interactive demo above is the reference menu for E2E coverage. The tables below keep
-          the visual prop matrix.
-        </Text>
-
         <Table.Root>
           <Table.Header>
             <Table.Row>
@@ -43,25 +29,45 @@ export default function DropdownMenuPage() {
                 <Table.RowHeaderCell>{variant}</Table.RowHeaderCell>
                 {dropdownMenuContentPropDefs.size.values.map((size) => (
                   <Table.Cell key={size}>
-                    <Button size={size} variant="soft" color="gray">
-                      More <DropdownMenu.TriggerIcon />
-                    </Button>
+                    <DropdownMenu.Root>
+                      <DropdownMenu.Trigger>
+                        <Button size={size} variant="soft" color="gray">
+                          More <DropdownMenu.TriggerIcon />
+                        </Button>
+                      </DropdownMenu.Trigger>
+                      <DropdownMenuContentDemo size={size} variant={variant} />
+                    </DropdownMenu.Root>
                   </Table.Cell>
                 ))}
                 <Table.Cell>
-                  <Button variant="soft" color="gray" highContrast>
-                    More <DropdownMenu.TriggerIcon />
-                  </Button>
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger>
+                      <Button variant="soft" color="gray">
+                        More <DropdownMenu.TriggerIcon />
+                      </Button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenuContentDemo variant={variant} highContrast />
+                  </DropdownMenu.Root>
                 </Table.Cell>
                 <Table.Cell>
-                  <Button variant="soft" color="gray">
-                    More <DropdownMenu.TriggerIcon />
-                  </Button>
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger>
+                      <Button variant="soft" color="gray">
+                        More <DropdownMenu.TriggerIcon />
+                      </Button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenuContentDemo variant={variant} color="gray" />
+                  </DropdownMenu.Root>
                 </Table.Cell>
                 <Table.Cell>
-                  <Button variant="soft" color="gray" highContrast>
-                    More <DropdownMenu.TriggerIcon />
-                  </Button>
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger>
+                      <Button variant="soft" color="gray">
+                        More <DropdownMenu.TriggerIcon />
+                      </Button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenuContentDemo variant={variant} color="gray" highContrast />
+                  </DropdownMenu.Root>
                 </Table.Cell>
               </Table.Row>
             ))}
@@ -98,12 +104,22 @@ export default function DropdownMenuPage() {
                       <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
                       {dropdownMenuContentPropDefs.variant.values.map((variant) => (
                         <Table.Cell key={variant}>
-                          <IconButton variant="soft" color={color}>
-                            <DotsHorizontalIcon />
-                          </IconButton>
-                          <IconButton variant="soft" color={color} highContrast ml="2">
-                            <DotsHorizontalIcon />
-                          </IconButton>
+                          <DropdownMenu.Root>
+                            <DropdownMenu.Trigger>
+                              <IconButton variant="soft" color="gray">
+                                <DotsHorizontalIcon />
+                              </IconButton>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenuContentDemo variant={variant} color={color} />
+                          </DropdownMenu.Root>
+                          <DropdownMenu.Root>
+                            <DropdownMenu.Trigger>
+                              <IconButton variant="soft" color="gray" ml="2">
+                                <DotsHorizontalIcon />
+                              </IconButton>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenuContentDemo variant={variant} color={color} highContrast />
+                          </DropdownMenu.Root>
                         </Table.Cell>
                       ))}
                     </Table.Row>

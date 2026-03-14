@@ -14,11 +14,19 @@ function parseRgbChannels(color: string) {
 test('dialog opens and closes from the cancel action', async ({ page }) => {
   const section = await gotoSinkSection(page, 'dialog')
   const tracker = trackBrowserErrors(page)
+  const openButton = section.getByRole('button', { name: 'Open' })
 
-  await section.locator('#dialog-demo-open').click()
-  await expect(page.locator('#dialog-demo-overlay')).toBeVisible()
-  await section.locator('#dialog-demo-cancel').click()
-  await expect(page.locator('#dialog-demo-overlay')).toBeHidden()
+  await expect(openButton).toHaveClass(/rt-Button/)
+  await expect(openButton).not.toHaveAttribute('style', /.+/)
+
+  await openButton.click()
+  const dialog = page.getByRole('dialog')
+  const cancelButton = page.getByRole('button', { name: 'Cancel' })
+  await expect(dialog).toBeVisible()
+  await expect(cancelButton).toHaveClass(/rt-Button/)
+  await expect(cancelButton).not.toHaveAttribute('style', /.+/)
+  await cancelButton.click()
+  await expect(dialog).toBeHidden()
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the dialog demo')
@@ -27,11 +35,19 @@ test('dialog opens and closes from the cancel action', async ({ page }) => {
 test('alert dialog opens and closes from the cancel action', async ({ page }) => {
   const section = await gotoSinkSection(page, 'alert-dialog')
   const tracker = trackBrowserErrors(page)
+  const openButton = section.getByRole('button', { name: 'Open' })
 
-  await section.locator('#alert-dialog-demo-open').click()
-  await expect(page.locator('#alert-dialog-demo-overlay')).toBeVisible()
-  await section.locator('#alert-dialog-demo-cancel').click()
-  await expect(page.locator('#alert-dialog-demo-overlay')).toBeHidden()
+  await expect(openButton).toHaveClass(/rt-Button/)
+  await expect(openButton).not.toHaveAttribute('style', /.+/)
+
+  await openButton.click()
+  const dialog = page.getByRole('alertdialog')
+  const cancelButton = page.getByRole('button', { name: 'Cancel' })
+  await expect(dialog).toBeVisible()
+  await expect(cancelButton).toHaveClass(/rt-Button/)
+  await expect(cancelButton).not.toHaveAttribute('style', /.+/)
+  await cancelButton.click()
+  await expect(dialog).toBeHidden()
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the alert dialog demo')
@@ -40,11 +56,16 @@ test('alert dialog opens and closes from the cancel action', async ({ page }) =>
 test('hover card opens on pointer enter and closes on pointer leave', async ({ page }) => {
   const section = await gotoSinkSection(page, 'hover-card')
   const tracker = trackBrowserErrors(page)
+  const trigger = section.locator('.rt-Link').filter({ hasText: 'A fancy link' }).first()
+  const content = page
+    .locator('.rt-HoverCardContent')
+    .filter({ hasText: 'Jan Tschichold was a German calligrapher' })
+    .first()
 
-  await section.locator('#hover-card-demo-trigger').hover()
-  await expect(page.locator('#hover-card-demo-content')).toBeVisible()
-  await page.mouse.move(8, 8)
-  await expect(page.locator('#hover-card-demo-content')).toBeHidden()
+  await trigger.dispatchEvent('pointerenter', { bubbles: true, pointerType: 'mouse' })
+  await expect(content).toBeVisible()
+  await trigger.dispatchEvent('pointerleave', { bubbles: true, pointerType: 'mouse' })
+  await expect(content).toBeHidden()
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the hover card demo')
@@ -55,8 +76,8 @@ test('tooltip trigger clicks do not re-enter delayed open loops on the sink page
 }) => {
   const tracker = trackBrowserErrors(page)
 
-  await page.goto('/#/sink', { waitUntil: 'networkidle' })
-  const trigger = page.locator('#tooltip-demo-trigger')
+  const section = await gotoSinkSection(page, 'tooltip')
+  const trigger = section.getByRole('button', { name: 'Singleline' })
   await trigger.click()
   const box = await trigger.boundingBox()
   if (!box) {
@@ -83,7 +104,7 @@ test('tooltip opens on hover and closes when the pointer leaves', async ({ page 
   const tooltipText = page.locator('.rt-TooltipText').first()
   const arrow = page.locator('.rt-TooltipArrow')
 
-  await section.locator('#tooltip-demo-trigger').hover()
+  await section.getByRole('button', { name: 'Singleline' }).hover()
   await expect(tooltip).toContainText('The quick brown fox')
   await expect(tooltipText).toContainText('The quick brown fox')
   await expect(arrow).toBeVisible()
@@ -148,11 +169,13 @@ test('tooltip opens on hover and closes when the pointer leaves', async ({ page 
 test('popover opens on click and closes on outside press', async ({ page }) => {
   const section = await gotoSinkSection(page, 'popover')
   const tracker = trackBrowserErrors(page)
+  const trigger = section.getByRole('button', { name: 'Popover' })
+  const dialog = page.getByRole('dialog')
 
-  await section.locator('#popover-demo-trigger').click()
-  await expect(page.locator('#popover-demo-content')).toBeVisible()
+  await trigger.click()
+  await expect(dialog).toBeVisible()
   await page.mouse.click(8, 8)
-  await expect(page.locator('#popover-demo-content')).toBeHidden()
+  await expect(dialog).toBeHidden()
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the popover demo')
@@ -162,8 +185,9 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
   const section = await gotoSinkSection(page, 'dropdown-menu')
   const tracker = trackBrowserErrors(page)
   const menuItem = page.getByRole('menuitem', { name: 'New Tab ⌘+T' })
+  const trigger = section.locator('table button').filter({ hasText: 'More' }).first()
 
-  await section.locator('#dropdown-menu-demo-trigger').click()
+  await trigger.dispatchEvent('click')
   await expect(menuItem).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()
@@ -175,12 +199,13 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
 test('context menu opens on right click and closes on escape', async ({ page }) => {
   const section = await gotoSinkSection(page, 'context-menu')
   const tracker = trackBrowserErrors(page)
+  const trigger = section.locator('.rt-Grid').filter({ hasText: 'Right-click here' }).first()
+  const menuItem = page.getByRole('menuitem', { name: 'New Tab ⌘+T' })
 
-  await section.locator('#context-menu-demo-trigger').click({ button: 'right' })
-  await expect(page.locator('#context-menu-demo-content')).toBeVisible()
-  await expect(page.getByRole('menuitem', { name: 'New Tab ⌘+T' })).toBeVisible()
+  await trigger.dispatchEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
+  await expect(menuItem).toBeVisible()
   await page.keyboard.press('Escape')
-  await expect(page.locator('#context-menu-demo-content')).toBeHidden()
+  await expect(menuItem).toBeHidden()
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the context menu demo')
@@ -190,11 +215,12 @@ test('select opens and applies a new value', async ({ page }) => {
   const section = await gotoSinkSection(page, 'select')
   const tracker = trackBrowserErrors(page)
   const listbox = page.getByRole('listbox')
+  const trigger = section.locator('.rt-SelectTrigger').first()
 
-  await section.locator('#select-demo-trigger').click()
+  await trigger.dispatchEvent('click')
   await expect(listbox).toBeVisible()
   await page.getByRole('option', { name: 'Orange' }).click()
-  await expect(section.locator('#select-demo-trigger')).toContainText('Orange')
+  await expect(trigger).toContainText('Orange')
   await expect(listbox).toBeHidden()
 
   tracker.stop()

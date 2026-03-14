@@ -13,13 +13,6 @@ export default function SelectPage() {
     <DocsSection>
       <DocsSectionHeading>Select</DocsSectionHeading>
       <DocsSectionBody>
-        <Select.Root defaultValue="apple" size="2">
-          <Select.Trigger id="select-demo-trigger" />
-          <Select.Content id="select-demo-content">
-            <SelectItemsDemo />
-          </Select.Content>
-        </Select.Root>
-
         <Text as="p" my="5">
           Trigger variants:
         </Text>
@@ -45,7 +38,7 @@ export default function SelectPage() {
                 {selectRootPropDefs.size.values.map((size) => (
                   <Table.Cell key={size}>
                     <Select.Root defaultValue="apple" size={size}>
-                      <Select.Trigger variant={variant} disabled />
+                      <Select.Trigger variant={variant} />
                       <Select.Content>
                         <SelectItemsDemo />
                       </Select.Content>
@@ -80,7 +73,7 @@ export default function SelectPage() {
                 <Table.Cell />
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="2">
-                    <Select.Trigger variant={variant} />
+                    <Select.Trigger variant={variant} disabled />
                     <Select.Content>
                       <SelectItemsDemo />
                     </Select.Content>

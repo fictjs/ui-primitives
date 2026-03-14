@@ -55,21 +55,25 @@ describe('playground hover card demo', () => {
 
     await flush();
 
-    const trigger = container.querySelector('#hover-card-demo-trigger');
+    const trigger = Array.from(container.querySelectorAll('a')).find(
+      (link) => link.textContent?.trim() === 'A fancy link',
+    );
     expect(trigger).not.toBeNull();
-    expect(document.body.querySelector('#hover-card-demo-content')).toBeNull();
+    expect(document.body.querySelector('.rt-HoverCardContent')).toBeNull();
 
     pointerEvent(trigger as Element, 'pointerenter');
     await advance(200);
 
-    expect(document.body.querySelector('#hover-card-demo-content')).not.toBeNull();
+    expect(document.body.querySelector('.rt-HoverCardContent')).not.toBeNull();
 
-    const currentTrigger = container.querySelector('#hover-card-demo-trigger');
+    const currentTrigger = Array.from(container.querySelectorAll('a')).find(
+      (link) => link.textContent?.trim() === 'A fancy link',
+    );
     expect(currentTrigger).not.toBeNull();
 
     pointerEvent(currentTrigger as Element, 'pointerleave');
     await advance(170);
 
-    expect(document.body.querySelector('#hover-card-demo-content')).toBeNull();
+    expect(document.body.querySelector('.rt-HoverCardContent')).toBeNull();
   });
 });

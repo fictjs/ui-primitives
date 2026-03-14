@@ -1,9 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { render } from 'fict'
-import { createSignal } from 'fict/advanced'
 
-import { AlertDialogDemoModal } from '../src/sink/alert-dialog/page'
+import AlertDialogPage from '../src/sink/alert-dialog/page'
 
 const cleanups: Array<() => void> = []
 
@@ -19,21 +18,38 @@ describe('playground alert dialog demo', () => {
     document.body.innerHTML = ''
   })
 
-  it('closes the demo modal when clicking Cancel', async () => {
+  it('renders theme buttons with class-based styling and closes from cancel', async () => {
     const container = document.createElement('div')
     document.body.append(container)
-    const open = createSignal(true)
 
-    cleanups.push(render(() => <AlertDialogDemoModal open={true} setOpen={open} />, container))
+    cleanups.push(render(() => <AlertDialogPage />, container))
 
     await flush()
 
-    const cancelButton = container.querySelector('#alert-dialog-demo-cancel')
-    expect(open()).toBe(true)
+    const openButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Open',
+    )
+    expect(openButton).not.toBeNull()
+    expect(openButton?.getAttribute('class')).toContain('rt-Button')
+    expect(openButton?.getAttribute('style')).toBeNull()
+
+    openButton?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    await flush()
+
+    const content = document.body.querySelector('[role="alertdialog"]')
+    expect(content).not.toBeNull()
+    expect(document.body.textContent).toContain('Revoke setup link')
+
+    const cancelButton = Array.from(document.body.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Cancel',
+    )
+    expect(cancelButton).not.toBeNull()
+    expect(cancelButton?.getAttribute('class')).toContain('rt-Button')
+    expect(cancelButton?.getAttribute('style')).toBeNull()
 
     cancelButton?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
     await flush()
 
-    expect(open()).toBe(false)
+    expect(document.body.querySelector('[role="alertdialog"]')).toBeNull()
   })
 })
