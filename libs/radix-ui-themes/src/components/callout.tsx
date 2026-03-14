@@ -73,7 +73,7 @@ const CalloutText = React.forwardRef<CalloutTextElement, CalloutTextProps>(
         {...props}
        
         ref={React.coerceRef(forwardedRef)}
-        class={classNames('rt-CalloutText', className)}
+        className={classNames('rt-CalloutText', className)}
       />
     );
   },

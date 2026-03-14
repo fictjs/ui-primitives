@@ -80,39 +80,46 @@ test('tooltip opens on hover and closes when the pointer leaves', async ({ page 
   const section = await gotoSinkSection(page, 'tooltip')
   const tracker = trackBrowserErrors(page)
   const tooltip = page.locator('.rt-TooltipContent')
+  const tooltipText = page.locator('.rt-TooltipText').first()
   const arrow = page.locator('.rt-TooltipArrow')
 
   await section.locator('#tooltip-demo-trigger').hover()
   await expect(tooltip).toContainText('The quick brown fox')
+  await expect(tooltipText).toContainText('The quick brown fox')
   await expect(arrow).toBeVisible()
 
-  const tooltipStyles = await tooltip.evaluate((node) => {
+  const tooltipSurfaceStyles = await tooltip.evaluate((node) => {
     const styles = window.getComputedStyle(node)
     return {
       backgroundColor: styles.backgroundColor,
+    }
+  })
+  const tooltipTextStyles = await tooltipText.evaluate((node) => {
+    const styles = window.getComputedStyle(node)
+    return {
       color: styles.color,
     }
   })
 
   const [backgroundRed, backgroundGreen, backgroundBlue] = parseRgbChannels(
-    tooltipStyles.backgroundColor,
+    tooltipSurfaceStyles.backgroundColor,
   )
-  const [textRed, textGreen, textBlue] = parseRgbChannels(tooltipStyles.color)
+  const [textRed, textGreen, textBlue] = parseRgbChannels(tooltipTextStyles.color)
   const tooltipBackgroundBrightness = backgroundRed + backgroundGreen + backgroundBlue
   const tooltipTextBrightness = textRed + textGreen + textBlue
 
   expect(
     tooltipBackgroundBrightness,
-    'tooltip should use the dark panel surface in the dark playground theme',
-  ).toBeLessThan(120)
-  expect(
-    tooltipTextBrightness,
-    'tooltip text should remain readable against the dark panel surface',
+    'tooltip should keep the light surface used by the React radix-ui-themes package',
   ).toBeGreaterThan(600)
   expect(
     tooltipTextBrightness,
-    'tooltip text should stay noticeably brighter than the tooltip background',
-  ).toBeGreaterThan(tooltipBackgroundBrightness + 400)
+    'tooltip text should remain readable against the light tooltip surface',
+  ).toBeLessThan(120)
+  expect(
+    tooltipBackgroundBrightness,
+    'tooltip surface should stay noticeably brighter than the tooltip text',
+  ).toBeGreaterThan(tooltipTextBrightness + 400)
 
   const arrowStyles = await arrow.evaluate((node) => {
     const styles = window.getComputedStyle(node)
@@ -126,7 +133,7 @@ test('tooltip opens on hover and closes when the pointer leaves', async ({ page 
   })
 
   expect(arrowStyles.fill, 'tooltip arrow should match the tooltip surface').toBe(
-    tooltipStyles.backgroundColor,
+    tooltipSurfaceStyles.backgroundColor,
   )
   expect(arrowStyles.width, 'tooltip arrow should have a rendered width').toBeGreaterThan(0)
   expect(arrowStyles.height, 'tooltip arrow should have a rendered height').toBeGreaterThan(0)

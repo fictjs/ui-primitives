@@ -48,7 +48,7 @@ const Tooltip = React.forwardRef<TooltipElement, TooltipProps>((props, forwarded
             ref={React.coerceRef(forwardedRef)}
             class={classNames('rt-TooltipContent', className)}
           >
-            <Text as="p" class="rt-TooltipText" size="1">
+            <Text as="p" className="rt-TooltipText" size="1">
               {content}
             </Text>
             <TooltipPrimitive.Arrow class="rt-TooltipArrow" />

@@ -1,10 +1,8 @@
 .rt-TooltipContent {
   box-sizing: border-box;
   padding: var(--space-1) var(--space-2);
-  background-color: var(--color-panel-solid);
-  color: var(--gray-12);
+  background-color: var(--gray-12);
   border-radius: var(--radius-2);
-  box-shadow: var(--shadow-3);
 
   transform-origin: var(--radix-tooltip-content-transform-origin);
 
@@ -30,11 +28,11 @@
 }
 
 .rt-TooltipText {
-  color: inherit;
+  color: var(--gray-1);
   user-select: none;
   cursor: default;
 }
 
 .rt-TooltipArrow {
-  fill: var(--color-panel-solid);
+  fill: var(--gray-12);
 }

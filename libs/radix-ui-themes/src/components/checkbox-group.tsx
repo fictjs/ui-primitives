@@ -60,14 +60,26 @@ const CheckboxGroupItem = React.forwardRef<CheckboxGroupItemElement, CheckboxGro
 
     if (children) {
       return (
-        <Text as="label" size={size} class={classNames('rt-CheckboxGroupItem', className)} style={style}>
+        <Text
+          as="label"
+          size={size}
+          className={classNames('rt-CheckboxGroupItem', className)}
+          style={style}
+        >
           <CheckboxGroupItemCheckbox {...props} ref={React.coerceRef(forwardedRef)} />
           <span class="rt-CheckboxGroupItemInner">{children}</span>
         </Text>
       )
     }
 
-    return <CheckboxGroupItemCheckbox {...props} ref={React.coerceRef(forwardedRef)} class={className} style={style} />
+    return (
+      <CheckboxGroupItemCheckbox
+        {...props}
+        ref={React.coerceRef(forwardedRef)}
+        className={className}
+        style={style}
+      />
+    )
   },
 )
 
@@ -88,14 +100,14 @@ const CheckboxGroupItemCheckbox = React.forwardRef<
   )
 
   return (
-    <CheckboxGroupPrimitive.Item
-      {...props}
-      data-accent-color={color}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames(
-        'rt-reset',
-        'rt-BaseCheckboxRoot',
-        'rt-CheckboxGroupItemCheckbox',
+      <CheckboxGroupPrimitive.Item
+        {...props}
+        data-accent-color={color}
+        ref={React.coerceRef(forwardedRef)}
+        class={classNames(
+          'rt-reset',
+          'rt-BaseCheckboxRoot',
+          'rt-CheckboxGroupItemCheckbox',
         extractedClassName,
         className,
       )}

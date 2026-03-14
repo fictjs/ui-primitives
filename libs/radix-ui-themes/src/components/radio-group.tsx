@@ -72,7 +72,7 @@ const RadioGroupItem = React.forwardRef<RadioGroupItemElement, RadioGroupItemPro
         <Text
           as="label"
           size={size}
-          class={classNames('rt-RadioGroupItem', className)}
+          className={classNames('rt-RadioGroupItem', className)}
           style={style}
           onClick={(event) => {
             const target = event.target
@@ -95,7 +95,7 @@ const RadioGroupItem = React.forwardRef<RadioGroupItemElement, RadioGroupItemPro
       )
     }
 
-    return <RadioGroupItemRadio {...props} ref={handleItemRef} class={className} style={style} />
+    return <RadioGroupItemRadio {...props} ref={handleItemRef} className={className} style={style} />
   },
 )
 
