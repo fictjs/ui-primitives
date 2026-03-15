@@ -289,4 +289,63 @@ describe('@fictjs/popper', () => {
 
     expect(arrowWrapper.style.visibility).toBe('')
   })
+
+  it('falls back to DOM geometry when floating-ui does not provide arrow coordinates', async () => {
+    useSizeMock.mockImplementation(() => () => ({ width: 10, height: 5 }))
+
+    const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect
+    try {
+      Element.prototype.getBoundingClientRect = function () {
+        if ((this as Element).getAttribute('data-testid') === 'anchor') {
+          return new DOMRect(40, 80, 60, 24)
+        }
+
+        if ((this as Element).getAttribute('data-side') === 'top') {
+          return new DOMRect(10, 40, 120, 24)
+        }
+
+        if (
+          this instanceof HTMLSpanElement &&
+          (this.querySelector('[data-testid="arrow"]') as Element | null)
+        ) {
+          return new DOMRect(0, 0, 10, 5)
+        }
+
+        return originalGetBoundingClientRect.call(this)
+      }
+
+      floatingUiMocks.useFloating.mockImplementation(() =>
+        createFloatingResult({
+          placement: 'top',
+          middlewareData: {},
+        }),
+      )
+
+      const container = document.createElement('div')
+      document.body.appendChild(container)
+
+      render(
+        () => (
+          <Popper>
+            <PopperAnchor data-testid="anchor" />
+            <PopperContent>
+              <PopperArrow data-testid="arrow" />
+            </PopperContent>
+          </Popper>
+        ),
+        container,
+      )
+
+      await flushEffects()
+
+      const arrow = container.querySelector('[data-testid="arrow"]') as SVGSVGElement
+      const arrowWrapper = arrow.parentElement as HTMLSpanElement
+
+      expect(arrowWrapper.style.left).toBe('55px')
+      expect(arrowWrapper.style.top).toBe('')
+      expect(arrowWrapper.style.bottom).toBe('0px')
+    } finally {
+      Element.prototype.getBoundingClientRect = originalGetBoundingClientRect
+    }
+  })
 })

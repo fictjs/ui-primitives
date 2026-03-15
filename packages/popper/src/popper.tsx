@@ -122,6 +122,10 @@ function isDefined<T>(value: T | false | null | undefined): value is T {
   return Boolean(value)
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
+}
+
 function getSideAndAlignFromPlacement(placement: Placement) {
   const [side, align = 'center'] = placement.split('-')
   return [side as Side, align as Align] as const
@@ -254,6 +258,10 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
   )
   const content = createSignal<PopperContentElement | null>(null)
   const arrow = createSignal<HTMLSpanElement | null>(null)
+  const arrowOffsets = createSignal<{ x: number | undefined; y: number | undefined }>({
+    x: undefined,
+    y: undefined,
+  })
   const contentZIndex = createSignal<string | undefined>(undefined)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<PopperContentElement>, (nextNode) =>
     content(nextNode),
@@ -361,6 +369,57 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
   })
 
   useLayoutEffect(() => {
+    floating.isPositioned()
+    floating.x()
+    floating.y()
+    floating.placement()
+    floating.middlewareData()
+
+    const middlewareArrow = floating.middlewareData().arrow
+    const middlewareX = middlewareArrow?.x
+    const middlewareY = middlewareArrow?.y
+
+    if (middlewareX !== undefined || middlewareY !== undefined) {
+      arrowOffsets({ x: middlewareX, y: middlewareY })
+      return
+    }
+
+    const currentAnchor = context.anchor()
+    const currentContent = content()
+    const currentArrow = arrow()
+
+    if (!currentAnchor || !currentContent || !currentArrow) {
+      arrowOffsets({ x: undefined, y: undefined })
+      return
+    }
+
+    const referenceRect = currentAnchor.getBoundingClientRect()
+    const contentRect = currentContent.getBoundingClientRect()
+    const arrowRect = currentArrow.getBoundingClientRect()
+
+    if (placedSide() === 'top' || placedSide() === 'bottom') {
+      arrowOffsets({
+        x: clamp(
+          referenceRect.left + referenceRect.width / 2 - contentRect.left - arrowRect.width / 2,
+          0,
+          Math.max(contentRect.width - arrowRect.width, 0),
+        ),
+        y: undefined,
+      })
+      return
+    }
+
+    arrowOffsets({
+      x: undefined,
+      y: clamp(
+        referenceRect.top + referenceRect.height / 2 - contentRect.top - arrowRect.height / 2,
+        0,
+        Math.max(contentRect.height - arrowRect.height, 0),
+      ),
+    })
+  })
+
+  useLayoutEffect(() => {
     const currentContent = content()
     if (!currentContent) {
       contentZIndex(undefined)
@@ -434,8 +493,8 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
         scope={__scopePopper as Scope<PopperContentContextValue | undefined>}
         placedSide={placedSide}
         onArrowChange={arrow}
-        arrowX={() => floating.middlewareData().arrow?.x}
-        arrowY={() => floating.middlewareData().arrow?.y}
+        arrowX={() => arrowOffsets().x}
+        arrowY={() => arrowOffsets().y}
         shouldHideArrow={() => {
           const centerOffset = floating.middlewareData().arrow?.centerOffset
           return centerOffset !== undefined && centerOffset !== 0
@@ -455,6 +514,8 @@ function PopperArrow(props: ScopedProps<PopperArrowProps>): FictNode {
     ARROW_NAME,
     __scopePopper as Scope<PopperContentContextValue | undefined>,
   )
+  const node = createSignal<HTMLSpanElement | null>(null)
+  const composedRefs = useComposedRefs(contentContext.onArrowChange, (nextNode) => node(nextNode))
   const wrapperStyle = () => {
     const placedSide = contentContext.placedSide()
     const baseSide = OPPOSITE_SIDE[placedSide]
@@ -480,6 +541,28 @@ function PopperArrow(props: ScopedProps<PopperArrowProps>): FictNode {
     } as StyleRecord
   }
 
+  useLayoutEffect(() => {
+    const currentNode = node()
+    if (!currentNode) {
+      return
+    }
+
+    const nextX = contentContext.arrowX()
+    const nextY = contentContext.arrowY()
+
+    if (nextX === undefined) {
+      currentNode.style.removeProperty('left')
+    } else {
+      currentNode.style.left = `${nextX}px`
+    }
+
+    if (nextY === undefined) {
+      currentNode.style.removeProperty('top')
+    } else {
+      currentNode.style.top = `${nextY}px`
+    }
+  })
+
   const primitiveProps = mergeProps(() => arrowProps as Record<string, unknown>, {
     style: prop(() => ({
       ...readStyle(arrowProps.style as MaybeAccessor<unknown> | undefined),
@@ -497,7 +580,7 @@ function PopperArrow(props: ScopedProps<PopperArrowProps>): FictNode {
   )
 
   return (
-    <span {...(wrapperProps as Record<string, unknown>)} ref={contentContext.onArrowChange}>
+    <span {...(wrapperProps as Record<string, unknown>)} ref={composedRefs}>
       <ArrowRoot {...(rootProps as Record<string, unknown>)} />
     </span>
   )

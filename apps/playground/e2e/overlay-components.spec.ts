@@ -103,11 +103,31 @@ test('tooltip opens on hover and closes when the pointer leaves', async ({ page 
   const tooltip = page.locator('.rt-TooltipContent')
   const tooltipText = page.locator('.rt-TooltipText').first()
   const arrow = page.locator('.rt-TooltipArrow')
+  const singlelineTrigger = section.getByRole('button', { name: 'Singleline' })
+  const multilineTrigger = section.getByRole('button', { name: 'Multiline' })
 
-  await section.getByRole('button', { name: 'Singleline' }).hover()
+  await singlelineTrigger.hover()
   await expect(tooltip).toContainText('The quick brown fox')
   await expect(tooltipText).toContainText('The quick brown fox')
   await expect(arrow).toBeVisible()
+
+  const singlelineTriggerBox = await singlelineTrigger.boundingBox()
+  const singlelineArrowBox = await arrow.boundingBox()
+
+  expect(singlelineTriggerBox, 'singleline trigger should be measurable').not.toBeNull()
+  expect(singlelineArrowBox, 'tooltip arrow should be measurable').not.toBeNull()
+
+  if (!singlelineTriggerBox || !singlelineArrowBox) {
+    throw new Error('Unable to measure the singleline tooltip geometry')
+  }
+
+  const singlelineTriggerCenterX = singlelineTriggerBox.x + singlelineTriggerBox.width / 2
+  const singlelineArrowCenterX = singlelineArrowBox.x + singlelineArrowBox.width / 2
+
+  expect(
+    Math.abs(singlelineTriggerCenterX - singlelineArrowCenterX),
+    'singleline tooltip arrow should stay centered over the trigger',
+  ).toBeLessThanOrEqual(3)
 
   const tooltipSurfaceStyles = await tooltip.evaluate((node) => {
     const styles = window.getComputedStyle(node)
@@ -161,6 +181,28 @@ test('tooltip opens on hover and closes when the pointer leaves', async ({ page 
 
   await page.mouse.move(8, 8)
   await expect(tooltip).toBeHidden()
+
+  await multilineTrigger.hover()
+  await expect(tooltip).toContainText(
+    'The goal of typography is to relate font size, line height, and line width',
+  )
+
+  const multilineTooltipBox = await tooltip.boundingBox()
+  const multilineTriggerBox = await multilineTrigger.boundingBox()
+  const multilineSide = await tooltip.getAttribute('data-side')
+
+  expect(multilineSide, 'multiline tooltip should remain above the trigger').toBe('top')
+  expect(multilineTooltipBox, 'multiline tooltip should be measurable').not.toBeNull()
+  expect(multilineTriggerBox, 'multiline trigger should be measurable').not.toBeNull()
+
+  if (!multilineTooltipBox || !multilineTriggerBox) {
+    throw new Error('Unable to measure the multiline tooltip geometry')
+  }
+
+  expect(
+    multilineTooltipBox.y + multilineTooltipBox.height,
+    'multiline tooltip should render above the trigger',
+  ).toBeLessThan(multilineTriggerBox.y)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the tooltip demo')

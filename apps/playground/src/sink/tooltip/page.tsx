@@ -6,7 +6,7 @@ export default function TooltipPage() {
     <DocsSection>
       <DocsSectionHeading>Tooltip</DocsSectionHeading>
       <DocsSectionBody>
-        <Flex gap="5">
+        <Flex gap="5" mt="8">
           <Tooltip content="The quick brown fox">
             <Button variant="solid" size="1">
               Singleline
