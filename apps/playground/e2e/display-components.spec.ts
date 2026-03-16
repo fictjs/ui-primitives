@@ -78,9 +78,24 @@ test('button exposes enabled and disabled examples', async ({ page }) => {
 test('callout renders guidance links inside the content', async ({ page }) => {
   await runSectionTest(page, 'callout', 'testing the callout demo', async (section) => {
     const link = section.getByRole('link', { name: 'Configuration Guide' }).first()
+    const colorCombinations = section.locator('details').first()
+    const layoutCombinations = section.locator('details').nth(1)
 
     await expect(link).toBeVisible()
     await expect(link).toHaveAttribute('href', '/')
+
+    await colorCombinations.locator('summary').click()
+    await expect(colorCombinations).toHaveAttribute('open', '')
+    await expect(colorCombinations.locator('p', { hasText: 'Regulars' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: 'Brights' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: 'Metals' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: /^Gray$/ })).toBeVisible()
+    await expect(colorCombinations.locator('table')).toHaveCount(4)
+
+    await layoutCombinations.locator('summary').click()
+    await expect(layoutCombinations).toHaveAttribute('open', '')
+    await expect(layoutCombinations.locator('.rt-CalloutRoot')).toHaveCount(12)
+    await expect(layoutCombinations.locator('.rt-Separator')).toHaveCount(3)
   })
 })
 
