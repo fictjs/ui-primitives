@@ -87,6 +87,7 @@ const SUB_CONTENT_NAME = 'MenuSubContent'
 const SELECTION_KEYS = ['Enter', ' ']
 const FIRST_KEYS = ['ArrowDown', 'PageUp', 'Home']
 const LAST_KEYS = ['ArrowUp', 'PageDown', 'End']
+const GLOBAL_MODAL_LOCK_SELECTOR = '[role="menu"], [role="dialog"], [role="alertdialog"], [role="listbox"]'
 const SUB_OPEN_KEYS: Record<Direction, string[]> = {
   ltr: [...SELECTION_KEYS, 'ArrowRight'],
   rtl: [...SELECTION_KEYS, 'ArrowLeft'],
@@ -198,6 +199,29 @@ function readStyle(value: unknown): StyleRecord {
 
 function getState(open: boolean): 'open' | 'closed' {
   return open ? 'open' : 'closed'
+}
+
+function reconcileGlobalModalLocks(ownerDocument: Document): void {
+  const body = ownerDocument.body
+  if (!body) {
+    return
+  }
+
+  const hasBlockingLayer = Array.from(
+    ownerDocument.querySelectorAll<HTMLElement>(GLOBAL_MODAL_LOCK_SELECTOR),
+  ).some((node) => node.isConnected)
+
+  if (hasBlockingLayer) {
+    return
+  }
+
+  if (body.style.pointerEvents === 'none') {
+    body.style.pointerEvents = ''
+  }
+
+  if (body.hasAttribute('data-scroll-locked')) {
+    body.removeAttribute('data-scroll-locked')
+  }
 }
 
 function isMenuItemDisabled(element: MenuItemElement): boolean {
@@ -371,6 +395,7 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
     __scopeMenu as Scope<MenuContentContextValue | undefined>,
   )
   const ref = { current: null as HTMLDivElement | null }
+  const hasOpened = { current: false }
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<HTMLDivElement>,
     ref,
@@ -386,6 +411,28 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
       if (!menuContext.open()) return
       contentContext.focusItem('first')
     }, 0)
+  })
+
+  useLayoutEffect(() => {
+    const isOpen = menuContext.open()
+
+    if (isOpen) {
+      hasOpened.current = true
+      return
+    }
+
+    if (!menuContext.modal() || !hasOpened.current) {
+      return
+    }
+
+    const currentDocument = ref.current?.ownerDocument ?? globalThis.document
+    const timeoutId = globalThis.setTimeout(() => {
+      reconcileGlobalModalLocks(currentDocument)
+    }, 0)
+
+    return () => {
+      globalThis.clearTimeout(timeoutId)
+    }
   })
 
   useLayoutEffect(() => {

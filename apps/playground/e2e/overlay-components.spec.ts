@@ -277,11 +277,27 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
 
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        pointerEvents: document.body.style.pointerEvents,
+        scrollLocked: document.body.getAttribute('data-scroll-locked'),
+      })),
+    )
+    .toEqual({ pointerEvents: '', scrollLocked: null })
 
   await secondTrigger.click()
   await expect(menuItem).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        pointerEvents: document.body.style.pointerEvents,
+        scrollLocked: document.body.getAttribute('data-scroll-locked'),
+      })),
+    )
+    .toEqual({ pointerEvents: '', scrollLocked: null })
 
   await colorDetails.locator('summary').evaluate((node) => {
     ;(node as HTMLElement).click()
@@ -303,21 +319,33 @@ test('context menu opens on right click and closes on escape', async ({ page }) 
   const popperWrapper = page.locator('[data-radix-popper-content-wrapper]').first()
   const menuContent = page.locator('.rt-ContextMenuContent').first()
 
-  await trigger.dispatchEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
+  await trigger.click({ button: 'right' })
   await expect(menuItem).toBeVisible()
   await expect(popperWrapper).toBeVisible()
   await expect(menuContent).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        pointerEvents: document.body.style.pointerEvents,
+        scrollLocked: document.body.getAttribute('data-scroll-locked'),
+      })),
+    )
+    .toEqual({ pointerEvents: '', scrollLocked: null })
 
-  await secondTrigger.dispatchEvent('contextmenu', {
-    bubbles: true,
-    cancelable: true,
-    button: 2,
-  })
+  await secondTrigger.click({ button: 'right' })
   await expect(menuItem).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        pointerEvents: document.body.style.pointerEvents,
+        scrollLocked: document.body.getAttribute('data-scroll-locked'),
+      })),
+    )
+    .toEqual({ pointerEvents: '', scrollLocked: null })
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the context menu demo')
