@@ -43,8 +43,17 @@ test('blockquote renders multiple quote variants', async ({ page }) => {
 
 test('container renders nested size examples', async ({ page }) => {
   await runSectionTest(page, 'container', 'testing the container demo', async (section) => {
+    const containerInners = section.locator('.rt-ContainerInner')
+
     await expect(section.getByText('This should be size 4')).toBeVisible()
     await expect(section.getByText('This should be size 1')).toBeVisible()
+    await expect(containerInners).toHaveCount(2)
+
+    const widths = await containerInners.evaluateAll((elements) =>
+      elements.map((element) => Math.round((element as HTMLElement).getBoundingClientRect().width)),
+    )
+
+    expect(widths[0]).toBeGreaterThan(widths[1])
   })
 })
 
