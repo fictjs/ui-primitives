@@ -7,6 +7,7 @@ import { useId } from '@fictjs/id'
 import {
   createMenuScope,
   Menu,
+  MenuAnchor,
   MenuPortal,
   MenuContent,
   MenuGroup,
@@ -277,7 +278,7 @@ function DropdownMenu(props: ScopedProps<DropdownMenuProps>): FictNode {
       open={open}
       onOpenChange={setOpen}
       onOpenToggle={() => {
-        setOpen((previousOpen) => !previousOpen)
+        setOpen(!open())
       }}
       modal={modal}
     >
@@ -302,6 +303,7 @@ function DropdownMenuTrigger(props: ScopedProps<DropdownMenuTriggerProps>): Fict
     TRIGGER_NAME,
     __scopeDropdownMenu as Scope<DropdownMenuContextValue | undefined>,
   )
+  const menuScope = useMenuScope(__scopeDropdownMenu)
   const disabled = () =>
     props.disabled === undefined
       ? false
@@ -326,15 +328,24 @@ function DropdownMenuTrigger(props: ScopedProps<DropdownMenuTriggerProps>): Fict
       __scopeDropdownMenu: undefined,
       disabled: undefined,
       ref: undefined,
-      onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+      onPointerDown: composeEventHandlers<PointerEvent>(
+        props.onPointerDown as ((event: PointerEvent) => void) | undefined,
         (event) => {
           if (disabled()) {
             event.preventDefault()
             return
           }
 
-          context.onOpenToggle()
+          if (event.button !== 0 || event.ctrlKey) {
+            return
+          }
+
+          const wasOpen = context.open()
+          context.onOpenChange(!wasOpen)
+
+          if (!wasOpen) {
+            event.preventDefault()
+          }
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
@@ -343,21 +354,25 @@ function DropdownMenuTrigger(props: ScopedProps<DropdownMenuTriggerProps>): Fict
           if (disabled()) return
 
           if (event.key === 'ArrowDown') {
-            event.preventDefault()
             context.onOpenChange(true)
+            event.preventDefault()
             return
           }
 
           if (event.key === 'Enter' || event.key === ' ') {
+            context.onOpenChange(!context.open())
             event.preventDefault()
-            context.onOpenToggle()
           }
         },
       ),
     },
   )
 
-  return <Primitive.button {...primitiveProps} ref={composedRefs} />
+  return (
+    <MenuAnchor {...menuScope} asChild>
+      <Primitive.button {...primitiveProps} ref={composedRefs} />
+    </MenuAnchor>
+  )
 }
 
 DropdownMenuTrigger.displayName = TRIGGER_NAME
@@ -376,6 +391,7 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
     __scopeDropdownMenu as Scope<DropdownMenuContextValue | undefined>,
   )
   const menuScope = useMenuScope(__scopeDropdownMenu)
+  let hasInteractedOutside = false
   const side = () =>
     props.side === undefined
       ? 'bottom'
@@ -434,10 +450,42 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
               }}
               onCloseAutoFocus={(event) => {
                 props.onCloseAutoFocus?.(event)
-                if (!event.defaultPrevented) {
+                if (!event.defaultPrevented && !hasInteractedOutside) {
                   context.triggerRef.current?.focus()
                 }
+                hasInteractedOutside = false
                 event.preventDefault()
+              }}
+              onInteractOutside={(event) => {
+                props.onInteractOutside?.(event)
+                if (event.defaultPrevented) {
+                  return
+                }
+
+                const originalEvent = event.detail.originalEvent as PointerEvent | FocusEvent
+                const target = originalEvent.target as HTMLElement | null
+                const ctrlLeftClick =
+                  'button' in originalEvent && originalEvent.button === 0 && originalEvent.ctrlKey
+                const isRightClick =
+                  'button' in originalEvent && (originalEvent.button === 2 || ctrlLeftClick)
+                const isMenuFocus =
+                  originalEvent.type === 'focusin' && !!target?.closest('[role="menu"]')
+                const isTriggerInteraction =
+                  !!target && !!context.triggerRef.current?.contains(target)
+
+                if (isMenuFocus) {
+                  event.preventDefault()
+                  return
+                }
+
+                if (isTriggerInteraction) {
+                  event.preventDefault()
+                  return
+                }
+
+                if (!context.modal() || isRightClick) {
+                  hasInteractedOutside = true
+                }
               }}
             />
           </div>

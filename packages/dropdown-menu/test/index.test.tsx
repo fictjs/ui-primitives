@@ -8,9 +8,27 @@ import { Content, DropdownMenu, Item, Portal, Trigger } from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
+    new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      pointerType: 'mouse',
+    }),
+  )
+  target.dispatchEvent(
     new MouseEvent('click', {
       bubbles: true,
       cancelable: true,
+    }),
+  )
+}
+
+function keydown(target: EventTarget, key: string): void {
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      key,
     }),
   )
 }
@@ -215,6 +233,76 @@ describe('@fictjs/dropdown-menu', () => {
 
     expect(container.querySelector('[data-testid="content"]')).toBeNull()
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('reopens from the same trigger after closing', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <DropdownMenu>
+          <Trigger data-testid="trigger">Open</Trigger>
+          <Content data-testid="content">
+            <Item data-testid="item">Item</Item>
+          </Content>
+        </DropdownMenu>
+      ),
+      container,
+    )
+
+    let trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    click(trigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    click(container.querySelector('[data-testid="item"]') as HTMLDivElement)
+    await waitForEffects()
+    await waitForEffects()
+
+    trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    click(trigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="content"]')).not.toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('reopens from the same trigger after closing with escape', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <DropdownMenu>
+          <Trigger data-testid="trigger">Open</Trigger>
+          <Content data-testid="content">
+            <Item data-testid="item">Item</Item>
+          </Content>
+        </DropdownMenu>
+      ),
+      container,
+    )
+
+    let trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    click(trigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    keydown(document, 'Escape')
+    await waitForEffects()
+    await waitForEffects()
+
+    trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    click(trigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="content"]')).not.toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
   })
 
   it('closes portaled content after selecting an item in a custom portal container', async () => {

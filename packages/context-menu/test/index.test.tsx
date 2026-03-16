@@ -140,4 +140,42 @@ describe('@fictjs/context-menu', () => {
 
     expect(portalRoot.querySelector('[data-testid="second-content"]')).not.toBeNull()
   })
+
+  it('can reopen from the same trigger after closing with escape', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    mount(
+      () => (
+        <ContextMenu>
+          <Trigger data-testid="trigger">Area</Trigger>
+          <Portal container={portalRoot}>
+            <Content data-testid="content">
+              <Item data-testid="item">Action</Item>
+            </Content>
+          </Portal>
+        </ContextMenu>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLDivElement
+
+    contextMenu(trigger, 32, 64)
+    await waitForEffects()
+    await waitForEffects()
+    expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    escape()
+    await waitForEffects()
+    await waitForEffects()
+    expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
+
+    contextMenu(trigger, 72, 96)
+    await waitForEffects()
+    await waitForEffects()
+
+    expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+  })
 })

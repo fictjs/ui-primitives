@@ -66,7 +66,30 @@ test('cursors toggles pointer cursor styles and opens the dropdown menu', async 
       .evaluate((element) => getComputedStyle(element).getPropertyValue('--cursor-button').trim())
     expect(cursorButton).toBe('pointer')
 
-    await section.getByRole('button', { name: /Dropdown Menu/ }).click()
+    const computedCursors = await section
+      .locator('button, a[href="#Cursors"]')
+      .evaluateAll((elements) =>
+        elements.map((element) => getComputedStyle(element as HTMLElement).cursor),
+      )
+
+    expect(computedCursors.every((value) => value === 'pointer')).toBe(true)
+
+    const trigger = section.getByRole('button', { name: /Dropdown Menu/ })
+
+    await trigger.click()
+    await expect(page.getByText('New Tab')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByText('New Tab')).toBeHidden()
+    await expect
+      .poll(() =>
+        page.evaluate(() => ({
+          pointerEvents: document.body.style.pointerEvents,
+          scrollLocked: document.body.getAttribute('data-scroll-locked'),
+        })),
+      )
+      .toEqual({ pointerEvents: '', scrollLocked: null })
+
+    await trigger.click()
     await expect(page.getByText('New Tab')).toBeVisible()
   })
 })

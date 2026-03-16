@@ -10,6 +10,7 @@ import {
   Button,
   Card,
   CheckboxGroup,
+  DropdownMenu,
   IconButton,
   Kbd,
   Link,
@@ -20,7 +21,28 @@ import {
 } from '../src/index.js'
 
 function click(target: Element): void {
+  target.dispatchEvent(
+    new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      pointerType: 'mouse',
+    }),
+  )
   target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+}
+
+function keydown(target: EventTarget, key: string): void {
+  const eventTarget =
+    target instanceof Document ? (target.body ?? target.documentElement ?? target) : target
+
+  eventTarget.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      key,
+    }),
+  )
 }
 
 async function flushEffects(cycles = 6): Promise<void> {
@@ -400,5 +422,46 @@ describe('@fictjs/radix-ui-themes', () => {
       '[data-testid="controlled-popover-trigger"]',
     ) as HTMLButtonElement
     expect(finalTrigger.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('reopens themed dropdown menu content from the same trigger after closing with escape', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <Button data-testid="dropdown-trigger">Open</Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content data-testid="dropdown-content">
+              <DropdownMenu.Item data-testid="dropdown-item">Item</DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    let trigger = container.querySelector('[data-testid="dropdown-trigger"]') as HTMLButtonElement
+    expect(trigger).not.toBeNull()
+
+    click(trigger)
+    await flushEffects()
+    expect(document.body.querySelector('[data-testid="dropdown-content"]')).not.toBeNull()
+
+    keydown(document, 'Escape')
+    await flushEffects()
+    expect(document.body.querySelector('[data-testid="dropdown-content"]')).toBeNull()
+
+    trigger = container.querySelector('[data-testid="dropdown-trigger"]') as HTMLButtonElement
+    click(trigger)
+    await flushEffects()
+
+    expect(document.body.querySelector('[data-testid="dropdown-content"]')).not.toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
   })
 })

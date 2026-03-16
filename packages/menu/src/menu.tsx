@@ -168,6 +168,10 @@ type MenuSubProps = {
 }
 type MenuSubTriggerProps = MenuItemProps
 type MenuSubContentProps = MenuContentProps
+type PointerDownOutsideEvent = Parameters<
+  NonNullable<DismissableLayerProps['onPointerDownOutside']>
+>[0]
+type FocusOutsideEvent = Parameters<NonNullable<DismissableLayerProps['onFocusOutside']>>[0]
 
 function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
   return (
@@ -497,8 +501,32 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
       onOpenAutoFocus: undefined,
       ref: undefined,
       onDismiss: undefined,
-      onInteractOutside: props.onInteractOutside,
-      onFocusOutside: props.onFocusOutside,
+      onInteractOutside: (event: PointerDownOutsideEvent | FocusOutsideEvent) => {
+        const target = event.detail.originalEvent.target as HTMLElement | null
+        const isFocusInsideContent =
+          event.detail.originalEvent.type === 'focusin' &&
+          !!target &&
+          !!ref.current &&
+          ref.current.contains(target)
+
+        if (isFocusInsideContent) {
+          event.preventDefault()
+          return
+        }
+
+        props.onInteractOutside?.(event)
+      },
+      onFocusOutside: (event: FocusOutsideEvent) => {
+        const target = event.detail.originalEvent.target as HTMLElement | null
+        const isFocusInsideContent = !!target && !!ref.current && ref.current.contains(target)
+
+        if (isFocusInsideContent) {
+          event.preventDefault()
+          return
+        }
+
+        props.onFocusOutside?.(event)
+      },
       onPointerDownOutside: props.onPointerDownOutside,
       onEscapeKeyDown: props.onEscapeKeyDown,
     },
