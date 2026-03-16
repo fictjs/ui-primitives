@@ -107,10 +107,10 @@ export default function CardPage() {
 
 function ContactCard({ variant }: { variant: (typeof cardPropDefs.variant.values)[number] }) {
   return (
-    <Card variant={variant}>
-      <a href="#some-page" style={{ color: 'inherit', textDecoration: 'none' }}>
+    <Card variant={variant} asChild>
+      <a href="#some-page">
         <Flex align="center" gap="2">
-          <Avatar src="/avatar.svg" fallback="D" />
+          <Avatar src="./api/avatar" fallback="D" />
           <div>
             <Text as="p" size="2" weight="medium">
               Poppy Nichols

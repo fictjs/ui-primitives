@@ -76,7 +76,11 @@ test('callout renders guidance links inside the content', async ({ page }) => {
 
 test('card renders linked contact cards', async ({ page }) => {
   await runSectionTest(page, 'card', 'testing the card demo', async (section) => {
-    await expect(section.locator('a[href="#some-page"]').first()).toBeVisible()
+    const linkedCards = section.locator('a.rt-Card[href="#some-page"]')
+
+    await expect(linkedCards.first()).toBeVisible()
+    await expect(linkedCards).toHaveCount(15)
+    await expect(linkedCards.nth(3)).not.toHaveAttribute('style', /.+/)
     await expect(section.getByText('Poppy Nichols').first()).toBeVisible()
   })
 })
