@@ -189,13 +189,19 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     return () => {
       context.layers.delete(currentNode)
       context.layersWithOutsidePointerEventsDisabled.delete(currentNode)
+      const restoreBodyPointerEvents = () => {
+        pruneLayerState()
 
-      if (
-        shouldDisableOutsidePointerEvents &&
-        context.layersWithOutsidePointerEventsDisabled.size === 0
-      ) {
-        currentDocument.body.style.pointerEvents = originalBodyPointerEvents
+        if (
+          shouldDisableOutsidePointerEvents &&
+          context.layersWithOutsidePointerEventsDisabled.size === 0
+        ) {
+          currentDocument.body.style.pointerEvents = originalBodyPointerEvents
+        }
       }
+
+      restoreBodyPointerEvents()
+      queueMicrotask(restoreBodyPointerEvents)
 
       dispatchUpdate(currentDocument)
     }

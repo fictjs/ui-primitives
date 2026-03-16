@@ -10,8 +10,8 @@
   border-spacing: 0;
   box-sizing: border-box;
 
-  /* Makes "height: 100%" work on content inside cells */
-  height: 0;
+  /* Fict collapses ScrollArea tables when this is forced to zero. */
+  height: auto;
 }
 
 .rt-TableHeader {

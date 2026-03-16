@@ -29,6 +29,22 @@ async function waitForEffects(cycles = 6): Promise<void> {
   }
 }
 
+async function waitForCondition(
+  predicate: () => boolean,
+  message: string,
+  attempts = 20,
+): Promise<void> {
+  for (let index = 0; index < attempts; index++) {
+    if (predicate()) {
+      return
+    }
+
+    await waitForEffects()
+  }
+
+  throw new Error(message)
+}
+
 describe('@fictjs/dropdown-menu', () => {
   const cleanups: Array<() => void> = []
 
@@ -42,6 +58,7 @@ describe('@fictjs/dropdown-menu', () => {
     }
 
     document.body.innerHTML = ''
+    document.body.style.pointerEvents = ''
     vi.clearAllMocks()
   })
 
@@ -74,6 +91,102 @@ describe('@fictjs/dropdown-menu', () => {
 
     expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
     expect(nextTrigger.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('positions portaled content next to the trigger instead of leaving it in normal flow', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    mount(
+      () => (
+        <DropdownMenu>
+          <Trigger data-testid="trigger">Open</Trigger>
+          <Portal container={portalRoot}>
+            <Content data-testid="content">
+              <Item data-testid="item">Item</Item>
+            </Content>
+          </Portal>
+        </DropdownMenu>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      x: 18,
+      y: 12,
+      width: 34,
+      height: 24,
+      top: 12,
+      right: 52,
+      bottom: 36,
+      left: 18,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    click(trigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    const wrapper = portalRoot.querySelector(
+      '[data-radix-popper-content-wrapper]',
+    ) as HTMLDivElement
+    const content = portalRoot.querySelector('[data-testid="content"]') as HTMLDivElement
+
+    expect(wrapper.style.position).toBe('fixed')
+    expect(wrapper.style.left).toBe('0px')
+    expect(wrapper.style.top).toBe('0px')
+    expect(wrapper.style.transform).toBe('translate(18px, 40px)')
+    expect(wrapper.style.minWidth).toBe('max-content')
+    expect(content.style.width).toBe('100%')
+    expect(content.getAttribute('data-side')).toBe('bottom')
+  })
+
+  it('restores body pointer events after closing one menu so another trigger can open', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <>
+          <DropdownMenu>
+            <Trigger data-testid="first-trigger">First</Trigger>
+            <Content data-testid="first-content">
+              <Item data-testid="first-item">First item</Item>
+            </Content>
+          </DropdownMenu>
+          <DropdownMenu>
+            <Trigger data-testid="second-trigger">Second</Trigger>
+            <Content data-testid="second-content">
+              <Item>Second item</Item>
+            </Content>
+          </DropdownMenu>
+        </>
+      ),
+      container,
+    )
+
+    const firstTrigger = container.querySelector('[data-testid="first-trigger"]') as HTMLButtonElement
+    const secondTrigger = container.querySelector(
+      '[data-testid="second-trigger"]',
+    ) as HTMLButtonElement
+
+    click(firstTrigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    click(container.querySelector('[data-testid="first-item"]') as HTMLDivElement)
+    await waitForCondition(
+      () => container.querySelector('[data-testid="first-content"]') === null,
+      'expected the first dropdown menu to close after selecting an item',
+    )
+
+    click(secondTrigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="second-content"]')).not.toBeNull()
   })
 
   it('restores the trigger closed state when content closes', async () => {

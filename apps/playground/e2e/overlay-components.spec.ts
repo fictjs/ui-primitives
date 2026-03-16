@@ -230,12 +230,65 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
   const section = await gotoSinkSection(page, 'dropdown-menu')
   const tracker = trackBrowserErrors(page)
   const menuItem = page.getByRole('menuitem', { name: 'New Tab ⌘+T' })
-  const trigger = section.locator('table button').filter({ hasText: 'More' }).first()
+  const menuContent = page.locator('.rt-DropdownMenuContent').first()
+  const popperWrapper = page.locator('[data-radix-popper-content-wrapper]').first()
+  const triggers = section.locator('table button').filter({ hasText: 'More' })
+  const trigger = triggers.first()
+  const secondTrigger = triggers.nth(1)
+  const colorDetails = section
+    .locator('details')
+    .filter({ hasText: 'See colors & variants combinations' })
+    .first()
 
-  await trigger.dispatchEvent('click')
+  await expect(trigger).toBeVisible()
+  await trigger.click()
+  await expect(menuItem).toBeVisible()
+  await expect(popperWrapper).toBeVisible()
+  await expect(menuContent).toBeVisible()
+
+  const triggerBox = await trigger.boundingBox()
+  const wrapperBox = await popperWrapper.boundingBox()
+  const menuBox = await menuContent.boundingBox()
+
+  expect(triggerBox, 'dropdown menu trigger should be measurable').not.toBeNull()
+  expect(wrapperBox, 'dropdown menu wrapper should be measurable').not.toBeNull()
+  expect(menuBox, 'dropdown menu content should be measurable').not.toBeNull()
+
+  if (!triggerBox || !wrapperBox || !menuBox) {
+    throw new Error('Unable to measure dropdown menu geometry')
+  }
+
+  expect(
+    Math.abs(triggerBox.x - menuBox.x),
+    'dropdown menu content should stay aligned with the trigger instead of dropping to the page bottom',
+  ).toBeLessThanOrEqual(4)
+  expect(
+    menuBox.y - (triggerBox.y + triggerBox.height),
+    'dropdown menu content should render just below the trigger',
+  ).toBeGreaterThanOrEqual(0)
+  expect(
+    menuBox.y - (triggerBox.y + triggerBox.height),
+    'dropdown menu content should stay close to the trigger',
+  ).toBeLessThanOrEqual(8)
+  expect(
+    Math.abs(wrapperBox.width - menuBox.width),
+    'dropdown menu content should fill the popper wrapper width',
+  ).toBeLessThanOrEqual(1)
+
+  await page.keyboard.press('Escape')
+  await expect(menuItem).toBeHidden()
+
+  await secondTrigger.click()
   await expect(menuItem).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()
+
+  await colorDetails.locator('summary').evaluate((node) => {
+    ;(node as HTMLElement).click()
+  })
+  await expect(colorDetails).toHaveJSProperty('open', true)
+  await expect(colorDetails.locator('.rt-TableRoot')).toHaveCount(4)
+  await expect(colorDetails.getByRole('button')).toHaveCount(104)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the dropdown menu demo')

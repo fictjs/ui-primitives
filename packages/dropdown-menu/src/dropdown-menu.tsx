@@ -110,6 +110,7 @@ type DropdownMenuArrowProps = MenuArrowProps
 type DropdownMenuSubProps = MenuSubProps
 type DropdownMenuSubTriggerProps = MenuSubTriggerProps
 type DropdownMenuSubContentProps = MenuSubContentProps
+type StyleRecord = Record<string, string | number>
 
 function isReadableAccessor(value: unknown): value is () => unknown {
   const taggedValue = value as unknown as Record<symbol, unknown>
@@ -129,6 +130,114 @@ function readValue<T>(value: MaybeAccessor<T>, depth = 0): T {
   }
 
   return readValue(value(), depth + 1)
+}
+
+function readStyle(value: unknown): StyleRecord {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {}
+  }
+
+  return value as StyleRecord
+}
+
+function getDropdownMenuWrapperStyle(
+  trigger: HTMLElement | null,
+  side: 'top' | 'right' | 'bottom' | 'left',
+  align: 'start' | 'center' | 'end',
+  sideOffset: number,
+  alignOffset: number,
+): StyleRecord {
+  if (!trigger) {
+    return {}
+  }
+
+  const rect = trigger.getBoundingClientRect()
+  const availableWidth = globalThis.innerWidth || document.documentElement.clientWidth || 0
+  const availableHeight = globalThis.innerHeight || document.documentElement.clientHeight || 0
+  let left = rect.left
+  let top = rect.bottom + sideOffset
+  let translateSuffix = ''
+
+  if (side === 'top') {
+    top = rect.top - sideOffset
+  } else if (side === 'right') {
+    left = rect.right + sideOffset
+    top = rect.top
+  } else if (side === 'left') {
+    left = rect.left - sideOffset
+    top = rect.top
+  }
+
+  if (side === 'top' || side === 'bottom') {
+    if (align === 'center') {
+      left = rect.left + rect.width / 2
+    } else if (align === 'end') {
+      left = rect.right
+    }
+
+    left += alignOffset
+
+    if (align === 'center') {
+      translateSuffix = side === 'top' ? ' translate(-50%, -100%)' : ' translate(-50%, 0)'
+    } else if (align === 'end') {
+      translateSuffix = side === 'top' ? ' translate(-100%, -100%)' : ' translate(-100%, 0)'
+    } else if (side === 'top') {
+      translateSuffix = ' translate(0, -100%)'
+    }
+  } else {
+    if (align === 'center') {
+      top = rect.top + rect.height / 2
+    } else if (align === 'end') {
+      top = rect.bottom
+    }
+
+    top += alignOffset
+
+    if (align === 'center') {
+      translateSuffix = side === 'left' ? ' translate(-100%, -50%)' : ' translate(0, -50%)'
+    } else if (align === 'end') {
+      translateSuffix = side === 'left' ? ' translate(-100%, -100%)' : ' translate(0, -100%)'
+    } else if (side === 'left') {
+      translateSuffix = ' translate(-100%, 0)'
+    }
+  }
+
+  const roundedLeft = Math.round(left)
+  const roundedTop = Math.round(top)
+  const originX =
+    side === 'top' || side === 'bottom'
+      ? align === 'center'
+        ? '50%'
+        : align === 'end'
+          ? '100%'
+          : '0%'
+      : side === 'left'
+        ? '100%'
+        : '0%'
+  const originY =
+    side === 'left' || side === 'right'
+      ? align === 'center'
+        ? '50%'
+        : align === 'end'
+          ? '100%'
+          : '0%'
+      : side === 'top'
+        ? '100%'
+        : '0px'
+
+  return {
+    position: 'fixed',
+    left: '0px',
+    top: '0px',
+    transform: `translate(${roundedLeft}px, ${roundedTop}px)${translateSuffix}`,
+    minWidth: 'max-content',
+    zIndex: 'auto',
+    '--radix-popper-transform-origin': `${originX} ${originY}`,
+    '--radix-popper-available-width': `${Math.max(availableWidth, 0)}px`,
+    '--radix-popper-available-height': `${Math.max(availableHeight, 0)}px`,
+    '--radix-popper-anchor-width': `${Math.max(rect.width, 0)}px`,
+    '--radix-popper-anchor-height': `${Math.max(rect.height, 0)}px`,
+  }
 }
 
 function DropdownMenu(props: ScopedProps<DropdownMenuProps>): FictNode {
@@ -267,21 +376,74 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
     __scopeDropdownMenu as Scope<DropdownMenuContextValue | undefined>,
   )
   const menuScope = useMenuScope(__scopeDropdownMenu)
+  const side = () =>
+    props.side === undefined
+      ? 'bottom'
+      : (readValue(props.side as MaybeAccessor<'top' | 'right' | 'bottom' | 'left' | undefined>) ??
+        'bottom')
+  const align = () =>
+    props.align === undefined
+      ? 'start'
+      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ??
+        'start')
+  const sideOffset = () =>
+    props.sideOffset === undefined
+      ? 4
+      : (readValue(props.sideOffset as MaybeAccessor<number | undefined>) ?? 4)
+  const alignOffset = () =>
+    props.alignOffset === undefined
+      ? 0
+      : (readValue(props.alignOffset as MaybeAccessor<number | undefined>) ?? 0)
+  const forceMount = () =>
+    props.forceMount === undefined
+      ? false
+      : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
+  const wrapperStyle = () =>
+    getDropdownMenuWrapperStyle(
+      context.triggerRef.current,
+      side(),
+      align(),
+      sideOffset(),
+      alignOffset(),
+    )
 
   return (
-    <MenuContent
-      {...menuScope}
-      {...contentProps}
-      id={context.contentId()}
-      aria-labelledby={context.triggerId()}
-      onCloseAutoFocus={(event) => {
-        props.onCloseAutoFocus?.(event)
-        if (!event.defaultPrevented) {
-          context.triggerRef.current?.focus()
-        }
-        event.preventDefault()
-      }}
-    />
+    <>
+      {() =>
+        context.open() || forceMount() ? (
+          <div data-radix-popper-content-wrapper="" style={wrapperStyle()}>
+            <MenuContent
+              {...menuScope}
+              {...contentProps}
+              id={context.contentId()}
+              data-side={prop(side)}
+              data-align={prop(align)}
+              aria-labelledby={context.triggerId()}
+              style={{
+                outline: 'none',
+                width: '100%',
+                '--radix-dropdown-menu-content-transform-origin':
+                  'var(--radix-popper-transform-origin)',
+                '--radix-dropdown-menu-content-available-width':
+                  'var(--radix-popper-available-width)',
+                '--radix-dropdown-menu-content-available-height':
+                  'var(--radix-popper-available-height)',
+                '--radix-dropdown-menu-trigger-width': 'var(--radix-popper-anchor-width)',
+                '--radix-dropdown-menu-trigger-height': 'var(--radix-popper-anchor-height)',
+                ...readStyle(props.style),
+              }}
+              onCloseAutoFocus={(event) => {
+                props.onCloseAutoFocus?.(event)
+                if (!event.defaultPrevented) {
+                  context.triggerRef.current?.focus()
+                }
+                event.preventDefault()
+              }}
+            />
+          </div>
+        ) : null
+      }
+    </>
   )
 }
 

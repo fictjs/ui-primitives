@@ -1,5 +1,5 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
-import { Button, Code, DropdownMenu, IconButton, Table, Text } from '@fictjs/radix-ui-themes'
+import { Box, Button, Code, DropdownMenu, IconButton, Table, Text } from '@fictjs/radix-ui-themes'
 import { dropdownMenuContentPropDefs } from '@fictjs/radix-ui-themes/props'
 
 import { DropdownMenuContentDemo } from '../_components'
@@ -84,50 +84,52 @@ export default function DropdownMenuPage() {
               See colors & variants combinations
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
-                    {dropdownMenuContentPropDefs.variant.values.map((variant) => (
-                      <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+          <Box>
+            {accentColorsGrouped.map((group) => (
+              <Box key={group.label}>
+                <Text as="p" weight="bold" mt="6" mb="4">
+                  {group.label}
+                </Text>
+                <Table.Root>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell />
                       {dropdownMenuContentPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant}>
-                          <DropdownMenu.Root>
-                            <DropdownMenu.Trigger>
-                              <IconButton variant="soft" color="gray">
-                                <DotsHorizontalIcon />
-                              </IconButton>
-                            </DropdownMenu.Trigger>
-                            <DropdownMenuContentDemo variant={variant} color={color} />
-                          </DropdownMenu.Root>
-                          <DropdownMenu.Root>
-                            <DropdownMenu.Trigger>
-                              <IconButton variant="soft" color="gray" ml="2">
-                                <DotsHorizontalIcon />
-                              </IconButton>
-                            </DropdownMenu.Trigger>
-                            <DropdownMenuContentDemo variant={variant} color={color} highContrast />
-                          </DropdownMenu.Root>
-                        </Table.Cell>
+                        <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
                       ))}
                     </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+                  </Table.Header>
+                  <Table.Body>
+                    {group.values.map((color) => (
+                      <Table.Row key={color}>
+                        <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+                        {dropdownMenuContentPropDefs.variant.values.map((variant) => (
+                          <Table.Cell key={variant}>
+                            <DropdownMenu.Root>
+                              <DropdownMenu.Trigger>
+                                <IconButton variant="soft" color="gray">
+                                  <DotsHorizontalIcon />
+                                </IconButton>
+                              </DropdownMenu.Trigger>
+                              <DropdownMenuContentDemo variant={variant} color={color} />
+                            </DropdownMenu.Root>
+                            <DropdownMenu.Root>
+                              <DropdownMenu.Trigger>
+                                <IconButton variant="soft" color="gray" ml="2">
+                                  <DotsHorizontalIcon />
+                                </IconButton>
+                              </DropdownMenu.Trigger>
+                              <DropdownMenuContentDemo variant={variant} color={color} highContrast />
+                            </DropdownMenu.Root>
+                          </Table.Cell>
+                        ))}
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Root>
+              </Box>
+            ))}
+          </Box>
         </details>
       </DocsSectionBody>
     </DocsSection>
