@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
+import { Presence } from '../../presence/src/index.js'
+
 import { Branch, Root } from '../src/index.js'
 
 function pointerDown(target: Element): void {
@@ -212,6 +214,70 @@ describe('@fictjs/dismissable-layer', () => {
     await flushEffects()
 
     expect(document.body.style.pointerEvents).toBe('')
+  })
+
+  it('reapplies outside pointer event locking after reopening', async () => {
+    const open = createSignal(true)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <>
+          {() =>
+            open() ? (
+              <Root data-testid="layer" disableOutsidePointerEvents>
+                <button data-testid="inside" type="button">
+                  Inside
+                </button>
+              </Root>
+            ) : null
+          }
+        </>
+      ),
+      container,
+    )
+
+    await waitForListenerRegistration()
+    expect(document.body.style.pointerEvents).toBe('none')
+
+    open(false)
+    await flushEffects()
+    expect(document.body.style.pointerEvents).toBe('')
+
+    open(true)
+    await waitForListenerRegistration()
+    expect(document.body.style.pointerEvents).toBe('none')
+  })
+
+  it('reapplies outside pointer event locking when presence remounts the layer', async () => {
+    const present = createSignal(true)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Presence present={present}>
+          <Root data-testid="layer" disableOutsidePointerEvents>
+            <button data-testid="inside" type="button">
+              Inside
+            </button>
+          </Root>
+        </Presence>
+      ),
+      container,
+    )
+
+    await waitForListenerRegistration()
+    expect(document.body.style.pointerEvents).toBe('none')
+
+    present(false)
+    await waitForListenerRegistration()
+    expect(document.body.style.pointerEvents).toBe('')
+
+    present(true)
+    await waitForListenerRegistration()
+    expect(document.body.style.pointerEvents).toBe('none')
   })
 
   it('only dismisses the topmost layer on escape', async () => {

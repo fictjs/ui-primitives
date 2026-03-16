@@ -188,4 +188,42 @@ describe('@fictjs/alert-dialog', () => {
 
     expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
   })
+
+  it('supports repeated open and cancel cycles without breaking modal state', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <AlertDialog>
+          <AlertDialogTrigger data-testid="trigger">Delete</AlertDialogTrigger>
+          <AlertDialogPortal>
+            <AlertDialogOverlay />
+            <AlertDialogContent data-testid="content">
+              <AlertDialogTitle>Delete item</AlertDialogTitle>
+              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+              <AlertDialogCancel data-testid="cancel">Cancel</AlertDialogCancel>
+            </AlertDialogContent>
+          </AlertDialogPortal>
+        </AlertDialog>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    for (let index = 0; index < 3; index += 1) {
+      click(trigger)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+      expect(document.body.style.pointerEvents).toBe('none')
+
+      click(document.body.querySelector('[data-testid="cancel"]') as HTMLButtonElement)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+      expect(document.body.style.pointerEvents).toBe('')
+    }
+  })
 })

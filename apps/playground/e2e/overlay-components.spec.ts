@@ -40,14 +40,17 @@ test('alert dialog opens and closes from the cancel action', async ({ page }) =>
   await expect(openButton).toHaveClass(/rt-Button/)
   await expect(openButton).not.toHaveAttribute('style', /.+/)
 
-  await openButton.click()
   const dialog = page.getByRole('alertdialog')
   const cancelButton = page.getByRole('button', { name: 'Cancel' })
-  await expect(dialog).toBeVisible()
-  await expect(cancelButton).toHaveClass(/rt-Button/)
-  await expect(cancelButton).not.toHaveAttribute('style', /.+/)
-  await cancelButton.click()
-  await expect(dialog).toBeHidden()
+
+  for (let index = 0; index < 3; index += 1) {
+    await openButton.click()
+    await expect(dialog).toBeVisible()
+    await expect(cancelButton).toHaveClass(/rt-Button/)
+    await expect(cancelButton).not.toHaveAttribute('style', /.+/)
+    await cancelButton.click()
+    await expect(dialog).toBeHidden()
+  }
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the alert dialog demo')

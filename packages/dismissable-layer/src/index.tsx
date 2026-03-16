@@ -57,6 +57,14 @@ const DismissableLayerContext = createContext({
   layersWithOutsidePointerEventsDisabled: new Set<DismissableLayerElement>(),
 })
 
+function pruneDisconnectedElements<T extends Element>(elements: Set<T>) {
+  for (const element of elements) {
+    if (!element.isConnected) {
+      elements.delete(element)
+    }
+  }
+}
+
 function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
   return (
     typeof value === 'function' &&
@@ -97,16 +105,27 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     (nextNode) => node(nextNode),
   )
 
-  const getLayers = () => Array.from(context.layers)
+  const pruneLayerState = () => {
+    pruneDisconnectedElements(context.layers)
+    pruneDisconnectedElements(context.layersWithOutsidePointerEventsDisabled)
+  }
+  const getLayers = () => {
+    pruneLayerState()
+    return Array.from(context.layers)
+  }
   const getIndex = () => {
     const currentNode = node()
     return currentNode ? getLayers().indexOf(currentNode) : -1
   }
   const getHighestDisabledIndex = () => {
+    pruneLayerState()
     const highestLayer = [...context.layersWithOutsidePointerEventsDisabled].slice(-1)[0]
     return highestLayer ? getLayers().indexOf(highestLayer) : -1
   }
-  const isBodyPointerEventsDisabled = () => context.layersWithOutsidePointerEventsDisabled.size > 0
+  const isBodyPointerEventsDisabled = () => {
+    pruneLayerState()
+    return context.layersWithOutsidePointerEventsDisabled.size > 0
+  }
   const isPointerEventsEnabled = () => getIndex() >= getHighestDisabledIndex()
 
   const pointerDownOutside = usePointerDownOutside((event) => {
@@ -151,7 +170,11 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
       return
     }
 
-    if (disableOutsidePointerEvents()) {
+    pruneLayerState()
+
+    const shouldDisableOutsidePointerEvents = disableOutsidePointerEvents()
+
+    if (shouldDisableOutsidePointerEvents) {
       if (context.layersWithOutsidePointerEventsDisabled.size === 0) {
         originalBodyPointerEvents = currentDocument.body.style.pointerEvents
         currentDocument.body.style.pointerEvents = 'none'
@@ -164,30 +187,13 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     dispatchUpdate(currentDocument)
 
     return () => {
-      if (
-        disableOutsidePointerEvents() &&
-        context.layersWithOutsidePointerEventsDisabled.size === 1
-      ) {
-        currentDocument.body.style.pointerEvents = originalBodyPointerEvents
-      }
-    }
-  })
-
-  useLayoutEffect(() => {
-    const currentNode = node()
-    const currentDocument = ownerDocument()
-
-    return () => {
-      if (!currentNode || !currentDocument) return
-
-      const shouldRestoreBodyPointerEvents =
-        context.layersWithOutsidePointerEventsDisabled.has(currentNode) &&
-        context.layersWithOutsidePointerEventsDisabled.size === 1
-
       context.layers.delete(currentNode)
       context.layersWithOutsidePointerEventsDisabled.delete(currentNode)
 
-      if (shouldRestoreBodyPointerEvents) {
+      if (
+        shouldDisableOutsidePointerEvents &&
+        context.layersWithOutsidePointerEventsDisabled.size === 0
+      ) {
         currentDocument.body.style.pointerEvents = originalBodyPointerEvents
       }
 
@@ -196,8 +202,9 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
   })
 
   useLayoutEffect(() => {
+    const currentNode = node()
     const currentDocument = ownerDocument()
-    if (!currentDocument) {
+    if (!currentNode || !currentDocument) {
       return
     }
 

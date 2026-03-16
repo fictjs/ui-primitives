@@ -250,4 +250,146 @@ describe('@fictjs/dialog', () => {
 
     expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
   })
+
+  it('supports repeated open and close cycles without leaving modal side effects behind', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Dialog>
+          <DialogTrigger data-testid="trigger">Open</DialogTrigger>
+          <DialogPortal>
+            <DialogOverlay />
+            <DialogContent data-testid="content">
+              <DialogTitle>Preferences</DialogTitle>
+              <DialogDescription>Configure options.</DialogDescription>
+              <DialogClose data-testid="close">Close</DialogClose>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    for (let index = 0; index < 3; index += 1) {
+      click(trigger)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+      expect(document.body.style.pointerEvents).toBe('none')
+
+      click(document.body.querySelector('[data-testid="close"]') as HTMLButtonElement)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+      expect(document.body.style.pointerEvents).toBe('')
+    }
+  })
+
+  it('supports repeated open and close cycles with close autofocus overrides', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const closeRef = { current: null as HTMLButtonElement | null }
+
+    mount(
+      () => (
+        <Dialog>
+          <DialogTrigger data-testid="trigger">Open</DialogTrigger>
+          <DialogPortal>
+            <DialogOverlay />
+            <DialogContent
+              data-testid="content"
+              onOpenAutoFocus={(event) => {
+                event.preventDefault()
+                queueMicrotask(() => {
+                  closeRef.current?.focus({ preventScroll: true })
+                })
+              }}
+            >
+              <DialogTitle>Preferences</DialogTitle>
+              <DialogDescription>Configure options.</DialogDescription>
+              <DialogClose data-testid="close" ref={closeRef}>
+                Close
+              </DialogClose>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    for (let index = 0; index < 3; index += 1) {
+      click(trigger)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+      expect(document.body.style.pointerEvents).toBe('none')
+
+      click(document.body.querySelector('[data-testid="close"]') as HTMLButtonElement)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+      expect(document.body.style.pointerEvents).toBe('')
+    }
+  })
+
+  it('supports repeated cycles with alert-style focus and outside-interaction overrides', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const closeRef = { current: null as HTMLButtonElement | null }
+
+    mount(
+      () => (
+        <Dialog>
+          <DialogTrigger data-testid="trigger">Open</DialogTrigger>
+          <DialogPortal>
+            <DialogOverlay />
+            <DialogContent
+              data-testid="content"
+              onOpenAutoFocus={(event) => {
+                event.preventDefault()
+                queueMicrotask(() => {
+                  closeRef.current?.focus({ preventScroll: true })
+                })
+              }}
+              onInteractOutside={(event) => {
+                event.preventDefault()
+              }}
+              onPointerDownOutside={(event) => {
+                event.preventDefault()
+              }}
+            >
+              <DialogTitle>Preferences</DialogTitle>
+              <DialogDescription>Configure options.</DialogDescription>
+              <DialogClose data-testid="close" ref={closeRef}>
+                Close
+              </DialogClose>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    for (let index = 0; index < 3; index += 1) {
+      click(trigger)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+      expect(document.body.style.pointerEvents).toBe('none')
+
+      click(document.body.querySelector('[data-testid="close"]') as HTMLButtonElement)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+      expect(document.body.style.pointerEvents).toBe('')
+    }
+  })
 })

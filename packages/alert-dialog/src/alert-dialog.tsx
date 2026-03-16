@@ -1,4 +1,4 @@
-import { mergeProps, type FictNode, type JSX } from '@fictjs/runtime'
+import { type FictNode, type JSX } from '@fictjs/runtime'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -13,7 +13,6 @@ import {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
-  WarningProvider,
   type DialogCloseProps,
   type DialogContentProps,
   type DialogDescriptionProps,
@@ -23,7 +22,6 @@ import {
   type DialogTitleProps,
   type DialogTriggerProps,
 } from '@fictjs/dialog'
-import { createSlottable } from '@fictjs/slot'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
 type ScopedProps<P> = P & { __scopeAlertDialog?: Scope }
@@ -65,8 +63,6 @@ type AlertDialogContentProps = Omit<
   'onPointerDownOutside' | 'onInteractOutside'
 >
 
-const Slottable = createSlottable(CONTENT_NAME)
-
 function AlertDialog(props: ScopedProps<AlertDialogProps>): FictNode {
   const { __scopeAlertDialog, ...alertDialogProps } = props
   const dialogScope = useDialogScope(__scopeAlertDialog)
@@ -107,43 +103,36 @@ function AlertDialogContent(props: ScopedProps<AlertDialogContentProps>): FictNo
   const { __scopeAlertDialog, children, ...contentProps } = props
   const dialogScope = useDialogScope(__scopeAlertDialog)
   const cancelRef = { current: null as AlertDialogCancelElement | null }
-  const contentRef = { current: null as AlertDialogContentElement | null }
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<AlertDialogContentElement>,
-    contentRef,
   )
 
   return (
-    <WarningProvider contentName={CONTENT_NAME} docsSlug="alert-dialog" titleName={TITLE_NAME}>
+    <DialogContent
+      {...dialogScope}
+      {...contentProps}
+      ref={composedRefs}
+      role="alertdialog"
+      onOpenAutoFocus={composeEventHandlers(contentProps.onOpenAutoFocus, (event) => {
+        event.preventDefault()
+        queueMicrotask(() => {
+          cancelRef.current?.focus({ preventScroll: true })
+        })
+      })}
+      onInteractOutside={(event) => {
+        event.preventDefault()
+      }}
+      onPointerDownOutside={(event) => {
+        event.preventDefault()
+      }}
+    >
       <AlertDialogContentProvider
         scope={__scopeAlertDialog as Scope<AlertDialogContentContextValue | undefined>}
         cancelRef={cancelRef}
       >
-        <DialogContent
-          {...dialogScope}
-          {...contentProps}
-          ref={composedRefs}
-          role="alertdialog"
-          onOpenAutoFocus={composeEventHandlers(contentProps.onOpenAutoFocus, (event) => {
-            event.preventDefault()
-            queueMicrotask(() => {
-              cancelRef.current?.focus({ preventScroll: true })
-            })
-          })}
-          onInteractOutside={(event) => {
-            event.preventDefault()
-          }}
-          onPointerDownOutside={(event) => {
-            event.preventDefault()
-          }}
-        >
-          <Slottable>{children}</Slottable>
-          {process.env.NODE_ENV !== 'production' ? (
-            <DescriptionWarning contentRef={contentRef} />
-          ) : null}
-        </DialogContent>
+        {children}
       </AlertDialogContentProvider>
-    </WarningProvider>
+    </DialogContent>
   )
 }
 
@@ -187,34 +176,17 @@ function AlertDialogCancel(props: ScopedProps<AlertDialogCancelProps>): FictNode
     props.ref as PossibleRef<AlertDialogCancelElement>,
     cancelRef,
   )
-  const closeProps = mergeProps(dialogScope, () => cancelProps as Record<string, unknown>, {
-    ref: composedRefs,
+
+  useLayoutEffect(() => {
+    return () => {
+      cancelRef.current = null
+    }
   })
 
-  return <DialogClose {...(closeProps as Record<string, unknown>)} />
+  return <DialogClose {...dialogScope} {...cancelProps} ref={composedRefs} />
 }
 
 AlertDialogCancel.displayName = CANCEL_NAME
-
-type DescriptionWarningProps = {
-  contentRef: { current: AlertDialogContentElement | null }
-}
-
-function DescriptionWarning({ contentRef }: DescriptionWarningProps): null {
-  useLayoutEffect(() => {
-    queueMicrotask(() => {
-      const descriptionId = contentRef.current?.getAttribute('aria-describedby')
-      const hasDescription = descriptionId ? document.getElementById(descriptionId) : null
-      if (!hasDescription) {
-        console.warn(
-          `\`${CONTENT_NAME}\` requires a description for the component to be accessible for screen reader users.\n\nYou can add a description to the \`${CONTENT_NAME}\` by passing a \`${DESCRIPTION_NAME}\` component as a child, which also benefits sighted users by adding visible context to the dialog.\n\nAlternatively, you can use your own component as a description by assigning it an \`id\` and passing the same value to the \`aria-describedby\` prop in \`${CONTENT_NAME}\`. If the description is confusing or duplicative for sighted users, you can use the \`@radix-ui/react-visually-hidden\` primitive as a wrapper around your description component.\n\nFor more information, see https://radix-ui.com/primitives/docs/components/alert-dialog`,
-        )
-      }
-    })
-  })
-
-  return null
-}
 
 const Root = AlertDialog
 const Trigger = AlertDialogTrigger
