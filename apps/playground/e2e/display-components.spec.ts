@@ -112,10 +112,20 @@ test('card renders linked contact cards', async ({ page }) => {
 
 test('code renders inline and linked snippets', async ({ page }) => {
   await runSectionTest(page, 'code', 'testing the code demo', async (section) => {
+    const colorCombinations = section.locator('details').first()
+
     await expect(section.locator('code').filter({ hasText: 'console.log()' }).first()).toBeVisible()
     await expect(
       section.locator('a[href*="developer.mozilla.org"]').locator('code').first(),
     ).toBeVisible()
+
+    await colorCombinations.locator('summary').click()
+    await expect(colorCombinations).toHaveAttribute('open', '')
+    await expect(colorCombinations.locator('p', { hasText: 'Regulars' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: 'Brights' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: 'Metals' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: /^Gray$/ })).toBeVisible()
+    await expect(colorCombinations.locator('table')).toHaveCount(4)
   })
 })
 
