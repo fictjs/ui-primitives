@@ -133,6 +133,97 @@ function readStyle(value: unknown): StyleRecord {
   return value as StyleRecord
 }
 
+function getContextMenuWrapperStyle(
+  anchorPoint: { x: number; y: number } | null,
+  side: 'top' | 'right' | 'bottom' | 'left',
+  align: 'start' | 'center' | 'end',
+  sideOffset: number,
+  alignOffset: number,
+): StyleRecord {
+  if (!anchorPoint) {
+    return {}
+  }
+
+  const availableWidth = globalThis.innerWidth || document.documentElement.clientWidth || 0
+  const availableHeight = globalThis.innerHeight || document.documentElement.clientHeight || 0
+  let left = anchorPoint.x
+  let top = anchorPoint.y
+  let translateSuffix = ''
+
+  if (side === 'top') {
+    top -= sideOffset
+    if (align === 'center') {
+      translateSuffix = ' translate(-50%, -100%)'
+    } else if (align === 'end') {
+      translateSuffix = ' translate(-100%, -100%)'
+    } else {
+      translateSuffix = ' translate(0, -100%)'
+    }
+    left += alignOffset
+  } else if (side === 'bottom') {
+    top += sideOffset
+    if (align === 'center') {
+      translateSuffix = ' translate(-50%, 0)'
+    } else if (align === 'end') {
+      translateSuffix = ' translate(-100%, 0)'
+    }
+    left += alignOffset
+  } else if (side === 'left') {
+    left -= sideOffset
+    if (align === 'center') {
+      translateSuffix = ' translate(-100%, -50%)'
+    } else if (align === 'end') {
+      translateSuffix = ' translate(-100%, -100%)'
+    } else {
+      translateSuffix = ' translate(-100%, 0)'
+    }
+    top += alignOffset
+  } else {
+    left += sideOffset
+    if (align === 'center') {
+      translateSuffix = ' translate(0, -50%)'
+    } else if (align === 'end') {
+      translateSuffix = ' translate(0, -100%)'
+    }
+    top += alignOffset
+  }
+
+  const originX =
+    side === 'top' || side === 'bottom'
+      ? align === 'center'
+        ? '50%'
+        : align === 'end'
+          ? '100%'
+          : '0%'
+      : side === 'left'
+        ? '100%'
+        : '0px'
+  const originY =
+    side === 'left' || side === 'right'
+      ? align === 'center'
+        ? '50%'
+        : align === 'end'
+          ? '100%'
+          : '0%'
+      : side === 'top'
+        ? '100%'
+        : '0px'
+
+  return {
+    position: 'fixed',
+    left: '0px',
+    top: '0px',
+    transform: `translate(${Math.round(left)}px, ${Math.round(top)}px)${translateSuffix}`,
+    minWidth: 'max-content',
+    zIndex: 'auto',
+    '--radix-popper-transform-origin': `${originX} ${originY}`,
+    '--radix-popper-available-width': `${Math.max(availableWidth, 0)}px`,
+    '--radix-popper-available-height': `${Math.max(availableHeight, 0)}px`,
+    '--radix-popper-anchor-width': '0px',
+    '--radix-popper-anchor-height': '0px',
+  }
+}
+
 function ContextMenu(props: ScopedProps<ContextMenuProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeContextMenu)
   const openProp = () =>
@@ -154,17 +245,24 @@ function ContextMenu(props: ScopedProps<ContextMenuProps>): FictNode {
     ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
   })
   const anchorPoint = createSignal<{ x: number; y: number } | null>(null)
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      anchorPoint(null)
+    }
+
+    setOpen(nextOpen)
+  }
 
   return (
     <ContextMenuProvider
       scope={props.__scopeContextMenu as Scope<ContextMenuContextValue | undefined>}
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={handleOpenChange}
       modal={modal}
       anchorPoint={anchorPoint}
       onAnchorPointChange={anchorPoint}
     >
-      <Menu {...menuScope} open={open} onOpenChange={setOpen} modal={modal}>
+      <Menu {...menuScope} open={open} onOpenChange={handleOpenChange} modal={modal}>
         {props.children}
       </Menu>
     </ContextMenuProvider>
@@ -229,23 +327,83 @@ function ContextMenuContent(props: ScopedProps<ContextMenuContentProps>): FictNo
     CONTENT_NAME,
     props.__scopeContextMenu as Scope<ContextMenuContextValue | undefined>,
   )
+  let hasInteractedOutside = false
+  const side = () =>
+    props.side === undefined
+      ? 'right'
+      : (readValue(props.side as MaybeAccessor<'top' | 'right' | 'bottom' | 'left' | undefined>) ??
+        'right')
+  const align = () =>
+    props.align === undefined
+      ? 'start'
+      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ??
+        'start')
+  const sideOffset = () =>
+    props.sideOffset === undefined
+      ? 2
+      : (readValue(props.sideOffset as MaybeAccessor<number | undefined>) ?? 2)
+  const alignOffset = () =>
+    props.alignOffset === undefined
+      ? 0
+      : (readValue(props.alignOffset as MaybeAccessor<number | undefined>) ?? 0)
+  const forceMount = () =>
+    props.forceMount === undefined
+      ? false
+      : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
+  const wrapperStyle = () =>
+    getContextMenuWrapperStyle(
+      context.anchorPoint(),
+      side(),
+      align(),
+      sideOffset(),
+      alignOffset(),
+    )
 
   return (
-    <MenuContent
-      {...menuScope}
-      {...props}
-      style={{
-        position: 'fixed',
-        ...(context.anchorPoint()
-          ? { left: context.anchorPoint()!.x, top: context.anchorPoint()!.y }
-          : {}),
-        ...readStyle(props.style),
-      }}
-      onCloseAutoFocus={(event) => {
-        props.onCloseAutoFocus?.(event)
-        context.onAnchorPointChange(null)
-      }}
-    />
+    <>
+      {() =>
+        context.open() || forceMount() ? (
+          <div data-radix-popper-content-wrapper="" style={wrapperStyle()}>
+            <MenuContent
+              {...menuScope}
+              {...props}
+              data-side={prop(side)}
+              data-align={prop(align)}
+              style={{
+                outline: 'none',
+                width: '100%',
+                pointerEvents: 'auto',
+                '--radix-context-menu-content-transform-origin':
+                  'var(--radix-popper-transform-origin)',
+                '--radix-context-menu-content-available-width':
+                  'var(--radix-popper-available-width)',
+                '--radix-context-menu-content-available-height':
+                  'var(--radix-popper-available-height)',
+                '--radix-context-menu-trigger-width': 'var(--radix-popper-anchor-width)',
+                '--radix-context-menu-trigger-height': 'var(--radix-popper-anchor-height)',
+                ...readStyle(props.style),
+              }}
+              onCloseAutoFocus={(event) => {
+                props.onCloseAutoFocus?.(event)
+
+                if (!event.defaultPrevented && hasInteractedOutside) {
+                  event.preventDefault()
+                }
+
+                hasInteractedOutside = false
+              }}
+              onInteractOutside={(event) => {
+                props.onInteractOutside?.(event)
+
+                if (!event.defaultPrevented && !context.modal()) {
+                  hasInteractedOutside = true
+                }
+              }}
+            />
+          </div>
+        ) : null
+      }
+    </>
   )
 }
 

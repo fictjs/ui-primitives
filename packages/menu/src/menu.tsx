@@ -471,7 +471,7 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
   }
 
   const contentNode = (
-    <FocusScope {...focusScopeProps}>
+    <FocusScope {...focusScopeProps} asChild>
       <DismissableLayer
         {...(layerProps as Record<string, unknown>)}
         ref={composedRefs}

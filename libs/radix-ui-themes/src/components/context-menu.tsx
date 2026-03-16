@@ -9,6 +9,7 @@ import {
   contextMenuCheckboxItemPropDefs,
   contextMenuRadioItemPropDefs,
 } from './context-menu.props.js';
+import { ScrollArea } from './scroll-area.js';
 import { ThemeContext, useThemeContext } from './theme.js';
 import { ThickCheckIcon, ThickChevronRightIcon } from './icons.js';
 import { extractProps } from '../helpers/extract-props.js';
@@ -78,6 +79,7 @@ const ContextMenuContent = React.forwardRef<ContextMenuContentElement, ContextMe
           data-panel-background={themeContext.panelBackground}
           data-radius={themeContext.radius}
           data-scaling={themeContext.scaling}
+          alignOffset={-Number(size) * 4}
           asChild={false}
           {...contentProps}
           ref={React.coerceRef(forwardedRef)}
@@ -94,13 +96,15 @@ const ContextMenuContent = React.forwardRef<ContextMenuContentElement, ContextMe
           )}
         >
           <ThemeContext.Provider value={themeContext}>
-            <div class={classNames('rt-BaseMenuViewport', 'rt-ContextMenuViewport')}>
-              <ContextMenuContentContext.Provider
-                value={{ size, variant, color: resolvedColor, highContrast }}
-              >
-                <ContextMenuLazyChildren children={children as LazyMenuChildren} />
-              </ContextMenuContentContext.Provider>
-            </div>
+            <ScrollArea type="auto">
+              <div class={classNames('rt-BaseMenuViewport', 'rt-ContextMenuViewport')}>
+                <ContextMenuContentContext.Provider
+                  value={{ size, variant, color: resolvedColor, highContrast }}
+                >
+                  <ContextMenuLazyChildren children={children as LazyMenuChildren} />
+                </ContextMenuContentContext.Provider>
+              </div>
+            </ScrollArea>
           </ThemeContext.Provider>
         </ContextMenuPrimitive.Content>
       </ContextMenuPrimitive.Portal>

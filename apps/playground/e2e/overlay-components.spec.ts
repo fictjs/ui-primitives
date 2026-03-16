@@ -298,9 +298,23 @@ test('context menu opens on right click and closes on escape', async ({ page }) 
   const section = await gotoSinkSection(page, 'context-menu')
   const tracker = trackBrowserErrors(page)
   const trigger = section.locator('.rt-Grid').filter({ hasText: 'Right-click here' }).first()
+  const secondTrigger = section.locator('.rt-Grid').filter({ hasText: 'Right-click here' }).nth(1)
   const menuItem = page.getByRole('menuitem', { name: 'New Tab ⌘+T' })
+  const popperWrapper = page.locator('[data-radix-popper-content-wrapper]').first()
+  const menuContent = page.locator('.rt-ContextMenuContent').first()
 
   await trigger.dispatchEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
+  await expect(menuItem).toBeVisible()
+  await expect(popperWrapper).toBeVisible()
+  await expect(menuContent).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(menuItem).toBeHidden()
+
+  await secondTrigger.dispatchEvent('contextmenu', {
+    bubbles: true,
+    cancelable: true,
+    button: 2,
+  })
   await expect(menuItem).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()

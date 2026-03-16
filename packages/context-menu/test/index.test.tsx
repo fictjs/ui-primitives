@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 
-import { Content, ContextMenu, Item, Trigger } from '../src/index.js'
+import { Content, ContextMenu, Item, Portal, Trigger } from '../src/index.js'
 
 function contextMenu(target: Element, clientX = 40, clientY = 80): void {
   target.dispatchEvent(
@@ -13,6 +13,16 @@ function contextMenu(target: Element, clientX = 40, clientY = 80): void {
       cancelable: true,
       clientX,
       clientY,
+    }),
+  )
+}
+
+function escape(): void {
+  document.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
     }),
   )
 }
@@ -44,6 +54,7 @@ describe('@fictjs/context-menu', () => {
     }
 
     document.body.innerHTML = ''
+    document.body.style.pointerEvents = ''
     vi.clearAllMocks()
   })
 
@@ -66,9 +77,67 @@ describe('@fictjs/context-menu', () => {
     contextMenu(container.querySelector('[data-testid="trigger"]') as HTMLDivElement, 32, 64)
     await waitForEffects()
 
+    const wrapper = container.querySelector(
+      '[data-radix-popper-content-wrapper]',
+    ) as HTMLDivElement
     const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+
+    expect(wrapper).not.toBeNull()
     expect(content).not.toBeNull()
-    expect(content.style.left).toBe('32px')
-    expect(content.style.top).toBe('64px')
+    expect(wrapper.style.position).toBe('fixed')
+    expect(wrapper.style.left).toBe('0px')
+    expect(wrapper.style.top).toBe('0px')
+    expect(wrapper.style.transform).toBe('translate(34px, 64px)')
+    expect(wrapper.style.minWidth).toBe('max-content')
+    expect(content.style.width).toBe('100%')
+  })
+
+  it('can reopen after closing the first context menu instance', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    mount(
+      () => (
+        <>
+          <ContextMenu>
+            <Trigger data-testid="first-trigger">Area 1</Trigger>
+            <Portal container={portalRoot}>
+              <Content data-testid="first-content">
+                <Item data-testid="first-item">First action</Item>
+              </Content>
+            </Portal>
+          </ContextMenu>
+          <ContextMenu>
+            <Trigger data-testid="second-trigger">Area 2</Trigger>
+            <Portal container={portalRoot}>
+              <Content data-testid="second-content">
+                <Item data-testid="second-item">Second action</Item>
+              </Content>
+            </Portal>
+          </ContextMenu>
+        </>
+      ),
+      container,
+    )
+
+    const firstTrigger = container.querySelector('[data-testid="first-trigger"]') as HTMLDivElement
+    const secondTrigger = container.querySelector(
+      '[data-testid="second-trigger"]',
+    ) as HTMLDivElement
+
+    contextMenu(firstTrigger)
+    await waitForEffects()
+    await waitForEffects()
+    escape()
+    await waitForEffects()
+    await waitForEffects()
+    expect(portalRoot.querySelector('[data-testid="first-content"]')).toBeNull()
+
+    contextMenu(secondTrigger, 72, 96)
+    await waitForEffects()
+    await waitForEffects()
+
+    expect(portalRoot.querySelector('[data-testid="second-content"]')).not.toBeNull()
   })
 })
