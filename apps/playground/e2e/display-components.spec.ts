@@ -58,10 +58,20 @@ test('button exposes enabled and disabled examples', async ({ page }) => {
   await runSectionTest(page, 'button', 'testing the button demo', async (section) => {
     const enabledButton = section.getByRole('button', { name: /Next/ }).first()
     const disabledButtons = section.locator('button:disabled')
+    const colorCombinations = section.locator('details').nth(1)
 
     await expect(enabledButton).toBeVisible()
     await expect(enabledButton).toBeEnabled()
     expect(await disabledButtons.count()).toBeGreaterThan(0)
+
+    await colorCombinations.locator('summary').click()
+    await expect(colorCombinations).toHaveAttribute('open', '')
+
+    await expect(colorCombinations.locator('p', { hasText: 'Regulars' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: 'Brights' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: 'Metals' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: /^Gray$/ })).toBeVisible()
+    await expect(colorCombinations.locator('table')).toHaveCount(4)
   })
 })
 
