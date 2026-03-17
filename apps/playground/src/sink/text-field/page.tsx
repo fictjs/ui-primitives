@@ -1,3 +1,4 @@
+import type { FictNode } from 'fict';
 import { InfoCircledIcon, Share2Icon, StarIcon } from '@radix-ui/react-icons';
 import {
   TextField,
@@ -15,6 +16,148 @@ import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-sectio
 import { accentColorsGrouped } from '../_utils';
 
 export default function TextFieldPage() {
+  const variantRows: FictNode[] = textFieldRootPropDefs.variant.values.map((variant) =>
+    [variant, '+ gray'].map((label) => (
+      <Table.Row key={label}>
+        <Table.RowHeaderCell>{label}</Table.RowHeaderCell>
+        {textFieldRootPropDefs.size.values.map((size) => (
+          <Table.Cell key={size}>
+            <Flex direction="column" gap="2">
+              <TextField.Root
+                size={size}
+                variant={variant}
+                color={label === '+ gray' ? 'gray' : undefined}
+                placeholder="Your name"
+              />
+
+              <TextField.Root
+                size={size}
+                variant={variant}
+                color={label === '+ gray' ? 'gray' : undefined}
+                placeholder="Your name"
+              >
+                <TextField.Slot>
+                  <InfoCircledIcon />
+                </TextField.Slot>
+                <TextField.Slot>
+                  <IconButton size={size === '3' ? '2' : '1'} variant="ghost" color="gray">
+                    <Share2Icon />
+                  </IconButton>
+                  <IconButton size={size === '3' ? '2' : '1'} variant="ghost" color="gray">
+                    <StarIcon />
+                  </IconButton>
+                </TextField.Slot>
+              </TextField.Root>
+
+              <TextField.Root
+                size={size}
+                variant={variant}
+                color={label === '+ gray' ? 'gray' : undefined}
+                placeholder="Your name"
+                defaultValue="The quick brown fox jumped over the lazy dog"
+              />
+            </Flex>
+          </Table.Cell>
+        ))}
+        <Table.Cell>
+          <Flex direction="column" gap="2">
+            <TextField.Root
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+              placeholder="Your name"
+              disabled
+            />
+
+            <TextField.Root
+              disabled
+              placeholder="Your name"
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+            >
+              <TextField.Slot>
+                <InfoCircledIcon />
+              </TextField.Slot>
+              <TextField.Slot>
+                <IconButton size="1" variant="ghost" color="gray">
+                  <StarIcon />
+                </IconButton>
+              </TextField.Slot>
+            </TextField.Root>
+
+            <TextField.Root
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+              placeholder="Your name"
+              disabled
+              defaultValue="The quick brown fox jumped over the lazy dog"
+            />
+          </Flex>
+        </Table.Cell>
+        <Table.Cell>
+          <Flex direction="column" gap="2">
+            <TextField.Root
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+              placeholder="Your name"
+              readOnly
+            />
+
+            <TextField.Root
+              readOnly
+              placeholder="Your name"
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+            >
+              <TextField.Slot>
+                <InfoCircledIcon />
+              </TextField.Slot>
+              <TextField.Slot>
+                <IconButton size="1" variant="ghost" color="gray">
+                  <StarIcon />
+                </IconButton>
+              </TextField.Slot>
+            </TextField.Root>
+
+            <TextField.Root
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+              placeholder="Your name"
+              readOnly
+              defaultValue="The quick brown fox jumped over the lazy dog"
+            />
+          </Flex>
+        </Table.Cell>
+      </Table.Row>
+    ))
+  );
+  const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
+    <Text as="p" weight="bold" mt="6" mb="4">
+      {group.label}
+    </Text>,
+    <Table.Root>
+      <Table.Header>
+        <Table.Row>
+          <Table.ColumnHeaderCell />
+          {textFieldRootPropDefs.variant.values.map((variant) => (
+            <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
+          ))}
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {group.values.map((color) => (
+          <Table.Row key={color}>
+            <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+            {textFieldRootPropDefs.variant.values.map((variant) => (
+              <Table.Cell key={variant}>
+                <TextField.Root variant={variant} color={color} placeholder="Your name" />
+              </Table.Cell>
+            ))}
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>,
+  ]);
+
   return (
     <DocsSection>
       <DocsSectionHeading>TextField</DocsSectionHeading>
@@ -31,127 +174,7 @@ export default function TextFieldPage() {
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {textFieldRootPropDefs.variant.values.map((variant) => (
-              <div key={variant} style={{ display: 'contents' }}>
-                {[variant, '+ gray'].map((label) => (
-                  <Table.Row key={label}>
-                    <Table.RowHeaderCell>{label}</Table.RowHeaderCell>
-                    {textFieldRootPropDefs.size.values.map((size) => (
-                      <Table.Cell key={size}>
-                        <Flex direction="column" gap="2">
-                          <TextField.Root
-                            size={size}
-                            variant={variant}
-                            color={label === '+ gray' ? 'gray' : undefined}
-                            placeholder="Your name"
-                          />
-
-                          <TextField.Root
-                            size={size}
-                            variant={variant}
-                            color={label === '+ gray' ? 'gray' : undefined}
-                            placeholder="Your name"
-                          >
-                            <TextField.Slot>
-                              <InfoCircledIcon />
-                            </TextField.Slot>
-                            <TextField.Slot>
-                              <IconButton
-                                size={size === '3' ? '2' : '1'}
-                                variant="ghost"
-                                color="gray"
-                              >
-                                <Share2Icon />
-                              </IconButton>
-                              <IconButton
-                                size={size === '3' ? '2' : '1'}
-                                variant="ghost"
-                                color="gray"
-                              >
-                                <StarIcon />
-                              </IconButton>
-                            </TextField.Slot>
-                          </TextField.Root>
-
-                          <TextField.Root
-                            size={size}
-                            variant={variant}
-                            color={label === '+ gray' ? 'gray' : undefined}
-                            placeholder="Your name"
-                            defaultValue="The quick brown fox jumped over the lazy dog"
-                          />
-                        </Flex>
-                      </Table.Cell>
-                    ))}
-                    <Table.Cell>
-                      <Flex direction="column" gap="2">
-                        <TextField.Root
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                          placeholder="Your name"
-                          disabled
-                        />
-
-                        <TextField.Root
-                          disabled
-                          placeholder="Your name"
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                        >
-                          <TextField.Slot>
-                            <InfoCircledIcon />
-                          </TextField.Slot>
-                          <TextField.Slot>
-                            <IconButton size="1" variant="ghost" color="gray">
-                              <StarIcon />
-                            </IconButton>
-                          </TextField.Slot>
-                        </TextField.Root>
-
-                        <TextField.Root
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                          placeholder="Your name"
-                          disabled
-                          defaultValue="The quick brown fox jumped over the lazy dog"
-                        />
-                      </Flex>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Flex direction="column" gap="2">
-                        <TextField.Root
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                          placeholder="Your name"
-                        />
-
-                        <TextField.Root
-                          placeholder="Your name"
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                        >
-                          <TextField.Slot>
-                            <InfoCircledIcon />
-                          </TextField.Slot>
-                          <TextField.Slot>
-                            <IconButton size="1" variant="ghost" color="gray">
-                              <StarIcon />
-                            </IconButton>
-                          </TextField.Slot>
-                        </TextField.Root>
-
-                        <TextField.Root
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                          placeholder="Your name"
-                          defaultValue="The quick brown fox jumped over the lazy dog"
-                        />
-                      </Flex>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </div>
-            ))}
+            {variantRows}
           </Table.Body>
         </Table.Root>
 
@@ -291,35 +314,7 @@ export default function TextFieldPage() {
               See colors & variants combinations
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
-                    {textFieldRootPropDefs.variant.values.map((variant) => (
-                      <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
-                      {textFieldRootPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant}>
-                          <TextField.Root variant={variant} color={color} placeholder="Your name" />
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+          {colorCombinationContent}
         </details>
       </DocsSectionBody>
     </DocsSection>

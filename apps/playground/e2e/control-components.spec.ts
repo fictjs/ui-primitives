@@ -229,9 +229,19 @@ test('text field accepts typed input', async ({ page }) => {
   const section = await gotoSinkSection(page, 'text-field')
   const tracker = trackBrowserErrors(page)
   const input = section.getByPlaceholder('Your name').first()
+  const colorCombinations = section
+    .locator('details')
+    .filter({ hasText: 'See colors & variants combinations' })
+  const readonlyInput = section.locator('input[readonly]').first()
 
   await input.fill('Ada Lovelace')
   await expect(input).toHaveValue('Ada Lovelace')
+  await expect(readonlyInput).toHaveJSProperty('readOnly', true)
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('table')).toHaveCount(4)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the text field demo')
