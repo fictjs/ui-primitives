@@ -25,10 +25,16 @@ test('switch toggles from its labeled example', async ({ page }) => {
   const section = await gotoSinkSection(page, 'switch')
   const tracker = trackBrowserErrors(page)
   const control = section.getByRole('switch', { name: 'Agree to Terms and Conditions' }).first()
+  const colorCombinations = section.locator('details').nth(1)
 
   await expect(control).not.toBeChecked()
   await control.click()
   await expect(control).toBeChecked()
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('table')).toHaveCount(4)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the switch demo')

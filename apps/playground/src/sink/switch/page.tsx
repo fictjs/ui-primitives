@@ -2,8 +2,77 @@ import { Switch, Grid, Text, Flex, Separator, Code, Box, Table } from '@fictjs/r
 import { switchPropDefs } from '@fictjs/radix-ui-themes/props';
 import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
 import { accentColorsGrouped } from '../_utils';
+import type { FictNode } from 'fict';
 
 export default function SwitchPage() {
+  const stateMatrixRows: FictNode[] = [];
+  const colorCombinationContent: FictNode[] = [];
+
+  for (const variant of switchPropDefs.variant.values) {
+    for (const label of [variant, '+ high-contrast'] as const) {
+      stateMatrixRows.push(
+        <Table.Row key={`${variant}-${label}`}>
+          <Table.RowHeaderCell>{label}</Table.RowHeaderCell>
+          <Table.Cell>
+            <Switch variant={variant} highContrast={label === '+ high-contrast'} />
+          </Table.Cell>
+          <Table.Cell>
+            <Switch
+              variant={variant}
+              highContrast={label === '+ high-contrast'}
+              defaultChecked
+            />
+          </Table.Cell>
+          <Table.Cell>
+            <Switch variant={variant} highContrast={label === '+ high-contrast'} disabled />
+          </Table.Cell>
+          <Table.Cell>
+            <Switch
+              variant={variant}
+              highContrast={label === '+ high-contrast'}
+              disabled
+              defaultChecked
+            />
+          </Table.Cell>
+        </Table.Row>,
+      );
+    }
+  }
+
+  for (const group of accentColorsGrouped) {
+    colorCombinationContent.push(
+      <Text key={`${group.label}-heading`} as="p" weight="bold" mt="6" mb="4">
+        {group.label}
+      </Text>,
+    );
+    colorCombinationContent.push(
+      <Table.Root key={`${group.label}-table`}>
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeaderCell />
+            {switchPropDefs.variant.values.map((variant) => (
+              <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
+            ))}
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {group.values.map((color) => (
+            <Table.Row key={color}>
+              <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+              {switchPropDefs.variant.values.map((variant) => (
+                <Table.Cell key={variant}>
+                  <Switch variant={variant} color={color} />
+                  <Switch variant={variant} color={color} defaultChecked ml="2" />
+                  <Switch variant={variant} color={color} highContrast defaultChecked ml="2" />
+                </Table.Cell>
+              ))}
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>,
+    );
+  }
+
   return (
     <DocsSection>
       <DocsSectionHeading>Switch</DocsSectionHeading>
@@ -20,42 +89,7 @@ export default function SwitchPage() {
                   <Table.ColumnHeaderCell>disabled checked</Table.ColumnHeaderCell>
                 </Table.Row>
               </Table.Header>
-              <Table.Body>
-                {switchPropDefs.variant.values.map((variant) => (
-                  <div key={variant} style={{ display: 'contents' }}>
-                    {[variant, '+ high-contrast'].map((label) => (
-                      <Table.Row key={label}>
-                        <Table.RowHeaderCell>{label}</Table.RowHeaderCell>
-                        <Table.Cell>
-                          <Switch variant={variant} highContrast={label === '+ high-contrast'} />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Switch
-                            variant={variant}
-                            highContrast={label === '+ high-contrast'}
-                            defaultChecked
-                          />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Switch
-                            variant={variant}
-                            highContrast={label === '+ high-contrast'}
-                            disabled
-                          />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Switch
-                            variant={variant}
-                            highContrast={label === '+ high-contrast'}
-                            disabled
-                            defaultChecked
-                          />
-                        </Table.Cell>
-                      </Table.Row>
-                    ))}
-                  </div>
-                ))}
-              </Table.Body>
+              <Table.Body>{stateMatrixRows}</Table.Body>
             </Table.Root>
 
             <Table.Root>
@@ -197,43 +231,7 @@ export default function SwitchPage() {
               See colors
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
-                    {switchPropDefs.variant.values.map((variant) => (
-                      <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
-                      {switchPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant}>
-                          <Switch variant={variant} color={color} />
-                          <Switch variant={variant} color={color} defaultChecked ml="2" />
-                          <Switch
-                            variant={variant}
-                            color={color}
-                            highContrast
-                            defaultChecked
-                            ml="2"
-                          />
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+          {colorCombinationContent}
         </details>
       </DocsSectionBody>
     </DocsSection>
