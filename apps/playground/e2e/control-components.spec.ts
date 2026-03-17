@@ -83,12 +83,18 @@ test('radio group switches selection in the labeled example', async ({ page }) =
   const tracker = trackBrowserErrors(page)
   const first = section.getByRole('radio', { name: 'Agree to Terms and Conditions' }).first()
   const second = section.getByRole('radio', { name: 'Disagree with Terms and Conditions' }).first()
+  const colorCombinations = section.locator('details').first()
 
   await expect(first).toBeChecked()
   await expect(second).not.toBeChecked()
   await second.click()
   await expect(first).not.toBeChecked()
   await expect(second).toBeChecked()
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('table')).toHaveCount(4)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the radio group demo')
