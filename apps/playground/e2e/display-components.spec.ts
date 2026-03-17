@@ -49,8 +49,15 @@ test('avatar renders both image and fallback variants', async ({ page }) => {
 
 test('badge renders multiple color examples', async ({ page }) => {
   await runSectionTest(page, 'badge', 'testing the badge demo', async (section) => {
+    const colorCombinations = section.locator('details').nth(1)
+
     await expect(section.getByText('Orange').first()).toBeVisible()
     await expect(section.getByText('Violet').first()).toBeVisible()
+
+    await colorCombinations.locator('summary').click()
+    await expect(colorCombinations).toHaveAttribute('open', '')
+    await expect(colorCombinations.locator('table')).toHaveCount(4)
+    await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
   })
 })
 
