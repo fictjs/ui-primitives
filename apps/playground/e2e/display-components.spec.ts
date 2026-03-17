@@ -102,11 +102,27 @@ test('callout renders guidance links inside the content', async ({ page }) => {
 test('card renders linked contact cards', async ({ page }) => {
   await runSectionTest(page, 'card', 'testing the card demo', async (section) => {
     const linkedCards = section.locator('a.rt-Card[href="#some-page"]')
+    const avatarImages = linkedCards.locator('img')
 
     await expect(linkedCards.first()).toBeVisible()
     await expect(linkedCards).toHaveCount(15)
+    await expect(avatarImages.first()).toBeVisible()
     await expect(linkedCards.nth(3)).not.toHaveAttribute('style', /.+/)
     await expect(section.getByText('Poppy Nichols').first()).toBeVisible()
+
+    const avatarStates = await avatarImages.evaluateAll((images) =>
+      images.map((image) => {
+        const element = image as HTMLImageElement
+        return {
+          complete: element.complete,
+          naturalWidth: element.naturalWidth,
+        }
+      }),
+    )
+
+    expect(avatarStates.every(({ complete, naturalWidth }) => complete && naturalWidth > 0)).toBe(
+      true,
+    )
   })
 })
 
