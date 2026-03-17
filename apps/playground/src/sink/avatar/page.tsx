@@ -63,7 +63,7 @@ export default function AvatarPage() {
               <Table.Row key={variant}>
                 <Table.RowHeaderCell>{variant}</Table.RowHeaderCell>
                 <Table.Cell>
-                  <Avatar variant={variant} src="/avatar.svg" fallback="D" />
+                  <Avatar variant={variant} src="./api/avatar" fallback="D" />
                 </Table.Cell>
                 <Table.Cell>
                   <Avatar variant={variant} fallback="D" />
@@ -95,7 +95,7 @@ export default function AvatarPage() {
                 <Table.RowHeaderCell>{size}</Table.RowHeaderCell>
                 <Table.Cell>
                   <Flex gap="3">
-                    <Avatar size={size} src="/avatar.svg" fallback="D" />
+                    <Avatar size={size} src="./api/avatar" fallback="D" />
                     <Avatar size={size} fallback="D" />
                     <Avatar size={size} fallback="BG" />
                   </Flex>
@@ -130,8 +130,8 @@ export default function AvatarPage() {
                   <Table.Row key={radius}>
                     <Table.RowHeaderCell>{radius}</Table.RowHeaderCell>
                     {avatarPropDefs.size.values.map((size) => (
-                      <Table.Cell key={size}>
-                        <Avatar size={size} radius={radius} src="/avatar.svg" fallback="D" />
+                    <Table.Cell key={size}>
+                        <Avatar size={size} radius={radius} src="./api/avatar" fallback="D" />
                       </Table.Cell>
                     ))}
                   </Table.Row>

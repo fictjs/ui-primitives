@@ -43,7 +43,7 @@ test('aspect ratio renders all image variants', async ({ page }) => {
 test('avatar renders both image and fallback variants', async ({ page }) => {
   await runSectionTest(page, 'avatar', 'testing the avatar demo', async (section) => {
     const colorCombinations = section.locator('details').nth(1)
-    expect(await section.locator('img[src*="avatar.svg"]').count()).toBeGreaterThan(0)
+    await expect(section.locator('img[src$="/api/avatar"]').first()).toBeVisible()
     await expect(section.getByText('BG').first()).toBeVisible()
 
     await colorCombinations.locator('summary').click()
@@ -120,6 +120,7 @@ test('card renders linked contact cards', async ({ page }) => {
     await expect(linkedCards.first()).toBeVisible()
     await expect(linkedCards).toHaveCount(15)
     await expect(avatarImages.first()).toBeVisible()
+    await expect(avatarImages.first()).toHaveAttribute('src', /\/api\/avatar$/)
     await expect(linkedCards.nth(3)).not.toHaveAttribute('style', /.+/)
     await expect(section.getByText('Poppy Nichols').first()).toBeVisible()
 

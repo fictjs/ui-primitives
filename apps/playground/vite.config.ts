@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -5,6 +6,7 @@ import fict from '@fictjs/vite-plugin'
 import { defineConfig } from 'vite'
 
 const currentDir = dirname(fileURLToPath(import.meta.url))
+const avatarSvg = readFileSync(resolve(currentDir, './public/avatar.svg'), 'utf8')
 
 const historyFallback = () => ({
   name: 'playground-history-fallback',
@@ -33,6 +35,64 @@ const historyFallback = () => ({
   },
 })
 
+const avatarApiFallback = () => ({
+  name: 'playground-avatar-api-fallback',
+  configureServer(server: {
+    middlewares: {
+      use: (
+        handler: (
+          req: { url?: string },
+          res: {
+            statusCode?: number
+            setHeader: (name: string, value: string) => void
+            end: (body?: string) => void
+          },
+          next: () => void,
+        ) => void,
+      ) => void
+    }
+  }) {
+    server.middlewares.use((req, res, next) => {
+      if (req.url === '/api/avatar' || req.url === '/api/avatar/') {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'image/svg+xml')
+        res.setHeader('Cache-Control', 'no-store')
+        res.end(avatarSvg)
+        return
+      }
+
+      next()
+    })
+  },
+  configurePreviewServer(server: {
+    middlewares: {
+      use: (
+        handler: (
+          req: { url?: string },
+          res: {
+            statusCode?: number
+            setHeader: (name: string, value: string) => void
+            end: (body?: string) => void
+          },
+          next: () => void,
+        ) => void,
+      ) => void
+    }
+  }) {
+    server.middlewares.use((req, res, next) => {
+      if (req.url === '/api/avatar' || req.url === '/api/avatar/') {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'image/svg+xml')
+        res.setHeader('Cache-Control', 'no-store')
+        res.end(avatarSvg)
+        return
+      }
+
+      next()
+    })
+  },
+})
+
 export default defineConfig(() => {
   const useBuiltPackages = true
   const rootRuntimeDir = resolve(
@@ -46,6 +106,7 @@ export default defineConfig(() => {
 
   return {
     plugins: [
+      avatarApiFallback(),
       historyFallback(),
       fict({
         exclude: useBuiltPackages ? ['**/dist/**'] : [],
