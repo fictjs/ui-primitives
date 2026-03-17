@@ -1,9 +1,101 @@
+import type { FictNode } from 'fict';
 import { TextArea, Box, Flex, Text, Code, Table } from '@fictjs/radix-ui-themes';
 import { textAreaPropDefs } from '@fictjs/radix-ui-themes/props';
 import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
 import { accentColorsGrouped } from '../_utils';
 
 export default function TextAreaPage() {
+  const variantRows: FictNode[] = textAreaPropDefs.variant.values.map((variant) =>
+    [variant, '+ gray'].map((label) => (
+      <Table.Row key={label}>
+        <Table.RowHeaderCell>{label}</Table.RowHeaderCell>
+        {textAreaPropDefs.size.values.map((size) => (
+          <Table.Cell key={size}>
+            <Flex direction="column" gap="2">
+              <TextArea
+                size={size}
+                variant={variant}
+                color={label === '+ gray' ? 'gray' : undefined}
+                placeholder="Your feedback"
+              />
+
+              <TextArea
+                size={size}
+                variant={variant}
+                color={label === '+ gray' ? 'gray' : undefined}
+                placeholder="Your feedback"
+                defaultValue="The quick brown fox jumped over the lazy dog"
+              />
+            </Flex>
+          </Table.Cell>
+        ))}
+        <Table.Cell>
+          <Flex direction="column" gap="2">
+            <TextArea
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+              placeholder="Your feedback"
+              disabled
+            />
+
+            <TextArea
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+              placeholder="Your feedback"
+              disabled
+              defaultValue="The quick brown fox jumped over the lazy dog"
+            />
+          </Flex>
+        </Table.Cell>
+        <Table.Cell>
+          <Flex direction="column" gap="2">
+            <TextArea
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+              placeholder="Your feedback"
+              readOnly
+            />
+
+            <TextArea
+              variant={variant}
+              color={label === '+ gray' ? 'gray' : undefined}
+              placeholder="Your feedback"
+              readOnly
+              defaultValue="The quick brown fox jumped over the lazy dog"
+            />
+          </Flex>
+        </Table.Cell>
+      </Table.Row>
+    ))
+  );
+  const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
+    <Text as="p" weight="bold" mt="6" mb="4">
+      {group.label}
+    </Text>,
+    <Table.Root>
+      <Table.Header>
+        <Table.Row>
+          <Table.ColumnHeaderCell />
+          {textAreaPropDefs.variant.values.map((variant) => (
+            <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
+          ))}
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {group.values.map((color) => (
+          <Table.Row key={color}>
+            <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+            {textAreaPropDefs.variant.values.map((variant) => (
+              <Table.Cell key={variant}>
+                <TextArea variant={variant} color={color} placeholder="Your feedback" />
+              </Table.Cell>
+            ))}
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>,
+  ]);
+
   return (
     <DocsSection>
       <DocsSectionHeading>TextArea</DocsSectionHeading>
@@ -20,71 +112,7 @@ export default function TextAreaPage() {
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {textAreaPropDefs.variant.values.map((variant) => (
-              <div key={variant} style={{ display: 'contents' }}>
-                {[variant, '+ gray'].map((label) => (
-                  <Table.Row key={label}>
-                    <Table.RowHeaderCell>{label}</Table.RowHeaderCell>
-                    {textAreaPropDefs.size.values.map((size) => (
-                      <Table.Cell key={size}>
-                        <Flex direction="column" gap="2">
-                          <TextArea
-                            size={size}
-                            variant={variant}
-                            color={label === '+ gray' ? 'gray' : undefined}
-                            placeholder="Your feedback"
-                          />
-
-                          <TextArea
-                            size={size}
-                            variant={variant}
-                            color={label === '+ gray' ? 'gray' : undefined}
-                            placeholder="Your feedback"
-                            defaultValue="The quick brown fox jumped over the lazy dog"
-                          />
-                        </Flex>
-                      </Table.Cell>
-                    ))}
-                    <Table.Cell>
-                      <Flex direction="column" gap="2">
-                        <TextArea
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                          placeholder="Your feedback"
-                          disabled
-                        />
-
-                        <TextArea
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                          placeholder="Your feedback"
-                          disabled
-                          defaultValue="The quick brown fox jumped over the lazy dog"
-                        />
-                      </Flex>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Flex direction="column" gap="2">
-                        <TextArea
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                          placeholder="Your feedback"
-                          readonly
-                        />
-
-                        <TextArea
-                          variant={variant}
-                          color={label === '+ gray' ? 'gray' : undefined}
-                          placeholder="Your feedback"
-                          readonly
-                          defaultValue="The quick brown fox jumped over the lazy dog"
-                        />
-                      </Flex>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </div>
-            ))}
+            {variantRows}
           </Table.Body>
         </Table.Root>
 
@@ -134,35 +162,7 @@ export default function TextAreaPage() {
               See colors & variants combinations
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
-                    {textAreaPropDefs.variant.values.map((variant) => (
-                      <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
-                      {textAreaPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant}>
-                          <TextArea variant={variant} color={color} placeholder="Your feedback" />
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+          {colorCombinationContent}
         </details>
       </DocsSectionBody>
     </DocsSection>

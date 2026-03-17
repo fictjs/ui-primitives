@@ -241,9 +241,19 @@ test('text area accepts typed input', async ({ page }) => {
   const section = await gotoSinkSection(page, 'text-area')
   const tracker = trackBrowserErrors(page)
   const textarea = section.getByPlaceholder('Your feedback').first()
+  const colorCombinations = section
+    .locator('details')
+    .filter({ hasText: 'See colors & variants combinations' })
+  const readonlyTextarea = section.locator('textarea[readonly]').first()
 
   await textarea.fill('Looks good')
   await expect(textarea).toHaveValue('Looks good')
+  await expect(readonlyTextarea).toHaveJSProperty('readOnly', true)
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('table')).toHaveCount(4)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the text area demo')
