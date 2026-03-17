@@ -1,3 +1,4 @@
+import type { FictNode } from 'fict';
 import { Select, Text, Code, Box, Table } from '@fictjs/radix-ui-themes';
 import {
   selectRootPropDefs,
@@ -9,6 +10,39 @@ import { SelectItemsDemo } from '../_components';
 import { accentColorsGrouped } from '../_utils';
 
 export default function SelectPage() {
+  const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
+    <Text as="p" weight="bold" mt="6" mb="4">
+      {group.label}
+    </Text>,
+    <Table.Root>
+      <Table.Header>
+        <Table.Row>
+          <Table.ColumnHeaderCell />
+          {selectTriggerPropDefs.variant.values.map((variant) => (
+            <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
+          ))}
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {group.values.map((color) => (
+          <Table.Row key={color}>
+            <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+            {selectTriggerPropDefs.variant.values.map((variant) => (
+              <Table.Cell key={variant}>
+                <Select.Root defaultValue="apple" size="1">
+                  <Select.Trigger variant={variant} color={color} />
+                  <Select.Content variant="soft" color={color}>
+                    <SelectItemsDemo />
+                  </Select.Content>
+                </Select.Root>
+              </Table.Cell>
+            ))}
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>,
+  ]);
+
   return (
     <DocsSection>
       <DocsSectionHeading>Select</DocsSectionHeading>
@@ -104,7 +138,7 @@ export default function SelectPage() {
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="1">
                     <Select.Trigger />
-                    <Select.Content variant={variant}>
+                    <Select.Content variant={variant} position="popper">
                       <SelectItemsDemo />
                     </Select.Content>
                   </Select.Root>
@@ -112,7 +146,7 @@ export default function SelectPage() {
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="1">
                     <Select.Trigger />
-                    <Select.Content variant={variant} highContrast>
+                    <Select.Content variant={variant} highContrast position="popper">
                       <SelectItemsDemo />
                     </Select.Content>
                   </Select.Root>
@@ -120,7 +154,7 @@ export default function SelectPage() {
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="1">
                     <Select.Trigger />
-                    <Select.Content variant={variant} color="gray">
+                    <Select.Content variant={variant} color="gray" position="popper">
                       <SelectItemsDemo />
                     </Select.Content>
                   </Select.Root>
@@ -128,7 +162,7 @@ export default function SelectPage() {
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="1">
                     <Select.Trigger />
-                    <Select.Content variant={variant} color="gray" highContrast>
+                    <Select.Content variant={variant} color="gray" highContrast position="popper">
                       <SelectItemsDemo />
                     </Select.Content>
                   </Select.Root>
@@ -189,40 +223,7 @@ export default function SelectPage() {
               See colors & variants combinations
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
-                    {selectTriggerPropDefs.variant.values.map((variant) => (
-                      <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
-                      {selectTriggerPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant}>
-                          <Select.Root defaultValue="apple" size="1">
-                            <Select.Trigger variant={variant} color={color} />
-                            <Select.Content variant="soft" color={color}>
-                              <SelectItemsDemo />
-                            </Select.Content>
-                          </Select.Root>
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+          {colorCombinationContent}
         </details>
       </DocsSectionBody>
     </DocsSection>

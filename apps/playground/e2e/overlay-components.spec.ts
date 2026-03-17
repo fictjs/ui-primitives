@@ -354,12 +354,20 @@ test('select opens and applies a new value', async ({ page }) => {
   const tracker = trackBrowserErrors(page)
   const listbox = page.getByRole('listbox')
   const trigger = section.locator('.rt-SelectTrigger').first()
+  const colorCombinations = section
+    .locator('details')
+    .filter({ hasText: 'See colors & variants combinations' })
 
   await trigger.dispatchEvent('click')
   await expect(listbox).toBeVisible()
   await page.getByRole('option', { name: 'Orange' }).click()
   await expect(trigger).toContainText('Orange')
   await expect(listbox).toBeHidden()
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('table')).toHaveCount(4)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the select demo')
