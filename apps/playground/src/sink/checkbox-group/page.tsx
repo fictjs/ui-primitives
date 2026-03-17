@@ -2,8 +2,95 @@ import { CheckboxGroup, Grid, Box, Text, Code, Flex, Separator, Table } from '@f
 import { checkboxGroupRootPropDefs } from '@fictjs/radix-ui-themes/props';
 import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
 import { accentColorsGrouped } from '../_utils';
+import type { FictNode } from 'fict';
 
 export default function CheckboxGroupPage() {
+  const stateMatrixRows: FictNode[] = [];
+  const colorCombinationContent: FictNode[] = [];
+
+  for (const variant of checkboxGroupRootPropDefs.variant.values) {
+    for (const label of [variant, '+ high-contrast'] as const) {
+      stateMatrixRows.push(
+        <Table.Row key={`${variant}-${label}`}>
+          <Table.RowHeaderCell>{label}</Table.RowHeaderCell>
+          <Table.Cell>
+            <CheckboxGroup.Root variant={variant} highContrast={label === '+ high-contrast'}>
+              <CheckboxGroup.Item value="value" />
+            </CheckboxGroup.Root>
+          </Table.Cell>
+          <Table.Cell>
+            <CheckboxGroup.Root
+              variant={variant}
+              defaultValue={['value']}
+              highContrast={label === '+ high-contrast'}
+            >
+              <CheckboxGroup.Item value="value" />
+            </CheckboxGroup.Root>
+          </Table.Cell>
+          <Table.Cell>
+            <CheckboxGroup.Root variant={variant} highContrast={label === '+ high-contrast'}>
+              <CheckboxGroup.Item value="value" disabled />
+            </CheckboxGroup.Root>
+          </Table.Cell>
+          <Table.Cell>
+            <CheckboxGroup.Root
+              variant={variant}
+              highContrast={label === '+ high-contrast'}
+              disabled
+              defaultValue={['value']}
+            >
+              <CheckboxGroup.Item value="value" />
+            </CheckboxGroup.Root>
+          </Table.Cell>
+        </Table.Row>,
+      );
+    }
+  }
+
+  for (const group of accentColorsGrouped) {
+    colorCombinationContent.push(
+      <Text key={`${group.label}-heading`} as="p" weight="bold" mt="6" mb="4">
+        {group.label}
+      </Text>,
+    );
+    colorCombinationContent.push(
+      <Table.Root key={`${group.label}-table`}>
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeaderCell />
+            {checkboxGroupRootPropDefs.variant.values.map((variant) => (
+              <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
+            ))}
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {group.values.map((color) => (
+            <Table.Row key={color}>
+              <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+              {checkboxGroupRootPropDefs.variant.values.map((variant) => (
+                <Table.Cell key={variant}>
+                  <Flex gap="2">
+                    <CheckboxGroup.Root variant={variant} color={color} defaultValue={['value']}>
+                      <CheckboxGroup.Item value="value" />
+                    </CheckboxGroup.Root>
+                    <CheckboxGroup.Root
+                      variant={variant}
+                      color={color}
+                      defaultValue={['value']}
+                      highContrast
+                    >
+                      <CheckboxGroup.Item value="value" />
+                    </CheckboxGroup.Root>
+                  </Flex>
+                </Table.Cell>
+              ))}
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>,
+    );
+  }
+
   return (
     <DocsSection>
       <DocsSectionHeading>CheckboxGroup</DocsSectionHeading>
@@ -20,52 +107,7 @@ export default function CheckboxGroupPage() {
                   <Table.ColumnHeaderCell>disabled checked</Table.ColumnHeaderCell>
                 </Table.Row>
               </Table.Header>
-              <Table.Body>
-                {checkboxGroupRootPropDefs.variant.values.map((variant) => (
-                  <div key={variant} style={{ display: 'contents' }}>
-                    {[variant, '+ high-contrast'].map((label) => (
-                      <Table.Row key={label}>
-                        <Table.RowHeaderCell>{label}</Table.RowHeaderCell>
-                        <Table.Cell>
-                          <CheckboxGroup.Root
-                            variant={variant}
-                            highContrast={label === '+ high-contrast'}
-                          >
-                            <CheckboxGroup.Item value="value" />
-                          </CheckboxGroup.Root>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <CheckboxGroup.Root
-                            variant={variant}
-                            defaultValue={['value']}
-                            highContrast={label === '+ high-contrast'}
-                          >
-                            <CheckboxGroup.Item value="value" />
-                          </CheckboxGroup.Root>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <CheckboxGroup.Root
-                            variant={variant}
-                            highContrast={label === '+ high-contrast'}
-                          >
-                            <CheckboxGroup.Item value="value" disabled />
-                          </CheckboxGroup.Root>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <CheckboxGroup.Root
-                            variant={variant}
-                            highContrast={label === '+ high-contrast'}
-                            disabled
-                            defaultValue={['value']}
-                          >
-                            <CheckboxGroup.Item value="value" />
-                          </CheckboxGroup.Root>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))}
-                  </div>
-                ))}
-              </Table.Body>
+              <Table.Body>{stateMatrixRows}</Table.Body>
             </Table.Root>
 
             <Table.Root>
@@ -224,51 +266,7 @@ export default function CheckboxGroupPage() {
               See colors & variants combinations
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
-                    {checkboxGroupRootPropDefs.variant.values.map((variant) => (
-                      <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
-                      {checkboxGroupRootPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant}>
-                          <Flex gap="2">
-                            <CheckboxGroup.Root
-                              variant={variant}
-                              color={color}
-                              defaultValue={['value']}
-                            >
-                              <CheckboxGroup.Item value="value" />
-                            </CheckboxGroup.Root>
-                            <CheckboxGroup.Root
-                              variant={variant}
-                              color={color}
-                              defaultValue={['value']}
-                              highContrast
-                            >
-                              <CheckboxGroup.Item value="value" />
-                            </CheckboxGroup.Root>
-                          </Flex>
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+          {colorCombinationContent}
         </details>
 
         <Separator size="3" my="5" />
