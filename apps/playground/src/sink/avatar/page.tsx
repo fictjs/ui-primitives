@@ -3,8 +3,44 @@ import { avatarPropDefs } from '@fictjs/radix-ui-themes/props';
 import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
 import { CustomUserIcon } from '../_components';
 import { accentColorsGrouped } from '../_utils';
+import type { FictNode } from 'fict';
 
 export default function AvatarPage() {
+  const colorCombinationContent: FictNode[] = [];
+
+  for (const group of accentColorsGrouped) {
+    colorCombinationContent.push(
+      <Text key={`${group.label}-heading`} as="p" weight="bold" mt="6" mb="4">
+        {group.label}
+      </Text>,
+    );
+    colorCombinationContent.push(
+      <Table.Root key={`${group.label}-table`}>
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeaderCell />
+            {avatarPropDefs.variant.values.map((variant) => (
+              <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
+            ))}
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {group.values.map((color) => (
+            <Table.Row key={color}>
+              <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+              {avatarPropDefs.variant.values.map((variant) => (
+                <Table.Cell key={variant}>
+                  <Avatar variant={variant} color={color} fallback="D" />
+                  <Avatar variant={variant} color={color} highContrast fallback="D" ml="2" />
+                </Table.Cell>
+              ))}
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>,
+    );
+  }
+
   return (
     <DocsSection>
       <DocsSectionHeading>Avatar</DocsSectionHeading>
@@ -115,42 +151,7 @@ export default function AvatarPage() {
               See colors & variants combinations
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
-                    {avatarPropDefs.variant.values.map((variant) => (
-                      <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
-                      {avatarPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant}>
-                          <Avatar variant={variant} color={color} fallback="D" />
-                          <Avatar
-                            variant={variant}
-                            color={color}
-                            highContrast
-                            fallback="D"
-                            ml="2"
-                          />
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+          {colorCombinationContent}
         </details>
       </DocsSectionBody>
     </DocsSection>

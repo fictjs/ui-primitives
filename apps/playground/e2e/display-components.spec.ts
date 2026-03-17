@@ -42,8 +42,14 @@ test('aspect ratio renders all image variants', async ({ page }) => {
 
 test('avatar renders both image and fallback variants', async ({ page }) => {
   await runSectionTest(page, 'avatar', 'testing the avatar demo', async (section) => {
+    const colorCombinations = section.locator('details').nth(1)
     expect(await section.locator('img[src*="avatar.svg"]').count()).toBeGreaterThan(0)
     await expect(section.getByText('BG').first()).toBeVisible()
+
+    await colorCombinations.locator('summary').click()
+    await expect(colorCombinations).toHaveAttribute('open', '')
+    await expect(colorCombinations.locator('table')).toHaveCount(4)
+    await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
   })
 })
 
