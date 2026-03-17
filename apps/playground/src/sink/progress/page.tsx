@@ -1,9 +1,40 @@
+import type { FictNode } from 'fict';
 import { Progress, Grid, Text, Code, Box, Flex, Table } from '@fictjs/radix-ui-themes';
 import { progressPropDefs } from '@fictjs/radix-ui-themes/props';
 import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
 import { accentColorsGrouped } from '../_utils';
 
 export default function ProgressPage() {
+  const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
+    <Text as="p" weight="bold" mt="6" mb="4">
+      {group.label}
+    </Text>,
+    <Table.Root>
+      <Table.Header>
+        <Table.Row>
+          <Table.ColumnHeaderCell />
+          {progressPropDefs.variant.values.map((variant) => (
+            <Table.RowHeaderCell key={variant}>{variant}</Table.RowHeaderCell>
+          ))}
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {group.values.map((color) => (
+          <Table.Row key={color}>
+            <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+            {progressPropDefs.variant.values.map((variant) => (
+              <Table.Cell key={variant} style={{ minWidth: 150 }}>
+                <Progress variant={variant} color={color} mt="3" mb="3" />
+                <Progress variant={variant} color={color} value={66} mt="5" />
+                <Progress variant={variant} color={color} highContrast value={66} mt="5" mb="3" />
+              </Table.Cell>
+            ))}
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>,
+  ]);
+
   return (
     <DocsSection>
       <DocsSectionHeading>Progress</DocsSectionHeading>
@@ -121,44 +152,7 @@ export default function ProgressPage() {
               See colors
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
-                    {progressPropDefs.variant.values.map((variant) => (
-                      <Table.RowHeaderCell key={variant}>{variant}</Table.RowHeaderCell>
-                    ))}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
-                      {progressPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant} style={{ minWidth: 150 }}>
-                          <Progress variant={variant} color={color} mt="3" mb="3" />
-                          <Progress variant={variant} color={color} value={66} mt="5" />
-                          <Progress
-                            variant={variant}
-                            color={color}
-                            highContrast
-                            value={66}
-                            mt="5"
-                            mb="3"
-                          />
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+          {colorCombinationContent}
         </details>
       </DocsSectionBody>
     </DocsSection>

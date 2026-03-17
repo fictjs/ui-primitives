@@ -206,8 +206,15 @@ test('playground form accepts typed values', async ({ page }) => {
 
 test('progress exposes determinate values', async ({ page }) => {
   await runSectionTest(page, 'progress', 'testing the progress demo', async (section) => {
+    const colorCombinations = section.locator('details').filter({ hasText: 'See colors' })
+
     await expect(section.locator('[role="progressbar"][aria-valuenow="33"]').first()).toBeVisible()
     expect(await section.getByRole('progressbar').count()).toBeGreaterThan(4)
+
+    await colorCombinations.locator('summary').click()
+    await expect(colorCombinations).toHaveAttribute('open', '')
+    await expect(colorCombinations.locator('table')).toHaveCount(4)
+    await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
   })
 })
 
