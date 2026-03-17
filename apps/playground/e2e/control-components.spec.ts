@@ -6,10 +6,16 @@ test('checkbox toggles from its labeled example', async ({ page }) => {
   const section = await gotoSinkSection(page, 'checkbox')
   const tracker = trackBrowserErrors(page)
   const checkbox = section.getByRole('checkbox', { name: 'Agree to Terms and Conditions' }).first()
+  const colorCombinations = section.locator('details').first()
 
   await expect(checkbox).not.toBeChecked()
   await checkbox.click()
   await expect(checkbox).toBeChecked()
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('table')).toHaveCount(4)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the checkbox demo')
