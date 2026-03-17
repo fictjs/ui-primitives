@@ -12,6 +12,7 @@ import type { GetPropDefTypes } from '../props/prop-def.js';
 type TextAreaElement = React.ElementRef<'textarea'>;
 type TextAreaOwnProps = GetPropDefTypes<typeof textAreaPropDefs> & {
   defaultValue?: string;
+  readOnly?: boolean;
   value?: string;
 };
 interface TextAreaProps
@@ -20,8 +21,11 @@ interface TextAreaProps
     MarginProps,
     TextAreaOwnProps {}
 const TextArea = React.forwardRef<TextAreaElement, TextAreaProps>((props, forwardedRef) => {
+  const { readOnly, readonly, ...restProps } = props as TextAreaProps & {
+    readonly?: boolean;
+  };
   const { className, color, radius, style, ...textAreaProps } = extractProps(
-    props,
+    { ...restProps, readonly: readOnly ?? readonly },
     textAreaPropDefs,
     marginPropDefs,
   );
