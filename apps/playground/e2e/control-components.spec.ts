@@ -90,12 +90,18 @@ test('checkbox cards support toggling an additional card', async ({ page }) => {
     .locator('.rt-CheckboxCardsItem')
     .filter({ hasText: 'Go' })
     .getByRole('checkbox')
+  const colorCombinations = section.locator('details').first()
 
   await expect(checkbox).not.toBeChecked()
   await checkbox.press(' ')
   await expect(checkbox).toBeChecked()
   await checkbox.press(' ')
   await expect(checkbox).not.toBeChecked()
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('table')).toHaveCount(4)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the checkbox cards demo')
