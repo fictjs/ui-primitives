@@ -14,6 +14,7 @@ import type { GetPropDefTypes } from '../props/prop-def.js';
 type TextFieldRootElement = React.ElementRef<'input'>;
 type TextFieldRootOwnProps = GetPropDefTypes<typeof textFieldRootPropDefs> & {
   defaultValue?: string | number;
+  readOnly?: boolean;
   value?: string | number;
   type?:
     | 'date'
@@ -38,8 +39,11 @@ interface TextFieldRootProps extends TextFieldInputProps, MarginProps, TextField
 const TextFieldRoot = React.forwardRef<TextFieldRootElement, TextFieldRootProps>(
   (props, forwardedRef) => {
     const inputRef: React.RefObject<HTMLInputElement> = { current: null };
+    const { readOnly, readonly, ...restProps } = props as TextFieldRootProps & {
+      readonly?: boolean;
+    };
     const { children, className, color, radius, style, ...inputProps } = extractProps(
-      props,
+      { ...restProps, readonly: readOnly ?? readonly },
       textFieldRootPropDefs,
       marginPropDefs,
     );
