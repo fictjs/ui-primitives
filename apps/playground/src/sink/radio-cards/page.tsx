@@ -1,3 +1,4 @@
+import type { FictNode } from 'fict';
 import { RadioCards, Flex, Text, Code, Box, Table } from '@fictjs/radix-ui-themes';
 import { CodeIcon } from '@radix-ui/react-icons';
 import { radioCardsRootPropDefs } from '@fictjs/radix-ui-themes/props';
@@ -5,6 +6,67 @@ import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-sectio
 import { accentColorsGrouped } from '../_utils';
 
 export default function RadioCardsPage() {
+  const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
+    <Text as="p" weight="bold" mt="6" mb="4">
+      {group.label}
+    </Text>,
+    <Table.Root>
+      <Table.Header>
+        <Table.Row>
+          <Table.ColumnHeaderCell />
+          {radioCardsRootPropDefs.variant.values.map((variant) => (
+            <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
+          ))}
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {group.values.map((color) => (
+          <Table.Row key={color}>
+            <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
+            {radioCardsRootPropDefs.variant.values.map((variant) => (
+              <Table.Cell key={variant}>
+                <Flex direction="column" gap="2">
+                  <RadioCards.Root
+                    size="1"
+                    gap="2"
+                    columns="3"
+                    defaultValue="0"
+                    variant={variant}
+                    color={color}
+                    style={{ width: 400 }}
+                  >
+                    <RadioCards.Item value="0">Node.js</RadioCards.Item>
+                    <RadioCards.Item value="1" disabled>
+                      Ruby
+                    </RadioCards.Item>
+                    <RadioCards.Item value="2">Go</RadioCards.Item>
+                  </RadioCards.Root>
+
+                  <RadioCards.Root
+                    size="1"
+                    gap="2"
+                    columns="3"
+                    defaultValue="1"
+                    variant={variant}
+                    color={color}
+                    highContrast
+                    style={{ width: 400 }}
+                  >
+                    <RadioCards.Item value="0">Node.js</RadioCards.Item>
+                    <RadioCards.Item value="1" disabled>
+                      Ruby
+                    </RadioCards.Item>
+                    <RadioCards.Item value="2">Go</RadioCards.Item>
+                  </RadioCards.Root>
+                </Flex>
+              </Table.Cell>
+            ))}
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>,
+  ]);
+
   return (
     <DocsSection>
       <DocsSectionHeading>RadioCards</DocsSectionHeading>
@@ -67,68 +129,7 @@ export default function RadioCardsPage() {
               See colors & variants combinations
             </Text>
           </summary>
-          {accentColorsGrouped.map(({ label, values }) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <Text as="p" weight="bold" mt="6" mb="4">
-                {label}
-              </Text>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell />
-                    {radioCardsRootPropDefs.variant.values.map((variant) => (
-                      <Table.ColumnHeaderCell key={variant}>{variant}</Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {values.map((color) => (
-                    <Table.Row key={color}>
-                      <Table.RowHeaderCell>{color}</Table.RowHeaderCell>
-                      {radioCardsRootPropDefs.variant.values.map((variant) => (
-                        <Table.Cell key={variant}>
-                          <Flex direction="column" gap="2">
-                            <RadioCards.Root
-                              size="1"
-                              gap="2"
-                              columns="3"
-                              defaultValue="0"
-                              variant={variant}
-                              color={color}
-                              style={{ width: 400 }}
-                            >
-                              <RadioCards.Item value="0">Node.js</RadioCards.Item>
-                              <RadioCards.Item value="1" disabled>
-                                Ruby
-                              </RadioCards.Item>
-                              <RadioCards.Item value="2">Go</RadioCards.Item>
-                            </RadioCards.Root>
-
-                            <RadioCards.Root
-                              size="1"
-                              gap="2"
-                              columns="3"
-                              defaultValue="1"
-                              variant={variant}
-                              color={color}
-                              highContrast
-                              style={{ width: 400 }}
-                            >
-                              <RadioCards.Item value="0">Node.js</RadioCards.Item>
-                              <RadioCards.Item value="1" disabled>
-                                Ruby
-                              </RadioCards.Item>
-                              <RadioCards.Item value="2">Go</RadioCards.Item>
-                            </RadioCards.Root>
-                          </Flex>
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </div>
-          ))}
+          {colorCombinationContent}
         </details>
       </DocsSectionBody>
     </DocsSection>

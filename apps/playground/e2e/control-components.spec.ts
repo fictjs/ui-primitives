@@ -135,6 +135,9 @@ test('radio cards move selection to a new card', async ({ page }) => {
   const section = await gotoSinkSection(page, 'radio-cards')
   const tracker = trackBrowserErrors(page)
   const demo = section.locator('.rt-RadioCardsRoot').first()
+  const colorCombinations = section
+    .locator('details')
+    .filter({ hasText: 'See colors & variants combinations' })
   const node = demo.getByRole('radio', { name: 'Node.js' })
   const go = demo.getByRole('radio', { name: 'Go' })
 
@@ -145,6 +148,11 @@ test('radio cards move selection to a new card', async ({ page }) => {
   })
   await expect(node).not.toBeChecked()
   await expect(go).toBeChecked()
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('table')).toHaveCount(4)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the radio cards demo')
