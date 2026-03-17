@@ -162,6 +162,7 @@ test('slider responds to keyboard input', async ({ page }) => {
   const section = await gotoSinkSection(page, 'slider')
   const tracker = trackBrowserErrors(page)
   const slider = section.getByRole('slider').first()
+  const colorCombinations = section.locator('details').filter({ hasText: 'See colors' })
   const before = Number(await slider.getAttribute('aria-valuenow'))
 
   await slider.focus()
@@ -169,6 +170,11 @@ test('slider responds to keyboard input', async ({ page }) => {
 
   const after = Number(await slider.getAttribute('aria-valuenow'))
   expect(after).toBeGreaterThan(before)
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('table')).toHaveCount(4)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the slider demo')
