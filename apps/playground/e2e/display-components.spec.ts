@@ -221,6 +221,11 @@ test('progress exposes determinate values', async ({ page }) => {
 test('scroll area viewport can scroll in both directions', async ({ page }) => {
   await runSectionTest(page, 'scroll-area', 'testing the scroll area demo', async (section) => {
     const viewport = section.locator('.rt-ScrollAreaViewport').first()
+    const horizontalScrollbar = section
+      .locator('table')
+      .first()
+      .locator('.rt-ScrollAreaScrollbar[data-orientation="horizontal"]')
+      .first()
 
     const result = await viewport.evaluate((element) => {
       const target = element as HTMLElement
@@ -231,6 +236,8 @@ test('scroll area viewport can scroll in both directions', async ({ page }) => {
 
     expect(result.scrollTop).toBeGreaterThan(0)
     expect(result.scrollLeft).toBeGreaterThan(0)
+    await expect(horizontalScrollbar).toBeVisible()
+    expect(await horizontalScrollbar.getAttribute('data-state')).toBeNull()
   })
 })
 

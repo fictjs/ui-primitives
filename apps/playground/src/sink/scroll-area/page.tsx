@@ -67,7 +67,7 @@ export default function ScrollAreaPage() {
                 <Table.RowHeaderCell>size {size}</Table.RowHeaderCell>
                 <Table.Cell>
                   <Box style={{ width: 200, height: 20 }}>
-                    <ScrollArea size={size} scrollbars="horizontal">
+                    <ScrollArea type="always" size={size} scrollbars="horizontal">
                       <Box style={{ width: 600, height: '100%' }} />
                     </ScrollArea>
                   </Box>
@@ -105,7 +105,7 @@ export default function ScrollAreaPage() {
                       <Table.Cell key={size}>
                         <Box style={{ width: 200, height: 20 }}>
                           <ScrollArea
-                           
+                            type="always"
                             radius={radius}
                             size={size}
                             scrollbars="horizontal"
