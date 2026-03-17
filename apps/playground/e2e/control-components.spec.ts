@@ -205,6 +205,7 @@ test('tab nav updates the active link when a new tab is selected', async ({ page
   const section = await gotoSinkSection(page, 'tab-nav')
   const tracker = trackBrowserErrors(page)
   const demo = section.locator('.rt-TabNavRoot').first()
+  const colorCombinations = section.locator('details').filter({ hasText: 'See color combinations' })
   const account = demo.getByRole('link', { name: 'Account' })
   const documents = demo.getByRole('link', { name: 'Documents' })
 
@@ -213,6 +214,11 @@ test('tab nav updates the active link when a new tab is selected', async ({ page
   await documents.press('Enter')
   await expect(account).toHaveAttribute('data-active', 'false')
   await expect(documents).toHaveAttribute('data-active', 'true')
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('.rt-TabNavRoot')).not.toHaveCount(0)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the tab nav demo')
