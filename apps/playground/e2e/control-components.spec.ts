@@ -184,12 +184,18 @@ test('tabs switch their active panel', async ({ page }) => {
   const section = await gotoSinkSection(page, 'tabs')
   const tracker = trackBrowserErrors(page)
   const demo = section.locator('.rt-TabsRoot').first()
+  const colorCombinations = section.locator('details').filter({ hasText: 'See color combinations' })
   const documentsTab = demo.getByRole('tab', { name: 'Documents' })
   const tabpanel = demo.getByRole('tabpanel')
 
   await documentsTab.press('Enter')
   await expect(documentsTab).toHaveAttribute('aria-selected', 'true')
   await expect(tabpanel).toContainText('Documents')
+
+  await colorCombinations.locator('summary').click()
+  await expect(colorCombinations).toHaveAttribute('open', '')
+  await expect(colorCombinations.locator('.rt-TabsRoot')).not.toHaveCount(0)
+  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the tabs demo')

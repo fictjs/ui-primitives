@@ -1,8 +1,49 @@
+import type { FictNode } from 'fict';
 import { Text, Code, Grid, Flex, Box, Tabs, Table } from '@fictjs/radix-ui-themes';
 import { tabsListPropDefs } from '@fictjs/radix-ui-themes/props';
 import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
 
 export default function TabsPage() {
+  const colorCombinationContent: FictNode[] = tabsListPropDefs.color.values.map((color) => [
+    <Text>{color}</Text>,
+    <Flex>
+      <Tabs.Root defaultValue="account" activationMode="manual">
+        <Tabs.List size="1" color={color}>
+          <Tabs.Trigger value="account">Account</Tabs.Trigger>
+          <Tabs.Trigger value="documents">Documents</Tabs.Trigger>
+          <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="account">
+          <Box py="5">Account</Box>
+        </Tabs.Content>
+        <Tabs.Content value="documents">
+          <Box py="5">Documents</Box>
+        </Tabs.Content>
+        <Tabs.Content value="settings">
+          <Box py="5">Settings</Box>
+        </Tabs.Content>
+      </Tabs.Root>
+    </Flex>,
+    <Flex>
+      <Tabs.Root defaultValue="account" activationMode="manual">
+        <Tabs.List size="1" color={color} highContrast>
+          <Tabs.Trigger value="account">Account</Tabs.Trigger>
+          <Tabs.Trigger value="documents">Documents</Tabs.Trigger>
+          <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="account">
+          <Box py="5">Account</Box>
+        </Tabs.Content>
+        <Tabs.Content value="documents">
+          <Box py="5">Documents</Box>
+        </Tabs.Content>
+        <Tabs.Content value="settings">
+          <Box py="5">Settings</Box>
+        </Tabs.Content>
+      </Tabs.Root>
+    </Flex>,
+  ]);
+
   return (
     <DocsSection>
       <DocsSectionHeading>Tabs</DocsSectionHeading>
@@ -44,47 +85,7 @@ export default function TabsPage() {
             </Text>
           </summary>
           <Grid gap="5" columns="3" align="center">
-            {tabsListPropDefs.color.values.map((color) => (
-              <div key={color} style={{ display: 'contents' }}>
-                <Text>{color}</Text>
-                <Flex>
-                  <Tabs.Root defaultValue="account" activationMode="manual">
-                    <Tabs.List size="1" color={color}>
-                      <Tabs.Trigger value="account">Account</Tabs.Trigger>
-                      <Tabs.Trigger value="documents">Documents</Tabs.Trigger>
-                      <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
-                    </Tabs.List>
-                    <Tabs.Content value="account">
-                      <Box py="5">Account</Box>
-                    </Tabs.Content>
-                    <Tabs.Content value="documents">
-                      <Box py="5">Documents</Box>
-                    </Tabs.Content>
-                    <Tabs.Content value="settings">
-                      <Box py="5">Settings</Box>
-                    </Tabs.Content>
-                  </Tabs.Root>
-                </Flex>
-                <Flex>
-                  <Tabs.Root defaultValue="account" activationMode="manual">
-                    <Tabs.List size="1" color={color} highContrast>
-                      <Tabs.Trigger value="account">Account</Tabs.Trigger>
-                      <Tabs.Trigger value="documents">Documents</Tabs.Trigger>
-                      <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
-                    </Tabs.List>
-                    <Tabs.Content value="account">
-                      <Box py="5">Account</Box>
-                    </Tabs.Content>
-                    <Tabs.Content value="documents">
-                      <Box py="5">Documents</Box>
-                    </Tabs.Content>
-                    <Tabs.Content value="settings">
-                      <Box py="5">Settings</Box>
-                    </Tabs.Content>
-                  </Tabs.Root>
-                </Flex>
-              </div>
-            ))}
+            {colorCombinationContent}
           </Grid>
         </details>
         <details>
