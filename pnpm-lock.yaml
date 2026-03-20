@@ -624,6 +624,9 @@ importers:
       '@fictjs/primitive':
         specifier: workspace:*
         version: link:../primitive
+      '@fictjs/use-callback-ref':
+        specifier: workspace:*
+        version: link:../use-callback-ref
       '@fictjs/use-controllable-state':
         specifier: workspace:*
         version: link:../use-controllable-state
