@@ -354,6 +354,7 @@ test('select opens and applies a new value', async ({ page }) => {
   const tracker = trackBrowserErrors(page)
   const listbox = page.getByRole('listbox')
   const trigger = section.locator('.rt-SelectTrigger').first()
+  const contentVariantTrigger = section.locator('table').nth(1).locator('.rt-SelectTrigger').first()
   const colorCombinations = section
     .locator('details')
     .filter({ hasText: 'See colors & variants combinations' })
@@ -368,6 +369,44 @@ test('select opens and applies a new value', async ({ page }) => {
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
   await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+
+  await contentVariantTrigger.click()
+  await expect(listbox).toBeVisible()
+
+  const selectPopperWrapper = page.locator('[data-radix-popper-content-wrapper]').last()
+  await expect(selectPopperWrapper).toBeVisible()
+
+  const triggerBox = await contentVariantTrigger.boundingBox()
+  const wrapperBox = await selectPopperWrapper.boundingBox()
+  const listboxBox = await listbox.boundingBox()
+
+  expect(triggerBox, 'select trigger should be measurable').not.toBeNull()
+  expect(wrapperBox, 'select popper wrapper should be measurable').not.toBeNull()
+  expect(listboxBox, 'select listbox should be measurable').not.toBeNull()
+
+  if (!triggerBox || !wrapperBox || !listboxBox) {
+    throw new Error('Unable to measure select popper geometry')
+  }
+
+  expect(
+    Math.abs(triggerBox.x - listboxBox.x),
+    'select content should stay aligned with the trigger',
+  ).toBeLessThanOrEqual(4)
+  expect(
+    listboxBox.y - (triggerBox.y + triggerBox.height),
+    'select content should render just below the trigger',
+  ).toBeGreaterThanOrEqual(0)
+  expect(
+    listboxBox.y - (triggerBox.y + triggerBox.height),
+    'select content should stay close to the trigger',
+  ).toBeLessThanOrEqual(8)
+  expect(
+    Math.abs(wrapperBox.width - listboxBox.width),
+    'select content should fill the popper wrapper width',
+  ).toBeLessThanOrEqual(1)
+
+  await page.keyboard.press('Escape')
+  await expect(listbox).toBeHidden()
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the select demo')

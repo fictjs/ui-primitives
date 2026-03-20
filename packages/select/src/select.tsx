@@ -38,6 +38,7 @@ type SelectContextValue = {
   open: () => boolean
   onOpenChange(open: boolean): void
   disabled: () => boolean
+  triggerRef: { current: HTMLButtonElement | null }
   triggerId: () => string
   contentId: () => string
   selectedText: () => string
@@ -94,7 +95,10 @@ type SelectValueProps = PrimitiveSpanProps & {
 }
 type SelectIconProps = PrimitiveSpanProps
 type SelectPortalProps = MenuPortalProps
-type SelectContentProps = MenuContentProps
+type SelectPosition = 'item-aligned' | 'popper'
+type SelectContentProps = MenuContentProps & {
+  position?: MaybeAccessor<SelectPosition | undefined>
+}
 type SelectViewportProps = PrimitiveDivProps
 type SelectGroupProps = PrimitiveDivProps
 type SelectLabelProps = PrimitiveDivProps
@@ -129,7 +133,139 @@ function readValue<T>(value: MaybeAccessor<T>, depth = 0): T {
   return readValue(value(), depth + 1)
 }
 
+function readStyle(value: unknown): Record<string, string | number> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {}
+  }
+
+  return value as Record<string, string | number>
+}
+
+function getSelectWrapperStyle(
+  trigger: HTMLElement | null,
+  side: 'top' | 'right' | 'bottom' | 'left',
+  align: 'start' | 'center' | 'end',
+  sideOffset: number,
+  alignOffset: number,
+): Record<string, string> {
+  if (!trigger) {
+    return {
+      position: 'fixed',
+      left: '0px',
+      top: '0px',
+      transform: 'translate(0px, 0px)',
+      minWidth: 'max-content',
+      zIndex: 'auto',
+      '--radix-popper-transform-origin': '0% 0px',
+      '--radix-popper-available-width': `${window.innerWidth}px`,
+      '--radix-popper-available-height': `${window.innerHeight}px`,
+      '--radix-popper-anchor-width': '0px',
+      '--radix-popper-anchor-height': '0px',
+    }
+  }
+
+  const rect = trigger.getBoundingClientRect()
+  const availableWidth =
+    side === 'left'
+      ? rect.left
+      : side === 'right'
+        ? window.innerWidth - rect.right
+        : window.innerWidth
+  const availableHeight =
+    side === 'top'
+      ? rect.top
+      : side === 'bottom'
+        ? window.innerHeight - rect.bottom
+        : window.innerHeight
+
+  let left = rect.left
+  let top = rect.top
+  let translateSuffix = ''
+
+  if (side === 'top') {
+    top = rect.top - sideOffset
+  } else if (side === 'bottom') {
+    top = rect.bottom + sideOffset
+  } else if (side === 'left') {
+    left = rect.left - sideOffset
+  } else {
+    left = rect.right + sideOffset
+  }
+
+  if (side === 'top' || side === 'bottom') {
+    if (align === 'center') {
+      left = rect.left + rect.width / 2
+    } else if (align === 'end') {
+      left = rect.right
+    }
+
+    left += alignOffset
+
+    if (align === 'center') {
+      translateSuffix = side === 'top' ? ' translate(-50%, -100%)' : ' translate(-50%, 0)'
+    } else if (align === 'end') {
+      translateSuffix = side === 'top' ? ' translate(-100%, -100%)' : ' translate(-100%, 0)'
+    } else if (side === 'top') {
+      translateSuffix = ' translate(0, -100%)'
+    }
+  } else {
+    if (align === 'center') {
+      top = rect.top + rect.height / 2
+    } else if (align === 'end') {
+      top = rect.bottom
+    }
+
+    top += alignOffset
+
+    if (align === 'center') {
+      translateSuffix = side === 'left' ? ' translate(-100%, -50%)' : ' translate(0, -50%)'
+    } else if (align === 'end') {
+      translateSuffix = side === 'left' ? ' translate(-100%, -100%)' : ' translate(0, -100%)'
+    } else if (side === 'left') {
+      translateSuffix = ' translate(-100%, 0)'
+    }
+  }
+
+  const roundedLeft = Math.round(left)
+  const roundedTop = Math.round(top)
+  const originX =
+    side === 'top' || side === 'bottom'
+      ? align === 'center'
+        ? '50%'
+        : align === 'end'
+          ? '100%'
+          : '0%'
+      : side === 'left'
+        ? '100%'
+        : '0%'
+  const originY =
+    side === 'left' || side === 'right'
+      ? align === 'center'
+        ? '50%'
+        : align === 'end'
+          ? '100%'
+          : '0%'
+      : side === 'top'
+        ? '100%'
+        : '0px'
+
+  return {
+    position: 'fixed',
+    left: '0px',
+    top: '0px',
+    transform: `translate(${roundedLeft}px, ${roundedTop}px)${translateSuffix}`,
+    minWidth: 'max-content',
+    zIndex: 'auto',
+    '--radix-popper-transform-origin': `${originX} ${originY}`,
+    '--radix-popper-available-width': `${Math.max(availableWidth, 0)}px`,
+    '--radix-popper-available-height': `${Math.max(availableHeight, 0)}px`,
+    '--radix-popper-anchor-width': `${Math.max(rect.width, 0)}px`,
+    '--radix-popper-anchor-height': `${Math.max(rect.height, 0)}px`,
+  }
+}
+
 function Select(props: ScopedProps<SelectProps>): FictNode {
+  const triggerRef = { current: null as HTMLButtonElement | null }
   const menuScope = useMenuScope(props.__scopeSelect)
   const triggerId = useId()
   const contentId = useId()
@@ -181,6 +317,7 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
       open={open}
       onOpenChange={setOpen}
       disabled={disabled}
+      triggerRef={triggerRef}
       triggerId={triggerId}
       contentId={contentId}
       selectedText={selectedText}
@@ -241,7 +378,20 @@ function SelectTrigger(props: ScopedProps<SelectTriggerProps>): FictNode {
     },
   )
 
-  return <Primitive.button {...primitiveProps} />
+  return (
+    <Primitive.button
+      {...primitiveProps}
+      ref={(node: HTMLButtonElement | null) => {
+        context.triggerRef.current = node
+        if (!props.ref) return
+        if (typeof props.ref === 'function') {
+          props.ref(node)
+          return
+        }
+        props.ref.current = node
+      }}
+    />
+  )
 }
 
 SelectTrigger.displayName = TRIGGER_NAME
@@ -294,24 +444,77 @@ function SelectPortal(props: ScopedProps<SelectPortalProps>): FictNode {
 SelectPortal.displayName = PORTAL_NAME
 
 function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
+  const { position: _position, ...contentProps } = props
   const menuScope = useMenuScope(props.__scopeSelect)
   const context = useSelectContext(
     CONTENT_NAME,
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
   )
+  const position = () =>
+    props.position === undefined
+      ? 'item-aligned'
+      : (readValue(props.position as MaybeAccessor<SelectPosition | undefined>) ?? 'item-aligned')
+  const side = () =>
+    props.side === undefined
+      ? 'bottom'
+      : (readValue(props.side as MaybeAccessor<'top' | 'right' | 'bottom' | 'left' | undefined>) ??
+        'bottom')
+  const align = () =>
+    props.align === undefined
+      ? 'start'
+      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ??
+        'start')
+  const sideOffset = () =>
+    props.sideOffset === undefined
+      ? 4
+      : (readValue(props.sideOffset as MaybeAccessor<number | undefined>) ?? 4)
+  const alignOffset = () =>
+    props.alignOffset === undefined
+      ? 0
+      : (readValue(props.alignOffset as MaybeAccessor<number | undefined>) ?? 0)
+  const wrapperStyle = () =>
+    getSelectWrapperStyle(context.triggerRef.current, side(), align(), sideOffset(), alignOffset())
 
-  return (
+  const contentNode = (
     <MenuContent
       {...menuScope}
-      {...props}
+      {...contentProps}
       id={context.contentId()}
       role="listbox"
       aria-labelledby={context.triggerId()}
+      data-side={prop(() => (position() === 'popper' ? side() : undefined))}
+      data-align={prop(() => (position() === 'popper' ? align() : undefined))}
+      {...(position() === 'popper'
+        ? {
+            style: {
+              outline: 'none',
+              width: '100%',
+              '--radix-select-content-transform-origin': 'var(--radix-popper-transform-origin)',
+              '--radix-select-content-available-width': 'var(--radix-popper-available-width)',
+              '--radix-select-content-available-height': 'var(--radix-popper-available-height)',
+              '--radix-select-trigger-width': 'var(--radix-popper-anchor-width)',
+              '--radix-select-trigger-height': 'var(--radix-popper-anchor-height)',
+              ...readStyle(contentProps.style),
+            },
+          }
+        : contentProps.style === undefined
+          ? {}
+          : { style: contentProps.style })}
       onCloseAutoFocus={(event) => {
         props.onCloseAutoFocus?.(event)
         event.preventDefault()
       }}
     />
+  )
+
+  if (position() !== 'popper') {
+    return contentNode
+  }
+
+  return (
+    <div data-radix-popper-content-wrapper="" style={wrapperStyle()}>
+      {contentNode}
+    </div>
   )
 }
 

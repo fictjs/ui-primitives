@@ -16,13 +16,16 @@ import { ThemeContext, useThemeContext } from './theme.js'
 import type { MarginProps } from '../props/margin.props.js'
 import type { GetPropDefTypes } from '../props/prop-def.js'
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
+import type { ReactNode } from '../helpers/element.js'
 
 type SelectRootOwnProps = GetPropDefTypes<typeof selectRootPropDefs>
 type SelectContextValue = SelectRootOwnProps
 
 const SelectContext = createContext<SelectContextValue>({})
 
-interface SelectRootProps extends SelectPrimitive.SelectProps, SelectContextValue {}
+interface SelectRootProps extends SelectPrimitive.SelectProps, SelectContextValue {
+  children?: ReactNode
+}
 
 const SelectRoot: React.FC<SelectRootProps> = (props) => {
   const { children, size = selectRootPropDefs.size.default, ...rootProps } = props

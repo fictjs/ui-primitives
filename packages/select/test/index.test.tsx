@@ -179,4 +179,38 @@ describe('@fictjs/select', () => {
     expect(document.querySelector('[data-testid="content"]')).toBeNull()
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
   })
+
+  it('wraps popper-positioned content in a popper content wrapper', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root defaultOpen>
+          <Trigger data-testid="trigger">
+            <Value data-testid="value" placeholder="Choose one" />
+          </Trigger>
+          <Content data-testid="content" position="popper">
+            <Item value="apple" data-testid="item-apple">
+              <ItemText>Apple</ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const wrapper = document.querySelector(
+      '[data-radix-popper-content-wrapper]',
+    ) as HTMLDivElement | null
+    const content = document.querySelector('[data-testid="content"]') as HTMLDivElement | null
+
+    expect(wrapper).not.toBeNull()
+    expect(content).not.toBeNull()
+    expect(content?.getAttribute('data-side')).toBe('bottom')
+    expect(content?.style.width).toBe('100%')
+    expect(wrapper?.style.position).toBe('fixed')
+  })
 })

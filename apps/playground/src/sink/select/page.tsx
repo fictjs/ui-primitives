@@ -138,7 +138,7 @@ export default function SelectPage() {
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="1">
                     <Select.Trigger />
-                    <Select.Content variant={variant}>
+                    <Select.Content variant={variant} position="popper">
                       <SelectItemsDemo />
                     </Select.Content>
                   </Select.Root>
@@ -146,7 +146,7 @@ export default function SelectPage() {
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="1">
                     <Select.Trigger />
-                    <Select.Content variant={variant} highContrast>
+                    <Select.Content variant={variant} highContrast position="popper">
                       <SelectItemsDemo />
                     </Select.Content>
                   </Select.Root>
@@ -154,7 +154,7 @@ export default function SelectPage() {
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="1">
                     <Select.Trigger />
-                    <Select.Content variant={variant} color="gray">
+                    <Select.Content variant={variant} color="gray" position="popper">
                       <SelectItemsDemo />
                     </Select.Content>
                   </Select.Root>
@@ -162,7 +162,12 @@ export default function SelectPage() {
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="1">
                     <Select.Trigger />
-                    <Select.Content variant={variant} color="gray" highContrast>
+                    <Select.Content
+                      variant={variant}
+                      color="gray"
+                      highContrast
+                      position="popper"
+                    >
                       <SelectItemsDemo />
                     </Select.Content>
                   </Select.Root>
