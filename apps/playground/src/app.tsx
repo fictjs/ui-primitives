@@ -13,6 +13,8 @@ function normalizeHeading(text: string) {
     .replace(/\s+/g, '-')
 }
 
+const SINK_SECTION_SCROLL_OFFSET = 96
+
 export default function App() {
   createEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -40,7 +42,18 @@ export default function App() {
         )
 
         if (targetHeading) {
-          targetHeading.closest('section')?.scrollIntoView({ block: 'start', behavior: 'auto' })
+          const targetSection = targetHeading.closest('section')
+          if (targetSection) {
+            const targetTop =
+              targetSection.getBoundingClientRect().top +
+              window.scrollY -
+              SINK_SECTION_SCROLL_OFFSET
+
+            window.scrollTo({
+              top: Math.max(targetTop, 0),
+              behavior: 'auto',
+            })
+          }
           return true
         }
 

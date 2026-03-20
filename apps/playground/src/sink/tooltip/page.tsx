@@ -3,10 +3,10 @@ import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-sectio
 
 export default function TooltipPage() {
   return (
-    <DocsSection>
+      <DocsSection>
       <DocsSectionHeading>Tooltip</DocsSectionHeading>
       <DocsSectionBody>
-        <Flex gap="5" mt="8">
+        <Flex gap="5">
           <Tooltip content="The quick brown fox">
             <Button variant="solid" size="1">
               Singleline
