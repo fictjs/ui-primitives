@@ -176,10 +176,19 @@ test('icon button renders interactive and disabled examples', async ({ page }) =
   await runSectionTest(page, 'icon-button', 'testing the icon button demo', async (section) => {
     const buttons = section.locator('button')
     const enabledButtons = section.locator('button:not(:disabled)')
+    const colorCombinations = section.locator('details').filter({ hasText: 'See colors' })
 
     expect(await buttons.count()).toBeGreaterThan(0)
     expect(await section.locator('button:disabled').count()).toBeGreaterThan(0)
     expect(await enabledButtons.count()).toBeGreaterThan(0)
+
+    await colorCombinations.locator('summary').click()
+    await expect(colorCombinations).toHaveAttribute('open', '')
+    await expect(colorCombinations.locator('p', { hasText: 'Regulars' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: 'Brights' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: 'Metals' })).toBeVisible()
+    await expect(colorCombinations.locator('p', { hasText: /^Gray$/ })).toBeVisible()
+    await expect(colorCombinations.locator('table')).toHaveCount(4)
   })
 })
 
