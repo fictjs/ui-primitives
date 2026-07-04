@@ -364,7 +364,7 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
       'aria-describedby': prop(() => (context.open() ? context.contentId() : undefined)),
       'data-state': prop(context.stateAttribute),
     },
-    () => triggerProps as Record<string, unknown>,
+    prop(() => triggerProps as Record<string, unknown>),
     {
       onPointerMove: composeEventHandlers<PointerEvent>(
         props.onPointerMove as ((event: PointerEvent) => void) | undefined,
@@ -649,12 +649,12 @@ function TooltipContentImpl(props: ScopedProps<TooltipContentImplProps>): FictNo
     dismissableLayerProps.onPointerDownOutside = onPointerDownOutside
   }
 
-  const popperProps = mergeProps(
+  const popperProps = mergeProps<Record<string, unknown>>(
     {
       'data-state': prop(context.stateAttribute),
     },
     popperScope,
-    () => contentProps as Record<string, unknown>,
+    prop(() => contentProps as Record<string, unknown>),
     {
       style: prop(() => ({
         ...readStyle(contentProps.style as MaybeAccessor<unknown> | undefined),

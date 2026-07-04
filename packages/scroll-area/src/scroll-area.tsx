@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createContextScope, type Scope } from '@fictjs/context'
 import { Primitive } from '@fictjs/primitive'
@@ -242,7 +242,7 @@ function ScrollAreaThumb(props: ScopedProps<ScrollAreaThumbProps>): FictNode {
     {
       'data-orientation': prop(scrollbarContext.orientation),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeScrollArea: undefined,
     },
@@ -275,11 +275,11 @@ function ScrollAreaCorner(props: ScopedProps<ScrollAreaCornerProps>): FictNode {
 
   return (
     <>
-      {() =>
+      {reactive(() =>
         context.hasHorizontalScrollbar() && context.hasVerticalScrollbar() ? (
           <Primitive.div {...(props as Record<string, unknown>)} />
-        ) : null
-      }
+        ) : null,
+      )}
     </>
   )
 }

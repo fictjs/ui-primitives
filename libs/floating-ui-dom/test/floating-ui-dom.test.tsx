@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createEffect, createRoot, onMount, render } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createEffect, createRoot, onMount, render, untrack } from '@fictjs/runtime'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { arrow, flip, hide, limitShift, offset, shift, size, useFloating } from '../src/index.js'
 
@@ -42,6 +42,20 @@ function createRect(width: number, height: number, x = 0, y = 0): DOMRect {
 
 function mockRect(element: Element, width: number, height: number, x = 0, y = 0): void {
   ;(element as HTMLElement).getBoundingClientRect = vi.fn(() => createRect(width, height, x, y))
+}
+
+function signalRef<T extends Element>(signal: (node: T | null) => void): (node: T | null) => void {
+  return (node) => {
+    signal(node)
+  }
+}
+
+function untrackedRef<T extends Element>(ref: (node: T | null) => void): (node: T | null) => void {
+  return (node) => {
+    untrack(() => {
+      ref(node)
+    })
+  }
 }
 
 describe('@fictjs/floating-ui-dom', () => {
@@ -95,7 +109,7 @@ describe('@fictjs/floating-ui-dom', () => {
         <>
           <div ref={floating.refs.setReference} />
           <div ref={floating.refs.setFloating}>
-            <div ref={inlineArrow} />
+            <div ref={signalRef(inlineArrow)} />
           </div>
         </>
       )
@@ -156,7 +170,7 @@ describe('@fictjs/floating-ui-dom', () => {
         <>
           <div ref={floating.refs.setReference} />
           <div ref={floating.refs.setFloating}>
-            <div ref={stateArrow} />
+            <div ref={signalRef(stateArrow)} />
           </div>
         </>
       )
@@ -236,13 +250,17 @@ describe('@fictjs/floating-ui-dom', () => {
           <button data-testid="reference" ref={api.refs.setReference} onClick={() => open(!open())}>
             Toggle
           </button>
-          {() =>
+          {reactive(() =>
             open() ? (
-              <div data-testid="floating" ref={api.refs.setFloating} style={api.floatingStyles}>
+              <div
+                data-testid="floating"
+                ref={untrackedRef(api.refs.setFloating)}
+                style={api.floatingStyles}
+              >
                 Content
               </div>
-            ) : null
-          }
+            ) : null,
+          )}
         </>
       )
     }, container)
@@ -288,11 +306,11 @@ describe('@fictjs/floating-ui-dom', () => {
 
       return (
         <>
-          <button data-testid="reference" ref={referenceElement}>
+          <button data-testid="reference" ref={signalRef(referenceElement)}>
             Trigger
           </button>
-          <div data-testid="floating" ref={floatingElement} style={api.floatingStyles}>
-            <span data-testid="arrow" ref={arrowElement} />
+          <div data-testid="floating" ref={signalRef(floatingElement)} style={api.floatingStyles}>
+            <span data-testid="arrow" ref={signalRef(arrowElement)} />
           </div>
         </>
       )
@@ -391,7 +409,9 @@ describe('@fictjs/floating-ui-dom', () => {
             <button ref={floating.refs.setReference} onClick={() => open(true)}>
               Trigger
             </button>
-            {() => (open() ? <div ref={floating.refs.setFloating}>Content</div> : null)}
+            {reactive(() =>
+              open() ? <div ref={untrackedRef(floating.refs.setFloating)}>Content</div> : null,
+            )}
           </>
         )
       }, container)
@@ -416,7 +436,11 @@ describe('@fictjs/floating-ui-dom', () => {
 
         return (
           <>
-            {() => (open() ? <button ref={floating.refs.setReference}>Trigger</button> : null)}
+            {reactive(() =>
+              open() ? (
+                <button ref={untrackedRef(floating.refs.setReference)}>Trigger</button>
+              ) : null,
+            )}
             <div role="tooltip" ref={floating.refs.setFloating} onClick={() => open(true)}>
               Content
             </div>
@@ -448,14 +472,18 @@ describe('@fictjs/floating-ui-dom', () => {
 
         return (
           <>
-            {() => (open() ? <button ref={floating.refs.setReference}>Trigger</button> : null)}
-            {() =>
+            {reactive(() =>
               open() ? (
-                <div role="tooltip" ref={floating.refs.setFloating}>
+                <button ref={untrackedRef(floating.refs.setReference)}>Trigger</button>
+              ) : null,
+            )}
+            {reactive(() =>
+              open() ? (
+                <div role="tooltip" ref={untrackedRef(floating.refs.setFloating)}>
                   Content
                 </div>
-              ) : null
-            }
+              ) : null,
+            )}
           </>
         )
       }, container)
@@ -479,20 +507,20 @@ describe('@fictjs/floating-ui-dom', () => {
 
         return (
           <>
-            {() =>
+            {reactive(() =>
               open() ? (
-                <button data-testid="reference" ref={api.refs.setReference}>
+                <button data-testid="reference" ref={untrackedRef(api.refs.setReference)}>
                   Trigger
                 </button>
-              ) : null
-            }
-            {() =>
+              ) : null,
+            )}
+            {reactive(() =>
               open() ? (
-                <div data-testid="floating" ref={api.refs.setFloating}>
+                <div data-testid="floating" ref={untrackedRef(api.refs.setFloating)}>
                   Content
                 </div>
-              ) : null
-            }
+              ) : null,
+            )}
           </>
         )
       }, container)
@@ -545,7 +573,9 @@ describe('@fictjs/floating-ui-dom', () => {
           <button ref={api.refs.setReference} onClick={() => open(!open())}>
             Toggle
           </button>
-          {() => (open() ? <div ref={api.refs.setFloating}>Content</div> : null)}
+          {reactive(() =>
+            open() ? <div ref={untrackedRef(api.refs.setFloating)}>Content</div> : null,
+          )}
         </>
       )
     }, container)
@@ -586,8 +616,8 @@ describe('@fictjs/floating-ui-dom', () => {
 
       return (
         <>
-          <div ref={referenceElement} />
-          <div ref={floatingElement} />
+          <div ref={signalRef(referenceElement)} />
+          <div ref={signalRef(floatingElement)} />
         </>
       )
     }, container)
@@ -614,7 +644,7 @@ describe('@fictjs/floating-ui-dom', () => {
 
       return (
         <>
-          <div data-testid="reference" ref={referenceElement} />
+          <div data-testid="reference" ref={signalRef(referenceElement)} />
           <div ref={api.refs.setFloating} />
         </>
       )
@@ -646,7 +676,7 @@ describe('@fictjs/floating-ui-dom', () => {
       return (
         <>
           <div data-testid="reference" ref={api.refs.setReference} />
-          <div ref={floatingElement} />
+          <div ref={signalRef(floatingElement)} />
         </>
       )
     }, container)
@@ -678,8 +708,8 @@ describe('@fictjs/floating-ui-dom', () => {
 
       return (
         <>
-          <div data-testid="reference" ref={referenceElement} />
-          <div ref={floatingElement} />
+          <div data-testid="reference" ref={signalRef(referenceElement)} />
+          <div ref={signalRef(floatingElement)} />
         </>
       )
     }, container)
@@ -711,8 +741,8 @@ describe('@fictjs/floating-ui-dom', () => {
 
       return (
         <>
-          <div data-testid="reference" ref={referenceElement} />
-          <div ref={floatingElement} />
+          <div data-testid="reference" ref={signalRef(referenceElement)} />
+          <div ref={signalRef(floatingElement)} />
         </>
       )
     }, container)

@@ -175,13 +175,16 @@ function AccordionImplSingle(props: ScopedProps<AccordionImplSingleProps>): Fict
     caller: ACCORDION_NAME,
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
-  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
-    collapsible: undefined,
-    defaultValue: undefined,
-    onValueChange: undefined,
-    type: undefined,
-    value: undefined,
-  })
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      collapsible: undefined,
+      defaultValue: undefined,
+      onValueChange: undefined,
+      type: undefined,
+      value: undefined,
+    },
+  )
 
   return (
     <AccordionValueProvider
@@ -222,12 +225,15 @@ function AccordionImplMultiple(props: ScopedProps<AccordionImplMultipleProps>): 
     caller: ACCORDION_NAME,
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
-  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
-    defaultValue: undefined,
-    onValueChange: undefined,
-    type: undefined,
-    value: undefined,
-  })
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      defaultValue: undefined,
+      onValueChange: undefined,
+      type: undefined,
+      value: undefined,
+    },
+  )
 
   return (
     <AccordionValueProvider
@@ -340,14 +346,17 @@ function AccordionImpl(props: ScopedProps<AccordionImplProps>): FictNode {
       triggerCollection[nextIndex]?.ref.current?.focus()
     },
   )
-  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
-    __scopeAccordion: undefined,
-    dir: undefined,
-    disabled: undefined,
-    orientation: undefined,
-    'data-orientation': prop(orientation),
-    onKeyDown: disabled() ? undefined : handleKeyDown,
-  })
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAccordion: undefined,
+      dir: undefined,
+      disabled: undefined,
+      orientation: undefined,
+      'data-orientation': prop(orientation),
+      onKeyDown: disabled() ? undefined : handleKeyDown,
+    },
+  )
 
   return (
     <AccordionImplProvider
@@ -379,13 +388,13 @@ function AccordionItem(props: ScopedProps<AccordionItemProps>): FictNode {
   const disabled = () =>
     accordionContext.disabled() ||
     Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
-  const rootProps = mergeProps(
+  const rootProps = mergeProps<Record<string, unknown>>(
     {
       'data-orientation': prop(accordionContext.orientation),
       'data-state': prop(() => getState(open())),
     },
     collapsibleScope,
-    () => accordionItemProps as Record<string, unknown>,
+    prop(() => accordionItemProps as Record<string, unknown>),
     {
       disabled: prop(disabled),
       open,
@@ -423,13 +432,13 @@ function AccordionHeader(props: ScopedProps<AccordionHeaderProps>): FictNode {
     HEADER_NAME,
     __scopeAccordion as Scope<AccordionItemContextValue | undefined>,
   )
-  const primitiveProps = mergeProps(
+  const primitiveProps = mergeProps<Record<string, unknown>>(
     {
       'data-orientation': prop(accordionContext.orientation),
       'data-state': prop(() => getState(itemContext.open())),
       'data-disabled': prop(() => (itemContext.disabled() ? '' : undefined)),
     },
-    () => headerProps as Record<string, unknown>,
+    prop(() => headerProps as Record<string, unknown>),
   )
 
   return <Primitive.h3 {...primitiveProps} />
@@ -452,7 +461,7 @@ function AccordionTrigger(props: ScopedProps<AccordionTriggerProps>): FictNode {
     __scopeAccordion as Scope<AccordionCollapsibleContextValue | undefined>,
   )
   const collapsibleScope = useCollapsibleScope(__scopeAccordion)
-  const primitiveProps = mergeProps(
+  const primitiveProps = mergeProps<Record<string, unknown>>(
     {
       'aria-disabled': prop(() =>
         itemContext.open() && !collapsibleContext.collapsible() ? 'true' : undefined,
@@ -461,7 +470,7 @@ function AccordionTrigger(props: ScopedProps<AccordionTriggerProps>): FictNode {
       id: prop(itemContext.triggerId),
     },
     collapsibleScope,
-    () => triggerProps as Record<string, unknown>,
+    prop(() => triggerProps as Record<string, unknown>),
   )
 
   return (
@@ -487,14 +496,14 @@ function AccordionContent(props: ScopedProps<AccordionContentProps>): FictNode {
     __scopeAccordion as Scope<AccordionItemContextValue | undefined>,
   )
   const collapsibleScope = useCollapsibleScope(__scopeAccordion)
-  const primitiveProps = mergeProps(
+  const primitiveProps = mergeProps<Record<string, unknown>>(
     {
       role: 'region',
       'aria-labelledby': prop(itemContext.triggerId),
       'data-orientation': prop(accordionContext.orientation),
     },
     collapsibleScope,
-    () => contentProps as Record<string, unknown>,
+    prop(() => contentProps as Record<string, unknown>),
     {
       style: prop(() => ({
         '--radix-accordion-content-height': 'var(--radix-collapsible-content-height)',

@@ -1,4 +1,5 @@
 import * as React from '../helpers/element.js';
+import { mergeProps, prop } from 'fict';
 import classNames from 'classnames';
 import { Popover as PopoverPrimitive } from '@fictjs/radix-ui';
 
@@ -12,7 +13,7 @@ import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-p
 
 interface PopoverRootProps extends React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Root> {}
 const PopoverRoot: React.FC<PopoverRootProps> = (props: PopoverRootProps) => (
-  <PopoverPrimitive.Root {...props} />
+  <PopoverPrimitive.Root {...mergeProps(prop(() => props as Record<string, unknown>))} />
 );
 PopoverRoot.displayName = 'Popover.Root';
 
@@ -22,9 +23,16 @@ interface PopoverTriggerProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const PopoverTrigger = React.forwardRef<PopoverTriggerElement, PopoverTriggerProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <PopoverPrimitive.Trigger {...props} ref={React.coerceRef(forwardedRef)} asChild>
-      {requireReactElement(children)}
+  (props, forwardedRef) => (
+    <PopoverPrimitive.Trigger
+      {...mergeProps(prop(() => props as Record<string, unknown>), {
+        asChild: true,
+        children: undefined,
+        ref: undefined,
+      })}
+      ref={React.coerceRef(forwardedRef)}
+    >
+      {requireReactElement((props as { children?: React.ReactNode }).children)}
     </PopoverPrimitive.Trigger>
   ),
 );
@@ -53,22 +61,26 @@ const PopoverContent = React.forwardRef<PopoverContentElement, PopoverContentPro
           {...contentProps}
           ref={React.coerceRef(forwardedRef)}
           data-is-root-theme="false"
-          data-accent-color={themeContext.accentColor}
-          data-gray-color={themeContext.resolvedGrayColor}
+          data-accent-color={prop(() => themeContext.accentColor)}
+          data-gray-color={prop(() => themeContext.resolvedGrayColor)}
           data-has-background="false"
-          data-panel-background={themeContext.panelBackground}
-          data-radius={themeContext.radius}
-          data-scaling={themeContext.scaling}
-          class={classNames(
-            'radix-themes',
-            {
-              light: themeContext.appearance === 'light',
-              dark: themeContext.appearance === 'dark',
-            },
-            'rt-PopperContent',
-            'rt-PopoverContent',
-            className,
-          )}
+          data-panel-background={prop(() => themeContext.panelBackground)}
+          data-radius={prop(() => themeContext.radius)}
+          data-scaling={prop(() => themeContext.scaling)}
+          class={
+            prop(() =>
+              classNames(
+                'radix-themes',
+                {
+                  light: themeContext.appearance === 'light',
+                  dark: themeContext.appearance === 'dark',
+                },
+                'rt-PopperContent',
+                'rt-PopoverContent',
+                className,
+              ),
+            ) as unknown as string
+          }
         >
           <ThemeContext.Provider value={themeContext}>{children}</ThemeContext.Provider>
         </PopoverPrimitive.Content>
@@ -84,9 +96,16 @@ interface PopoverCloseProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const PopoverClose = React.forwardRef<PopoverCloseElement, PopoverCloseProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <PopoverPrimitive.Close {...props} ref={React.coerceRef(forwardedRef)} asChild>
-      {requireReactElement(children)}
+  (props, forwardedRef) => (
+    <PopoverPrimitive.Close
+      {...mergeProps(prop(() => props as Record<string, unknown>), {
+        asChild: true,
+        children: undefined,
+        ref: undefined,
+      })}
+      ref={React.coerceRef(forwardedRef)}
+    >
+      {requireReactElement((props as { children?: React.ReactNode }).children)}
     </PopoverPrimitive.Close>
   ),
 );
@@ -97,8 +116,13 @@ interface PopoverAnchorProps extends React.ComponentPropsWithoutRef<
   typeof PopoverPrimitive.Anchor
 > {}
 const PopoverAnchor = React.forwardRef<PopoverAnchorElement, PopoverAnchorProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <PopoverPrimitive.Anchor {...props} ref={React.coerceRef(forwardedRef)} />
+  (props, forwardedRef) => (
+    <PopoverPrimitive.Anchor
+      {...mergeProps(prop(() => props as Record<string, unknown>), {
+        ref: undefined,
+      })}
+      ref={React.coerceRef(forwardedRef)}
+    />
   ),
 );
 

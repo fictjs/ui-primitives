@@ -206,6 +206,17 @@ export default defineConfig(() => {
           replacement: resolve(currentDir, './src/compat/radix-icons.tsx'),
         },
         {
+          find: 'fict/internal/list',
+          replacement: resolve(
+            rootFictDir,
+            useBuiltPackages ? 'internal-list.js' : 'internal-list.ts',
+          ),
+        },
+        {
+          find: 'fict/internal',
+          replacement: resolve(rootFictDir, useBuiltPackages ? 'internal.js' : 'internal.ts'),
+        },
+        {
           find: 'fict/advanced',
           replacement: resolve(rootFictDir, useBuiltPackages ? 'advanced.js' : 'advanced.ts'),
         },

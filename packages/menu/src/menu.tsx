@@ -6,7 +6,7 @@ import {
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -87,7 +87,8 @@ const SUB_CONTENT_NAME = 'MenuSubContent'
 const SELECTION_KEYS = ['Enter', ' ']
 const FIRST_KEYS = ['ArrowDown', 'PageUp', 'Home']
 const LAST_KEYS = ['ArrowUp', 'PageDown', 'End']
-const GLOBAL_MODAL_LOCK_SELECTOR = '[role="menu"], [role="dialog"], [role="alertdialog"], [role="listbox"]'
+const GLOBAL_MODAL_LOCK_SELECTOR =
+  '[role="menu"], [role="dialog"], [role="alertdialog"], [role="listbox"]'
 const SUB_OPEN_KEYS: Record<Direction, string[]> = {
   ltr: [...SELECTION_KEYS, 'ArrowRight'],
   rtl: [...SELECTION_KEYS, 'ArrowLeft'],
@@ -186,7 +187,11 @@ function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
 function readValue<T>(value: MaybeAccessor<T>): T {
   let currentValue: unknown = value
 
-  for (let depth = 0; depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>); depth += 1) {
+  for (
+    let depth = 0;
+    depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>);
+    depth += 1
+  ) {
     currentValue = (currentValue as () => unknown)()
   }
 
@@ -370,7 +375,7 @@ function MenuContent(props: ScopedProps<MenuContentProps>): FictNode {
 
   return (
     <>
-      {() =>
+      {reactive(() =>
         Boolean(forceMount || menuContext.open()) ? (
           <MenuContentProvider
             scope={props.__scopeMenu as Scope<MenuContentContextValue | undefined>}
@@ -380,8 +385,8 @@ function MenuContent(props: ScopedProps<MenuContentProps>): FictNode {
           >
             <MenuContentImpl {...props} />
           </MenuContentProvider>
-        ) : null
-      }
+        ) : null,
+      )}
     </>
   )
 }
@@ -439,20 +444,6 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
     }
   })
 
-  useLayoutEffect(() => {
-    const forwardedRef = props.ref as PossibleRef<HTMLDivElement>
-    if (!forwardedRef) return
-
-    return () => {
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(null)
-        return
-      }
-
-      forwardedRef.current = null
-    }
-  })
-
   const layerProps = mergeProps(
     {
       id: prop(menuContext.contentId),
@@ -493,7 +484,7 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
         },
       ),
     },
-    () => contentProps as Record<string, unknown>,
+    prop(() => contentProps as Record<string, unknown>),
     {
       __scopeMenu: undefined,
       forceMount: undefined,
@@ -647,7 +638,7 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
         },
       ),
     },
-    () => itemProps as Record<string, unknown>,
+    prop(() => itemProps as Record<string, unknown>),
     {
       __scopeMenu: undefined,
       checked: undefined,
@@ -705,11 +696,14 @@ function MenuCheckboxItem(props: ScopedProps<MenuCheckboxItemProps>): FictNode {
 MenuCheckboxItem.displayName = CHECKBOX_ITEM_NAME
 
 function MenuRadioGroup(props: ScopedProps<MenuRadioGroupProps>): FictNode {
-  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
-    __scopeMenu: undefined,
-    onValueChange: undefined,
-    value: undefined,
-  })
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeMenu: undefined,
+      onValueChange: undefined,
+      value: undefined,
+    },
+  )
   const value = () =>
     props.value === undefined
       ? ''
@@ -770,7 +764,11 @@ function MenuItemIndicator(props: ScopedProps<MenuItemIndicatorProps>): FictNode
     indicatorContext.checked() === 'indeterminate'
 
   return (
-    <>{() => (present() ? <Primitive.div {...(props as Record<string, unknown>)} /> : null)}</>
+    <>
+      {reactive(() =>
+        present() ? <Primitive.div {...(props as Record<string, unknown>)} /> : null,
+      )}
+    </>
   )
 }
 
@@ -806,12 +804,7 @@ function MenuSub(props: ScopedProps<MenuSubProps>): FictNode {
   const triggerRef = { current: null as HTMLElement | null }
 
   return (
-    <Menu
-      open={prop(open)}
-      onOpenChange={setOpen}
-      modal={false}
-      __scopeMenu={props.__scopeMenu}
-    >
+    <Menu open={prop(open)} onOpenChange={setOpen} modal={false} __scopeMenu={props.__scopeMenu}>
       <MenuSubProvider
         scope={props.__scopeMenu as Scope<MenuSubContextValue | undefined>}
         open={open}

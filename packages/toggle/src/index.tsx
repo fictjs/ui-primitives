@@ -57,7 +57,7 @@ function Toggle(props: ToggleProps): FictNode {
       'data-state': prop(() => (pressed() ? 'on' : 'off')),
       'data-disabled': prop(() => (isDisabled() ? '' : undefined)),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       defaultPressed: undefined,
       onClick: handleClick,

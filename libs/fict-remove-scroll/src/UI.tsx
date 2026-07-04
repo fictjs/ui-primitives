@@ -2,6 +2,7 @@
 
 import { createRef, prop } from 'fict'
 import type { FictVNode } from 'fict'
+import { reactive } from 'fict/advanced'
 import { fullWidthClassName, zeroRightClassName } from '@fictjs/fict-remove-scroll-bar/constants'
 import { useMergeRefs } from '@fictjs/use-callback-ref'
 import { effectCar } from './medium.js'
@@ -130,7 +131,7 @@ const RemoveScroll = ((props: IRemoveScrollUIProps) => {
 
   return (
     <>
-      {() =>
+      {reactive(() =>
         readEnabled(props.enabled) ? (
           <SideCar
             sideCar={effectCar}
@@ -144,8 +145,8 @@ const RemoveScroll = ((props: IRemoveScrollUIProps) => {
             setCallbacks={setCallbacks}
             shards={prop(() => props.shards)}
           />
-        ) : null
-      }
+        ) : null,
+      )}
       {content}
     </>
   )

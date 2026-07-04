@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { Presence } from '../../presence/src/index.js'
 
@@ -192,15 +192,15 @@ describe('@fictjs/dismissable-layer', () => {
     mount(
       () => (
         <>
-          {() =>
+          {reactive(() =>
             open() ? (
               <Root data-testid="layer" disableOutsidePointerEvents>
                 <button data-testid="inside" type="button">
                   Inside
                 </button>
               </Root>
-            ) : null
-          }
+            ) : null,
+          )}
         </>
       ),
       container,
@@ -224,15 +224,15 @@ describe('@fictjs/dismissable-layer', () => {
     mount(
       () => (
         <>
-          {() =>
+          {reactive(() =>
             open() ? (
               <Root data-testid="layer" disableOutsidePointerEvents>
                 <button data-testid="inside" type="button">
                   Inside
                 </button>
               </Root>
-            ) : null
-          }
+            ) : null,
+          )}
         </>
       ),
       container,
@@ -281,9 +281,8 @@ describe('@fictjs/dismissable-layer', () => {
   })
 
   it('only dismisses the topmost layer on escape', async () => {
-    const openInner = createSignal(true)
     const onOuterDismiss = vi.fn()
-    const onInnerDismiss = vi.fn(() => openInner(false))
+    const onInnerDismiss = vi.fn()
     const container = document.createElement('div')
     document.body.append(container)
 
@@ -293,17 +292,11 @@ describe('@fictjs/dismissable-layer', () => {
           <button data-testid="outer" type="button">
             Outer
           </button>
-          <>
-            {() =>
-              openInner() ? (
-                <Root onDismiss={onInnerDismiss}>
-                  <button data-testid="inner" type="button">
-                    Inner
-                  </button>
-                </Root>
-              ) : null
-            }
-          </>
+          <Root onDismiss={onInnerDismiss}>
+            <button data-testid="inner" type="button">
+              Inner
+            </button>
+          </Root>
         </Root>
       ),
       container,

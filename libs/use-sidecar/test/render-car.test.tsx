@@ -1,5 +1,5 @@
 import { render } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 import { describe, expect, it } from 'vitest'
 
 import { env, renderCar, sidecar } from '../src/index.js'
@@ -47,7 +47,7 @@ describe('renderCar', () => {
 
     resolveExternal?.({
       default: (props: { children: (payload: { y: number }) => unknown }) => (
-        <>{() => props.children({ y: (source() + 2) * 2 })}</>
+        <>{reactive(() => props.children({ y: (source() + 2) * 2 }))}</>
       ),
     })
 

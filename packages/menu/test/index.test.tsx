@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createMemo, onDestroy, render } from '@fictjs/runtime'
+import { createMemo, onDestroy, render, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { createContext, createContextScope } from '@fictjs/context'
@@ -21,7 +21,7 @@ import {
   RadioGroup,
   RadioItem,
 } from '../src/index.js'
-import { useEffectEvent } from '../../use-effect-event/src/index.ts'
+import { useEffectEvent } from '../../use-effect-event/src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -320,8 +320,9 @@ describe('@fictjs/menu', () => {
     const open = createSignal(true)
     const [DummyProvider] = createContext<{ open: () => boolean } | null>('DummyProvider')
     const [createScopedContext] = createContextScope('SharedMenuScope')
-    const [SharedMenuProvider, useSharedMenuContext] =
-      createScopedContext<{ open: () => boolean } | null>('SharedMenuProvider')
+    const [SharedMenuProvider, useSharedMenuContext] = createScopedContext<{ open: () => boolean }>(
+      'SharedMenuProvider',
+    )
     const [SharedPortalProvider] = createScopedContext<{ forceMount: boolean | undefined } | null>(
       'SharedPortalProvider',
       { forceMount: undefined },
@@ -373,7 +374,7 @@ describe('@fictjs/menu', () => {
       dir: () => 'ltr'
       modal: () => boolean
       contentId: () => string
-    } | null>('SharedFullMenuProvider')
+    }>('SharedFullMenuProvider')
     const [SharedPortalProvider] = createScopedContext<{ forceMount: boolean | undefined } | null>(
       'SharedFullPortalProvider',
       { forceMount: undefined },
@@ -431,13 +432,13 @@ describe('@fictjs/menu', () => {
       dir: () => 'ltr'
       modal: () => boolean
       contentId: () => string
-    } | null>('SharedControlledMenuProvider')
+    }>('SharedControlledMenuProvider')
     const [SharedPortalProvider] = createScopedContext<{ forceMount: boolean | undefined } | null>(
       'SharedControlledPortalProvider',
       { forceMount: undefined },
     )
 
-    function ControlledSharedMenuProvider(props: { children?: unknown }) {
+    function ControlledSharedMenuProvider(props: { children?: FictNode }) {
       const [controlledOpen, setControlledOpen] = useControllableState<boolean>({
         prop: () => open(),
         defaultProp: () => false,
@@ -502,13 +503,13 @@ describe('@fictjs/menu', () => {
       dir: () => 'ltr'
       modal: () => boolean
       contentId: () => string
-    } | null>('SharedMemoMenuProvider')
+    }>('SharedMemoMenuProvider')
     const [SharedPortalProvider] = createScopedContext<{ forceMount: boolean | undefined } | null>(
       'SharedMemoPortalProvider',
       { forceMount: undefined },
     )
 
-    function MemoSharedMenuProvider(props: { children?: unknown }) {
+    function MemoSharedMenuProvider(props: { children?: FictNode }) {
       const memoOpen = createMemo(() => open())
 
       return (
@@ -570,12 +571,13 @@ describe('@fictjs/menu', () => {
       dir: () => 'ltr'
       modal: () => boolean
       contentId: () => string
-    } | null>('SharedMemoEffectMenuProvider')
-    const [SharedPortalProvider] = createScopedContext<
-      { forceMount: boolean | undefined } | null
-    >('SharedMemoEffectPortalProvider', { forceMount: undefined })
+    }>('SharedMemoEffectMenuProvider')
+    const [SharedPortalProvider] = createScopedContext<{ forceMount: boolean | undefined } | null>(
+      'SharedMemoEffectPortalProvider',
+      { forceMount: undefined },
+    )
 
-    function MemoEffectSharedMenuProvider(props: { children?: unknown }) {
+    function MemoEffectSharedMenuProvider(props: { children?: FictNode }) {
       const memoOpen = createMemo(() => open())
 
       useLayoutEffect(() => {
@@ -641,10 +643,11 @@ describe('@fictjs/menu', () => {
       dir: () => 'ltr'
       modal: () => boolean
       contentId: () => string
-    } | null>('SharedRecursiveMenuProvider')
-    const [SharedPortalProvider] = createScopedContext<
-      { forceMount: boolean | undefined } | null
-    >('SharedRecursivePortalProvider', { forceMount: undefined })
+    }>('SharedRecursiveMenuProvider')
+    const [SharedPortalProvider] = createScopedContext<{ forceMount: boolean | undefined } | null>(
+      'SharedRecursivePortalProvider',
+      { forceMount: undefined },
+    )
 
     const SIGNAL_MARKER = Symbol.for('fict:signal')
     const COMPUTED_MARKER = Symbol.for('fict:computed')
@@ -674,7 +677,7 @@ describe('@fictjs/menu', () => {
       return currentValue as T
     }
 
-    function RecursiveSharedMenuProvider(props: { children?: unknown }) {
+    function RecursiveSharedMenuProvider(props: { children?: FictNode }) {
       const controlledState = () => readValue(() => open())
       const memoOpen = createMemo(() => controlledState())
 
@@ -741,10 +744,11 @@ describe('@fictjs/menu', () => {
       dir: () => 'ltr'
       modal: () => boolean
       contentId: () => string
-    } | null>('SharedPlainRecursiveMenuProvider')
-    const [SharedPortalProvider] = createScopedContext<
-      { forceMount: boolean | undefined } | null
-    >('SharedPlainRecursivePortalProvider', { forceMount: undefined })
+    }>('SharedPlainRecursiveMenuProvider')
+    const [SharedPortalProvider] = createScopedContext<{ forceMount: boolean | undefined } | null>(
+      'SharedPlainRecursivePortalProvider',
+      { forceMount: undefined },
+    )
 
     const SIGNAL_MARKER = Symbol.for('fict:signal')
     const COMPUTED_MARKER = Symbol.for('fict:computed')
@@ -774,7 +778,7 @@ describe('@fictjs/menu', () => {
       return currentValue as T
     }
 
-    function PlainRecursiveSharedMenuProvider(props: { children?: unknown }) {
+    function PlainRecursiveSharedMenuProvider(props: { children?: FictNode }) {
       const controlledState = () => readValue(() => open())
       const plainOpen = () => controlledState()
 
@@ -821,7 +825,9 @@ describe('@fictjs/menu', () => {
     )
 
     await waitForEffects()
-    expect(document.querySelector('[data-testid="plain-recursive-scope-portal-child"]')).not.toBeNull()
+    expect(
+      document.querySelector('[data-testid="plain-recursive-scope-portal-child"]'),
+    ).not.toBeNull()
 
     open(false)
     await waitForEffects()
@@ -841,12 +847,13 @@ describe('@fictjs/menu', () => {
       dir: () => 'ltr'
       modal: () => boolean
       contentId: () => string
-    } | null>('SharedEffectEventMenuProvider')
-    const [SharedPortalProvider] = createScopedContext<
-      { forceMount: boolean | undefined } | null
-    >('SharedEffectEventPortalProvider', { forceMount: undefined })
+    }>('SharedEffectEventMenuProvider')
+    const [SharedPortalProvider] = createScopedContext<{ forceMount: boolean | undefined } | null>(
+      'SharedEffectEventPortalProvider',
+      { forceMount: undefined },
+    )
 
-    function EffectEventSharedMenuProvider(props: { children?: unknown }) {
+    function EffectEventSharedMenuProvider(props: { children?: FictNode }) {
       const plainOpen = () => open()
       const emitChange = useEffectEvent<(_: boolean) => void>(() => {})
 

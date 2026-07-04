@@ -217,7 +217,7 @@ function Toolbar(props: ScopedProps<ToolbarProps>): FictNode {
         setRef(props.ref as PossibleRef<HTMLDivElement>, node)
       },
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeToolbar: undefined,
       dir: undefined,
@@ -356,19 +356,22 @@ ToolbarButton.displayName = BUTTON_NAME
 function ToolbarLink(props: ScopedProps<ToolbarLinkProps>): FictNode {
   const { __scopeToolbar: _scopeToolbar, ...linkProps } = props
   const isDisabled = () => false
-  const toolbarLinkProps = mergeProps(() => linkProps as Record<string, unknown>, {
-    onKeyDown: composeEventHandlers<KeyboardEvent>(
-      linkProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-      (event) => {
-        if (event.key === ' ') {
-          event.preventDefault()
-          if (!isDisabled()) {
-            ;(event.currentTarget as HTMLAnchorElement).click()
+  const toolbarLinkProps = mergeProps(
+    prop(() => linkProps as Record<string, unknown>),
+    {
+      onKeyDown: composeEventHandlers<KeyboardEvent>(
+        linkProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => {
+          if (event.key === ' ') {
+            event.preventDefault()
+            if (!isDisabled()) {
+              ;(event.currentTarget as HTMLAnchorElement).click()
+            }
           }
-        }
-      },
-    ),
-  })
+        },
+      ),
+    },
+  )
   const primitiveProps = mergeProps(
     useToolbarItemProps(
       props.__scopeToolbar,

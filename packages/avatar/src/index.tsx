@@ -1,5 +1,5 @@
 import { type FictNode, type FictVNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createContextScope, type Scope } from '@fictjs/context'
 import { Primitive } from '@fictjs/primitive'
@@ -155,9 +155,9 @@ function AvatarImage(props: ScopedProps<AvatarImageProps & AvatarStateProps>): F
 
   return (
     <>
-      {() =>
-        imageLoadingStatus() === 'loaded' ? <Primitive.img {...getPrimitiveProps()} /> : null
-      }
+      {reactive(() =>
+        imageLoadingStatus() === 'loaded' ? <Primitive.img {...getPrimitiveProps()} /> : null,
+      )}
     </>
   )
 }
@@ -200,11 +200,11 @@ function AvatarFallback(props: ScopedProps<AvatarFallbackProps & AvatarStateProp
 
   return (
     <>
-      {() =>
+      {reactive(() =>
         canRender() && imageLoadingStatus() !== 'loaded' ? (
           <Primitive.span {...(primitiveProps as Record<string, unknown>)} />
-        ) : null
-      }
+        ) : null,
+      )}
     </>
   )
 }

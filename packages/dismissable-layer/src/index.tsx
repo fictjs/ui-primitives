@@ -78,7 +78,11 @@ function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
 function readValue<T>(value: MaybeAccessor<T>): T {
   let currentValue: unknown = value
 
-  for (let depth = 0; depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>); depth += 1) {
+  for (
+    let depth = 0;
+    depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>);
+    depth += 1
+  ) {
     currentValue = (currentValue as () => unknown)()
   }
 
@@ -99,6 +103,7 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
   const context = useContext(DismissableLayerContext)
   const node = createSignal<DismissableLayerElement | null>(null)
   const layerVersion = createSignal(0)
+  let layerVersionValue = 0
   const ownerDocument = () => node()?.ownerDocument ?? globalThis.document
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<DismissableLayerElement>,
@@ -152,17 +157,6 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     if (!event.defaultPrevented) props.onDismiss?.()
   }, ownerDocument)
 
-  useEscapeKeydown((event) => {
-    const isHighestLayer = getIndex() === context.layers.size - 1
-    if (!isHighestLayer) return
-
-    props.onEscapeKeyDown?.(event)
-    if (!event.defaultPrevented && props.onDismiss) {
-      event.preventDefault()
-      props.onDismiss()
-    }
-  }, ownerDocument())
-
   useLayoutEffect(() => {
     const currentNode = node()
     const currentDocument = ownerDocument()
@@ -215,7 +209,8 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     }
 
     const handleUpdate = () => {
-      layerVersion(layerVersion() + 1)
+      layerVersionValue += 1
+      layerVersion(layerVersionValue)
     }
 
     currentDocument.addEventListener(CONTEXT_UPDATE, handleUpdate)
@@ -224,55 +219,60 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     }
   })
 
-  useLayoutEffect(() => {
-    const forwardedRef = props.ref as PossibleRef<DismissableLayerElement>
-    if (!forwardedRef) return
+  useEscapeKeydown((event) => {
+    const isHighestLayer = getIndex() === context.layers.size - 1
+    if (!isHighestLayer) return
 
-    return () => {
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(null)
-        return
-      }
-
-      forwardedRef.current = null
+    props.onEscapeKeyDown?.(event)
+    if (!event.defaultPrevented && props.onDismiss) {
+      event.preventDefault()
+      props.onDismiss()
     }
-  })
+  }, globalThis.document)
 
-  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
-    disableOutsidePointerEvents: undefined,
-    onDismiss: undefined,
-    onEscapeKeyDown: undefined,
-    onFocusOutside: undefined,
-    onInteractOutside: undefined,
-    onPointerDownOutside: undefined,
-    ref: undefined,
-    style: prop(() => {
-      layerVersion()
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      disableOutsidePointerEvents: undefined,
+      children: undefined,
+      onDismiss: undefined,
+      onEscapeKeyDown: undefined,
+      onFocusOutside: undefined,
+      onInteractOutside: undefined,
+      onPointerDownOutside: undefined,
+      ref: undefined,
+      style: prop(() => {
+        layerVersion()
 
-      return {
-        pointerEvents: isBodyPointerEventsDisabled()
-          ? isPointerEventsEnabled()
-            ? 'auto'
-            : 'none'
-          : undefined,
-        ...readStyle(props.style),
-      }
-    }),
-    'oncapture:blur': composeEventHandlers<FocusEvent>(
-      props['oncapture:blur'],
-      focusOutside.onBlurCapture,
-    ),
-    'oncapture:focus': composeEventHandlers<FocusEvent>(
-      props['oncapture:focus'],
-      focusOutside.onFocusCapture,
-    ),
-    'oncapture:pointerdown': composeEventHandlers<PointerEvent>(
-      props['oncapture:pointerdown'],
-      pointerDownOutside.onPointerDownCapture,
-    ),
-  })
+        return {
+          pointerEvents: isBodyPointerEventsDisabled()
+            ? isPointerEventsEnabled()
+              ? 'auto'
+              : 'none'
+            : undefined,
+          ...readStyle(props.style),
+        }
+      }),
+      'oncapture:blur': composeEventHandlers<FocusEvent>(
+        props['oncapture:blur'],
+        focusOutside.onBlurCapture,
+      ),
+      'oncapture:focus': composeEventHandlers<FocusEvent>(
+        props['oncapture:focus'],
+        focusOutside.onFocusCapture,
+      ),
+      'oncapture:pointerdown': composeEventHandlers<PointerEvent>(
+        props['oncapture:pointerdown'],
+        pointerDownOutside.onPointerDownCapture,
+      ),
+    },
+  )
 
-  return <Primitive.div {...primitiveProps} ref={composedRefs} />
+  return (
+    <Primitive.div {...primitiveProps} ref={composedRefs}>
+      {props.children}
+    </Primitive.div>
+  )
 }
 
 DismissableLayer.displayName = DISMISSABLE_LAYER_NAME

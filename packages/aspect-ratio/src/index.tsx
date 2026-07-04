@@ -1,4 +1,4 @@
-import type { FictNode, JSX } from '@fictjs/runtime'
+import { prop, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { Primitive } from '@fictjs/primitive'
 
@@ -39,11 +39,11 @@ function AspectRatio(props: AspectRatioProps): FictNode {
   const { ratio = 1 / 1, style, ...aspectRatioProps } = props
   const wrapperProps: Record<string, unknown> = {
     'data-radix-aspect-ratio-wrapper': '',
-    style: () => ({
+    style: prop(() => ({
       position: 'relative',
       width: '100%',
       paddingBottom: `${100 / readValue(ratio)}%`,
-    }),
+    })),
   }
 
   return (

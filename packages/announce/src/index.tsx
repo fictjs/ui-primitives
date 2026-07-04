@@ -4,7 +4,7 @@ import {
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs } from '@fictjs/compose-refs'
 import { Primitive } from '@fictjs/primitive'
@@ -179,12 +179,12 @@ function Announce(props: AnnounceProps): FictNode {
       <Primitive.div {...(regionProps as Record<string, unknown>)} ref={ref}>
         {children}
       </Primitive.div>
-      {() => {
+      {reactive(() => {
         const liveRegion = region()
         if (!liveRegion) return null
 
         return createFictPortal(liveRegion, () => <div>{children}</div>, createElement)
-      }}
+      })}
     </>
   )
 }

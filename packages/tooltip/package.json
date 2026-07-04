@@ -64,7 +64,7 @@
     "@fictjs/visually-hidden": "workspace:*"
   },
   "peerDependencies": {
-    "@fictjs/runtime": ">=0.17.0"
+    "@fictjs/runtime": ">=0.22.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",

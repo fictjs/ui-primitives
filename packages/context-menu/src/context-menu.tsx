@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createContextScope, type Scope } from '@fictjs/context'
 import { composeEventHandlers } from '@fictjs/core-primitive'
@@ -286,7 +286,7 @@ function ContextMenuTrigger(props: ScopedProps<ContextMenuTriggerProps>): FictNo
       'data-state': prop(() => (context.open() ? 'open' : 'closed')),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
     },
-    () => triggerProps as Record<string, unknown>,
+    prop(() => triggerProps as Record<string, unknown>),
     {
       __scopeContextMenu: undefined,
       disabled: undefined,
@@ -336,8 +336,7 @@ function ContextMenuContent(props: ScopedProps<ContextMenuContentProps>): FictNo
   const align = () =>
     props.align === undefined
       ? 'start'
-      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ??
-        'start')
+      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ?? 'start')
   const sideOffset = () =>
     props.sideOffset === undefined
       ? 2
@@ -351,17 +350,11 @@ function ContextMenuContent(props: ScopedProps<ContextMenuContentProps>): FictNo
       ? false
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
   const wrapperStyle = () =>
-    getContextMenuWrapperStyle(
-      context.anchorPoint(),
-      side(),
-      align(),
-      sideOffset(),
-      alignOffset(),
-    )
+    getContextMenuWrapperStyle(context.anchorPoint(), side(), align(), sideOffset(), alignOffset())
 
   return (
     <>
-      {() =>
+      {reactive(() =>
         context.open() || forceMount() ? (
           <div data-radix-popper-content-wrapper="" style={wrapperStyle()}>
             <MenuContent
@@ -401,8 +394,8 @@ function ContextMenuContent(props: ScopedProps<ContextMenuContentProps>): FictNo
               }}
             />
           </div>
-        ) : null
-      }
+        ) : null,
+      )}
     </>
   )
 }

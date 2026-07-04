@@ -1,5 +1,5 @@
 import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -290,22 +290,6 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
     },
   )
 
-  useLayoutEffect(() => {
-    const forwardedRef = props.ref as PossibleRef<HTMLButtonElement>
-    if (!forwardedRef) {
-      return
-    }
-
-    return () => {
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(null)
-        return
-      }
-
-      forwardedRef.current = null
-    }
-  })
-
   const primitiveProps = mergeProps(
     {
       type: 'button',
@@ -319,7 +303,7 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
       disabled: prop(context.disabled),
       value: prop(context.value),
     },
-    () => triggerProps as Record<string, unknown>,
+    prop(() => triggerProps as Record<string, unknown>),
     {
       onClick: handleClick,
       onKeyDown: handleKeyDown,
@@ -341,15 +325,18 @@ function CheckboxIndicator(props: ScopedProps<CheckboxIndicatorProps>): FictNode
       isIndeterminate(context.checked()) ||
       context.checked() === true,
     )
-  const primitiveProps = mergeProps(() => indicatorProps as Record<string, unknown>, {
-    'data-state': prop(() => getState(context.checked())),
-    'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
-    forceMount: undefined,
-    style: prop(() => ({
-      pointerEvents: 'none',
-      ...readStyle(props.style as MaybeAccessor<CheckboxStyle> | undefined),
-    })),
-  })
+  const primitiveProps = mergeProps(
+    prop(() => indicatorProps as Record<string, unknown>),
+    {
+      'data-state': prop(() => getState(context.checked())),
+      'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
+      forceMount: undefined,
+      style: prop(() => ({
+        pointerEvents: 'none',
+        ...readStyle(props.style as MaybeAccessor<CheckboxStyle> | undefined),
+      })),
+    },
+  )
 
   return (
     <Presence present={present}>
@@ -389,7 +376,7 @@ function CheckboxBubbleInput(props: ScopedProps<CheckboxBubbleInputProps>): Fict
       value: prop(context.value),
       tabIndex: -1,
     },
-    () => inputProps as Record<string, unknown>,
+    prop(() => inputProps as Record<string, unknown>),
     {
       ref: undefined,
       style: prop(() => {
@@ -424,11 +411,11 @@ function CheckboxRootBubbleInput(props: {
 
   return (
     <>
-      {() =>
+      {reactive(() =>
         context.isFormControl() ? (
           <CheckboxBubbleInput __scopeCheckbox={props.__scopeCheckbox} />
-        ) : null
-      }
+        ) : null,
+      )}
     </>
   )
 }
@@ -446,22 +433,6 @@ function Checkbox(props: ScopedProps<CheckboxProps>): FictNode {
     value,
     ...checkboxProps
   } = props
-
-  useLayoutEffect(() => {
-    const forwardedRef = props.ref as PossibleRef<HTMLButtonElement>
-    if (!forwardedRef) {
-      return
-    }
-
-    return () => {
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(null)
-        return
-      }
-
-      forwardedRef.current = null
-    }
-  })
 
   return (
     <CheckboxProvider

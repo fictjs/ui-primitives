@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useSize } from '../src/index.js'
 
@@ -86,12 +86,10 @@ describe('@fictjs/use-size', () => {
         <>
           <div ref={(node) => target(node)} data-width="120" data-height="48" />
           <output>
-            {
-              (() => {
-                const nextSize = size()
-                return nextSize ? `${nextSize.width}x${nextSize.height}` : 'none'
-              }) as unknown as string
-            }
+            {reactive(() => {
+              const nextSize = size()
+              return nextSize ? `${nextSize.width}x${nextSize.height}` : 'none'
+            }) as unknown as string}
           </output>
         </>
       )

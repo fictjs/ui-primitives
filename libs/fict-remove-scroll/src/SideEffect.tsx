@@ -2,6 +2,7 @@
 
 import { createEffect, onCleanup, onMount } from 'fict'
 import type { FictNode } from 'fict'
+import { reactive } from 'fict/advanced'
 import { RemoveScrollBar } from '@fictjs/fict-remove-scroll-bar'
 import { styleSingleton } from '@fictjs/fict-style-singleton'
 
@@ -328,8 +329,10 @@ export function RemoveScrollSideCar(props: IRemoveScrollEffectProps): FictNode {
 
   return (
     <>
-      {() => (readBoolean(props.inert, false) ? <Style styles={generateStyle(id)} /> : null)}
-      {() =>
+      {reactive(() =>
+        readBoolean(props.inert, false) ? <Style styles={generateStyle(id)} /> : null,
+      )}
+      {reactive(() =>
         readBoolean(props.removeScrollBar, true)
           ? (() => {
               const gapMode = readGapMode(props.gapMode)
@@ -341,8 +344,8 @@ export function RemoveScrollSideCar(props: IRemoveScrollEffectProps): FictNode {
                 />
               )
             })()
-          : null
-      }
+          : null,
+      )}
     </>
   )
 }

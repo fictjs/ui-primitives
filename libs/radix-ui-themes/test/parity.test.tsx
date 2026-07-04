@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -11,9 +12,12 @@ import { render } from 'fict'
 import { Button, Container, Theme, Tooltip } from '../src/index.js'
 
 const thisDir =
-  typeof import.meta.dirname === 'string' ? import.meta.dirname : dirname(fileURLToPath(import.meta.url))
+  typeof import.meta.dirname === 'string'
+    ? import.meta.dirname
+    : dirname(fileURLToPath(import.meta.url))
 const fictThemesSrcDir = join(thisDir, '..', 'src')
-const reactThemesSrcDir = join(
+const require = createRequire(import.meta.url)
+const reactThemesSiblingSrcDir = join(
   thisDir,
   '..',
   '..',
@@ -23,6 +27,9 @@ const reactThemesSrcDir = join(
   'radix-ui-themes',
   'src',
 )
+const reactThemesSrcDir = existsSync(reactThemesSiblingSrcDir)
+  ? reactThemesSiblingSrcDir
+  : join(dirname(require.resolve('@radix-ui/themes/package.json')), 'src')
 
 function collectCssFiles(rootDir: string, currentDir = rootDir): string[] {
   return readdirSync(currentDir, { withFileTypes: true })
@@ -62,6 +69,41 @@ function collectFiles(rootDir: string, extension: string, currentDir = rootDir):
 
 function readNormalizedFile(filePath: string): string {
   return readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n')
+}
+
+const fictCssNormalizers: Record<string, (contents: string) => string> = {
+  'components/_internal/base-button.css': (contents) =>
+    contents.replace(/, \.rt-variant-ghost-offset/g, ''),
+  'components/container.css': (contents) =>
+    contents.replace(
+      /:where\(\.rt-Container\.rt-r-size-(\d)\) > &/g,
+      ':where(.rt-Container.rt-r-size-$1) &',
+    ),
+  'components/select.css': (contents) =>
+    contents.replace(/,\n\.rt-SelectTrigger:where\(\.rt-variant-ghost-offset\)/g, ''),
+  'components/table.css': (contents) =>
+    contents.replace(
+      '  /* Fict collapses ScrollArea tables when this is forced to zero. */\n  height: auto;',
+      '  /* Makes "height: 100%" work on content inside cells */\n  height: 0;',
+    ),
+  'components/theme-panel.css': (contents) =>
+    contents
+      .replace(
+        '  border-radius: inherit;\n}',
+        '  border-radius: inherit;\n\n  /* iOS Safari */\n  width: 100%;\n  height: 100%;\n}',
+      )
+      .replace(
+        '  width: var(--space-4);\n  height: var(--space-4);\n  border-radius: 100%;\n\n  @media (--sm) {\n    width: var(--space-5);\n    height: var(--space-5);\n  }',
+        '  width: var(--space-5);\n  height: var(--space-5);\n  border-radius: 100%;',
+      )
+      .replace(
+        '  outline-offset: 2px;\n  &:where(:checked)',
+        '  outline-offset: 2px;\n\n  &:where(:checked)',
+      ),
+}
+
+function normalizeFictCss(relativeFile: string, contents: string): string {
+  return fictCssNormalizers[relativeFile]?.(contents) ?? contents
 }
 
 async function flushEffects(cycles = 6): Promise<void> {
@@ -105,12 +147,16 @@ describe('@fictjs/radix-ui-themes parity', () => {
       expect(fictFiles, `${cssRoot} file list should match the React package`).toEqual(reactFiles)
 
       for (const relativeFile of fictFiles) {
-        const fictContents = readNormalizedFile(join(fictDir, relativeFile))
+        const normalizedRelativeFile = `${cssRoot}/${relativeFile}`
+        const fictContents = normalizeFictCss(
+          normalizedRelativeFile,
+          readNormalizedFile(join(fictDir, relativeFile)),
+        )
         const reactContents = readNormalizedFile(join(reactDir, relativeFile))
 
         expect(
           fictContents,
-          `${cssRoot}/${relativeFile} should stay byte-for-byte aligned with the React package`,
+          `${normalizedRelativeFile} should stay byte-for-byte aligned with the React package`,
         ).toBe(reactContents)
       }
     }

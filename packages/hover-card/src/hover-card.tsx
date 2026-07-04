@@ -202,7 +202,7 @@ function HoverCardTrigger(props: ScopedProps<HoverCardTriggerProps>): FictNode {
     {
       'data-state': prop(() => getState(context.open())),
     },
-    () => triggerProps as Record<string, unknown>,
+    prop(() => triggerProps as Record<string, unknown>),
     {
       onPointerEnter: composeEventHandlers<PointerEvent>(
         props.onPointerEnter as ((event: PointerEvent) => void) | undefined,
@@ -361,30 +361,33 @@ function HoverCardContentImpl(props: ScopedProps<HoverCardContentImplProps>): Fi
     }
   })
 
-  const popperContentProps = mergeProps(() => contentProps as Record<string, unknown>, {
-    onPointerDown: composeEventHandlers<PointerEvent>(
-      contentProps.onPointerDown as ((event: PointerEvent) => void) | undefined,
-      (event) => {
-        const currentTarget = event.currentTarget as HTMLElement
-        const target = event.target as HTMLElement | null
-        if (target && currentTarget.contains(target)) {
-          containSelection(true)
-        }
-        context.hasSelectionRef.current = false
-        context.isPointerDownOnContentRef.current = true
-      },
-    ),
-    style: prop(() => ({
-      ...readStyle(contentProps.style as MaybeAccessor<unknown>),
-      userSelect: containSelection() ? 'text' : undefined,
-      WebkitUserSelect: containSelection() ? 'text' : undefined,
-      '--radix-hover-card-content-transform-origin': 'var(--radix-popper-transform-origin)',
-      '--radix-hover-card-content-available-width': 'var(--radix-popper-available-width)',
-      '--radix-hover-card-content-available-height': 'var(--radix-popper-available-height)',
-      '--radix-hover-card-trigger-width': 'var(--radix-popper-anchor-width)',
-      '--radix-hover-card-trigger-height': 'var(--radix-popper-anchor-height)',
-    })),
-  })
+  const popperContentProps = mergeProps(
+    prop(() => contentProps as Record<string, unknown>),
+    {
+      onPointerDown: composeEventHandlers<PointerEvent>(
+        contentProps.onPointerDown as ((event: PointerEvent) => void) | undefined,
+        (event) => {
+          const currentTarget = event.currentTarget as HTMLElement
+          const target = event.target as HTMLElement | null
+          if (target && currentTarget.contains(target)) {
+            containSelection(true)
+          }
+          context.hasSelectionRef.current = false
+          context.isPointerDownOnContentRef.current = true
+        },
+      ),
+      style: prop(() => ({
+        ...readStyle(contentProps.style as MaybeAccessor<unknown>),
+        userSelect: containSelection() ? 'text' : undefined,
+        WebkitUserSelect: containSelection() ? 'text' : undefined,
+        '--radix-hover-card-content-transform-origin': 'var(--radix-popper-transform-origin)',
+        '--radix-hover-card-content-available-width': 'var(--radix-popper-available-width)',
+        '--radix-hover-card-content-available-height': 'var(--radix-popper-available-height)',
+        '--radix-hover-card-trigger-width': 'var(--radix-popper-anchor-width)',
+        '--radix-hover-card-trigger-height': 'var(--radix-popper-anchor-height)',
+      })),
+    },
+  )
   const dismissableLayerProps = mergeProps(
     {
       asChild: true,
@@ -414,7 +417,7 @@ function HoverCardArrow(props: ScopedProps<HoverCardArrowProps>): FictNode {
   const { __scopeHoverCard, ...arrowProps } = props
   const popperScope = usePopperScope(__scopeHoverCard)
   const primitiveProps = mergeProps(
-    () => arrowProps as Record<string, unknown>,
+    prop(() => arrowProps as Record<string, unknown>),
     props.ref ? { ref: props.ref as PossibleRef<HoverCardArrowElement> } : {},
   )
 

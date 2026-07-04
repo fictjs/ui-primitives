@@ -213,13 +213,16 @@ function ToggleGroupImplSingle(props: ScopedProps<ToggleGroupImplSingleProps>): 
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
 
-  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
-    __scopeToggleGroup: undefined,
-    defaultValue: undefined,
-    onValueChange: undefined,
-    type: undefined,
-    value: undefined,
-  })
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeToggleGroup: undefined,
+      defaultValue: undefined,
+      onValueChange: undefined,
+      type: undefined,
+      value: undefined,
+    },
+  )
 
   return (
     <ToggleGroupValueProvider
@@ -254,13 +257,16 @@ function ToggleGroupImplMultiple(props: ScopedProps<ToggleGroupImplMultipleProps
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
 
-  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
-    __scopeToggleGroup: undefined,
-    defaultValue: undefined,
-    onValueChange: undefined,
-    type: undefined,
-    value: undefined,
-  })
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeToggleGroup: undefined,
+      defaultValue: undefined,
+      onValueChange: undefined,
+      type: undefined,
+      value: undefined,
+    },
+  )
 
   return (
     <ToggleGroupValueProvider
@@ -363,7 +369,7 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
         focusItem(entryItem)
       },
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeToggleGroup: undefined,
       dir: undefined,
@@ -423,59 +429,62 @@ function ToggleGroupItem(props: ScopedProps<ToggleGroupItemProps>): FictNode {
     })
   })
 
-  const itemImplProps = mergeProps(() => props as Record<string, unknown>, {
-    __scopeToggleGroup: props.__scopeToggleGroup,
-    disabled: prop(() => (disabled() ? true : undefined)),
-    pressed,
-    ref: (node: ToggleGroupItemElement | null) => {
-      itemRef.current = node
-      setRef(props.ref as PossibleRef<ToggleGroupItemElement>, node)
-    },
-    ...(context.rovingFocus()
-      ? {
-          tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
-        }
-      : {}),
-    onFocus: composeEventHandlers<FocusEvent>(
-      props.onFocus as ((event: FocusEvent) => void) | undefined,
-      () => {
-        if (context.rovingFocus() && !disabled()) {
-          setTimeout(() => {
-            if (context.rovingFocus() && !disabled()) {
-              context.setCurrentTabStop(props.value)
-            }
-          })
-        }
+  const itemImplProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeToggleGroup: props.__scopeToggleGroup,
+      disabled: prop(() => (disabled() ? true : undefined)),
+      pressed,
+      ref: (node: ToggleGroupItemElement | null) => {
+        itemRef.current = node
+        setRef(props.ref as PossibleRef<ToggleGroupItemElement>, node)
       },
-    ),
-    onMouseDown: composeEventHandlers<MouseEvent>(
-      props.onMouseDown as ((event: MouseEvent) => void) | undefined,
-      (event) => {
-        if (disabled()) {
+      ...(context.rovingFocus()
+        ? {
+            tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
+          }
+        : {}),
+      onFocus: composeEventHandlers<FocusEvent>(
+        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        () => {
+          if (context.rovingFocus() && !disabled()) {
+            setTimeout(() => {
+              if (context.rovingFocus() && !disabled()) {
+                context.setCurrentTabStop(props.value)
+              }
+            })
+          }
+        },
+      ),
+      onMouseDown: composeEventHandlers<MouseEvent>(
+        props.onMouseDown as ((event: MouseEvent) => void) | undefined,
+        (event) => {
+          if (disabled()) {
+            event.preventDefault()
+          }
+        },
+      ),
+      onKeyDown: composeEventHandlers<KeyboardEvent>(
+        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => {
+          if (!context.rovingFocus()) return
+          if (event.target !== event.currentTarget) return
+          if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
+
+          const intent = getFocusIntent(event.key, context.orientation(), context.dir())
+          if (!intent) return
+
+          const enabledItems = context.getItems().filter((item) => !item.disabled())
+          const nextItem = getNextItem(enabledItems, props.value, intent, context.loop())
+          if (!nextItem) return
+
           event.preventDefault()
-        }
-      },
-    ),
-    onKeyDown: composeEventHandlers<KeyboardEvent>(
-      props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-      (event) => {
-        if (!context.rovingFocus()) return
-        if (event.target !== event.currentTarget) return
-        if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
-
-        const intent = getFocusIntent(event.key, context.orientation(), context.dir())
-        if (!intent) return
-
-        const enabledItems = context.getItems().filter((item) => !item.disabled())
-        const nextItem = getNextItem(enabledItems, props.value, intent, context.loop())
-        if (!nextItem) return
-
-        event.preventDefault()
-        context.setCurrentTabStop(nextItem.value)
-        setTimeout(() => focusItem(nextItem))
-      },
-    ),
-  }) as unknown as ScopedProps<ToggleGroupItemImplProps>
+          context.setCurrentTabStop(nextItem.value)
+          setTimeout(() => focusItem(nextItem))
+        },
+      ),
+    },
+  ) as unknown as ScopedProps<ToggleGroupItemImplProps>
 
   return <ToggleGroupItemImpl {...itemImplProps} />
 }
@@ -496,7 +505,7 @@ function ToggleGroupItemImpl(props: ScopedProps<ToggleGroupItemImplProps>): Fict
       'data-toggle-group-item': '',
       'data-toggle-group-value': value,
     },
-    () => itemProps as Record<string, unknown>,
+    prop(() => itemProps as Record<string, unknown>),
     valueContext.type === 'single'
       ? {
           role: 'radio',

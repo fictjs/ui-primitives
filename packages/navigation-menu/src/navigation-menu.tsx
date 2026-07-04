@@ -108,12 +108,15 @@ function NavigationMenuImpl(props: ScopedProps<NavigationMenuProps>, name: strin
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
   const viewport = createSignal<HTMLDivElement | null>(null)
-  const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
-    __scopeNavigationMenu: undefined,
-    defaultValue: undefined,
-    onValueChange: undefined,
-    value: undefined,
-  })
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeNavigationMenu: undefined,
+      defaultValue: undefined,
+      onValueChange: undefined,
+      value: undefined,
+    },
+  )
 
   return (
     <NavigationMenuProvider
@@ -181,7 +184,7 @@ function NavigationMenuTrigger(props: ScopedProps<NavigationMenuTriggerProps>): 
       'aria-expanded': prop(() => String(open())),
       'data-state': prop(() => (open() ? 'open' : 'closed')),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeNavigationMenu: undefined,
       onClick: (event: MouseEvent) => {

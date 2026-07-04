@@ -1,4 +1,4 @@
-import { mergeProps, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -206,7 +206,7 @@ function FocusScope(props: FocusScopeProps): FictNode {
     {
       tabIndex: -1,
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       loop: undefined,
       onKeyDown: handleKeyDown,

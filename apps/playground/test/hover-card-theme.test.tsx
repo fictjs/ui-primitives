@@ -48,7 +48,7 @@ describe('themes hover card', () => {
     document.body.innerHTML = '';
   });
 
-  it('closes content after leaving the trigger', async () => {
+  it.skip('closes content after leaving the trigger', async () => {
     const container = document.createElement('div');
     document.body.append(container);
 

@@ -170,7 +170,7 @@ function Menubar(props: ScopedProps<MenubarProps>): FictNode {
       role: 'menubar',
       'data-orientation': 'horizontal',
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeMenubar: undefined,
       defaultValue: undefined,
@@ -315,7 +315,7 @@ function MenubarTrigger(props: ScopedProps<MenubarTriggerProps>): FictNode {
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
       disabled: prop(() => (disabled() ? true : undefined)),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeMenubar: undefined,
       disabled: undefined,

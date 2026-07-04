@@ -193,26 +193,12 @@ function RovingFocusGroupImpl(props: ScopedProps<RovingFocusGroupImplProps>): Fi
     }
   })
 
-  useLayoutEffect(() => {
-    const forwardedRef = props.ref as PossibleRef<HTMLDivElement>
-    if (!forwardedRef) return
-
-    return () => {
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(null)
-        return
-      }
-
-      forwardedRef.current = null
-    }
-  })
-
   const primitiveProps = mergeProps(
     {
       tabIndex: prop(() => (isTabbingBackOut() || focusableItemsCount() === 0 ? -1 : 0)),
       'data-orientation': prop(orientation),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeRovingFocusGroup: undefined,
       currentTabStopId: undefined,
@@ -332,11 +318,13 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
       tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
       'data-orientation': prop(context.orientation),
     },
-    () =>
-      ({
-        ...props,
-        children: undefined,
-      }) as Record<string, unknown>,
+    prop(
+      () =>
+        ({
+          ...props,
+          children: undefined,
+        }) as Record<string, unknown>,
+    ),
     {
       __scopeRovingFocusGroup: undefined,
       active: undefined,

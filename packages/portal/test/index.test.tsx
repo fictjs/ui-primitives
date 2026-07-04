@@ -2,11 +2,11 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { createContext, createMemo, render } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createContext, createMemo, render, type FictNode } from '@fictjs/runtime'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
-import { createContext as createScopedContext } from '../../context/src/index.ts'
-import { Presence } from '../../presence/src/index.tsx'
+import { createContext as createScopedContext } from '../../context/src/index.js'
+import { Presence } from '../../presence/src/index.js'
 import { Portal } from '../src/index.js'
 
 function flushMicrotasks(): Promise<void> {
@@ -62,12 +62,13 @@ describe('@fictjs/portal', () => {
     render(
       () => (
         <>
-          {() =>
+          {reactive(() =>
             present() ? (
               <Portal id="body-portal-cleanup">
                 <span>Cleanup</span>
               </Portal>
-            ) : null}
+            ) : null,
+          )}
         </>
       ),
       host,
@@ -92,12 +93,13 @@ describe('@fictjs/portal', () => {
       () => (
         <DummyContext.Provider value={{ present }}>
           <>
-            {() =>
+            {reactive(() =>
               present() ? (
                 <Portal id="body-portal-context-cleanup">
                   <span>Cleanup</span>
                 </Portal>
-              ) : null}
+              ) : null,
+            )}
           </>
         </DummyContext.Provider>
       ),
@@ -123,12 +125,13 @@ describe('@fictjs/portal', () => {
       () => (
         <DummyProvider present={present}>
           <>
-            {() =>
+            {reactive(() =>
               present() ? (
                 <Portal id="body-portal-scoped-context-cleanup">
                   <span>Cleanup</span>
                 </Portal>
-              ) : null}
+              ) : null,
+            )}
           </>
         </DummyProvider>
       ),
@@ -149,14 +152,18 @@ describe('@fictjs/portal', () => {
     document.body.appendChild(host)
     const open = createSignal(true)
     const [OuterProvider] = createScopedContext<{ present: () => boolean } | null>('OuterProvider')
-    const [InnerProvider, useInnerContext] = createScopedContext<{ open: () => boolean } | null>(
+    const [InnerProvider, useInnerContext] = createScopedContext<{ open: () => boolean }>(
       'InnerProvider',
     )
 
     function InnerContent() {
       const context = useInnerContext('InnerContent')
 
-      return <>{() => (context.open() ? <div id="body-portal-inner-content">Open</div> : null)}</>
+      return (
+        <>
+          {reactive(() => (context.open() ? <div id="body-portal-inner-content">Open</div> : null))}
+        </>
+      )
     }
 
     render(
@@ -248,7 +255,7 @@ describe('@fictjs/portal', () => {
     document.body.appendChild(host)
     const open = createSignal(true)
     const [DummyProvider] = createScopedContext<{ open: () => boolean } | null>('DummyProvider')
-    const [MenuProvider, useMenuContext] = createScopedContext<{ open: () => boolean } | null>(
+    const [MenuProvider, useMenuContext] = createScopedContext<{ open: () => boolean }>(
       'MenuProvider',
     )
 
@@ -289,11 +296,11 @@ describe('@fictjs/portal', () => {
     document.body.appendChild(host)
     const open = createSignal(true)
     const [DummyProvider] = createScopedContext<{ open: () => boolean } | null>('DummyProvider')
-    const [MenuProvider, useMenuContext] = createScopedContext<{ open: () => boolean } | null>(
+    const [MenuProvider, useMenuContext] = createScopedContext<{ open: () => boolean }>(
       'MenuProvider',
     )
 
-    function ControlledMenuProvider(props: { children?: unknown }) {
+    function ControlledMenuProvider(props: { children?: FictNode }) {
       const computedOpen = createMemo(() => open())
 
       return <MenuProvider open={computedOpen}>{props.children}</MenuProvider>

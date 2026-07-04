@@ -250,7 +250,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
         },
       ),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeRadioGroup: undefined,
       defaultValue: undefined,
@@ -319,8 +319,8 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
   })
 
   const nextProps = mergeProps(
-    () => radioScope as Record<string, unknown>,
-    () => itemProps as Record<string, unknown>,
+    prop(() => radioScope as Record<string, unknown>),
+    prop(() => itemProps as Record<string, unknown>),
     {
       checked,
       disabled: prop(() => (disabled() ? true : undefined)),

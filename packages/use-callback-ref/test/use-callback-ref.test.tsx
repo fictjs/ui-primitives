@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createRef as createDomRef, render } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import {
   assignRef,
@@ -191,7 +191,7 @@ describe('@fictjs/use-callback-ref', () => {
       const dispose = render(
         () => (
           <>
-            {() => (show() ? <div ref={mergedRef}>Shown</div> : null)}
+            {reactive(() => (show() ? <div ref={mergedRef}>Shown</div> : null))}
           </>
         ),
         container,

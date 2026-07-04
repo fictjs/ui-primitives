@@ -1,5 +1,5 @@
 import type { FictNode } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import type { SideCarMedium } from './types.js'
 
@@ -34,7 +34,7 @@ export function renderCar<
     return (
       <>
         <WrappedComponent {...(props as TProps)} children={renderTarget} />
-        {() => props.children(...currentState())}
+        {reactive(() => props.children(...currentState()))}
       </>
     )
   }

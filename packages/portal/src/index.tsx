@@ -15,21 +15,17 @@ function Portal(props: PortalProps): FictNode {
   const { container: containerProp, ...portalProps } = props
 
   const resolveContainer = () => containerProp ?? globalThis.document?.body ?? null
+  const container = resolveContainer()
 
-  return (
-    <>
-      {() => {
-        const container = resolveContainer()
-        if (!container) return null
+  if (!container) return null
 
-        return createFictPortal(
-          container,
-          () => <Primitive.div {...(portalProps as Record<string, unknown>)} />,
-          createElement,
-        )
-      }}
-    </>
+  createFictPortal(
+    container,
+    () => <Primitive.div {...(portalProps as Record<string, unknown>)} />,
+    createElement,
   )
+
+  return null
 }
 
 Portal.displayName = 'Portal'

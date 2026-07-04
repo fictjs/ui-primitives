@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -137,6 +137,17 @@ function readStyle(value: unknown): Record<string, string | number> {
   return value as Record<string, string | number>
 }
 
+function shallowBooleanRecordEqual(
+  left: Record<string, boolean>,
+  right: Record<string, boolean>,
+): boolean {
+  const leftKeys = Object.keys(left)
+  const rightKeys = Object.keys(right)
+  if (leftKeys.length !== rightKeys.length) return false
+
+  return leftKeys.every((key) => left[key] === right[key])
+}
+
 function Form(props: ScopedProps<FormProps>): FictNode {
   const { __scopeForm, onClearServerErrors = () => {}, ...rootProps } = props
   const formRef = { current: null as HTMLFormElement | null }
@@ -151,8 +162,9 @@ function Form(props: ScopedProps<FormProps>): FictNode {
       return validityMap()[fieldName]
     },
     onFieldValidityChange(fieldName, validity) {
+      const currentValidityMap = untrack(() => validityMap())
       validityMap({
-        ...validityMap(),
+        ...currentValidityMap,
         [fieldName]: cloneValidityState(validity),
       })
     },
@@ -160,44 +172,85 @@ function Form(props: ScopedProps<FormProps>): FictNode {
       return customMatcherEntriesMap()[fieldName] ?? []
     },
     onFieldCustomMatcherEntryAdd(fieldName, matcherEntry) {
+      const currentEntriesMap = untrack(() => customMatcherEntriesMap())
+      const currentEntries = currentEntriesMap[fieldName] ?? []
+      const nextEntries = currentEntries.some((entry) => entry.id === matcherEntry.id)
+        ? currentEntries.map((entry) => (entry.id === matcherEntry.id ? matcherEntry : entry))
+        : [...currentEntries, matcherEntry]
+
+      if (
+        nextEntries.length === currentEntries.length &&
+        nextEntries.every((entry, index) => entry === currentEntries[index])
+      ) {
+        return
+      }
+
       customMatcherEntriesMap({
-        ...customMatcherEntriesMap(),
-        [fieldName]: [...(customMatcherEntriesMap()[fieldName] ?? []), matcherEntry],
+        ...currentEntriesMap,
+        [fieldName]: nextEntries,
       })
     },
     onFieldCustomMatcherEntryRemove(fieldName, matcherEntryId) {
+      const currentEntriesMap = untrack(() => customMatcherEntriesMap())
+      const currentEntries = currentEntriesMap[fieldName] ?? []
+      const nextEntries = currentEntries.filter(
+        (matcherEntry) => matcherEntry.id !== matcherEntryId,
+      )
+
+      if (nextEntries.length === currentEntries.length) {
+        return
+      }
+
       customMatcherEntriesMap({
-        ...customMatcherEntriesMap(),
-        [fieldName]: (customMatcherEntriesMap()[fieldName] ?? []).filter(
-          (matcherEntry) => matcherEntry.id !== matcherEntryId,
-        ),
+        ...currentEntriesMap,
+        [fieldName]: nextEntries,
       })
     },
     getFieldCustomErrors(fieldName) {
       return customErrorsMap()[fieldName] ?? {}
     },
     onFieldCustomErrorsChange(fieldName, errors) {
+      const currentErrorsMap = untrack(() => customErrorsMap())
+      const currentErrors = currentErrorsMap[fieldName] ?? {}
+      const nextErrors = { ...currentErrors, ...errors }
+
+      if (shallowBooleanRecordEqual(currentErrors, nextErrors)) {
+        return
+      }
+
       customErrorsMap({
-        ...customErrorsMap(),
-        [fieldName]: { ...(customErrorsMap()[fieldName] ?? {}), ...errors },
+        ...currentErrorsMap,
+        [fieldName]: nextErrors,
       })
     },
     onFieldValiditionClear(fieldName) {
-      validityMap({ ...validityMap(), [fieldName]: undefined })
-      customErrorsMap({ ...customErrorsMap(), [fieldName]: {} })
+      validityMap({ ...untrack(() => validityMap()), [fieldName]: undefined })
+      customErrorsMap({ ...untrack(() => customErrorsMap()), [fieldName]: {} })
     },
   }
 
   const ariaDescriptionContext: AriaDescriptionContextValue = {
     onFieldMessageIdAdd(fieldName, id) {
-      const nextIds = new Set(messageIdsMap()[fieldName] ?? [])
+      const currentMessageIdsMap = untrack(() => messageIdsMap())
+      const currentIds = currentMessageIdsMap[fieldName] ?? new Set<string>()
+      if (currentIds.has(id)) {
+        return
+      }
+
+      const nextIds = new Set(currentIds)
       nextIds.add(id)
-      messageIdsMap({ ...messageIdsMap(), [fieldName]: nextIds })
+      messageIdsMap({ ...currentMessageIdsMap, [fieldName]: nextIds })
     },
     onFieldMessageIdRemove(fieldName, id) {
-      const nextIds = new Set(messageIdsMap()[fieldName] ?? [])
+      const currentMessageIdsMap = untrack(() => messageIdsMap())
+      const currentIds = currentMessageIdsMap[fieldName] ?? new Set<string>()
+      if (!currentIds.has(id)) {
+        return
+      }
+
+      const nextIds = new Set(currentIds)
       nextIds.delete(id)
-      messageIdsMap({ ...messageIdsMap(), [fieldName]: nextIds })
+      messageIdsMap({ ...currentMessageIdsMap, [fieldName]: nextIds })
     },
     getFieldDescription(fieldName) {
       const description = Array.from(messageIdsMap()[fieldName] ?? []).join(' ')
@@ -205,33 +258,36 @@ function Form(props: ScopedProps<FormProps>): FictNode {
     },
   }
 
-  const primitiveProps = mergeProps(() => rootProps as Record<string, unknown>, {
-    onInvalid: composeEventHandlers<Event>(
-      props.onInvalid as ((event: Event) => void) | undefined,
-      (event) => {
-        const form = event.currentTarget as HTMLFormElement
-        const firstInvalidControl = getFirstInvalidControl(form)
-        if (firstInvalidControl === event.target) {
-          firstInvalidControl.focus()
-        }
-        event.preventDefault()
-      },
-    ),
-    onSubmit: composeEventHandlers<Event>(
-      props.onSubmit as ((event: Event) => void) | undefined,
-      () => {
-        onClearServerErrors()
-      },
-      { checkForDefaultPrevented: false },
-    ),
-    onReset: composeEventHandlers<Event>(
-      props.onReset as ((event: Event) => void) | undefined,
-      () => {
-        onClearServerErrors()
-      },
-    ),
-    ref: undefined,
-  })
+  const primitiveProps = mergeProps(
+    prop(() => rootProps as Record<string, unknown>),
+    {
+      onInvalid: composeEventHandlers<Event>(
+        props.onInvalid as ((event: Event) => void) | undefined,
+        (event) => {
+          const form = event.currentTarget as HTMLFormElement
+          const firstInvalidControl = getFirstInvalidControl(form)
+          if (firstInvalidControl === event.target) {
+            firstInvalidControl.focus()
+          }
+          event.preventDefault()
+        },
+      ),
+      onSubmit: composeEventHandlers<Event>(
+        props.onSubmit as ((event: Event) => void) | undefined,
+        () => {
+          onClearServerErrors()
+        },
+        { checkForDefaultPrevented: false },
+      ),
+      onReset: composeEventHandlers<Event>(
+        props.onReset as ((event: Event) => void) | undefined,
+        () => {
+          onClearServerErrors()
+        },
+      ),
+      ref: undefined,
+    },
+  )
 
   return (
     <ValidationProvider
@@ -267,7 +323,7 @@ function FormField(props: ScopedProps<FormFieldProps>): FictNode {
       'data-valid': prop(() => getValidAttribute(validity(), serverInvalid)),
       'data-invalid': prop(() => getInvalidAttribute(validity(), serverInvalid)),
     },
-    () => fieldProps as Record<string, unknown>,
+    prop(() => fieldProps as Record<string, unknown>),
   )
 
   useLayoutEffect(() => {
@@ -322,7 +378,7 @@ function FormLabel(props: ScopedProps<FormLabelProps>): FictNode {
       'data-invalid': prop(() => getInvalidAttribute(validity(), fieldContext.serverInvalid())),
       htmlFor: prop(htmlFor),
     },
-    () => labelProps as Record<string, unknown>,
+    prop(() => labelProps as Record<string, unknown>),
     {
       ref: undefined,
     },
@@ -490,7 +546,7 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
       id: prop(id),
       name: prop(name),
     },
-    () => controlProps as Record<string, unknown>,
+    prop(() => controlProps as Record<string, unknown>),
     {
       ref: undefined,
       onInvalid: composeEventHandlers<Event>(
@@ -585,7 +641,7 @@ function FormBuiltInMessage(props: ScopedProps<FormBuiltInMessageProps>): FictNo
   )
   const validity = () => validationContext.getFieldValidity(name)
   const matches = () => Boolean(forceMatch || validity()?.[match])
-  const builtInMessageProps = mergeProps(() => messageProps as Record<string, unknown>)
+  const builtInMessageProps = mergeProps(prop(() => messageProps as Record<string, unknown>))
   const messageText = () => String(children ?? DEFAULT_BUILT_IN_MESSAGES[match] ?? '')
 
   if (props.ref) {
@@ -636,7 +692,7 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
       forceMatch ||
       (validity() && !hasBuiltInError(validity()!) && Object.values(customErrors()).some(Boolean)),
     )
-  const customMessageProps = mergeProps(() => messageProps as Record<string, unknown>)
+  const customMessageProps = mergeProps(prop(() => messageProps as Record<string, unknown>))
   const messageText = () => String(children ?? DEFAULT_INVALID_MESSAGE)
 
   if (props.ref) {
@@ -696,7 +752,7 @@ function FormMessageImpl(props: ScopedProps<FormMessageImplProps>): FictNode {
     {
       id,
     },
-    () => messageProps as Record<string, unknown>,
+    prop(() => messageProps as Record<string, unknown>),
     {
       ref: undefined,
     },
@@ -736,7 +792,7 @@ function FormSubmit(props: ScopedProps<FormSubmitProps>): FictNode {
     {
       type: 'submit',
     },
-    () => submitProps as Record<string, unknown>,
+    prop(() => submitProps as Record<string, unknown>),
     {
       ref: undefined,
     },

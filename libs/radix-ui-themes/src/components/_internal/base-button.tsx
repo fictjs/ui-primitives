@@ -1,44 +1,61 @@
-import * as React from '../../helpers/element.js';
-import classNames from 'classnames';
-import { Slot } from '@fictjs/radix-ui';
+import { prop } from 'fict'
+import * as React from '../../helpers/element.js'
+import classNames from 'classnames'
+import { Slot } from '@fictjs/radix-ui'
 
-import { baseButtonPropDefs } from './base-button.props.js';
-import { Flex } from '../flex.js';
-import { Spinner } from '../spinner.js';
-import { VisuallyHidden } from '../visually-hidden.js';
-import { extractProps } from '../../helpers/extract-props.js';
-import { mapResponsiveProp, mapButtonSizeToSpinnerSize } from '../../helpers/map-prop-values.js';
-import { marginPropDefs } from '../../props/margin.props.js';
+import { baseButtonPropDefs } from './base-button.props.js'
+import { Flex } from '../flex.js'
+import { Spinner } from '../spinner.js'
+import { VisuallyHidden } from '../visually-hidden.js'
+import { extractProps } from '../../helpers/extract-props.js'
+import { mapResponsiveProp, mapButtonSizeToSpinnerSize } from '../../helpers/map-prop-values.js'
+import { marginPropDefs } from '../../props/margin.props.js'
 
-import type { MarginProps } from '../../props/margin.props.js';
-import type { ComponentPropsWithout, RemovedProps } from '../../helpers/component-props.js';
-import type { GetPropDefTypes } from '../../props/prop-def.js';
+import type { MarginProps } from '../../props/margin.props.js'
+import type { ComponentPropsWithout, RemovedProps } from '../../helpers/component-props.js'
+import type { GetPropDefTypes } from '../../props/prop-def.js'
+import type { JSX } from 'fict'
 
-type BaseButtonElement = React.ElementRef<'button'>;
-type BaseButtonOwnProps = GetPropDefTypes<typeof baseButtonPropDefs>;
+type BaseButtonElement = React.ElementRef<'button'>
+type BaseButtonOwnProps = GetPropDefTypes<typeof baseButtonPropDefs>
+type PropGetter<T> = (() => T) & { __fictProp: true }
+type GetterBacked<T> = T | PropGetter<T>
 interface BaseButtonProps
-  extends ComponentPropsWithout<'button', RemovedProps>, MarginProps, BaseButtonOwnProps {}
+  extends
+    ComponentPropsWithout<'button', RemovedProps | 'aria-expanded'>,
+    MarginProps,
+    BaseButtonOwnProps {
+  'aria-expanded'?: GetterBacked<JSX.IntrinsicElements['button']['aria-expanded']>
+}
 const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, forwardedRef) => {
-  const { size = baseButtonPropDefs.size.default } = props;
-  const extractedProps = extractProps(props, baseButtonPropDefs, marginPropDefs) as BaseButtonProps & {
-    className?: string;
-  };
-  const className = extractedProps.className;
-  const children = extractedProps.children;
-  const asChild = extractedProps.asChild;
-  const color = extractedProps.color;
-  const radius = extractedProps.radius;
-  const disabled = extractedProps.disabled ?? props.loading;
-  const baseButtonProps = omitPropsPreservingDescriptors(extractedProps as Record<string, unknown>, [
-    'className',
-    'children',
-    'asChild',
-    'color',
-    'radius',
-    'disabled',
-  ]);
-  const Comp = asChild ? Slot.Root : 'button';
-  let child = children;
+  const { size = baseButtonPropDefs.size.default } = props
+  const extractedProps = extractProps(
+    props,
+    baseButtonPropDefs,
+    marginPropDefs,
+  ) as BaseButtonProps & {
+    className?: string
+  }
+  const className = extractedProps.className
+  const children = extractedProps.children
+  const asChild = extractedProps.asChild
+  const color = extractedProps.color
+  const radius = extractedProps.radius
+  const disabled = extractedProps.disabled ?? props.loading
+  const baseButtonProps = omitPropsPreservingDescriptors(
+    extractedProps as Record<string, unknown>,
+    ['className', 'children', 'asChild', 'color', 'radius', 'disabled'],
+  )
+  const ariaExpandedProps =
+    'aria-expanded' in props
+      ? {
+          'aria-expanded': prop(
+            () => props['aria-expanded'],
+          ) as unknown as JSX.IntrinsicElements['button']['aria-expanded'],
+        }
+      : {}
+  const Comp = asChild ? Slot.Root : 'button'
+  let child = children
   if (props.loading) {
     // Loading buttons will wrap the contents of the button for hiding them
     // visually while retaining the button's size. This does not work with the
@@ -46,14 +63,14 @@ const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, 
     // its direct descendants. To get around this we need to clone the child
     // with its wrapped inner children.
     if (asChild && React.isValidElement(children)) {
-      const props = children.props as { children?: React.ReactNode };
-      const childNode = props.children;
+      const props = children.props as { children?: React.ReactNode }
+      const childNode = props.children
       child = React.cloneElement<any>(children, {
         ...props,
         children: renderLoadingButtonContents(childNode, size),
-      });
+      })
     } else {
-      child = renderLoadingButtonContents(children, size);
+      child = renderLoadingButtonContents(children, size)
     }
   }
 
@@ -64,18 +81,19 @@ const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, 
       data-accent-color={color}
       data-radius={radius}
       {...baseButtonProps}
+      {...ariaExpandedProps}
       ref={React.coerceRef(forwardedRef)}
       class={classNames('rt-reset', 'rt-BaseButton', className)}
       disabled={disabled}
     >
       {child}
     </Comp>
-  );
-});
-BaseButton.displayName = 'BaseButton';
+  )
+})
+BaseButton.displayName = 'BaseButton'
 
-export { BaseButton };
-export type { BaseButtonProps };
+export { BaseButton }
+export type { BaseButtonProps }
 
 function renderLoadingButtonContents(children: React.ReactNode, size: BaseButtonProps['size']) {
   return (
@@ -99,28 +117,28 @@ function renderLoadingButtonContents(children: React.ReactNode, size: BaseButton
         </span>
       </Flex>
     </>
-  );
+  )
 }
 
 function omitPropsPreservingDescriptors(
   source: Record<string, unknown>,
   omittedKeys: string[],
 ): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  const omitted = new Set(omittedKeys);
+  const result: Record<string, unknown> = {}
+  const omitted = new Set(omittedKeys)
 
   for (const key of Reflect.ownKeys(source)) {
     if (typeof key === 'string' && omitted.has(key)) {
-      continue;
+      continue
     }
 
-    const descriptor = Object.getOwnPropertyDescriptor(source, key);
+    const descriptor = Object.getOwnPropertyDescriptor(source, key)
     if (!descriptor) {
-      continue;
+      continue
     }
 
-    Object.defineProperty(result, key, descriptor);
+    Object.defineProperty(result, key, descriptor)
   }
 
-  return result;
+  return result
 }

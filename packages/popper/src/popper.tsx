@@ -478,14 +478,17 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
     }),
   })
 
-  const primitiveProps = mergeProps(() => contentProps as Record<string, unknown>, {
-    'data-side': prop(placedSide),
-    'data-align': prop(placedAlign),
-    style: prop(() => ({
-      ...readStyle(contentProps.style as MaybeAccessor<unknown> | undefined),
-      animation: !floating.isPositioned() ? 'none' : undefined,
-    })),
-  })
+  const primitiveProps = mergeProps(
+    prop(() => contentProps as Record<string, unknown>),
+    {
+      'data-side': prop(placedSide),
+      'data-align': prop(placedAlign),
+      style: prop(() => ({
+        ...readStyle(contentProps.style as MaybeAccessor<unknown> | undefined),
+        animation: !floating.isPositioned() ? 'none' : undefined,
+      })),
+    },
+  )
 
   return (
     <div {...(wrapperProps as Record<string, unknown>)} ref={floating.refs.setFloating}>
@@ -563,19 +566,22 @@ function PopperArrow(props: ScopedProps<PopperArrowProps>): FictNode {
     }
   })
 
-  const primitiveProps = mergeProps(() => arrowProps as Record<string, unknown>, {
-    style: prop(() => ({
-      ...readStyle(arrowProps.style as MaybeAccessor<unknown> | undefined),
-      display: 'block',
-    })),
-  })
+  const primitiveProps = mergeProps(
+    prop(() => arrowProps as Record<string, unknown>),
+    {
+      style: prop(() => ({
+        ...readStyle(arrowProps.style as MaybeAccessor<unknown> | undefined),
+        display: 'block',
+      })),
+    },
+  )
 
   const wrapperProps = mergeProps({
     style: prop(wrapperStyle),
   })
 
   const rootProps = mergeProps(
-    () => primitiveProps as Record<string, unknown>,
+    prop(() => primitiveProps as Record<string, unknown>),
     forwardedRef === undefined ? {} : { ref: forwardedRef as PossibleRef<PopperArrowElement> },
   )
 

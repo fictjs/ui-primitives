@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { render } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createCollection, unstable_createCollection } from '../src/index.js'
 import { OrderedDict } from '../src/ordered-dictionary.js'
@@ -50,13 +50,13 @@ function LegacyHarness(props: { showMiddle: () => boolean }) {
             <div data-value="first">First</div>
           </LegacyCollection.ItemSlot>
           <>
-            {() =>
+            {reactive(() =>
               props.showMiddle() ? (
                 <LegacyCollection.ItemSlot scope={undefined} textValue="middle">
                   <div data-value="middle">Middle</div>
                 </LegacyCollection.ItemSlot>
-              ) : null
-            }
+              ) : null,
+            )}
           </>
           <LegacyCollection.ItemSlot scope={undefined} textValue="last">
             <div data-value="last">Last</div>
@@ -79,13 +79,13 @@ function ModernHarness(props: { showMiddle: () => boolean }) {
             <div data-value="first">First</div>
           </ModernCollection.ItemSlot>
           <>
-            {() =>
+            {reactive(() =>
               props.showMiddle() ? (
                 <ModernCollection.ItemSlot scope={undefined} textValue="middle">
                   <div data-value="middle">Middle</div>
                 </ModernCollection.ItemSlot>
-              ) : null
-            }
+              ) : null,
+            )}
           </>
           <ModernCollection.ItemSlot scope={undefined} textValue="last">
             <div data-value="last">Last</div>

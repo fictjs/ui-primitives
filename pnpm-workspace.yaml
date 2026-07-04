@@ -3,15 +3,14 @@ packages:
   - libs/*
   - packages/*
 
-catalogMode: strict
-
 catalog:
-  '@playwright/test': 1.56.1
-  '@fictjs/runtime': 0.17.0
   '@changesets/cli': 2.30.0
   '@commitlint/cli': 20.4.3
   '@commitlint/config-conventional': 20.4.3
   '@eslint/js': 10.0.1
+  '@fictjs/runtime': 0.22.0
+  '@playwright/test': 1.56.1
+  '@radix-ui/themes': 3.3.0
   '@types/node': 25.3.5
   '@vitest/coverage-v8': 4.0.18
   commitizen: 4.3.1
@@ -28,6 +27,8 @@ catalog:
   typescript: 5.9.3
   typescript-eslint: 8.56.1
   vitest: 4.0.18
+
+catalogMode: strict
 
 onlyBuiltDependencies:
   - esbuild

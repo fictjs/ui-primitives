@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -125,7 +125,7 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
       'data-state': prop(() => getState(checked())),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
     },
-    () => radioProps as Record<string, unknown>,
+    prop(() => radioProps as Record<string, unknown>),
     {
       __scopeRadio: undefined,
       checked: undefined,
@@ -151,7 +151,7 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
       value: prop(value),
     },
   )
-  const bubbleInputNode = (() =>
+  const bubbleInputNode = reactive(() =>
     isFormControl() ? (
       <RadioBubbleInput
         bubbles={() => !hasConsumerStoppedPropagationRef.current}
@@ -164,7 +164,8 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
         style={{ transform: 'translateX(-100%)' }}
         value={valueInput}
       />
-    ) : null) as unknown as FictNode
+    ) : null,
+  ) as unknown as FictNode
 
   return (
     <RadioProvider
@@ -188,10 +189,13 @@ function RadioIndicator(props: ScopedProps<RadioIndicatorProps>): FictNode {
     INDICATOR_NAME,
     __scopeRadio as Scope<RadioContextValue | undefined>,
   )
-  const primitiveProps = mergeProps(() => indicatorProps as Record<string, unknown>, {
-    'data-state': prop(() => getState(context.checked())),
-    'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
-  })
+  const primitiveProps = mergeProps(
+    prop(() => indicatorProps as Record<string, unknown>),
+    {
+      'data-state': prop(() => getState(context.checked())),
+      'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
+    },
+  )
 
   return (
     <Presence
@@ -240,56 +244,61 @@ function RadioBubbleInput(props: RadioBubbleInputProps): FictNode {
     }
   })
 
-  const inputProps = mergeProps(() => inputRestProps as Record<string, unknown>, {
-    'aria-hidden': true,
-    bubbles: undefined,
-    checked: prop(() => readValue(props.checked)),
-    control: undefined,
-    disabled: prop(() =>
-      props.disabled === undefined
-        ? undefined
-        : Boolean(readValue(props.disabled as MaybeAccessor<unknown>)),
-    ),
-    'attr:form': prop(() =>
-      formProp === undefined ? undefined : readValue(formProp as MaybeAccessor<string | undefined>),
-    ),
-    name: prop(() =>
-      props.name === undefined
-        ? undefined
-        : readValue(props.name as MaybeAccessor<string | undefined>),
-    ),
-    ref: undefined,
-    required: prop(() =>
-      props.required === undefined
-        ? undefined
-        : Boolean(readValue(props.required as MaybeAccessor<unknown>)),
-    ),
-    style: prop(() => {
-      const nextControlSize = controlSize()
-      return {
-        ...readStyle(props.style),
-        ...(nextControlSize
-          ? {
-              height: `${nextControlSize.height}px`,
-              width: `${nextControlSize.width}px`,
-            }
-          : {}),
-        margin: 0,
-        opacity: 0,
-        pointerEvents: 'none',
-        position: 'absolute',
-      }
-    }),
-    tabIndex: -1,
-    type: 'radio',
-    value: prop(() =>
-      props.value === undefined
-        ? undefined
-        : readValue(
-            props.value as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
-          ),
-    ),
-  })
+  const inputProps = mergeProps(
+    prop(() => inputRestProps as Record<string, unknown>),
+    {
+      'aria-hidden': true,
+      bubbles: undefined,
+      checked: prop(() => readValue(props.checked)),
+      control: undefined,
+      disabled: prop(() =>
+        props.disabled === undefined
+          ? undefined
+          : Boolean(readValue(props.disabled as MaybeAccessor<unknown>)),
+      ),
+      'attr:form': prop(() =>
+        formProp === undefined
+          ? undefined
+          : readValue(formProp as MaybeAccessor<string | undefined>),
+      ),
+      name: prop(() =>
+        props.name === undefined
+          ? undefined
+          : readValue(props.name as MaybeAccessor<string | undefined>),
+      ),
+      ref: undefined,
+      required: prop(() =>
+        props.required === undefined
+          ? undefined
+          : Boolean(readValue(props.required as MaybeAccessor<unknown>)),
+      ),
+      style: prop(() => {
+        const nextControlSize = controlSize()
+        return {
+          ...readStyle(props.style),
+          ...(nextControlSize
+            ? {
+                height: `${nextControlSize.height}px`,
+                width: `${nextControlSize.width}px`,
+              }
+            : {}),
+          margin: 0,
+          opacity: 0,
+          pointerEvents: 'none',
+          position: 'absolute',
+        }
+      }),
+      tabIndex: -1,
+      type: 'radio',
+      value: prop(() =>
+        props.value === undefined
+          ? undefined
+          : readValue(
+              props.value as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
+            ),
+      ),
+    },
+  )
 
   return <Primitive.input {...inputProps} ref={composedRefs} />
 }

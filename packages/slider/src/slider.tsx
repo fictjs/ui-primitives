@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createCollection } from '@fictjs/collection'
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -284,7 +284,7 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
         },
       ),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeSlider: undefined,
       defaultValue: undefined,
@@ -565,67 +565,70 @@ function SliderImpl(props: ScopedProps<SliderImplProps>): FictNode {
   )
   const isSlidingRef = { current: false }
 
-  const primitiveProps = mergeProps(() => sliderProps as Record<string, unknown>, {
-    onKeyDown: composeEventHandlers<KeyboardEvent>(
-      props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-      (event) => {
-        if (context.disabled()) return
+  const primitiveProps = mergeProps(
+    prop(() => sliderProps as Record<string, unknown>),
+    {
+      onKeyDown: composeEventHandlers<KeyboardEvent>(
+        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => {
+          if (context.disabled()) return
 
-        if (event.key === 'Home') {
-          onHomeKeyDown()
+          if (event.key === 'Home') {
+            onHomeKeyDown()
+            event.preventDefault()
+          } else if (event.key === 'End') {
+            onEndKeyDown()
+            event.preventDefault()
+          } else if (PAGE_KEYS.concat(ARROW_KEYS).includes(event.key)) {
+            onStepKeyDown(event)
+            event.preventDefault()
+          }
+        },
+      ),
+      onPointerDown: composeEventHandlers<PointerEvent>(
+        props.onPointerDown as ((event: PointerEvent) => void) | undefined,
+        (event) => {
+          if (context.disabled()) return
+
+          const target = event.target as HTMLElement | null
+          target?.setPointerCapture?.(event.pointerId)
+          isSlidingRef.current = !context.thumbs.has(target as SliderThumbElement)
           event.preventDefault()
-        } else if (event.key === 'End') {
-          onEndKeyDown()
-          event.preventDefault()
-        } else if (PAGE_KEYS.concat(ARROW_KEYS).includes(event.key)) {
-          onStepKeyDown(event)
-          event.preventDefault()
-        }
-      },
-    ),
-    onPointerDown: composeEventHandlers<PointerEvent>(
-      props.onPointerDown as ((event: PointerEvent) => void) | undefined,
-      (event) => {
-        if (context.disabled()) return
 
-        const target = event.target as HTMLElement | null
-        target?.setPointerCapture?.(event.pointerId)
-        isSlidingRef.current = !context.thumbs.has(target as SliderThumbElement)
-        event.preventDefault()
+          if (context.thumbs.has(target as SliderThumbElement)) {
+            target?.focus()
+          } else {
+            onSlideStart(event)
+          }
+        },
+      ),
+      onPointerMove: composeEventHandlers<PointerEvent>(
+        props.onPointerMove as ((event: PointerEvent) => void) | undefined,
+        (event) => {
+          if (context.disabled()) return
 
-        if (context.thumbs.has(target as SliderThumbElement)) {
-          target?.focus()
-        } else {
-          onSlideStart(event)
-        }
-      },
-    ),
-    onPointerMove: composeEventHandlers<PointerEvent>(
-      props.onPointerMove as ((event: PointerEvent) => void) | undefined,
-      (event) => {
-        if (context.disabled()) return
+          const target = event.target as HTMLElement | null
+          if (isSlidingRef.current || target?.hasPointerCapture?.(event.pointerId)) {
+            onSlideMove(event)
+          }
+        },
+      ),
+      onPointerUp: composeEventHandlers<PointerEvent>(
+        props.onPointerUp as ((event: PointerEvent) => void) | undefined,
+        (event) => {
+          if (context.disabled()) return
 
-        const target = event.target as HTMLElement | null
-        if (isSlidingRef.current || target?.hasPointerCapture?.(event.pointerId)) {
-          onSlideMove(event)
-        }
-      },
-    ),
-    onPointerUp: composeEventHandlers<PointerEvent>(
-      props.onPointerUp as ((event: PointerEvent) => void) | undefined,
-      (event) => {
-        if (context.disabled()) return
-
-        const target = event.target as HTMLElement | null
-        const hasPointer = target?.hasPointerCapture?.(event.pointerId)
-        if (isSlidingRef.current || hasPointer) {
-          target?.releasePointerCapture?.(event.pointerId)
-          isSlidingRef.current = false
-          onSlideEnd(event)
-        }
-      },
-    ),
-  })
+          const target = event.target as HTMLElement | null
+          const hasPointer = target?.hasPointerCapture?.(event.pointerId)
+          if (isSlidingRef.current || hasPointer) {
+            target?.releasePointerCapture?.(event.pointerId)
+            isSlidingRef.current = false
+            onSlideEnd(event)
+          }
+        },
+      ),
+    },
+  )
 
   return (
     <Primitive.span
@@ -649,7 +652,7 @@ function SliderTrack(props: ScopedProps<SliderTrackProps>): FictNode {
       'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
       'data-orientation': prop(context.orientation),
     },
-    () => trackProps as Record<string, unknown>,
+    prop(() => trackProps as Record<string, unknown>),
   )
 
   if (props.ref) {
@@ -686,7 +689,7 @@ function SliderRange(props: ScopedProps<SliderRangeProps>): FictNode {
         [orientation.endEdge()]: `${offsetEnd()}%`,
       })),
     },
-    () => rangeProps as Record<string, unknown>,
+    prop(() => rangeProps as Record<string, unknown>),
   )
 
   if (props.ref) {
@@ -758,7 +761,7 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
         },
       ),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeSlider: undefined,
       name: undefined,
@@ -770,15 +773,18 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
     const thumbNode = thumb()
     if (!thumbNode) return
 
-    isFormControl(Boolean(context.form() || thumbNode.closest('form')))
+    queueMicrotask(() => {
+      if (thumb() === thumbNode) {
+        isFormControl(Boolean(context.form() || thumbNode.closest('form')))
+      }
+    })
     context.thumbs.add(thumbNode)
     return () => {
-      isFormControl(false)
       context.thumbs.delete(thumbNode)
     }
   })
 
-  const bubbleInputNode = (() =>
+  const bubbleInputNode = reactive(() =>
     isFormControl() ? (
       <SliderBubbleInput
         __scopeSlider={props.__scopeSlider}
@@ -794,7 +800,8 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
         form={context.form}
         value={value}
       />
-    ) : null) as unknown as FictNode
+    ) : null,
+  ) as unknown as FictNode
 
   return (
     <span style={wrapperStyle()}>
@@ -842,27 +849,32 @@ function SliderBubbleInput(props: ScopedProps<SliderBubbleInputProps>): FictNode
     }
   })
 
-  const inputProps = mergeProps(() => inputRestProps as Record<string, unknown>, {
-    __scopeSlider: undefined,
-    defaultValue: undefined,
-    'attr:form': prop(() =>
-      formProp === undefined ? undefined : readValue(formProp as MaybeAccessor<string | undefined>),
-    ),
-    name: prop(() =>
-      props.name === undefined
-        ? undefined
-        : readValue(props.name as MaybeAccessor<string | undefined>),
-    ),
-    ref: undefined,
-    style: prop(() => ({
-      display: 'none',
-      ...readStyle(props.style),
-    })),
-    value: prop(() => {
-      const nextValue = readValue(props.value)
-      return nextValue === undefined ? '' : String(nextValue)
-    }),
-  })
+  const inputProps = mergeProps(
+    prop(() => inputRestProps as Record<string, unknown>),
+    {
+      __scopeSlider: undefined,
+      defaultValue: undefined,
+      'attr:form': prop(() =>
+        formProp === undefined
+          ? undefined
+          : readValue(formProp as MaybeAccessor<string | undefined>),
+      ),
+      name: prop(() =>
+        props.name === undefined
+          ? undefined
+          : readValue(props.name as MaybeAccessor<string | undefined>),
+      ),
+      ref: undefined,
+      style: prop(() => ({
+        display: 'none',
+        ...readStyle(props.style),
+      })),
+      value: prop(() => {
+        const nextValue = readValue(props.value)
+        return nextValue === undefined ? '' : String(nextValue)
+      }),
+    },
+  )
 
   return (
     <Primitive.input

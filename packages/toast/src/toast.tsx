@@ -314,7 +314,7 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
       'aria-label': prop(label),
       'data-state': prop(() => (context.toastCount() > 0 ? 'open' : 'closed')),
     },
-    () => viewportProps as Record<string, unknown>,
+    prop(() => viewportProps as Record<string, unknown>),
     {
       __scopeToast: undefined,
       hotkey: undefined,
@@ -489,7 +489,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
         ...readStyle(props.style),
       })),
     },
-    () => toastProps as Record<string, unknown>,
+    prop(() => toastProps as Record<string, unknown>),
     {
       __scopeToast: undefined,
       defaultOpen: undefined,
@@ -652,7 +652,7 @@ function ToastClose(props: ScopedProps<ToastCloseProps>): FictNode {
     {
       type: 'button',
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeToast: undefined,
       onClick: composeEventHandlers<MouseEvent>(

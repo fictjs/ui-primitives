@@ -355,7 +355,7 @@ function SelectTrigger(props: ScopedProps<SelectTriggerProps>): FictNode {
       'data-state': prop(() => (context.open() ? 'open' : 'closed')),
       disabled: prop(() => (context.disabled() ? true : undefined)),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeSelect: undefined,
       onClick: composeEventHandlers<MouseEvent>(
@@ -462,8 +462,7 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
   const align = () =>
     props.align === undefined
       ? 'start'
-      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ??
-        'start')
+      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ?? 'start')
   const sideOffset = () =>
     props.sideOffset === undefined
       ? 4

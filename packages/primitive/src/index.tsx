@@ -1,4 +1,4 @@
-import { createElement, mergeProps, type FictNode, type JSX } from '@fictjs/runtime'
+import { createElement, mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { createSlot } from '@fictjs/slot'
 
@@ -48,10 +48,14 @@ const Primitive = NODES.reduce<Primitives>((primitive, node) => {
   const Node = ((props: PrimitivePropsWithRef<typeof node>) => {
     const asChild = props.asChild
     const forwardedRef = props.ref
-    const primitiveProps = mergeProps(() => props as Record<string, unknown>, {
-      asChild: undefined,
-      ref: undefined,
-    })
+    const primitiveProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        asChild: undefined,
+        children: undefined,
+        ref: undefined,
+      },
+    )
     const Comp = asChild ? Slot : node
 
     if (typeof window !== 'undefined') {
@@ -60,12 +64,17 @@ const Primitive = NODES.reduce<Primitives>((primitive, node) => {
 
     return createElement({
       type: Comp as string | ((props: Record<string, unknown>) => FictNode),
-      props:
+      props: mergeProps(
+        primitiveProps as Record<string, unknown>,
         forwardedRef === undefined
-          ? (primitiveProps as Record<string, unknown>)
-          : (mergeProps(primitiveProps as Record<string, unknown>, {
+          ? {
+              children: props.children,
+            }
+          : {
+              children: props.children,
               ref: forwardedRef,
-            }) as Record<string, unknown>),
+            },
+      ) as Record<string, unknown>,
       key: undefined,
     })
   }) as PrimitiveComponent<typeof node>

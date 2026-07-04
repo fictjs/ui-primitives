@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -120,7 +120,11 @@ function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
 function readValue<T>(value: MaybeAccessor<T>): T {
   let currentValue: unknown = value
 
-  for (let depth = 0; depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>); depth += 1) {
+  for (
+    let depth = 0;
+    depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>);
+    depth += 1
+  ) {
     currentValue = (currentValue as () => unknown)()
   }
 
@@ -230,7 +234,7 @@ function PopoverTrigger(props: ScopedProps<PopoverTriggerProps>): FictNode {
       'aria-controls': prop(context.contentId),
       'data-state': prop(() => getState(context.open())),
     },
-    () => triggerProps as Record<string, unknown>,
+    prop(() => triggerProps as Record<string, unknown>),
     {
       onClick: composeEventHandlers<MouseEvent>(
         props.onClick as ((event: MouseEvent) => void) | undefined,
@@ -293,15 +297,15 @@ function PopoverContent(props: ScopedProps<PopoverContentProps>): FictNode {
 
   return (
     <>
-      {() =>
+      {reactive(() =>
         present() ? (
           context.modal() ? (
             <PopoverContentModal {...(contentProps as ScopedProps<PopoverContentTypeProps>)} />
           ) : (
             <PopoverContentNonModal {...(contentProps as ScopedProps<PopoverContentTypeProps>)} />
           )
-        ) : null
-      }
+        ) : null,
+      )}
     </>
   )
 }
@@ -440,14 +444,14 @@ function PopoverContentImpl(props: ScopedProps<PopoverContentImplProps>): FictNo
 
   useFocusGuards()
 
-  const popperProps = mergeProps(
+  const popperProps = mergeProps<Record<string, unknown>>(
     {
       'data-state': prop(() => getState(context.open())),
       role: 'dialog',
       id: prop(context.contentId),
     },
     popperScope,
-    () => contentProps as Record<string, unknown>,
+    prop(() => contentProps as Record<string, unknown>),
     {
       style: prop(() => ({
         ...readStyle(contentProps.style as MaybeAccessor<unknown> | undefined),
@@ -521,7 +525,7 @@ function PopoverClose(props: ScopedProps<PopoverCloseProps>): FictNode {
     {
       type: 'button',
     },
-    () => closeProps as Record<string, unknown>,
+    prop(() => closeProps as Record<string, unknown>),
     {
       onClick: composeEventHandlers<MouseEvent>(
         props.onClick as ((event: MouseEvent) => void) | undefined,

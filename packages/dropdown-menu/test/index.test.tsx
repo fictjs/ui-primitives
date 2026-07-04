@@ -185,7 +185,9 @@ describe('@fictjs/dropdown-menu', () => {
       container,
     )
 
-    const firstTrigger = container.querySelector('[data-testid="first-trigger"]') as HTMLButtonElement
+    const firstTrigger = container.querySelector(
+      '[data-testid="first-trigger"]',
+    ) as HTMLButtonElement
     const secondTrigger = container.querySelector(
       '[data-testid="second-trigger"]',
     ) as HTMLButtonElement

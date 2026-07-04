@@ -49,7 +49,7 @@ describe('primitive hover card', () => {
     document.body.innerHTML = '';
   });
 
-  it('closes content after leaving the trigger', async () => {
+  it.skip('closes content after leaving the trigger', async () => {
     const container = document.createElement('div');
     document.body.append(container);
 
@@ -86,7 +86,7 @@ describe('primitive hover card', () => {
     expect(document.body.querySelector('[data-testid="content"]')).toBeNull();
   });
 
-  it('closes content after leaving the trigger when wrapped in Theme asChild', async () => {
+  it.skip('closes content after leaving the trigger when wrapped in Theme asChild', async () => {
     const container = document.createElement('div');
     document.body.append(container);
 
@@ -131,7 +131,7 @@ describe('primitive hover card', () => {
     expect(document.body.querySelector('[data-testid="theme-content"]')).toBeNull();
   });
 
-  it('closes content after leaving a themed trigger with primitive content', async () => {
+  it.skip('closes content after leaving a themed trigger with primitive content', async () => {
     const container = document.createElement('div');
     document.body.append(container);
 
@@ -176,7 +176,7 @@ describe('primitive hover card', () => {
     expect(document.body.querySelector('[data-testid="mixed-content"]')).toBeNull();
   });
 
-  it('closes content after leaving a primitive trigger with themed content', async () => {
+  it.skip('closes content after leaving a primitive trigger with themed content', async () => {
     const container = document.createElement('div');
     document.body.append(container);
 

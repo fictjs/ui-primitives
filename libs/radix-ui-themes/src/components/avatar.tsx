@@ -1,4 +1,4 @@
-import { createSignal } from 'fict/advanced'
+import { createSignal, reactive } from 'fict/advanced'
 
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
@@ -51,7 +51,7 @@ function Avatar(props: AvatarProps): React.ReactNode {
 
   const content = (
     <>
-      {() =>
+      {reactive(() =>
         status() !== 'loaded' ? (
           <span
             class={classNames('rt-AvatarFallback', {
@@ -61,8 +61,8 @@ function Avatar(props: AvatarProps): React.ReactNode {
           >
             {status() === 'error' ? fallback : null}
           </span>
-        ) : null
-      }
+        ) : null,
+      )}
       <img
         {...imageProps}
         src={src}

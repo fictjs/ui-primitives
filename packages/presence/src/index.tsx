@@ -1,9 +1,9 @@
 import { createEffect, onCleanup, type FictNode, type FictVNode } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { composeRefs, type PossibleRef } from '@fictjs/compose-refs'
 
-type MaybeAccessor<T> = T | (() => T)
+type MaybeAccessor<T> = T | (() => MaybeAccessor<T>)
 type PresenceState = 'mounted' | 'unmountSuspended' | 'unmounted'
 type PresenceEvent = 'MOUNT' | 'UNMOUNT' | 'ANIMATION_OUT' | 'ANIMATION_END'
 
@@ -232,7 +232,7 @@ function Presence(props: PresenceProps): FictNode {
 
   return (
     <>
-      {() => {
+      {reactive(() => {
         const child =
           typeof childTemplate === 'function'
             ? childTemplate({ present: presence.isPresent() })
@@ -249,7 +249,7 @@ function Presence(props: PresenceProps): FictNode {
         return cloneVNode(child, {
           ref: composeRefs(presence.ref, getElementRef(child)),
         })
-      }}
+      })}
     </>
   )
 }

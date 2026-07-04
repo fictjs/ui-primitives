@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -186,7 +186,7 @@ function PasswordToggleFieldInput(props: ScopedProps<PasswordToggleFieldInputPro
       spellCheck,
       type: prop(() => (visible() ? 'text' : 'password')),
     },
-    () => inputProps as Record<string, unknown>,
+    prop(() => inputProps as Record<string, unknown>),
     {
       ref: useComposedRefs(props.ref as PossibleRef<HTMLInputElement>, inputRef, inputNode),
       onBlur: composeEventHandlers<FocusEvent>(
@@ -269,7 +269,7 @@ function PasswordToggleFieldToggle(props: ScopedProps<PasswordToggleFieldToggleP
       'aria-label': prop(() => props['aria-label'] ?? internalAriaLabel()),
       tabIndex: prop(() => (isHydrated() ? props.tabIndex : -1)),
     },
-    () => toggleProps as Record<string, unknown>,
+    prop(() => toggleProps as Record<string, unknown>),
     {
       ref: useComposedRefs(props.ref as PossibleRef<HTMLButtonElement>, elementRef),
       onFocus: composeEventHandlers<FocusEvent>(
@@ -336,11 +336,17 @@ function PasswordToggleFieldSlot(props: ScopedProps<PasswordToggleFieldSlotProps
     props.__scopePasswordToggleField as Scope<PasswordToggleFieldContextValue | undefined>,
   )
 
-  if ('render' in props) {
-    return props.render({ visible: visible() })
-  }
-
-  return visible() ? props.visible : props.hidden
+  return (
+    <>
+      {reactive(() =>
+        'render' in props
+          ? props.render({ visible: visible() })
+          : visible()
+            ? props.visible
+            : props.hidden,
+      )}
+    </>
+  )
 }
 
 PasswordToggleFieldSlot.displayName = PASSWORD_TOGGLE_FIELD_SLOT_NAME
@@ -353,15 +359,19 @@ function PasswordToggleFieldIcon(props: ScopedProps<PasswordToggleFieldIconProps
   const { hidden, visible: visibleIcon, ...svgProps } = props
 
   return (
-    <Primitive.svg
-      {...(mergeProps(() => svgProps as Record<string, unknown>, { 'aria-hidden': true }) as Record<
-        string,
-        unknown
-      >)}
-      asChild
-    >
-      {visible() ? visibleIcon : hidden}
-    </Primitive.svg>
+    <>
+      {reactive(() => (
+        <Primitive.svg
+          {...(mergeProps(
+            prop(() => svgProps as Record<string, unknown>),
+            { 'aria-hidden': true },
+          ) as Record<string, unknown>)}
+          asChild
+        >
+          {visible() ? visibleIcon : hidden}
+        </Primitive.svg>
+      ))}
+    </>
   )
 }
 

@@ -97,6 +97,7 @@ function readValue<T>(value: T): T {
 function normalizeProps(
   source: Record<string, unknown> | null | undefined,
   excluded: Iterable<PropertyKey> = [],
+  preserveProxyReads = false,
 ): PropsRecord {
   const next: PropsRecord = {}
   if (!source) return next
@@ -110,11 +111,15 @@ function normalizeProps(
     if (!descriptor) continue
 
     if ('value' in descriptor) {
+      const value =
+        preserveProxyReads && typeof key === 'string' && !isReactiveValue(descriptor.value)
+          ? prop(() => source[key])
+          : descriptor.value
       Object.defineProperty(next, normalizedKey, {
         configurable: true,
         enumerable: descriptor.enumerable ?? true,
         writable: descriptor.writable ?? true,
-        value: descriptor.value,
+        value,
       })
       continue
     }
@@ -229,7 +234,10 @@ function mergeProps(slotProps: PropsRecord, childProps: PropsRecord): PropsRecor
     }
   }
 
-  return copyPropsPreservingDescriptors(copyPropsPreservingDescriptors({}, slotProps), overrideProps)
+  return copyPropsPreservingDescriptors(
+    copyPropsPreservingDescriptors({}, slotProps),
+    overrideProps,
+  )
 }
 
 function cloneVNode(
@@ -262,11 +270,14 @@ function isSlottable(child: FictNode): child is FictVNode {
   return (child.type as Partial<SlottableComponent>).__fictSlotId === SLOTTABLE_IDENTIFIER
 }
 
-function applySlotPropsToElement(element: Element, slotProps: PropsRecord, forwardedRef?: SlotRef): Element {
+function applySlotPropsToElement(
+  element: Element,
+  slotProps: PropsRecord,
+  forwardedRef?: SlotRef,
+): Element {
   const originalClassName = element.getAttribute('class') ?? ''
   const originalStyle = element.getAttribute('style') ?? ''
-  const styleTarget =
-    'style' in element ? (element as InlineStylableElement) : null
+  const styleTarget = 'style' in element ? (element as InlineStylableElement) : null
 
   for (const key of Reflect.ownKeys(slotProps)) {
     if (typeof key !== 'string') {
@@ -311,7 +322,9 @@ function applySlotPropsToElement(element: Element, slotProps: PropsRecord, forwa
 
     if (isEventProp(key)) {
       if (typeof value === 'function') {
-        const eventName = key.startsWith('oncapture:') ? key.slice('oncapture:'.length) : key.slice(2)
+        const eventName = key.startsWith('oncapture:')
+          ? key.slice('oncapture:'.length)
+          : key.slice(2)
         element.addEventListener(eventName.toLowerCase(), value as EventListener)
       }
       continue
@@ -347,7 +360,7 @@ function createSlotClone(ownerName: string) {
   const SlotClone = (props: SlotCloneProps): FictNode => {
     const child = getSingleChild(props.children)
     const forwardedRef = props.ref
-    const slotProps = normalizeProps(props as Record<string, unknown>, ['children', 'ref'])
+    const slotProps = normalizeProps(props as Record<string, unknown>, ['children', 'ref'], true)
 
     if (!child) return null
     if (!isVNode(child)) return child
@@ -374,10 +387,10 @@ function createSlotClone(ownerName: string) {
 function createSlot(ownerName: string) {
   const SlotClone = createSlotClone(ownerName)
 
-    const Slot = (props: SlotProps & { ref?: SlotRef }): FictNode => {
+  const Slot = (props: SlotProps & { ref?: SlotRef }): FictNode => {
     const forwardedRef = props.ref
     const childrenArray = flattenChildren(props.children)
-    const slotProps = normalizeProps(props as Record<string, unknown>, ['children', 'ref'])
+    const slotProps = normalizeProps(props as Record<string, unknown>, ['children', 'ref'], true)
     const slottable = childrenArray.find(isSlottable)
 
     if (slottable) {

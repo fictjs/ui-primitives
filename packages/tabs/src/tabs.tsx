@@ -142,7 +142,7 @@ function Tabs(props: ScopedProps<TabsProps>): FictNode {
       dir: prop(dir),
       'data-orientation': prop(orientation),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeTabs: undefined,
       activationMode: undefined,
@@ -229,7 +229,7 @@ function TabsList(props: ScopedProps<TabsListProps>): FictNode {
       role: 'tablist',
       'aria-orientation': prop(context.orientation),
     },
-    () => listProps as Record<string, unknown>,
+    prop(() => listProps as Record<string, unknown>),
     {
       onKeyDown: handleKeyDown,
     },
@@ -259,7 +259,7 @@ function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
       id: prop(triggerId),
       tabIndex: prop(() => (isSelected() ? 0 : -1)),
     },
-    () => triggerProps as Record<string, unknown>,
+    prop(() => triggerProps as Record<string, unknown>),
     {
       onMouseDown: composeEventHandlers<MouseEvent>(
         props.onMouseDown as ((event: MouseEvent) => void) | undefined,
@@ -339,7 +339,7 @@ function TabsContent(props: ScopedProps<TabsContentProps>): FictNode {
             })),
             children: prop(() => (present ? children : null)),
           },
-          () => contentProps as Record<string, unknown>,
+          prop(() => contentProps as Record<string, unknown>),
         )
 
         return <Primitive.div {...primitiveProps} />

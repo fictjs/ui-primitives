@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { render, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 const hideOthersMock = vi.hoisted(() => vi.fn(() => () => {}))
@@ -262,7 +262,7 @@ describe('@fictjs/popover', () => {
     const portalRoot = document.createElement('div')
     document.body.append(container, portalRoot)
 
-    function TriggerButton(props: { 'data-testid'?: string; children?: unknown }) {
+    function TriggerButton(props: { 'data-testid'?: string; children?: FictNode }) {
       return (
         <button type="button" data-testid={props['data-testid']}>
           {props.children}
@@ -306,7 +306,7 @@ describe('@fictjs/popover', () => {
 
     function ForwardRefTriggerButton(props: {
       'data-testid'?: string
-      children?: unknown
+      children?: FictNode
       ref?: { current: HTMLButtonElement | null } | ((node: HTMLButtonElement | null) => void)
     }) {
       return (

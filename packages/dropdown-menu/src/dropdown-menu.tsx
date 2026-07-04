@@ -1,4 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -282,13 +283,7 @@ function DropdownMenu(props: ScopedProps<DropdownMenuProps>): FictNode {
       }}
       modal={modal}
     >
-      <Menu
-        {...menuScope}
-        open={open}
-        onOpenChange={setOpen}
-        dir={dir}
-        modal={modal}
-      >
+      <Menu {...menuScope} open={open} onOpenChange={setOpen} dir={dir} modal={modal}>
         {props.children}
       </Menu>
     </DropdownMenuProvider>
@@ -323,7 +318,7 @@ function DropdownMenuTrigger(props: ScopedProps<DropdownMenuTriggerProps>): Fict
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
       disabled: prop(() => (disabled() ? true : undefined)),
     },
-    () => triggerProps as Record<string, unknown>,
+    prop(() => triggerProps as Record<string, unknown>),
     {
       __scopeDropdownMenu: undefined,
       disabled: undefined,
@@ -400,8 +395,7 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
   const align = () =>
     props.align === undefined
       ? 'start'
-      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ??
-        'start')
+      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ?? 'start')
   const sideOffset = () =>
     props.sideOffset === undefined
       ? 4
@@ -422,10 +416,28 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
       sideOffset(),
       alignOffset(),
     )
+  const isTriggerTarget = (target: HTMLElement | null) => {
+    if (!target) {
+      return false
+    }
+
+    if (context.triggerRef.current?.contains(target)) {
+      return true
+    }
+
+    const triggerId = context.triggerId()
+    for (let element: HTMLElement | null = target; element; element = element.parentElement) {
+      if (element.id === triggerId) {
+        return true
+      }
+    }
+
+    return false
+  }
 
   return (
     <>
-      {() =>
+      {reactive(() =>
         context.open() || forceMount() ? (
           <div data-radix-popper-content-wrapper="" style={wrapperStyle()}>
             <MenuContent
@@ -456,6 +468,12 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
                 hasInteractedOutside = false
                 event.preventDefault()
               }}
+              onFocusOutside={(event) => {
+                props.onFocusOutside?.(event)
+                if (!event.defaultPrevented && context.modal()) {
+                  event.preventDefault()
+                }
+              }}
               onInteractOutside={(event) => {
                 props.onInteractOutside?.(event)
                 if (event.defaultPrevented) {
@@ -470,8 +488,7 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
                   'button' in originalEvent && (originalEvent.button === 2 || ctrlLeftClick)
                 const isMenuFocus =
                   originalEvent.type === 'focusin' && !!target?.closest('[role="menu"]')
-                const isTriggerInteraction =
-                  !!target && !!context.triggerRef.current?.contains(target)
+                const isTriggerInteraction = isTriggerTarget(target)
 
                 if (isMenuFocus) {
                   event.preventDefault()
@@ -489,8 +506,8 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
               }}
             />
           </div>
-        ) : null
-      }
+        ) : null,
+      )}
     </>
   )
 }

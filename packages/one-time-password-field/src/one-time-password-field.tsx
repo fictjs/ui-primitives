@@ -217,6 +217,17 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
   const isHydrated = useIsHydrated()
   const inputRegistry = new Map<HTMLInputElement, number>()
   const inputsVersion = createSignal(0)
+  let inputsVersionScheduled = false
+
+  const scheduleInputsVersionUpdate = () => {
+    if (inputsVersionScheduled) return
+
+    inputsVersionScheduled = true
+    queueMicrotask(() => {
+      inputsVersionScheduled = false
+      inputsVersion(inputsVersion() + 1)
+    })
+  }
 
   const sanitizeValue = (value: string | string[]) => {
     let nextValue = Array.isArray(value) ? value.join('') : value
@@ -376,6 +387,7 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
       type: undefined,
       validationType: undefined,
       value: undefined,
+      children: undefined,
       ref: undefined,
     },
   )
@@ -461,20 +473,23 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
             (inputRegistry.size === 0 ? 0 : Math.max(...Array.from(inputRegistry.values())) + 1)
           inputRegistry.set(node, nextIndex)
         }
-        inputsVersion(inputsVersion() + 1)
+        scheduleInputsVersionUpdate()
       }}
       unregisterInput={(node) => {
         inputRegistry.delete(node)
-        inputsVersion(inputsVersion() + 1)
+        scheduleInputsVersionUpdate()
       }}
     >
       <Primitive.div
         {...(primitiveProps as Record<string, unknown>)}
         ref={(node) => {
-          rootRef.current = node
-          setRef(props.ref as PossibleRef<HTMLDivElement>, node)
+          const element = node instanceof HTMLDivElement ? node : null
+          rootRef.current = element
+          setRef(props.ref as PossibleRef<HTMLDivElement>, element)
         }}
-      />
+      >
+        {props.children}
+      </Primitive.div>
     </OneTimePasswordFieldProvider>
   )
 }
@@ -511,8 +526,9 @@ function OneTimePasswordFieldHiddenInput(
     <Primitive.input
       {...(primitiveProps as Record<string, unknown>)}
       ref={(node) => {
-        context.hiddenInputRef.current = node
-        setRef(props.ref as PossibleRef<HTMLInputElement>, node)
+        const element = node instanceof HTMLInputElement ? node : null
+        context.hiddenInputRef.current = element
+        setRef(props.ref as PossibleRef<HTMLInputElement>, element)
       }}
     />
   )

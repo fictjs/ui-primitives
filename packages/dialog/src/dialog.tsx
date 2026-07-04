@@ -147,7 +147,11 @@ function isReadableAccessor<T>(value: MaybeAccessor<T>): value is () => T {
 function readValue<T>(value: MaybeAccessor<T>): T {
   let currentValue: unknown = value
 
-  for (let depth = 0; depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>); depth += 1) {
+  for (
+    let depth = 0;
+    depth < 10 && isReadableAccessor(currentValue as MaybeAccessor<unknown>);
+    depth += 1
+  ) {
     currentValue = (currentValue as () => unknown)()
   }
 
@@ -233,7 +237,7 @@ function DialogTrigger(props: ScopedProps<DialogTriggerProps>): FictNode {
       'aria-controls': prop(context.contentId),
       'data-state': prop(() => getState(context.open())),
     },
-    () => triggerProps as Record<string, unknown>,
+    prop(() => triggerProps as Record<string, unknown>),
     {
       onClick: composeEventHandlers<MouseEvent>(
         props.onClick as ((event: MouseEvent) => void) | undefined,
@@ -249,19 +253,21 @@ function DialogTrigger(props: ScopedProps<DialogTriggerProps>): FictNode {
 DialogTrigger.displayName = TRIGGER_NAME
 
 function DialogPortal(props: ScopedProps<DialogPortalProps>): FictNode {
-  const { __scopeDialog, children, container, forceMount } = props
+  const { __scopeDialog, children, forceMount } = props
   const nextForceMount = forceMount === undefined ? undefined : readValue(forceMount)
-  const portalProps =
-    container === undefined
-      ? { style: { display: 'contents' } }
-      : { container, style: { display: 'contents' } }
 
   return (
     <PortalProvider
       scope={__scopeDialog as Scope<PortalContextValue | undefined>}
       forceMount={nextForceMount}
     >
-      <PortalPrimitive {...portalProps}>{children}</PortalPrimitive>
+      {props.container === undefined ? (
+        <PortalPrimitive style={{ display: 'contents' }}>{children}</PortalPrimitive>
+      ) : (
+        <PortalPrimitive container={props.container} style={{ display: 'contents' }}>
+          {children}
+        </PortalPrimitive>
+      )}
     </PortalProvider>
   )
 }
@@ -308,7 +314,7 @@ function DialogOverlayImpl(props: ScopedProps<DialogOverlayImplProps>): FictNode
     {
       'data-state': prop(() => getState(context.open())),
     },
-    () => overlayProps as Record<string, unknown>,
+    prop(() => overlayProps as Record<string, unknown>),
     {
       style: prop(() => ({
         pointerEvents: 'auto',
@@ -496,7 +502,7 @@ function DialogContentImpl(props: ScopedProps<DialogContentImplProps>): FictNode
       'aria-labelledby': prop(context.titleId),
       'data-state': prop(() => getState(context.open())),
     },
-    () => contentProps as Record<string, unknown>,
+    prop(() => contentProps as Record<string, unknown>),
   )
   const focusScopeProps: Record<string, unknown> = {
     asChild: true,
@@ -569,7 +575,7 @@ function DialogTitle(props: ScopedProps<DialogTitleProps>): FictNode {
     {
       id: prop(context.titleId),
     },
-    () => titleProps as Record<string, unknown>,
+    prop(() => titleProps as Record<string, unknown>),
   )
 
   return <Primitive.h2 {...primitiveProps} />
@@ -587,7 +593,7 @@ function DialogDescription(props: ScopedProps<DialogDescriptionProps>): FictNode
     {
       id: prop(context.descriptionId),
     },
-    () => descriptionProps as Record<string, unknown>,
+    prop(() => descriptionProps as Record<string, unknown>),
   )
 
   return <Primitive.p {...primitiveProps} />
@@ -605,7 +611,7 @@ function DialogClose(props: ScopedProps<DialogCloseProps>): FictNode {
     {
       type: 'button',
     },
-    () => closeProps as Record<string, unknown>,
+    prop(() => closeProps as Record<string, unknown>),
     {
       onClick: composeEventHandlers<MouseEvent>(
         props.onClick as ((event: MouseEvent) => void) | undefined,

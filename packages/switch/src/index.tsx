@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -129,22 +129,6 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
     isFormControl(currentButton ? Boolean(form() || currentButton.closest('form')) : true)
   })
 
-  useLayoutEffect(() => {
-    const forwardedRef = props.ref as PossibleRef<HTMLButtonElement>
-    if (!forwardedRef) {
-      return
-    }
-
-    return () => {
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(null)
-        return
-      }
-
-      forwardedRef.current = null
-    }
-  })
-
   const handleClick = composeEventHandlers<MouseEvent>(
     props.onClick as ((event: MouseEvent) => void) | undefined,
     (event) => {
@@ -188,7 +172,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
       'data-state': prop(() => getState(checked())),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
     },
-    () => buttonProps as Record<string, unknown>,
+    prop(() => buttonProps as Record<string, unknown>),
     {
       __scopeSwitch: undefined,
       onCheckedChange: undefined,
@@ -197,7 +181,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
       value: prop(value),
     },
   )
-  const bubbleInputNode = (() =>
+  const bubbleInputNode = reactive(() =>
     isFormControl() ? (
       <SwitchBubbleInput
         bubbles={() => !hasConsumerStoppedPropagation}
@@ -211,7 +195,8 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
         style={{ transform: 'translateX(-100%)' }}
         value={value}
       />
-    ) : null) as unknown as FictNode
+    ) : null,
+  ) as unknown as FictNode
 
   return (
     <SwitchProvider scope={__scopeSwitch} checked={checked} disabled={disabled}>
@@ -228,10 +213,13 @@ Switch.displayName = SWITCH_NAME
 function SwitchThumb(props: ScopedProps<SwitchThumbProps>): FictNode {
   const { __scopeSwitch, ...thumbProps } = props
   const context = useSwitchContext(THUMB_NAME, __scopeSwitch)
-  const primitiveProps = mergeProps(() => thumbProps as Record<string, unknown>, {
-    'data-state': prop(() => getState(context.checked())),
-    'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
-  })
+  const primitiveProps = mergeProps(
+    prop(() => thumbProps as Record<string, unknown>),
+    {
+      'data-state': prop(() => getState(context.checked())),
+      'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
+    },
+  )
 
   return <Primitive.span {...primitiveProps} />
 }
@@ -242,56 +230,61 @@ function SwitchBubbleInput(props: SwitchBubbleInputProps): FictNode {
   const { form: formProp, ...inputRestProps } = props
   const controlSize = useSize(props.control)
 
-  const inputProps = mergeProps(() => inputRestProps as Record<string, unknown>, {
-    'aria-hidden': true,
-    checked: prop(props.checked),
-    control: undefined,
-    bubbles: undefined,
-    children: undefined,
-    disabled: prop(() =>
-      props.disabled === undefined ? undefined : Boolean(readValue(props.disabled)),
-    ),
-    'attr:form': prop(() =>
-      formProp === undefined ? undefined : readValue(formProp as MaybeAccessor<string | undefined>),
-    ),
-    name: prop(() =>
-      props.name === undefined
-        ? undefined
-        : readValue(props.name as MaybeAccessor<string | undefined>),
-    ),
-    inputRef: undefined,
-    ref: undefined,
-    required: prop(() =>
-      props.required === undefined
-        ? undefined
-        : Boolean(readValue(props.required as MaybeAccessor<unknown>)),
-    ),
-    style: prop(() => {
-      const nextControlSize = controlSize()
-      return {
-        ...readStyle(props.style),
-        ...(nextControlSize
-          ? {
-              height: `${nextControlSize.height}px`,
-              width: `${nextControlSize.width}px`,
-            }
-          : {}),
-        margin: 0,
-        opacity: 0,
-        pointerEvents: 'none',
-        position: 'absolute',
-      }
-    }),
-    tabIndex: -1,
-    type: 'checkbox',
-    value: prop(() =>
-      props.value === undefined
-        ? undefined
-        : readValue(
-            props.value as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
-          ),
-    ),
-  })
+  const inputProps = mergeProps(
+    prop(() => inputRestProps as Record<string, unknown>),
+    {
+      'aria-hidden': true,
+      checked: prop(props.checked),
+      control: undefined,
+      bubbles: undefined,
+      children: undefined,
+      disabled: prop(() =>
+        props.disabled === undefined ? undefined : Boolean(readValue(props.disabled)),
+      ),
+      'attr:form': prop(() =>
+        formProp === undefined
+          ? undefined
+          : readValue(formProp as MaybeAccessor<string | undefined>),
+      ),
+      name: prop(() =>
+        props.name === undefined
+          ? undefined
+          : readValue(props.name as MaybeAccessor<string | undefined>),
+      ),
+      inputRef: undefined,
+      ref: undefined,
+      required: prop(() =>
+        props.required === undefined
+          ? undefined
+          : Boolean(readValue(props.required as MaybeAccessor<unknown>)),
+      ),
+      style: prop(() => {
+        const nextControlSize = controlSize()
+        return {
+          ...readStyle(props.style),
+          ...(nextControlSize
+            ? {
+                height: `${nextControlSize.height}px`,
+                width: `${nextControlSize.width}px`,
+              }
+            : {}),
+          margin: 0,
+          opacity: 0,
+          pointerEvents: 'none',
+          position: 'absolute',
+        }
+      }),
+      tabIndex: -1,
+      type: 'checkbox',
+      value: prop(() =>
+        props.value === undefined
+          ? undefined
+          : readValue(
+              props.value as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
+            ),
+      ),
+    },
+  )
 
   if (props.inputRef) {
     return <Primitive.input {...inputProps} ref={props.inputRef} />
