@@ -11,3 +11,4 @@ react-remove-scroll-bar
 react-style-singleton
 use-callback-ref
 use-sidecar
+libs/radix-ui-themes/**/*.css
