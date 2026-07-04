@@ -23,6 +23,7 @@
     "format:check": "prettier --check .",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix --continue",
+    "metadata:e2e": "node scripts/verify-fict-metadata-e2e.mjs",
     "metadata:verify": "node scripts/fict-metadata.mjs verify --pack",
     "prepare": "husky",
     "release": "changeset publish",
