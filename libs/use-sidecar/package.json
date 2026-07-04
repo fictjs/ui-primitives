@@ -15,6 +15,9 @@
       "require": "./dist/index.cjs"
     }
   },
+  "fict": {
+    "metadata": "./dist/index.fict.meta.json"
+  },
   "files": [
     "dist",
     "README.md"
@@ -32,7 +35,7 @@
     "directory": "libs/use-sidecar"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node ../../scripts/fict-metadata.mjs emit .",
     "clean": "rimraf coverage dist",
     "dev": "tsup --watch",
     "lint": "eslint . --max-warnings=0",
