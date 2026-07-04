@@ -51,7 +51,7 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "@fictjs/runtime": ">=0.22.0"
+    "@fictjs/runtime": ">=0.23.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",
