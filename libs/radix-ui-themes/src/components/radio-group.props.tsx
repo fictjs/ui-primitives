@@ -1,11 +1,11 @@
-import { asChildPropDef } from '../props/as-child.prop.js';
-import { colorPropDef } from '../props/color.prop.js';
-import { highContrastPropDef } from '../props/high-contrast.prop.js';
+import { asChildPropDef } from '../props/as-child.prop.js'
+import { colorPropDef } from '../props/color.prop.js'
+import { highContrastPropDef } from '../props/high-contrast.prop.js'
 
-import type { PropDef } from '../props/prop-def.js';
+import type { PropDef } from '../props/prop-def.js'
 
-const sizes = ['1', '2', '3'] as const;
-const variants = ['classic', 'surface', 'soft'] as const;
+const sizes = ['1', '2', '3'] as const
+const variants = ['classic', 'surface', 'soft'] as const
 
 const radioGroupRootPropDefs = {
   ...asChildPropDef,
@@ -14,8 +14,8 @@ const radioGroupRootPropDefs = {
   ...colorPropDef,
   ...highContrastPropDef,
 } satisfies {
-  size: PropDef<(typeof sizes)[number]>;
-  variant: PropDef<(typeof variants)[number]>;
-};
+  size: PropDef<(typeof sizes)[number]>
+  variant: PropDef<(typeof variants)[number]>
+}
 
-export { radioGroupRootPropDefs };
+export { radioGroupRootPropDefs }

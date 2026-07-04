@@ -1,5 +1,5 @@
-import type { FictNode } from 'fict';
-import { InfoCircledIcon, Share2Icon, StarIcon } from '@radix-ui/react-icons';
+import type { FictNode } from 'fict'
+import { InfoCircledIcon, Share2Icon, StarIcon } from '@radix-ui/react-icons'
 import {
   TextField,
   IconButton,
@@ -10,10 +10,10 @@ import {
   Code,
   Separator,
   Table,
-} from '@fictjs/radix-ui-themes';
-import { textFieldRootPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped } from '../_utils';
+} from '@fictjs/radix-ui-themes'
+import { textFieldRootPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
 
 export default function TextFieldPage() {
   const variantRows: FictNode[] = textFieldRootPropDefs.variant.values.map((variant) =>
@@ -128,8 +128,8 @@ export default function TextFieldPage() {
           </Flex>
         </Table.Cell>
       </Table.Row>
-    ))
-  );
+    )),
+  )
   const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
     <Text as="p" weight="bold" mt="6" mb="4">
       {group.label}
@@ -156,7 +156,7 @@ export default function TextFieldPage() {
         ))}
       </Table.Body>
     </Table.Root>,
-  ]);
+  ])
 
   return (
     <DocsSection>
@@ -173,9 +173,7 @@ export default function TextFieldPage() {
               <Table.ColumnHeaderCell>read-only</Table.ColumnHeaderCell>
             </Table.Row>
           </Table.Header>
-          <Table.Body>
-            {variantRows}
-          </Table.Body>
+          <Table.Body>{variantRows}</Table.Body>
         </Table.Root>
 
         <Separator my="8" />
@@ -318,5 +316,5 @@ export default function TextFieldPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

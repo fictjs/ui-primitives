@@ -1,20 +1,20 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
-import { ScrollArea as ScrollAreaPrimitive } from '@fictjs/radix-ui';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
+import { ScrollArea as ScrollAreaPrimitive } from '@fictjs/radix-ui'
 
-import { scrollAreaPropDefs } from './scroll-area.props.js';
-import { extractMarginProps } from '../helpers/extract-margin-props.js';
-import { getMarginStyles } from '../helpers/get-margin-styles.js';
-import { getResponsiveClassNames } from '../helpers/get-responsive-styles.js';
-import { getSubtree } from '../helpers/get-subtree.js';
-import { mergeStyles } from '../helpers/merge-styles.js';
+import { scrollAreaPropDefs } from './scroll-area.props.js'
+import { extractMarginProps } from '../helpers/extract-margin-props.js'
+import { getMarginStyles } from '../helpers/get-margin-styles.js'
+import { getResponsiveClassNames } from '../helpers/get-responsive-styles.js'
+import { getSubtree } from '../helpers/get-subtree.js'
+import { mergeStyles } from '../helpers/merge-styles.js'
 
-import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
-import type { MarginProps } from '../props/margin.props.js';
-import type { GetPropDefTypes } from '../props/prop-def.js';
+import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
+import type { MarginProps } from '../props/margin.props.js'
+import type { GetPropDefTypes } from '../props/prop-def.js'
 
-type ScrollAreaElement = React.ElementRef<typeof ScrollAreaPrimitive.Viewport>;
-type ScrollAreaOwnProps = GetPropDefTypes<typeof scrollAreaPropDefs>;
+type ScrollAreaElement = React.ElementRef<typeof ScrollAreaPrimitive.Viewport>
+type ScrollAreaOwnProps = GetPropDefTypes<typeof scrollAreaPropDefs>
 interface ScrollAreaProps
   extends
     ComponentPropsWithout<typeof ScrollAreaPrimitive.Root, RemovedProps>,
@@ -22,8 +22,8 @@ interface ScrollAreaProps
     MarginProps,
     ScrollAreaOwnProps {}
 const ScrollArea = React.forwardRef<ScrollAreaElement, ScrollAreaProps>((props, forwardedRef) => {
-  const { rest: marginRest, ...marginProps } = extractMarginProps(props);
-  const [marginClassNames, marginCustomProperties] = getMarginStyles(marginProps);
+  const { rest: marginRest, ...marginProps } = extractMarginProps(props)
+  const [marginClassNames, marginCustomProperties] = getMarginStyles(marginProps)
 
   const {
     asChild,
@@ -35,7 +35,7 @@ const ScrollArea = React.forwardRef<ScrollAreaElement, ScrollAreaProps>((props, 
     radius = scrollAreaPropDefs.radius.default,
     scrollbars = scrollAreaPropDefs.scrollbars.default,
     ...viewportProps
-  } = marginRest;
+  } = marginRest
 
   return (
     <ScrollAreaPrimitive.Root
@@ -95,9 +95,9 @@ const ScrollArea = React.forwardRef<ScrollAreaElement, ScrollAreaProps>((props, 
         </>
       ))}
     </ScrollAreaPrimitive.Root>
-  );
-});
-ScrollArea.displayName = 'ScrollArea';
+  )
+})
+ScrollArea.displayName = 'ScrollArea'
 
-export { ScrollArea };
-export type { ScrollAreaProps };
+export { ScrollArea }
+export type { ScrollAreaProps }

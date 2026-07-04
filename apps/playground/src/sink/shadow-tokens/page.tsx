@@ -1,5 +1,5 @@
-import { Flex, Box, Text } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { Flex, Box, Text } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function ShadowTokens() {
   return (
@@ -45,5 +45,5 @@ export default function ShadowTokens() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

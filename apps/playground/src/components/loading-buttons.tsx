@@ -1,6 +1,6 @@
-import { ArrowRightIcon, StarIcon } from '@radix-ui/react-icons';
-import { Button, Em, Flex, IconButton, Spinner, Text } from '@fictjs/radix-ui-themes';
-import { buttonPropDefs } from '@fictjs/radix-ui-themes/props';
+import { ArrowRightIcon, StarIcon } from '@radix-ui/react-icons'
+import { Button, Em, Flex, IconButton, Spinner, Text } from '@fictjs/radix-ui-themes'
+import { buttonPropDefs } from '@fictjs/radix-ui-themes/props'
 
 export function LoadingButtons() {
   return (
@@ -22,12 +22,12 @@ export function LoadingButtons() {
         vitae.
       </Text>
     </Flex>
-  );
+  )
 }
 
 function LoadingButtonRow({ size }: { size: (typeof buttonPropDefs.size.values)[number] }) {
-  const iconSize = size === '3' ? '18' : size === '4' ? '20' : '16';
-  const spinnerSize = size === '1' ? '1' : size === '4' ? '3' : '2';
+  const iconSize = size === '3' ? '18' : size === '4' ? '20' : '16'
+  const spinnerSize = size === '1' ? '1' : size === '4' ? '3' : '2'
 
   return (
     <Flex gap="5">
@@ -75,5 +75,5 @@ function LoadingButtonRow({ size }: { size: (typeof buttonPropDefs.size.values)[
         </Button>
       </Flex>
     </Flex>
-  );
+  )
 }

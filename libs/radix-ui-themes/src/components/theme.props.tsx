@@ -1,12 +1,12 @@
-import { asChildPropDef } from '../props/as-child.prop.js';
-import { accentColors, grayColors } from '../props/color.prop.js';
-import { radii } from '../props/radius.prop.js';
+import { asChildPropDef } from '../props/as-child.prop.js'
+import { accentColors, grayColors } from '../props/color.prop.js'
+import { radii } from '../props/radius.prop.js'
 
-import type { GetPropDefTypes, PropDef } from '../props/prop-def.js';
+import type { GetPropDefTypes, PropDef } from '../props/prop-def.js'
 
-const appearances = ['inherit', 'light', 'dark'] as const;
-const panelBackgrounds = ['solid', 'translucent'] as const;
-const scalings = ['90%', '95%', '100%', '105%', '110%'] as const;
+const appearances = ['inherit', 'light', 'dark'] as const
+const panelBackgrounds = ['solid', 'translucent'] as const
+const scalings = ['90%', '95%', '100%', '105%', '110%'] as const
 
 const themePropDefs = {
   ...asChildPropDef,
@@ -61,16 +61,16 @@ const themePropDefs = {
    */
   scaling: { type: 'enum', values: scalings, default: '100%' },
 } satisfies {
-  hasBackground: PropDef<boolean>;
-  appearance: PropDef<(typeof appearances)[number]>;
-  accentColor: PropDef<(typeof accentColors)[number]>;
-  grayColor: PropDef<(typeof grayColors)[number]>;
-  panelBackground: PropDef<(typeof panelBackgrounds)[number]>;
-  radius: PropDef<(typeof radii)[number]>;
-  scaling: PropDef<(typeof scalings)[number]>;
-};
+  hasBackground: PropDef<boolean>
+  appearance: PropDef<(typeof appearances)[number]>
+  accentColor: PropDef<(typeof accentColors)[number]>
+  grayColor: PropDef<(typeof grayColors)[number]>
+  panelBackground: PropDef<(typeof panelBackgrounds)[number]>
+  radius: PropDef<(typeof radii)[number]>
+  scaling: PropDef<(typeof scalings)[number]>
+}
 
-type ThemeOwnProps = GetPropDefTypes<typeof themePropDefs & typeof asChildPropDef>;
+type ThemeOwnProps = GetPropDefTypes<typeof themePropDefs & typeof asChildPropDef>
 
-export { themePropDefs, appearances, panelBackgrounds, scalings };
-export type { ThemeOwnProps };
+export { themePropDefs, appearances, panelBackgrounds, scalings }
+export type { ThemeOwnProps }

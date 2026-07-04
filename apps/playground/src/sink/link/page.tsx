@@ -1,7 +1,7 @@
-import { ArrowTopRightIcon } from '@radix-ui/react-icons';
-import { Flex, Link, Separator, Text } from '@fictjs/radix-ui-themes';
-import { linkPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { ArrowTopRightIcon } from '@radix-ui/react-icons'
+import { Flex, Link, Separator, Text } from '@fictjs/radix-ui-themes'
+import { linkPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function LinkPage() {
   return (
@@ -161,5 +161,5 @@ export default function LinkPage() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

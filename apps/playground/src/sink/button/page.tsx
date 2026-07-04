@@ -1,19 +1,19 @@
-import type { FictNode } from 'fict';
-import { ArrowRightIcon, Pencil2Icon } from '@radix-ui/react-icons';
-import { Button, Box, Text, Table, Code } from '@fictjs/radix-ui-themes';
-import { buttonPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped } from '../_utils';
+import type { FictNode } from 'fict'
+import { ArrowRightIcon, Pencil2Icon } from '@radix-ui/react-icons'
+import { Button, Box, Text, Table, Code } from '@fictjs/radix-ui-themes'
+import { buttonPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
 
 export default function ButtonPage() {
-  const colorCombinationContent: FictNode[] = [];
+  const colorCombinationContent: FictNode[] = []
 
   for (const group of accentColorsGrouped) {
     colorCombinationContent.push(
       <Text key={`${group.label}-heading`} as="p" weight="bold" mt="6" mb="4">
         {group.label}
       </Text>,
-    );
+    )
     colorCombinationContent.push(
       <Table.Root key={`${group.label}-table`}>
         <Table.Header>
@@ -44,7 +44,7 @@ export default function ButtonPage() {
           ))}
         </Table.Body>
       </Table.Root>,
-    );
+    )
   }
 
   return (
@@ -156,5 +156,5 @@ export default function ButtonPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

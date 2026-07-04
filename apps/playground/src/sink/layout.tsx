@@ -1,6 +1,15 @@
 import NextLink from 'next/link'
 
-import { Box, Container, Flex, Grid, Heading, Link, Reset, Separator } from '@fictjs/radix-ui-themes'
+import {
+  Box,
+  Container,
+  Flex,
+  Grid,
+  Heading,
+  Link,
+  Reset,
+  Separator,
+} from '@fictjs/radix-ui-themes'
 
 import { RadixLogo } from './radix-logo'
 import { sinkRoutes } from './routes'
@@ -64,7 +73,9 @@ function NavigationMenu() {
               <Box display="contents" asChild key={item.label}>
                 <li>
                   <Link asChild highContrast>
-                    <NextLink href={`/sink${item.href ? '/' + item.href : ''}`}>{item.label}</NextLink>
+                    <NextLink href={`/sink${item.href ? '/' + item.href : ''}`}>
+                      {item.label}
+                    </NextLink>
                   </Link>
                 </li>
               </Box>

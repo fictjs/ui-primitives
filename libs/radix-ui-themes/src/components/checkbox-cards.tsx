@@ -26,7 +26,8 @@ type CheckboxCardsRootElement = React.ElementRef<typeof CheckboxGroupPrimitive.R
 type CheckboxCardsRootOwnProps = GetPropDefTypes<typeof checkboxCardsRootPropDefs>
 
 interface CheckboxCardsRootProps
-  extends ComponentPropsWithout<typeof CheckboxGroupPrimitive.Root, 'color' | 'defaultChecked'>,
+  extends
+    ComponentPropsWithout<typeof CheckboxGroupPrimitive.Root, 'color' | 'defaultChecked'>,
     MarginProps,
     CheckboxCardsRootOwnProps {}
 
@@ -61,8 +62,7 @@ const CheckboxCardsRoot = React.forwardRef<CheckboxCardsRootElement, CheckboxCar
 type CheckboxCardsItemElement = React.ElementRef<typeof CheckboxGroupPrimitive.Item>
 
 interface CheckboxCardsItemProps
-  extends ComponentPropsWithout<typeof CheckboxGroupPrimitive.Item, RemovedProps>,
-    MarginProps {}
+  extends ComponentPropsWithout<typeof CheckboxGroupPrimitive.Item, RemovedProps>, MarginProps {}
 
 const CheckboxCardsItem = React.forwardRef<CheckboxCardsItemElement, CheckboxCardsItemProps>(
   ({ children, className, style, ...props }, forwardedRef) => {

@@ -1,6 +1,6 @@
-import { SegmentedControl, Code, Flex, Text, Box, Separator, Table } from '@fictjs/radix-ui-themes';
-import { segmentedControlRootPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { SegmentedControl, Code, Flex, Text, Box, Separator, Table } from '@fictjs/radix-ui-themes'
+import { segmentedControlRootPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function SegmentedControlPage() {
   return (
@@ -188,5 +188,5 @@ export default function SegmentedControlPage() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

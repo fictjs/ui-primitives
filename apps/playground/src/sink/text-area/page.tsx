@@ -1,8 +1,8 @@
-import type { FictNode } from 'fict';
-import { TextArea, Box, Flex, Text, Code, Table } from '@fictjs/radix-ui-themes';
-import { textAreaPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped } from '../_utils';
+import type { FictNode } from 'fict'
+import { TextArea, Box, Flex, Text, Code, Table } from '@fictjs/radix-ui-themes'
+import { textAreaPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
 
 export default function TextAreaPage() {
   const variantRows: FictNode[] = textAreaPropDefs.variant.values.map((variant) =>
@@ -66,8 +66,8 @@ export default function TextAreaPage() {
           </Flex>
         </Table.Cell>
       </Table.Row>
-    ))
-  );
+    )),
+  )
   const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
     <Text as="p" weight="bold" mt="6" mb="4">
       {group.label}
@@ -94,7 +94,7 @@ export default function TextAreaPage() {
         ))}
       </Table.Body>
     </Table.Root>,
-  ]);
+  ])
 
   return (
     <DocsSection>
@@ -111,9 +111,7 @@ export default function TextAreaPage() {
               <Table.ColumnHeaderCell>read-only</Table.ColumnHeaderCell>
             </Table.Row>
           </Table.Header>
-          <Table.Body>
-            {variantRows}
-          </Table.Body>
+          <Table.Body>{variantRows}</Table.Body>
         </Table.Root>
 
         <Text as="p" my="5">
@@ -166,5 +164,5 @@ export default function TextAreaPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

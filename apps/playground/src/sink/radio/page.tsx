@@ -1,12 +1,12 @@
-import { Radio, Grid, Flex, Text, Code, Box, Separator, Table } from '@fictjs/radix-ui-themes';
-import { radioPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped } from '../_utils';
-import type { FictNode } from 'fict';
+import { Radio, Grid, Flex, Text, Code, Box, Separator, Table } from '@fictjs/radix-ui-themes'
+import { radioPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
+import type { FictNode } from 'fict'
 
 export default function RadioPage() {
-  const stateMatrixRows: FictNode[] = [];
-  const colorCombinationContent: FictNode[] = [];
+  const stateMatrixRows: FictNode[] = []
+  const colorCombinationContent: FictNode[] = []
 
   for (const variant of radioPropDefs.variant.values) {
     for (const label of [variant, '+ high-contrast'] as const) {
@@ -42,7 +42,7 @@ export default function RadioPage() {
             />
           </Table.Cell>
         </Table.Row>,
-      );
+      )
     }
   }
 
@@ -51,7 +51,7 @@ export default function RadioPage() {
       <Text key={`${group.label}-heading`} as="p" weight="bold" mt="6" mb="4">
         {group.label}
       </Text>,
-    );
+    )
     colorCombinationContent.push(
       <Table.Root key={`${group.label}-table`}>
         <Table.Header>
@@ -69,7 +69,12 @@ export default function RadioPage() {
               {radioPropDefs.variant.values.map((variant) => (
                 <Table.Cell key={variant}>
                   <Flex gap="2">
-                    <Radio color={color} variant={variant} name={`radio-${variant}-${color}`} value="1" />
+                    <Radio
+                      color={color}
+                      variant={variant}
+                      name={`radio-${variant}-${color}`}
+                      value="1"
+                    />
                     <Radio
                       color={color}
                       variant={variant}
@@ -99,7 +104,7 @@ export default function RadioPage() {
           ))}
         </Table.Body>
       </Table.Root>,
-    );
+    )
   }
 
   return (
@@ -274,5 +279,5 @@ export default function RadioPage() {
         <Separator size="3" my="5" />
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

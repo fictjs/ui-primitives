@@ -1,13 +1,13 @@
-import type { FictNode } from 'fict';
-import { Select, Text, Code, Box, Table } from '@fictjs/radix-ui-themes';
+import type { FictNode } from 'fict'
+import { Select, Text, Code, Box, Table } from '@fictjs/radix-ui-themes'
 import {
   selectRootPropDefs,
   selectTriggerPropDefs,
   selectContentPropDefs,
-} from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { SelectItemsDemo } from '../_components';
-import { accentColorsGrouped } from '../_utils';
+} from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { SelectItemsDemo } from '../_components'
+import { accentColorsGrouped } from '../_utils'
 
 export default function SelectPage() {
   const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
@@ -41,7 +41,7 @@ export default function SelectPage() {
         ))}
       </Table.Body>
     </Table.Root>,
-  ]);
+  ])
 
   return (
     <DocsSection>
@@ -162,12 +162,7 @@ export default function SelectPage() {
                 <Table.Cell>
                   <Select.Root defaultValue="apple" size="1">
                     <Select.Trigger />
-                    <Select.Content
-                      variant={variant}
-                      color="gray"
-                      highContrast
-                      position="popper"
-                    >
+                    <Select.Content variant={variant} color="gray" highContrast position="popper">
                       <SelectItemsDemo />
                     </Select.Content>
                   </Select.Root>
@@ -232,5 +227,5 @@ export default function SelectPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

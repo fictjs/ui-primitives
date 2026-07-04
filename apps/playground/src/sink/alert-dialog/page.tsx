@@ -1,5 +1,5 @@
-import { AlertDialog, Button, Flex } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { AlertDialog, Button, Flex } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function AlertDialogPage() {
   return (
@@ -34,5 +34,5 @@ export default function AlertDialogPage() {
         </AlertDialog.Root>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

@@ -1,9 +1,9 @@
-import { asChildPropDef } from '../props/as-child.prop.js';
+import { asChildPropDef } from '../props/as-child.prop.js'
 
-import type { PropDef, GetPropDefTypes } from '../props/prop-def.js';
+import type { PropDef, GetPropDefTypes } from '../props/prop-def.js'
 
-const as = ['div', 'span'] as const;
-const displayValues = ['none', 'inline', 'inline-block', 'block', 'contents'] as const;
+const as = ['div', 'span'] as const
+const displayValues = ['none', 'inline', 'inline-block', 'block', 'contents'] as const
 
 const boxPropDefs = {
   /**
@@ -33,12 +33,12 @@ const boxPropDefs = {
     responsive: true,
   },
 } satisfies {
-  as: PropDef<(typeof as)[number]>;
-  display: PropDef<(typeof displayValues)[number]>;
-};
+  as: PropDef<(typeof as)[number]>
+  display: PropDef<(typeof displayValues)[number]>
+}
 
 // Use all of the imported prop defs to ensure that JSDoc works
-type BoxOwnProps = GetPropDefTypes<typeof boxPropDefs & typeof asChildPropDef>;
+type BoxOwnProps = GetPropDefTypes<typeof boxPropDefs & typeof asChildPropDef>
 
-export { boxPropDefs };
-export type { BoxOwnProps };
+export { boxPropDefs }
+export type { BoxOwnProps }

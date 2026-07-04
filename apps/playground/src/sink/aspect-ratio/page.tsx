@@ -1,6 +1,6 @@
-import { AspectRatio, Grid, Text } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { AspectRatioImage } from '../_components';
+import { AspectRatio, Grid, Text } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { AspectRatioImage } from '../_components'
 
 export default function AspectRatioPage() {
   return (
@@ -43,5 +43,5 @@ export default function AspectRatioPage() {
         </Grid>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

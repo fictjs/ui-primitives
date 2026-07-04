@@ -1,11 +1,11 @@
-import { paddingPropDefs } from '../props/padding.props.js';
-import { widthPropDefs } from '../props/width.props.js';
+import { paddingPropDefs } from '../props/padding.props.js'
+import { widthPropDefs } from '../props/width.props.js'
 
-import type { PropDef } from '../props/prop-def.js';
+import type { PropDef } from '../props/prop-def.js'
 
-const sizes = ['1', '2', '3'] as const;
-const variants = ['surface', 'ghost'] as const;
-const layoutValues = ['auto', 'fixed'] as const;
+const sizes = ['1', '2', '3'] as const
+const variants = ['surface', 'ghost'] as const
+const layoutValues = ['auto', 'fixed'] as const
 
 const tableRootPropDefs = {
   size: {
@@ -28,12 +28,12 @@ const tableRootPropDefs = {
     responsive: true,
   },
 } satisfies {
-  size: PropDef<(typeof sizes)[number]>;
-  variant: PropDef<(typeof variants)[number]>;
-  layout: PropDef<(typeof layoutValues)[number]>;
-};
+  size: PropDef<(typeof sizes)[number]>
+  variant: PropDef<(typeof variants)[number]>
+  layout: PropDef<(typeof layoutValues)[number]>
+}
 
-const rowAlign = ['start', 'center', 'end', 'baseline'] as const;
+const rowAlign = ['start', 'center', 'end', 'baseline'] as const
 
 const tableRowPropDefs = {
   align: {
@@ -44,8 +44,8 @@ const tableRowPropDefs = {
     responsive: true,
   },
 } satisfies {
-  align: PropDef<(typeof rowAlign)[number]>;
-};
+  align: PropDef<(typeof rowAlign)[number]>
+}
 
 function parseAlignValue(value: string) {
   return {
@@ -53,10 +53,10 @@ function parseAlignValue(value: string) {
     start: 'top',
     center: 'middle',
     end: 'bottom',
-  }[value];
+  }[value]
 }
 
-const justifyValues = ['start', 'center', 'end'] as const;
+const justifyValues = ['start', 'center', 'end'] as const
 
 const tableCellPropDefs = {
   justify: {
@@ -69,15 +69,15 @@ const tableCellPropDefs = {
   ...widthPropDefs,
   ...paddingPropDefs,
 } satisfies {
-  justify: PropDef<(typeof justifyValues)[number]>;
-};
+  justify: PropDef<(typeof justifyValues)[number]>
+}
 
 function parseJustifyValue(value: string) {
   return {
     start: 'left',
     center: 'center',
     end: 'right',
-  }[value];
+  }[value]
 }
 
-export { tableRootPropDefs, tableRowPropDefs, tableCellPropDefs };
+export { tableRootPropDefs, tableRowPropDefs, tableCellPropDefs }

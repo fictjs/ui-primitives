@@ -1,7 +1,7 @@
-import { Card, Flex, Text } from '@fictjs/radix-ui-themes';
-import { textFieldRootPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { PlaygroundForm } from '../_components';
+import { Card, Flex, Text } from '@fictjs/radix-ui-themes'
+import { textFieldRootPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { PlaygroundForm } from '../_components'
 
 export default function PlaygroundPage() {
   return (
@@ -23,5 +23,5 @@ export default function PlaygroundPage() {
         </Card>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

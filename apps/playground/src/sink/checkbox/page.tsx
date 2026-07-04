@@ -1,12 +1,12 @@
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { Checkbox, Grid, Flex, Text, Code, Box, Separator, Table } from '@fictjs/radix-ui-themes';
-import { accentColorsGrouped } from '../_utils';
-import { checkboxPropDefs } from '@fictjs/radix-ui-themes/props';
-import type { FictNode } from 'fict';
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { Checkbox, Grid, Flex, Text, Code, Box, Separator, Table } from '@fictjs/radix-ui-themes'
+import { accentColorsGrouped } from '../_utils'
+import { checkboxPropDefs } from '@fictjs/radix-ui-themes/props'
+import type { FictNode } from 'fict'
 
 export default function CheckboxPage() {
-  const stateMatrixRows: FictNode[] = [];
-  const colorCombinationContent: FictNode[] = [];
+  const stateMatrixRows: FictNode[] = []
+  const colorCombinationContent: FictNode[] = []
 
   for (const variant of checkboxPropDefs.variant.values) {
     for (const label of [variant, '+ high-contrast'] as const) {
@@ -38,7 +38,7 @@ export default function CheckboxPage() {
             />
           </Table.Cell>
         </Table.Row>,
-      );
+      )
     }
   }
 
@@ -47,7 +47,7 @@ export default function CheckboxPage() {
       <Text key={`${group.label}-heading`} as="p" weight="bold" mt="6" mb="4">
         {group.label}
       </Text>,
-    );
+    )
     colorCombinationContent.push(
       <Table.Root key={`${group.label}-table`}>
         <Table.Header>
@@ -72,7 +72,7 @@ export default function CheckboxPage() {
           ))}
         </Table.Body>
       </Table.Root>,
-    );
+    )
   }
 
   return (
@@ -205,5 +205,5 @@ export default function CheckboxPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

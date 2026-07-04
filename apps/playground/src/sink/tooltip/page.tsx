@@ -1,9 +1,9 @@
-import { Button, Flex, Tooltip } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { Button, Flex, Tooltip } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function TooltipPage() {
   return (
-      <DocsSection>
+    <DocsSection>
       <DocsSectionHeading>Tooltip</DocsSectionHeading>
       <DocsSectionBody>
         <Flex gap="5">
@@ -21,5 +21,5 @@ export default function TooltipPage() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

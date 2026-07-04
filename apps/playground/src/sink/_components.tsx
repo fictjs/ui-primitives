@@ -1,4 +1,4 @@
-import type * as React from 'react';
+import type * as React from 'react'
 import {
   ContextMenu,
   DropdownMenu,
@@ -12,137 +12,145 @@ import {
   TextField,
   Button,
   Heading,
-} from '@fictjs/radix-ui-themes';
+} from '@fictjs/radix-ui-themes'
 
 export function DropdownMenuContentDemo(props: React.ComponentProps<typeof DropdownMenu.Content>) {
   return (
     <DropdownMenu.Content {...props}>
-      {(() => (
-        <>
-          <DropdownMenu.Item shortcut="⌘+T">New Tab</DropdownMenu.Item>
-          <DropdownMenu.Item shortcut="⌘+N">New Window</DropdownMenu.Item>
-          <DropdownMenu.Item shortcut="⇧+⌘+N" disabled>
-            New Private Window
-          </DropdownMenu.Item>
-          <DropdownMenu.Sub>
-            <DropdownMenu.SubTrigger>More Tools</DropdownMenu.SubTrigger>
-
-            <DropdownMenu.SubContent>
-              {(() => (
-                <>
-                  <DropdownMenu.Item shortcut="⌘+S">Save Page As…</DropdownMenu.Item>
-                  <DropdownMenu.Item>Create Shortcut…</DropdownMenu.Item>
-                  <DropdownMenu.Item>Name Window…</DropdownMenu.Item>
-                  <DropdownMenu.Separator />
-                  <DropdownMenu.Item>Developer Tools</DropdownMenu.Item>
-                </>
-              )) as unknown as React.ReactNode}
-            </DropdownMenu.SubContent>
-          </DropdownMenu.Sub>
-
-          <DropdownMenu.Separator />
-          <DropdownMenu.Group>
-            <DropdownMenu.Label>Other</DropdownMenu.Label>
-            <DropdownMenu.Item shortcut="⌘+P">Print</DropdownMenu.Item>
-            <DropdownMenu.Item shortcut="⌘+Q" asChild>
-              <a href="#logout">Logout</a>
+      {
+        (() => (
+          <>
+            <DropdownMenu.Item shortcut="⌘+T">New Tab</DropdownMenu.Item>
+            <DropdownMenu.Item shortcut="⌘+N">New Window</DropdownMenu.Item>
+            <DropdownMenu.Item shortcut="⇧+⌘+N" disabled>
+              New Private Window
             </DropdownMenu.Item>
-          </DropdownMenu.Group>
+            <DropdownMenu.Sub>
+              <DropdownMenu.SubTrigger>More Tools</DropdownMenu.SubTrigger>
 
-          {props.variant === 'solid' && (
-            <>
-              <DropdownMenu.Separator />
+              <DropdownMenu.SubContent>
+                {
+                  (() => (
+                    <>
+                      <DropdownMenu.Item shortcut="⌘+S">Save Page As…</DropdownMenu.Item>
+                      <DropdownMenu.Item>Create Shortcut…</DropdownMenu.Item>
+                      <DropdownMenu.Item>Name Window…</DropdownMenu.Item>
+                      <DropdownMenu.Separator />
+                      <DropdownMenu.Item>Developer Tools</DropdownMenu.Item>
+                    </>
+                  )) as unknown as React.ReactNode
+                }
+              </DropdownMenu.SubContent>
+            </DropdownMenu.Sub>
 
-              <DropdownMenu.CheckboxItem shortcut="⌘+B" checked>
-                Show Bookmarks
-              </DropdownMenu.CheckboxItem>
-              <DropdownMenu.CheckboxItem>Show Full URLs</DropdownMenu.CheckboxItem>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Group>
+              <DropdownMenu.Label>Other</DropdownMenu.Label>
+              <DropdownMenu.Item shortcut="⌘+P">Print</DropdownMenu.Item>
+              <DropdownMenu.Item shortcut="⌘+Q" asChild>
+                <a href="#logout">Logout</a>
+              </DropdownMenu.Item>
+            </DropdownMenu.Group>
 
-              <DropdownMenu.Separator />
+            {props.variant === 'solid' && (
+              <>
+                <DropdownMenu.Separator />
 
-              <DropdownMenu.Label>People</DropdownMenu.Label>
-              <DropdownMenu.RadioGroup value="pedro">
-                <DropdownMenu.RadioItem value="pedro">Pedro Duarte</DropdownMenu.RadioItem>
-                <DropdownMenu.RadioItem value="colm">Colm Tuite</DropdownMenu.RadioItem>
-              </DropdownMenu.RadioGroup>
+                <DropdownMenu.CheckboxItem shortcut="⌘+B" checked>
+                  Show Bookmarks
+                </DropdownMenu.CheckboxItem>
+                <DropdownMenu.CheckboxItem>Show Full URLs</DropdownMenu.CheckboxItem>
 
-              <DropdownMenu.Separator />
+                <DropdownMenu.Separator />
 
-              <DropdownMenu.Item color="red">Delete</DropdownMenu.Item>
-            </>
-          )}
-        </>
-      )) as unknown as React.ReactNode}
+                <DropdownMenu.Label>People</DropdownMenu.Label>
+                <DropdownMenu.RadioGroup value="pedro">
+                  <DropdownMenu.RadioItem value="pedro">Pedro Duarte</DropdownMenu.RadioItem>
+                  <DropdownMenu.RadioItem value="colm">Colm Tuite</DropdownMenu.RadioItem>
+                </DropdownMenu.RadioGroup>
+
+                <DropdownMenu.Separator />
+
+                <DropdownMenu.Item color="red">Delete</DropdownMenu.Item>
+              </>
+            )}
+          </>
+        )) as unknown as React.ReactNode
+      }
     </DropdownMenu.Content>
-  );
+  )
 }
 
 export function ContextMenuContentDemo(props: React.ComponentProps<typeof ContextMenu.Content>) {
   return (
     <ContextMenu.Content {...props}>
-      {(() => (
-        <>
-          <ContextMenu.Item shortcut="⌘+T">New Tab</ContextMenu.Item>
-          <ContextMenu.Item shortcut="⌘+N">New Window</ContextMenu.Item>
-          <ContextMenu.Item shortcut="⇧+⌘+N" disabled>
-            New Private Window
-          </ContextMenu.Item>
-          <ContextMenu.Sub>
-            <ContextMenu.SubTrigger>More Tools</ContextMenu.SubTrigger>
-
-            <ContextMenu.SubContent>
-              {(() => (
-                <>
-                  <ContextMenu.Item shortcut="⌘+S">Save Page As…</ContextMenu.Item>
-                  <ContextMenu.Item>Create Shortcut…</ContextMenu.Item>
-                  <ContextMenu.Item>Name Window…</ContextMenu.Item>
-                  <ContextMenu.Separator />
-                  <ContextMenu.Item>Developer Tools</ContextMenu.Item>
-                </>
-              )) as unknown as React.ReactNode}
-            </ContextMenu.SubContent>
-          </ContextMenu.Sub>
-
-          <ContextMenu.Separator />
-          <ContextMenu.Group>
-            <ContextMenu.Label>Other</ContextMenu.Label>
-            <ContextMenu.Item shortcut="⌘+P">Print</ContextMenu.Item>
-            <ContextMenu.Item shortcut="⌘+Q" asChild>
-              <a href="#logout">Logout</a>
+      {
+        (() => (
+          <>
+            <ContextMenu.Item shortcut="⌘+T">New Tab</ContextMenu.Item>
+            <ContextMenu.Item shortcut="⌘+N">New Window</ContextMenu.Item>
+            <ContextMenu.Item shortcut="⇧+⌘+N" disabled>
+              New Private Window
             </ContextMenu.Item>
-          </ContextMenu.Group>
+            <ContextMenu.Sub>
+              <ContextMenu.SubTrigger>More Tools</ContextMenu.SubTrigger>
 
-          {props.variant === 'solid' && (
-            <>
-              <ContextMenu.Separator />
+              <ContextMenu.SubContent>
+                {
+                  (() => (
+                    <>
+                      <ContextMenu.Item shortcut="⌘+S">Save Page As…</ContextMenu.Item>
+                      <ContextMenu.Item>Create Shortcut…</ContextMenu.Item>
+                      <ContextMenu.Item>Name Window…</ContextMenu.Item>
+                      <ContextMenu.Separator />
+                      <ContextMenu.Item>Developer Tools</ContextMenu.Item>
+                    </>
+                  )) as unknown as React.ReactNode
+                }
+              </ContextMenu.SubContent>
+            </ContextMenu.Sub>
 
-              <ContextMenu.CheckboxItem shortcut="⌘+B" checked>
-                Show Bookmarks
-              </ContextMenu.CheckboxItem>
-              <ContextMenu.CheckboxItem>Show Full URLs</ContextMenu.CheckboxItem>
+            <ContextMenu.Separator />
+            <ContextMenu.Group>
+              <ContextMenu.Label>Other</ContextMenu.Label>
+              <ContextMenu.Item shortcut="⌘+P">Print</ContextMenu.Item>
+              <ContextMenu.Item shortcut="⌘+Q" asChild>
+                <a href="#logout">Logout</a>
+              </ContextMenu.Item>
+            </ContextMenu.Group>
 
-              <ContextMenu.Separator />
+            {props.variant === 'solid' && (
+              <>
+                <ContextMenu.Separator />
 
-              <ContextMenu.Label>People</ContextMenu.Label>
-              <ContextMenu.RadioGroup value="pedro">
-                <ContextMenu.RadioItem value="pedro">Pedro Duarte</ContextMenu.RadioItem>
-                <ContextMenu.RadioItem value="colm">Colm Tuite</ContextMenu.RadioItem>
-              </ContextMenu.RadioGroup>
+                <ContextMenu.CheckboxItem shortcut="⌘+B" checked>
+                  Show Bookmarks
+                </ContextMenu.CheckboxItem>
+                <ContextMenu.CheckboxItem>Show Full URLs</ContextMenu.CheckboxItem>
 
-              <ContextMenu.Separator />
+                <ContextMenu.Separator />
 
-              <ContextMenu.Item color="red">Delete</ContextMenu.Item>
-            </>
-          )}
-        </>
-      )) as unknown as React.ReactNode}
+                <ContextMenu.Label>People</ContextMenu.Label>
+                <ContextMenu.RadioGroup value="pedro">
+                  <ContextMenu.RadioItem value="pedro">Pedro Duarte</ContextMenu.RadioItem>
+                  <ContextMenu.RadioItem value="colm">Colm Tuite</ContextMenu.RadioItem>
+                </ContextMenu.RadioGroup>
+
+                <ContextMenu.Separator />
+
+                <ContextMenu.Item color="red">Delete</ContextMenu.Item>
+              </>
+            )}
+          </>
+        )) as unknown as React.ReactNode
+      }
     </ContextMenu.Content>
-  );
+  )
 }
 
 type RightClickAreaProps = React.ComponentProps<typeof Grid> & {
-  size: '1' | '2';
-};
+  size: '1' | '2'
+}
 export function RightClickArea({ size = '2', ...props }: RightClickAreaProps) {
   return (
     <Grid
@@ -161,7 +169,7 @@ export function RightClickArea({ size = '2', ...props }: RightClickAreaProps) {
         Right-click here
       </Text>
     </Grid>
-  );
+  )
 }
 
 export function SelectItemsDemo() {
@@ -184,7 +192,7 @@ export function SelectItemsDemo() {
         <Select.Item value="potato">Potato</Select.Item>
       </Select.Group>
     </>
-  );
+  )
 }
 
 export function AspectRatioImage() {
@@ -194,7 +202,7 @@ export function AspectRatioImage() {
       alt="A house in a forest"
       style={{ objectFit: 'cover', width: '100%', height: '100%' }}
     />
-  );
+  )
 }
 
 export function CustomUserIcon() {
@@ -211,7 +219,7 @@ export function CustomUserIcon() {
         clip-rule="evenodd"
       />
     </svg>
-  );
+  )
 }
 
 export function SampleNestedUI({
@@ -257,14 +265,14 @@ export function SampleNestedUI({
 
       {children}
     </Flex>
-  );
+  )
 }
 
 export function PlaygroundForm({
   size,
   ...props
 }: React.ComponentProps<typeof Flex> & {
-  size?: React.ComponentProps<typeof TextField.Root>['size'];
+  size?: React.ComponentProps<typeof TextField.Root>['size']
 }) {
   return (
     <Flex direction="column" gap="3" {...props}>
@@ -301,13 +309,13 @@ export function PlaygroundForm({
         </Button>
       </Grid>
     </Flex>
-  );
+  )
 }
 
 export function TableExample(
   props: React.ComponentProps<typeof Table.Root> & { noEmail?: boolean },
 ) {
-  const { noEmail, ...rootProps } = props;
+  const { noEmail, ...rootProps } = props
   return (
     <Table.Root {...rootProps}>
       <Table.Header>
@@ -340,5 +348,5 @@ export function TableExample(
         </Table.Row>
       </Table.Body>
     </Table.Root>
-  );
+  )
 }

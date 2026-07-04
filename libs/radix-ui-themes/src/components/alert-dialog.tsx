@@ -1,30 +1,30 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
-import { AlertDialog as AlertDialogPrimitive } from '@fictjs/radix-ui';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
+import { AlertDialog as AlertDialogPrimitive } from '@fictjs/radix-ui'
 
-import { alertDialogContentPropDefs } from './alert-dialog.props.js';
-import { Heading } from './heading.js';
-import { Text } from './text.js';
-import { Theme } from './theme.js';
-import { extractProps } from '../helpers/extract-props.js';
-import { requireReactElement } from '../helpers/require-react-element.js';
+import { alertDialogContentPropDefs } from './alert-dialog.props.js'
+import { Heading } from './heading.js'
+import { Text } from './text.js'
+import { Theme } from './theme.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { requireReactElement } from '../helpers/require-react-element.js'
 
-import type { AlertDialogContentOwnProps } from './alert-dialog.props.js';
+import type { AlertDialogContentOwnProps } from './alert-dialog.props.js'
 import type {
   ComponentPropsWithout,
   RemovedProps,
   ComponentPropsAs,
-} from '../helpers/component-props.js';
+} from '../helpers/component-props.js'
 
 interface AlertDialogRootProps extends React.ComponentPropsWithoutRef<
   typeof AlertDialogPrimitive.Root
 > {}
 const AlertDialogRoot: React.FC<AlertDialogRootProps> = (props) => (
   <AlertDialogPrimitive.Root {...props} />
-);
-AlertDialogRoot.displayName = 'AlertDialog.Root';
+)
+AlertDialogRoot.displayName = 'AlertDialog.Root'
 
-type AlertDialogTriggerElement = React.ElementRef<typeof AlertDialogPrimitive.Trigger>;
+type AlertDialogTriggerElement = React.ElementRef<typeof AlertDialogPrimitive.Trigger>
 interface AlertDialogTriggerProps extends ComponentPropsWithout<
   typeof AlertDialogPrimitive.Trigger,
   RemovedProps
@@ -35,21 +35,21 @@ const AlertDialogTrigger = React.forwardRef<AlertDialogTriggerElement, AlertDial
       {requireReactElement(children)}
     </AlertDialogPrimitive.Trigger>
   ),
-);
-AlertDialogTrigger.displayName = 'AlertDialog.Trigger';
+)
+AlertDialogTrigger.displayName = 'AlertDialog.Trigger'
 
-type AlertDialogContentElement = React.ElementRef<typeof AlertDialogPrimitive.Content>;
+type AlertDialogContentElement = React.ElementRef<typeof AlertDialogPrimitive.Content>
 interface AlertDialogContentProps
   extends
     ComponentPropsWithout<typeof AlertDialogPrimitive.Content, RemovedProps>,
     AlertDialogContentOwnProps {
-  container?: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Portal>['container'];
+  container?: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Portal>['container']
 }
 const AlertDialogContent = React.forwardRef<AlertDialogContentElement, AlertDialogContentProps>(
   ({ align, ...props }, forwardedRef) => {
-    const { align: alignPropDef, ...propDefs } = alertDialogContentPropDefs;
-    const { className: alignClassName } = extractProps({ align }, { align: alignPropDef });
-    const { className, forceMount, container, ...contentProps } = extractProps(props, propDefs);
+    const { align: alignPropDef, ...propDefs } = alertDialogContentPropDefs
+    const { className: alignClassName } = extractProps({ align }, { align: alignPropDef })
+    const { className, forceMount, container, ...contentProps } = extractProps(props, propDefs)
     return (
       <AlertDialogPrimitive.Portal container={container} forceMount={forceMount}>
         <Theme asChild>
@@ -68,24 +68,24 @@ const AlertDialogContent = React.forwardRef<AlertDialogContentElement, AlertDial
           </AlertDialogPrimitive.Overlay>
         </Theme>
       </AlertDialogPrimitive.Portal>
-    );
+    )
   },
-);
-AlertDialogContent.displayName = 'AlertDialog.Content';
+)
+AlertDialogContent.displayName = 'AlertDialog.Content'
 
-type AlertDialogTitleElement = React.ElementRef<typeof Heading>;
-type AlertDialogTitleProps = ComponentPropsWithout<typeof Heading, 'asChild'>;
+type AlertDialogTitleElement = React.ElementRef<typeof Heading>
+type AlertDialogTitleProps = ComponentPropsWithout<typeof Heading, 'asChild'>
 const AlertDialogTitle = React.forwardRef<AlertDialogTitleElement, AlertDialogTitleProps>(
   (props, forwardedRef) => (
     <AlertDialogPrimitive.Title asChild>
       <Heading size="5" mb="3" trim="start" {...props} ref={React.coerceRef(forwardedRef)} />
     </AlertDialogPrimitive.Title>
   ),
-);
-AlertDialogTitle.displayName = 'AlertDialog.Title';
+)
+AlertDialogTitle.displayName = 'AlertDialog.Title'
 
-type AlertDialogDescriptionElement = HTMLParagraphElement;
-type AlertDialogDescriptionProps = ComponentPropsAs<typeof Text, 'p'>;
+type AlertDialogDescriptionElement = HTMLParagraphElement
+type AlertDialogDescriptionProps = ComponentPropsAs<typeof Text, 'p'>
 const AlertDialogDescription = React.forwardRef<
   AlertDialogDescriptionElement,
   AlertDialogDescriptionProps
@@ -93,10 +93,10 @@ const AlertDialogDescription = React.forwardRef<
   <AlertDialogPrimitive.Description asChild>
     <Text as="p" size="3" {...props} ref={React.coerceRef(forwardedRef)} />
   </AlertDialogPrimitive.Description>
-));
-AlertDialogDescription.displayName = 'AlertDialog.Description';
+))
+AlertDialogDescription.displayName = 'AlertDialog.Description'
 
-type AlertDialogActionElement = React.ElementRef<typeof AlertDialogPrimitive.Action>;
+type AlertDialogActionElement = React.ElementRef<typeof AlertDialogPrimitive.Action>
 interface AlertDialogActionProps extends ComponentPropsWithout<
   typeof AlertDialogPrimitive.Action,
   RemovedProps
@@ -107,10 +107,10 @@ const AlertDialogAction = React.forwardRef<AlertDialogActionElement, AlertDialog
       {requireReactElement(children)}
     </AlertDialogPrimitive.Action>
   ),
-);
-AlertDialogAction.displayName = 'AlertDialog.Action';
+)
+AlertDialogAction.displayName = 'AlertDialog.Action'
 
-type AlertDialogCancelElement = React.ElementRef<typeof AlertDialogPrimitive.Cancel>;
+type AlertDialogCancelElement = React.ElementRef<typeof AlertDialogPrimitive.Cancel>
 interface AlertDialogCancelProps extends ComponentPropsWithout<
   typeof AlertDialogPrimitive.Cancel,
   RemovedProps
@@ -121,8 +121,8 @@ const AlertDialogCancel = React.forwardRef<AlertDialogCancelElement, AlertDialog
       {requireReactElement(children)}
     </AlertDialogPrimitive.Cancel>
   ),
-);
-AlertDialogCancel.displayName = 'AlertDialog.Cancel';
+)
+AlertDialogCancel.displayName = 'AlertDialog.Cancel'
 
 export {
   AlertDialogRoot as Root,
@@ -132,7 +132,7 @@ export {
   AlertDialogDescription as Description,
   AlertDialogAction as Action,
   AlertDialogCancel as Cancel,
-};
+}
 
 export type {
   AlertDialogRootProps as RootProps,
@@ -142,4 +142,4 @@ export type {
   AlertDialogDescriptionProps as DescriptionProps,
   AlertDialogActionProps as ActionProps,
   AlertDialogCancelProps as CancelProps,
-};
+}

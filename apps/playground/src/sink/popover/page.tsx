@@ -1,6 +1,6 @@
-import { Button, Popover, Text } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { Share2Icon } from '@radix-ui/react-icons';
+import { Button, Popover, Text } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { Share2Icon } from '@radix-ui/react-icons'
 
 export default function PopoverPage() {
   return (
@@ -9,9 +9,7 @@ export default function PopoverPage() {
       <DocsSectionBody>
         <Popover.Root>
           <Popover.Trigger>
-            <Button variant="solid">
-              Popover
-            </Button>
+            <Button variant="solid">Popover</Button>
           </Popover.Trigger>
           <Popover.Content width="200px">
             <Text as="p" size="2" mb="2">
@@ -25,5 +23,5 @@ export default function PopoverPage() {
         </Popover.Root>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

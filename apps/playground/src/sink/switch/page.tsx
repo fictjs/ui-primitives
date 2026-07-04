@@ -1,12 +1,12 @@
-import { Switch, Grid, Text, Flex, Separator, Code, Box, Table } from '@fictjs/radix-ui-themes';
-import { switchPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped } from '../_utils';
-import type { FictNode } from 'fict';
+import { Switch, Grid, Text, Flex, Separator, Code, Box, Table } from '@fictjs/radix-ui-themes'
+import { switchPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
+import type { FictNode } from 'fict'
 
 export default function SwitchPage() {
-  const stateMatrixRows: FictNode[] = [];
-  const colorCombinationContent: FictNode[] = [];
+  const stateMatrixRows: FictNode[] = []
+  const colorCombinationContent: FictNode[] = []
 
   for (const variant of switchPropDefs.variant.values) {
     for (const label of [variant, '+ high-contrast'] as const) {
@@ -17,11 +17,7 @@ export default function SwitchPage() {
             <Switch variant={variant} highContrast={label === '+ high-contrast'} />
           </Table.Cell>
           <Table.Cell>
-            <Switch
-              variant={variant}
-              highContrast={label === '+ high-contrast'}
-              defaultChecked
-            />
+            <Switch variant={variant} highContrast={label === '+ high-contrast'} defaultChecked />
           </Table.Cell>
           <Table.Cell>
             <Switch variant={variant} highContrast={label === '+ high-contrast'} disabled />
@@ -35,7 +31,7 @@ export default function SwitchPage() {
             />
           </Table.Cell>
         </Table.Row>,
-      );
+      )
     }
   }
 
@@ -44,7 +40,7 @@ export default function SwitchPage() {
       <Text key={`${group.label}-heading`} as="p" weight="bold" mt="6" mb="4">
         {group.label}
       </Text>,
-    );
+    )
     colorCombinationContent.push(
       <Table.Root key={`${group.label}-table`}>
         <Table.Header>
@@ -70,7 +66,7 @@ export default function SwitchPage() {
           ))}
         </Table.Body>
       </Table.Root>,
-    );
+    )
   }
 
   return (
@@ -235,5 +231,5 @@ export default function SwitchPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

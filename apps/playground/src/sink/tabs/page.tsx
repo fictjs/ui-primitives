@@ -1,7 +1,7 @@
-import type { FictNode } from 'fict';
-import { Text, Code, Grid, Flex, Box, Tabs, Table } from '@fictjs/radix-ui-themes';
-import { tabsListPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import type { FictNode } from 'fict'
+import { Text, Code, Grid, Flex, Box, Tabs, Table } from '@fictjs/radix-ui-themes'
+import { tabsListPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function TabsPage() {
   const colorCombinationContent: FictNode[] = tabsListPropDefs.color.values.map((color) => [
@@ -42,7 +42,7 @@ export default function TabsPage() {
         </Tabs.Content>
       </Tabs.Root>
     </Flex>,
-  ]);
+  ])
 
   return (
     <DocsSection>
@@ -119,5 +119,5 @@ export default function TabsPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

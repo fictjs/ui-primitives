@@ -1,26 +1,27 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
-import { Slot } from '@fictjs/radix-ui';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
+import { Slot } from '@fictjs/radix-ui'
 
-import { kbdPropDefs } from './kbd.props.js';
-import { extractProps } from '../helpers/extract-props.js';
-import { renderChildren } from '../helpers/render-children.js';
-import { marginPropDefs } from '../props/margin.props.js';
+import { kbdPropDefs } from './kbd.props.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { renderChildren } from '../helpers/render-children.js'
+import { marginPropDefs } from '../props/margin.props.js'
 
-import type { MarginProps } from '../props/margin.props.js';
-import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
-import type { GetPropDefTypes } from '../props/prop-def.js';
+import type { MarginProps } from '../props/margin.props.js'
+import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
+import type { GetPropDefTypes } from '../props/prop-def.js'
 
-type KbdElement = React.ElementRef<'kbd'>;
-type KbdOwnProps = GetPropDefTypes<typeof kbdPropDefs>;
+type KbdElement = React.ElementRef<'kbd'>
+type KbdOwnProps = GetPropDefTypes<typeof kbdPropDefs>
 interface KbdProps extends ComponentPropsWithout<'kbd', RemovedProps>, MarginProps, KbdOwnProps {}
 const Kbd = React.forwardRef<KbdElement, KbdProps>((props, forwardedRef) => {
-  const { asChild, children: _children, className, ...kbdProps } = extractProps(
-    props,
-    kbdPropDefs,
-    marginPropDefs,
-  );
-  const Comp = asChild ? Slot.Root : 'kbd';
+  const {
+    asChild,
+    children: _children,
+    className,
+    ...kbdProps
+  } = extractProps(props, kbdPropDefs, marginPropDefs)
+  const Comp = asChild ? Slot.Root : 'kbd'
   return (
     <Comp
       {...kbdProps}
@@ -29,9 +30,9 @@ const Kbd = React.forwardRef<KbdElement, KbdProps>((props, forwardedRef) => {
     >
       {renderChildren(props.children)}
     </Comp>
-  );
-});
-Kbd.displayName = 'Kbd';
+  )
+})
+Kbd.displayName = 'Kbd'
 
-export { Kbd };
-export type { KbdProps };
+export { Kbd }
+export type { KbdProps }

@@ -77,9 +77,7 @@ describe('@fictjs/context-menu', () => {
     contextMenu(container.querySelector('[data-testid="trigger"]') as HTMLDivElement, 32, 64)
     await waitForEffects()
 
-    const wrapper = container.querySelector(
-      '[data-radix-popper-content-wrapper]',
-    ) as HTMLDivElement
+    const wrapper = container.querySelector('[data-radix-popper-content-wrapper]') as HTMLDivElement
     const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
 
     expect(wrapper).not.toBeNull()

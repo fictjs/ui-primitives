@@ -40,7 +40,13 @@ function SvgIcon(props: IconProps) {
 function ArrowRightIcon(props: IconProps) {
   return (
     <SvgIcon {...props}>
-      <path d="M4 7.5h6m0 0L7.5 5m2.5 2.5L7.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M4 7.5h6m0 0L7.5 5m2.5 2.5L7.5 10"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </SvgIcon>
   )
 }
@@ -48,7 +54,13 @@ function ArrowRightIcon(props: IconProps) {
 function ArrowTopRightIcon(props: IconProps) {
   return (
     <SvgIcon {...props}>
-      <path d="M4 11 11 4m0 0H6.5M11 4v4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M4 11 11 4m0 0H6.5M11 4v4.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </SvgIcon>
   )
 }
@@ -56,7 +68,10 @@ function ArrowTopRightIcon(props: IconProps) {
 function StarIcon(props: IconProps) {
   return (
     <SvgIcon {...props}>
-      <path d="M7.5 1.5 9.4 5.3l4.1.6-3 2.9.7 4.1-3.7-2-3.7 2 .7-4.1-3-2.9 4.1-.6L7.5 1.5Z" fill="currentColor" />
+      <path
+        d="M7.5 1.5 9.4 5.3l4.1.6-3 2.9.7 4.1-3.7-2-3.7 2 .7-4.1-3-2.9 4.1-.6L7.5 1.5Z"
+        fill="currentColor"
+      />
     </SvgIcon>
   )
 }
@@ -67,7 +82,12 @@ function Share2Icon(props: IconProps) {
       <path d="M10.5 4.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" fill="currentColor" />
       <path d="M3 9.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" fill="currentColor" />
       <path d="M10.5 14.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" fill="currentColor" />
-      <path d="m4.6 6.1 1.9-1.1m-1.9 4 1.9 1.1" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+      <path
+        d="m4.6 6.1 1.9-1.1m-1.9 4 1.9 1.1"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+      />
     </SvgIcon>
   )
 }
@@ -83,7 +103,13 @@ function Pencil2Icon(props: IconProps) {
 function CodeIcon(props: IconProps) {
   return (
     <SvgIcon {...props}>
-      <path d="m5.2 3.2-3 4.3 3 4.3M9.8 3.2l3 4.3-3 4.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="m5.2 3.2-3 4.3 3 4.3M9.8 3.2l3 4.3-3 4.3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </SvgIcon>
   )
 }
@@ -91,8 +117,17 @@ function CodeIcon(props: IconProps) {
 function InfoCircledIcon(props: IconProps) {
   return (
     <SvgIcon {...props}>
-      <path d="M7.5 14a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13Z" stroke="currentColor" strokeWidth="1.25" />
-      <path d="M7.5 6.4v3.5M7.5 4.6h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M7.5 14a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13Z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+      />
+      <path
+        d="M7.5 6.4v3.5M7.5 4.6h.01"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </SvgIcon>
   )
 }
@@ -100,7 +135,12 @@ function InfoCircledIcon(props: IconProps) {
 function Cross1Icon(props: IconProps) {
   return (
     <SvgIcon {...props}>
-      <path d="M4 4 11 11M11 4 4 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M4 4 11 11M11 4 4 11"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </SvgIcon>
   )
 }
@@ -118,7 +158,12 @@ function DotsHorizontalIcon(props: IconProps) {
 function HamburgerMenuIcon(props: IconProps) {
   return (
     <SvgIcon {...props}>
-      <path d="M2 4.25h11M2 7.5h11M2 10.75h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M2 4.25h11M2 7.5h11M2 10.75h11"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </SvgIcon>
   )
 }
@@ -133,5 +178,5 @@ export {
   InfoCircledIcon,
   Pencil2Icon,
   Share2Icon,
-  StarIcon
+  StarIcon,
 }

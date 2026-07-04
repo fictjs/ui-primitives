@@ -1,8 +1,8 @@
-import type { FictNode } from 'fict';
-import { Text, Code, Grid, Flex, Table } from '@fictjs/radix-ui-themes';
-import { tabsListPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { TabNavDemo } from '../tab-nav-demo';
+import type { FictNode } from 'fict'
+import { Text, Code, Grid, Flex, Table } from '@fictjs/radix-ui-themes'
+import { tabsListPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { TabNavDemo } from '../tab-nav-demo'
 
 export default function TabNavPage() {
   const colorCombinationContent: FictNode[] = tabsListPropDefs.color.values.map((color) => [
@@ -13,7 +13,7 @@ export default function TabNavPage() {
     <Flex>
       <TabNavDemo size="1" color={color} highContrast />
     </Flex>,
-  ]);
+  ])
 
   return (
     <DocsSection>
@@ -46,5 +46,5 @@ export default function TabNavPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

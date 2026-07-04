@@ -1,14 +1,14 @@
-import * as React from 'react';
-import { createSignal } from '@fictjs/runtime/advanced';
-import { TabNav } from '@fictjs/radix-ui-themes';
+import * as React from 'react'
+import { createSignal } from '@fictjs/runtime/advanced'
+import { TabNav } from '@fictjs/radix-ui-themes'
 
 function TabNavDemoImpl(props: React.ComponentPropsWithRef<typeof TabNav.Root>) {
-  const tab = createSignal('account');
+  const tab = createSignal('account')
 
   const handleTabClick = (nextTab: string) => (event: MouseEvent) => {
-    event.preventDefault();
-    tab(nextTab);
-  };
+    event.preventDefault()
+    tab(nextTab)
+  }
 
   return (
     <TabNav.Root {...props}>
@@ -34,7 +34,7 @@ function TabNavDemoImpl(props: React.ComponentPropsWithRef<typeof TabNav.Root>) 
         Settings
       </TabNav.Link>
     </TabNav.Root>
-  );
+  )
 }
 
 export function TabNavDemo(props: React.ComponentPropsWithRef<typeof TabNav.Root>) {
@@ -42,5 +42,5 @@ export function TabNavDemo(props: React.ComponentPropsWithRef<typeof TabNav.Root
     <React.Suspense fallback={null}>
       <TabNavDemoImpl {...props} />
     </React.Suspense>
-  );
+  )
 }

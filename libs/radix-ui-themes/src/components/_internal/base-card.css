@@ -71,8 +71,10 @@
 
   @supports (color: color-mix(in oklab, white, black)) {
     --base-card-surface-box-shadow: 0 0 0 1px color-mix(in oklab, var(--gray-a5), var(--gray-5) 25%);
-    --base-card-surface-hover-box-shadow: 0 0 0 1px color-mix(in oklab, var(--gray-a7), var(--gray-7) 25%);
-    --base-card-surface-active-box-shadow: 0 0 0 1px color-mix(in oklab, var(--gray-a6), var(--gray-6) 25%);
+    --base-card-surface-hover-box-shadow: 0 0 0 1px
+      color-mix(in oklab, var(--gray-a7), var(--gray-7) 25%);
+    --base-card-surface-active-box-shadow: 0 0 0 1px
+      color-mix(in oklab, var(--gray-a6), var(--gray-6) 25%);
   }
 }
 

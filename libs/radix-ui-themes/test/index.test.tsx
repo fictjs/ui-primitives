@@ -467,5 +467,4 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(document.body.querySelector('[data-testid="dropdown-content"]')).not.toBeNull()
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
   })
-
 })

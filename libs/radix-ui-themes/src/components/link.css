@@ -17,7 +17,8 @@
     outline-offset: 2px;
   }
 
-  :where([data-accent-color]:not(.radix-themes, .rt-high-contrast)) &:where([data-accent-color='']) {
+  :where([data-accent-color]:not(.radix-themes, .rt-high-contrast))
+    &:where([data-accent-color='']) {
     color: var(--accent-12);
   }
 }
@@ -57,7 +58,8 @@
       }
 
       &:where(.rt-high-contrast),
-      :where([data-accent-color]:not(.radix-themes, .rt-high-contrast)) &:where([data-accent-color='']) {
+      :where([data-accent-color]:not(.radix-themes, .rt-high-contrast))
+        &:where([data-accent-color='']) {
         text-decoration-line: underline;
         text-decoration-color: var(--accent-a6);
 

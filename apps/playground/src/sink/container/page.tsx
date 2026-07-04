@@ -1,5 +1,5 @@
-import { Container, Box, Text, Code } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { Container, Box, Text, Code } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function ContainerPage() {
   return (
@@ -36,5 +36,5 @@ export default function ContainerPage() {
         </Container>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

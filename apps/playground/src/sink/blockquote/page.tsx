@@ -1,5 +1,5 @@
-import { Blockquote, Flex, Text } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { Blockquote, Flex, Text } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function BlockquotePage() {
   return (
@@ -29,5 +29,5 @@ export default function BlockquotePage() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

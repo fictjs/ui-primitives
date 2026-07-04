@@ -26,8 +26,7 @@ interface ThemePanelImplPrivateProps {
 }
 
 interface ThemePanelImplProps
-  extends ComponentPropsWithout<'div', RemovedProps>,
-    ThemePanelImplPrivateProps {
+  extends ComponentPropsWithout<'div', RemovedProps>, ThemePanelImplPrivateProps {
   onAppearanceChange?: (value: 'light' | 'dark') => void
 }
 
@@ -47,7 +46,13 @@ function ThemePanel(props: ThemePanelProps): React.ReactNode {
       const target = event.target as HTMLElement | null
       const isTypingTarget =
         target?.closest('input, textarea, select, [contenteditable="true"]') !== null
-      if (event.key.toUpperCase() !== 'T' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      if (
+        event.key.toUpperCase() !== 'T' ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      ) {
         return
       }
       if (isTypingTarget) {
@@ -103,7 +108,9 @@ function ThemePanelImpl(props: ThemePanelImplProps): React.ReactNode {
           transform: open() ? 'translateX(0)' : 'translateX(calc(100% + var(--space-2)))',
           transition: 'transform 200ms ease, box-shadow 200ms ease',
           zIndex: 999999999,
-          ...(typeof panelProps.style === 'object' && panelProps.style !== null ? panelProps.style : {}),
+          ...(typeof panelProps.style === 'object' && panelProps.style !== null
+            ? panelProps.style
+            : {}),
         }}
       >
         <Flex direction="column" gap="4" p="4">
@@ -157,7 +164,9 @@ function ThemePanelContent(props: ThemePanelContentProps): React.ReactNode {
       themeContext.panelBackground === themePropDefs.panelBackground.default
         ? undefined
         : `panelBackground="${themeContext.panelBackground}"`,
-      themeContext.radius === themePropDefs.radius.default ? undefined : `radius="${themeContext.radius}"`,
+      themeContext.radius === themePropDefs.radius.default
+        ? undefined
+        : `radius="${themeContext.radius}"`,
       themeContext.scaling === themePropDefs.scaling.default
         ? undefined
         : `scaling="${themeContext.scaling}"`,
@@ -182,14 +191,18 @@ function ThemePanelContent(props: ThemePanelContentProps): React.ReactNode {
         name="theme-panel-accent"
         options={themePropDefs.accentColor.values}
         value={themeContext.accentColor}
-        onChange={(nextValue) => themeContext.onAccentColorChange(nextValue as typeof themeContext.accentColor)}
+        onChange={(nextValue) =>
+          themeContext.onAccentColorChange(nextValue as typeof themeContext.accentColor)
+        }
       />
       <ThemePanelRadioGroup
         label="Gray"
         name="theme-panel-gray"
         options={themePropDefs.grayColor.values}
         value={themeContext.grayColor}
-        onChange={(nextValue) => themeContext.onGrayColorChange(nextValue as typeof themeContext.grayColor)}
+        onChange={(nextValue) =>
+          themeContext.onGrayColorChange(nextValue as typeof themeContext.grayColor)
+        }
       />
       <ThemePanelRadioGroup
         label="Panel"
@@ -205,16 +218,22 @@ function ThemePanelContent(props: ThemePanelContentProps): React.ReactNode {
         name="theme-panel-radius"
         options={themePropDefs.radius.values}
         value={themeContext.radius}
-        onChange={(nextValue) => themeContext.onRadiusChange(nextValue as typeof themeContext.radius)}
+        onChange={(nextValue) =>
+          themeContext.onRadiusChange(nextValue as typeof themeContext.radius)
+        }
       />
       <ThemePanelRadioGroup
         label="Scaling"
         name="theme-panel-scaling"
         options={themePropDefs.scaling.values}
         value={themeContext.scaling}
-        onChange={(nextValue) => themeContext.onScalingChange(nextValue as typeof themeContext.scaling)}
+        onChange={(nextValue) =>
+          themeContext.onScalingChange(nextValue as typeof themeContext.scaling)
+        }
       />
-      <Button onClick={() => void handleCopyTheme()}>{copyState() === 'copied' ? 'Copied' : 'Copy Theme'}</Button>
+      <Button onClick={() => void handleCopyTheme()}>
+        {copyState() === 'copied' ? 'Copied' : 'Copy Theme'}
+      </Button>
     </Flex>
   )
 }

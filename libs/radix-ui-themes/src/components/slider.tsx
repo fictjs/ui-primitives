@@ -1,17 +1,17 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
-import { Slider as SliderPrimitive } from '@fictjs/radix-ui';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
+import { Slider as SliderPrimitive } from '@fictjs/radix-ui'
 
-import { sliderPropDefs } from './slider.props.js';
-import { extractProps } from '../helpers/extract-props.js';
-import { marginPropDefs } from '../props/margin.props.js';
+import { sliderPropDefs } from './slider.props.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { marginPropDefs } from '../props/margin.props.js'
 
-import type { MarginProps } from '../props/margin.props.js';
-import type { ComponentPropsWithout } from '../helpers/component-props.js';
-import type { GetPropDefTypes } from '../props/prop-def.js';
+import type { MarginProps } from '../props/margin.props.js'
+import type { ComponentPropsWithout } from '../helpers/component-props.js'
+import type { GetPropDefTypes } from '../props/prop-def.js'
 
-type SliderElement = React.ElementRef<typeof SliderPrimitive.Root>;
-type SliderOwnProps = GetPropDefTypes<typeof sliderPropDefs>;
+type SliderElement = React.ElementRef<typeof SliderPrimitive.Root>
+type SliderOwnProps = GetPropDefTypes<typeof sliderPropDefs>
 interface SliderProps
   extends
     ComponentPropsWithout<
@@ -32,14 +32,13 @@ const Slider = React.forwardRef<SliderElement, SliderProps>((props, forwardedRef
     props,
     sliderPropDefs,
     marginPropDefs,
-  );
+  )
   return (
     <SliderPrimitive.Root
       data-accent-color={color}
       data-radius={radius}
       ref={React.coerceRef(forwardedRef)}
       {...sliderProps}
-     
       class={classNames('rt-SliderRoot', className)}
     >
       <SliderPrimitive.Track class="rt-SliderTrack">
@@ -64,9 +63,9 @@ const Slider = React.forwardRef<SliderElement, SliderProps>((props, forwardedRef
         />
       ))}
     </SliderPrimitive.Root>
-  );
-});
-Slider.displayName = 'Slider';
+  )
+})
+Slider.displayName = 'Slider'
 
-export { Slider };
-export type { SliderProps };
+export { Slider }
+export type { SliderProps }

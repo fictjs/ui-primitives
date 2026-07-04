@@ -1,4 +1,4 @@
-import { ArrowRightIcon, InfoCircledIcon, StarIcon } from '@radix-ui/react-icons';
+import { ArrowRightIcon, InfoCircledIcon, StarIcon } from '@radix-ui/react-icons'
 import {
   Avatar,
   Badge,
@@ -23,9 +23,9 @@ import {
   Text,
   TextArea,
   TextField,
-} from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { PlaygroundForm, SelectItemsDemo, TableExample } from '../_components';
+} from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { PlaygroundForm, SelectItemsDemo, TableExample } from '../_components'
 
 export default function SkeletonPage() {
   return (
@@ -228,5 +228,5 @@ export default function SkeletonPage() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

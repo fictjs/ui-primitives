@@ -1,5 +1,5 @@
-import { HoverCard, Link, Text } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { HoverCard, Link, Text } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function HoverCardPage() {
   return (
@@ -19,5 +19,5 @@ export default function HoverCardPage() {
         </HoverCard.Root>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

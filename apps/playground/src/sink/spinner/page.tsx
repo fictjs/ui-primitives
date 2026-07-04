@@ -1,6 +1,6 @@
-import { Spinner, Flex, Button, TextField, Grid } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { LoadingButtons } from '../../components/loading-buttons';
+import { Spinner, Flex, Button, TextField, Grid } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { LoadingButtons } from '../../components/loading-buttons'
 
 export default function SpinnerPage() {
   return (
@@ -42,5 +42,5 @@ export default function SpinnerPage() {
         </Grid>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

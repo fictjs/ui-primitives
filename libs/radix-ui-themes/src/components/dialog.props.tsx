@@ -1,12 +1,12 @@
-import { asChildPropDef } from '../props/as-child.prop.js';
-import { widthPropDefs } from '../props/width.props.js';
-import { heightPropDefs } from '../props/height.props.js';
+import { asChildPropDef } from '../props/as-child.prop.js'
+import { widthPropDefs } from '../props/width.props.js'
+import { heightPropDefs } from '../props/height.props.js'
 
-import type { PropDef, GetPropDefTypes } from '../props/prop-def.js';
+import type { PropDef, GetPropDefTypes } from '../props/prop-def.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const alignValues = ['start', 'center'] as const;
-const contentSizes = ['1', '2', '3', '4'] as const;
+const alignValues = ['start', 'center'] as const
+const contentSizes = ['1', '2', '3', '4'] as const
 
 const dialogContentPropDefs = {
   ...asChildPropDef,
@@ -28,16 +28,16 @@ const dialogContentPropDefs = {
   maxWidth: { ...widthPropDefs.maxWidth, default: '600px' },
   ...heightPropDefs,
 } satisfies {
-  align: PropDef<(typeof alignValues)[number]>;
-  size: PropDef<(typeof contentSizes)[number]>;
-  width: PropDef<string>;
-  minWidth: PropDef<string>;
-  maxWidth: PropDef<string>;
-};
+  align: PropDef<(typeof alignValues)[number]>
+  size: PropDef<(typeof contentSizes)[number]>
+  width: PropDef<string>
+  minWidth: PropDef<string>
+  maxWidth: PropDef<string>
+}
 
 type DialogContentOwnProps = GetPropDefTypes<
   typeof dialogContentPropDefs & typeof asChildPropDef & typeof widthPropDefs
->;
+>
 
-export { dialogContentPropDefs };
-export type { DialogContentOwnProps };
+export { dialogContentPropDefs }
+export type { DialogContentOwnProps }

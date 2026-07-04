@@ -1,6 +1,6 @@
-import { Button, Dialog, Flex } from '@fictjs/radix-ui-themes';
-import { InfoCircledIcon, Share2Icon } from '@radix-ui/react-icons';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { Button, Dialog, Flex } from '@fictjs/radix-ui-themes'
+import { InfoCircledIcon, Share2Icon } from '@radix-ui/react-icons'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function DialogPage() {
   return (
@@ -36,5 +36,5 @@ export default function DialogPage() {
         </Dialog.Root>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

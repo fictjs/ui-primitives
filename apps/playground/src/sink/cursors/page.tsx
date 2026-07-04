@@ -1,7 +1,7 @@
-import { Button, Card, DropdownMenu, Flex, Link, Text } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { PointerCursorsCheckbox } from '../pointer-cursors-checkbox';
-import { DropdownMenuContentDemo } from '../_components';
+import { Button, Card, DropdownMenu, Flex, Link, Text } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { PointerCursorsCheckbox } from '../pointer-cursors-checkbox'
+import { DropdownMenuContentDemo } from '../_components'
 
 export default function CursorsPage() {
   return (
@@ -56,5 +56,5 @@ export default function CursorsPage() {
         <PointerCursorsCheckbox />
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

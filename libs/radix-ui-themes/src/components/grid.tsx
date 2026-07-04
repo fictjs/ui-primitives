@@ -1,23 +1,23 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
 
-import { Slot } from './slot.js';
-import { gridPropDefs } from './grid.props.js';
-import { extractProps } from '../helpers/extract-props.js';
-import { renderChildren } from '../helpers/render-children.js';
-import { layoutPropDefs } from '../props/layout.props.js';
-import { marginPropDefs } from '../props/margin.props.js';
+import { Slot } from './slot.js'
+import { gridPropDefs } from './grid.props.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { renderChildren } from '../helpers/render-children.js'
+import { layoutPropDefs } from '../props/layout.props.js'
+import { marginPropDefs } from '../props/margin.props.js'
 
-import type { LayoutProps } from '../props/layout.props.js';
-import type { MarginProps } from '../props/margin.props.js';
-import type { GridOwnProps } from './grid.props.js';
-import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
+import type { LayoutProps } from '../props/layout.props.js'
+import type { MarginProps } from '../props/margin.props.js'
+import type { GridOwnProps } from './grid.props.js'
+import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
 
-type GridElement = React.ElementRef<'div'>;
+type GridElement = React.ElementRef<'div'>
 interface CommonGridProps extends MarginProps, LayoutProps, GridOwnProps {}
-type GridDivProps = { as?: 'div' } & ComponentPropsWithout<'div', RemovedProps>;
-type GridSpanProps = { as: 'span' } & ComponentPropsWithout<'span', RemovedProps>;
-type GridProps = CommonGridProps & (GridSpanProps | GridDivProps);
+type GridDivProps = { as?: 'div' } & ComponentPropsWithout<'div', RemovedProps>
+type GridSpanProps = { as: 'span' } & ComponentPropsWithout<'span', RemovedProps>
+type GridProps = CommonGridProps & (GridSpanProps | GridDivProps)
 
 const Grid = React.forwardRef<GridElement, GridProps>((props, forwardedRef) => {
   const {
@@ -26,15 +26,19 @@ const Grid = React.forwardRef<GridElement, GridProps>((props, forwardedRef) => {
     asChild,
     as: Tag = 'div',
     ...gridProps
-  } = extractProps(props, gridPropDefs, layoutPropDefs, marginPropDefs);
-  const Comp = asChild ? Slot : Tag;
+  } = extractProps(props, gridPropDefs, layoutPropDefs, marginPropDefs)
+  const Comp = asChild ? Slot : Tag
   return (
-    <Comp {...gridProps} ref={React.coerceRef(forwardedRef)} class={classNames('rt-Grid', className)}>
+    <Comp
+      {...gridProps}
+      ref={React.coerceRef(forwardedRef)}
+      class={classNames('rt-Grid', className)}
+    >
       {renderChildren(props.children)}
     </Comp>
-  );
-});
-Grid.displayName = 'Grid';
+  )
+})
+Grid.displayName = 'Grid'
 
-export { Grid };
-export type { GridProps };
+export { Grid }
+export type { GridProps }

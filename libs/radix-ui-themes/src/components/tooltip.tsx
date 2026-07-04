@@ -1,24 +1,24 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
-import { Tooltip as TooltipPrimitive } from '@fictjs/radix-ui';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
+import { Tooltip as TooltipPrimitive } from '@fictjs/radix-ui'
 
-import { Text } from './text.js';
-import { extractProps } from '../helpers/extract-props.js';
-import { tooltipPropDefs } from './tooltip.props.js';
-import { Theme } from './theme.js';
+import { Text } from './text.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { tooltipPropDefs } from './tooltip.props.js'
+import { Theme } from './theme.js'
 
-import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
-import type { GetPropDefTypes } from '../props/prop-def.js';
+import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
+import type { GetPropDefTypes } from '../props/prop-def.js'
 
-type TooltipElement = React.ElementRef<typeof TooltipPrimitive.Content>;
-type TooltipOwnProps = GetPropDefTypes<typeof tooltipPropDefs>;
+type TooltipElement = React.ElementRef<typeof TooltipPrimitive.Content>
+type TooltipOwnProps = GetPropDefTypes<typeof tooltipPropDefs>
 interface TooltipProps
   extends
     React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>,
     ComponentPropsWithout<typeof TooltipPrimitive.Content, RemovedProps | 'content'>,
     TooltipOwnProps {
-  content: React.ReactNode;
-  container?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Portal>['container'];
+  content: React.ReactNode
+  container?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Portal>['container']
 }
 const Tooltip = React.forwardRef<TooltipElement, TooltipProps>((props, forwardedRef) => {
   const {
@@ -33,8 +33,8 @@ const Tooltip = React.forwardRef<TooltipElement, TooltipProps>((props, forwarded
     container,
     forceMount,
     ...tooltipContentProps
-  } = extractProps(props, tooltipPropDefs);
-  const rootProps = { open, defaultOpen, onOpenChange, delayDuration, disableHoverableContent };
+  } = extractProps(props, tooltipPropDefs)
+  const rootProps = { open, defaultOpen, onOpenChange, delayDuration, disableHoverableContent }
   return (
     <TooltipPrimitive.Root {...rootProps}>
       <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
@@ -56,9 +56,9 @@ const Tooltip = React.forwardRef<TooltipElement, TooltipProps>((props, forwarded
         </Theme>
       </TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>
-  );
-});
-Tooltip.displayName = 'Tooltip';
+  )
+})
+Tooltip.displayName = 'Tooltip'
 
-export { Tooltip };
-export type { TooltipProps };
+export { Tooltip }
+export type { TooltipProps }

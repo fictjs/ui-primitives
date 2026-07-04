@@ -1,23 +1,23 @@
-import * as React from '../helpers/element.js';
-import { mergeProps, prop } from 'fict';
-import classNames from 'classnames';
-import { Popover as PopoverPrimitive } from '@fictjs/radix-ui';
+import * as React from '../helpers/element.js'
+import { mergeProps, prop } from 'fict'
+import classNames from 'classnames'
+import { Popover as PopoverPrimitive } from '@fictjs/radix-ui'
 
-import { extractProps } from '../helpers/extract-props.js';
-import { requireReactElement } from '../helpers/require-react-element.js';
-import { popoverContentPropDefs } from './popover.props.js';
-import { ThemeContext, useThemeContext } from './theme.js';
+import { extractProps } from '../helpers/extract-props.js'
+import { requireReactElement } from '../helpers/require-react-element.js'
+import { popoverContentPropDefs } from './popover.props.js'
+import { ThemeContext, useThemeContext } from './theme.js'
 
-import type { PopoverContentOwnProps } from './popover.props.js';
-import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
+import type { PopoverContentOwnProps } from './popover.props.js'
+import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
 
 interface PopoverRootProps extends React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Root> {}
 const PopoverRoot: React.FC<PopoverRootProps> = (props: PopoverRootProps) => (
   <PopoverPrimitive.Root {...mergeProps(prop(() => props as Record<string, unknown>))} />
-);
-PopoverRoot.displayName = 'Popover.Root';
+)
+PopoverRoot.displayName = 'Popover.Root'
 
-type PopoverTriggerElement = React.ElementRef<typeof PopoverPrimitive.Trigger>;
+type PopoverTriggerElement = React.ElementRef<typeof PopoverPrimitive.Trigger>
 interface PopoverTriggerProps extends ComponentPropsWithout<
   typeof PopoverPrimitive.Trigger,
   RemovedProps
@@ -25,33 +25,36 @@ interface PopoverTriggerProps extends ComponentPropsWithout<
 const PopoverTrigger = React.forwardRef<PopoverTriggerElement, PopoverTriggerProps>(
   (props, forwardedRef) => (
     <PopoverPrimitive.Trigger
-      {...mergeProps(prop(() => props as Record<string, unknown>), {
-        asChild: true,
-        children: undefined,
-        ref: undefined,
-      })}
+      {...mergeProps(
+        prop(() => props as Record<string, unknown>),
+        {
+          asChild: true,
+          children: undefined,
+          ref: undefined,
+        },
+      )}
       ref={React.coerceRef(forwardedRef)}
     >
       {requireReactElement((props as { children?: React.ReactNode }).children)}
     </PopoverPrimitive.Trigger>
   ),
-);
-PopoverTrigger.displayName = 'Popover.Trigger';
+)
+PopoverTrigger.displayName = 'Popover.Trigger'
 
-type PopoverContentElement = React.ElementRef<typeof PopoverPrimitive.Content>;
+type PopoverContentElement = React.ElementRef<typeof PopoverPrimitive.Content>
 interface PopoverContentProps
   extends
     ComponentPropsWithout<typeof PopoverPrimitive.Content, RemovedProps>,
     PopoverContentOwnProps {
-  container?: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Portal>['container'];
+  container?: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Portal>['container']
 }
 const PopoverContent = React.forwardRef<PopoverContentElement, PopoverContentProps>(
   (props, forwardedRef) => {
-    const themeContext = useThemeContext();
+    const themeContext = useThemeContext()
     const { className, forceMount, container, children, ...contentProps } = extractProps(
       props,
       popoverContentPropDefs,
-    );
+    )
     return (
       <PopoverPrimitive.Portal container={container} forceMount={forceMount}>
         <PopoverPrimitive.Content
@@ -85,12 +88,12 @@ const PopoverContent = React.forwardRef<PopoverContentElement, PopoverContentPro
           <ThemeContext.Provider value={themeContext}>{children}</ThemeContext.Provider>
         </PopoverPrimitive.Content>
       </PopoverPrimitive.Portal>
-    );
+    )
   },
-);
-PopoverContent.displayName = 'Popover.Content';
+)
+PopoverContent.displayName = 'Popover.Content'
 
-type PopoverCloseElement = React.ElementRef<typeof PopoverPrimitive.Close>;
+type PopoverCloseElement = React.ElementRef<typeof PopoverPrimitive.Close>
 interface PopoverCloseProps extends ComponentPropsWithout<
   typeof PopoverPrimitive.Close,
   RemovedProps
@@ -98,35 +101,41 @@ interface PopoverCloseProps extends ComponentPropsWithout<
 const PopoverClose = React.forwardRef<PopoverCloseElement, PopoverCloseProps>(
   (props, forwardedRef) => (
     <PopoverPrimitive.Close
-      {...mergeProps(prop(() => props as Record<string, unknown>), {
-        asChild: true,
-        children: undefined,
-        ref: undefined,
-      })}
+      {...mergeProps(
+        prop(() => props as Record<string, unknown>),
+        {
+          asChild: true,
+          children: undefined,
+          ref: undefined,
+        },
+      )}
       ref={React.coerceRef(forwardedRef)}
     >
       {requireReactElement((props as { children?: React.ReactNode }).children)}
     </PopoverPrimitive.Close>
   ),
-);
-PopoverClose.displayName = 'Popover.Close';
+)
+PopoverClose.displayName = 'Popover.Close'
 
-type PopoverAnchorElement = React.ElementRef<typeof PopoverPrimitive.Anchor>;
+type PopoverAnchorElement = React.ElementRef<typeof PopoverPrimitive.Anchor>
 interface PopoverAnchorProps extends React.ComponentPropsWithoutRef<
   typeof PopoverPrimitive.Anchor
 > {}
 const PopoverAnchor = React.forwardRef<PopoverAnchorElement, PopoverAnchorProps>(
   (props, forwardedRef) => (
     <PopoverPrimitive.Anchor
-      {...mergeProps(prop(() => props as Record<string, unknown>), {
-        ref: undefined,
-      })}
+      {...mergeProps(
+        prop(() => props as Record<string, unknown>),
+        {
+          ref: undefined,
+        },
+      )}
       ref={React.coerceRef(forwardedRef)}
     />
   ),
-);
+)
 
-PopoverAnchor.displayName = 'Popover.Anchor';
+PopoverAnchor.displayName = 'Popover.Anchor'
 
 export {
   PopoverRoot as Root,
@@ -134,11 +143,11 @@ export {
   PopoverTrigger as Trigger,
   PopoverClose as Close,
   PopoverAnchor as Anchor,
-};
+}
 export type {
   PopoverRootProps as RootProps,
   PopoverContentProps as ContentProps,
   PopoverTriggerProps as TriggerProps,
   PopoverCloseProps as CloseProps,
   PopoverAnchorProps as AnchorProps,
-};
+}

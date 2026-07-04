@@ -86,10 +86,12 @@ describe('@fictjs/use-rect', () => {
         <>
           <div ref={(node) => target(node)} data-width="120" data-height="64" />
           <output>
-            {reactive(() => {
-              const nextRect = rect()
-              return nextRect ? `${nextRect.width}x${nextRect.height}` : 'none'
-            }) as unknown as string}
+            {
+              reactive(() => {
+                const nextRect = rect()
+                return nextRect ? `${nextRect.width}x${nextRect.height}` : 'none'
+              }) as unknown as string
+            }
           </output>
         </>
       )

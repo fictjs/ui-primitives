@@ -1,18 +1,18 @@
-import { Badge, Box, Code, Flex, Text, Table } from '@fictjs/radix-ui-themes';
-import { badgePropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped, upperFirst } from '../_utils';
-import type { FictNode } from 'fict';
+import { Badge, Box, Code, Flex, Text, Table } from '@fictjs/radix-ui-themes'
+import { badgePropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped, upperFirst } from '../_utils'
+import type { FictNode } from 'fict'
 
 export default function BadgePage() {
-  const colorCombinationContent: FictNode[] = [];
+  const colorCombinationContent: FictNode[] = []
 
   for (const group of accentColorsGrouped) {
     colorCombinationContent.push(
       <Text key={`${group.label}-heading`} as="p" weight="bold" mt="6" mb="4">
         {group.label}
       </Text>,
-    );
+    )
     colorCombinationContent.push(
       <Table.Root key={`${group.label}-table`}>
         <Table.Header>
@@ -43,7 +43,7 @@ export default function BadgePage() {
           ))}
         </Table.Body>
       </Table.Root>,
-    );
+    )
   }
 
   return (
@@ -133,5 +133,5 @@ export default function BadgePage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

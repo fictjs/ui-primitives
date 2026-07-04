@@ -1,18 +1,18 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
-import { Slot } from '@fictjs/radix-ui';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
+import { Slot } from '@fictjs/radix-ui'
 
-import { inert } from '../helpers/inert.js';
-import { extractProps } from '../helpers/extract-props.js';
-import { marginPropDefs } from '../props/margin.props.js';
-import { skeletonPropDefs } from './skeleton.props.js';
+import { inert } from '../helpers/inert.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { marginPropDefs } from '../props/margin.props.js'
+import { skeletonPropDefs } from './skeleton.props.js'
 
-import type { MarginProps } from '../props/margin.props.js';
-import type { GetPropDefTypes } from '../props/prop-def.js';
-import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
+import type { MarginProps } from '../props/margin.props.js'
+import type { GetPropDefTypes } from '../props/prop-def.js'
+import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
 
-type SkeletonElement = React.ElementRef<'span'>;
-type SkeletonOwnProps = GetPropDefTypes<typeof skeletonPropDefs>;
+type SkeletonElement = React.ElementRef<'span'>
+type SkeletonOwnProps = GetPropDefTypes<typeof skeletonPropDefs>
 interface SkeletonProps
   extends ComponentPropsWithout<'span', RemovedProps>, MarginProps, SkeletonOwnProps {}
 const Skeleton = React.forwardRef<SkeletonElement, SkeletonProps>((props, forwardedRef) => {
@@ -20,11 +20,11 @@ const Skeleton = React.forwardRef<SkeletonElement, SkeletonProps>((props, forwar
     props,
     skeletonPropDefs,
     marginPropDefs,
-  );
+  )
 
-  if (!loading) return children;
+  if (!loading) return children
 
-  const Tag = React.isValidElement(children) ? Slot.Root : 'span';
+  const Tag = React.isValidElement(children) ? Slot.Root : 'span'
 
   return (
     <Tag
@@ -38,9 +38,9 @@ const Skeleton = React.forwardRef<SkeletonElement, SkeletonProps>((props, forwar
     >
       {children}
     </Tag>
-  );
-});
-Skeleton.displayName = 'Skeleton';
+  )
+})
+Skeleton.displayName = 'Skeleton'
 
-export { Skeleton };
-export type { SkeletonProps };
+export { Skeleton }
+export type { SkeletonProps }

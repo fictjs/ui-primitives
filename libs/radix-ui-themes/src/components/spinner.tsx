@@ -1,17 +1,17 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
 
-import { Flex } from './flex.js';
-import { spinnerPropDefs } from './spinner.props.js';
-import { extractProps } from '../helpers/extract-props.js';
-import { marginPropDefs } from '../props/margin.props.js';
+import { Flex } from './flex.js'
+import { spinnerPropDefs } from './spinner.props.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { marginPropDefs } from '../props/margin.props.js'
 
-import type { MarginProps } from '../props/margin.props.js';
-import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
-import type { GetPropDefTypes } from '../props/prop-def.js';
+import type { MarginProps } from '../props/margin.props.js'
+import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
+import type { GetPropDefTypes } from '../props/prop-def.js'
 
-type SpinnerElement = React.ElementRef<'span'>;
-type SpinnerOwnProps = GetPropDefTypes<typeof spinnerPropDefs>;
+type SpinnerElement = React.ElementRef<'span'>
+type SpinnerOwnProps = GetPropDefTypes<typeof spinnerPropDefs>
 interface SpinnerProps
   extends ComponentPropsWithout<'span', RemovedProps>, MarginProps, SpinnerOwnProps {}
 const Spinner = React.forwardRef<SpinnerElement, SpinnerProps>((props, forwardedRef) => {
@@ -19,12 +19,16 @@ const Spinner = React.forwardRef<SpinnerElement, SpinnerProps>((props, forwarded
     props,
     spinnerPropDefs,
     marginPropDefs,
-  );
+  )
 
-  if (!loading) return children;
+  if (!loading) return children
 
   const spinner = (
-    <span {...spinnerProps} ref={React.coerceRef(forwardedRef)} class={classNames('rt-Spinner', className)}>
+    <span
+      {...spinnerProps}
+      ref={React.coerceRef(forwardedRef)}
+      class={classNames('rt-Spinner', className)}
+    >
       <span class="rt-SpinnerLeaf" />
       <span class="rt-SpinnerLeaf" />
       <span class="rt-SpinnerLeaf" />
@@ -34,9 +38,9 @@ const Spinner = React.forwardRef<SpinnerElement, SpinnerProps>((props, forwarded
       <span class="rt-SpinnerLeaf" />
       <span class="rt-SpinnerLeaf" />
     </span>
-  );
+  )
 
-  if (children === undefined) return spinner;
+  if (children === undefined) return spinner
 
   return (
     <Flex asChild position="relative" align="center" justify="center">
@@ -54,9 +58,9 @@ const Spinner = React.forwardRef<SpinnerElement, SpinnerProps>((props, forwarded
         </Flex>
       </span>
     </Flex>
-  );
-});
-Spinner.displayName = 'Spinner';
+  )
+})
+Spinner.displayName = 'Spinner'
 
-export { Spinner };
-export type { SpinnerProps };
+export { Spinner }
+export type { SpinnerProps }

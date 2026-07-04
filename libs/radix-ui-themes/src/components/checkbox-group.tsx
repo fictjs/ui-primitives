@@ -22,18 +22,22 @@ type CheckboxGroupRootOwnProps = GetPropDefTypes<typeof checkboxGroupRootPropDef
 type CheckboxGroupRootElement = React.ElementRef<typeof CheckboxGroupPrimitive.Root>
 
 interface CheckboxGroupRootProps
-  extends ComponentPropsWithout<typeof CheckboxGroupPrimitive.Root, 'color' | 'defaultChecked'>,
+  extends
+    ComponentPropsWithout<typeof CheckboxGroupPrimitive.Root, 'color' | 'defaultChecked'>,
     MarginProps,
     CheckboxGroupRootOwnProps {}
 
 const CheckboxGroupRoot = React.forwardRef<CheckboxGroupRootElement, CheckboxGroupRootProps>(
-  ({
-    color = checkboxGroupRootPropDefs.color.default,
-    highContrast = checkboxGroupRootPropDefs.highContrast.default,
-    size = checkboxGroupRootPropDefs.size.default,
-    variant = checkboxGroupRootPropDefs.variant.default,
-    ...props
-  }, forwardedRef) => {
+  (
+    {
+      color = checkboxGroupRootPropDefs.color.default,
+      highContrast = checkboxGroupRootPropDefs.highContrast.default,
+      size = checkboxGroupRootPropDefs.size.default,
+      variant = checkboxGroupRootPropDefs.variant.default,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { className, ...rootProps } = extractProps(props, marginPropDefs)
 
     return (
@@ -51,8 +55,7 @@ const CheckboxGroupRoot = React.forwardRef<CheckboxGroupRootElement, CheckboxGro
 type CheckboxGroupItemElement = React.ElementRef<typeof CheckboxGroupPrimitive.Item>
 
 interface CheckboxGroupItemProps
-  extends ComponentPropsWithout<typeof CheckboxGroupPrimitive.Item, RemovedProps>,
-    MarginProps {}
+  extends ComponentPropsWithout<typeof CheckboxGroupPrimitive.Item, RemovedProps>, MarginProps {}
 
 const CheckboxGroupItem = React.forwardRef<CheckboxGroupItemElement, CheckboxGroupItemProps>(
   ({ children, className, style, ...props }, forwardedRef) => {
@@ -85,8 +88,10 @@ const CheckboxGroupItem = React.forwardRef<CheckboxGroupItemElement, CheckboxGro
 
 type CheckboxGroupItemCheckboxElement = React.ElementRef<typeof CheckboxGroupPrimitive.Item>
 
-interface CheckboxGroupItemCheckboxProps
-  extends ComponentPropsWithout<typeof CheckboxGroupPrimitive.Item, RemovedProps> {}
+interface CheckboxGroupItemCheckboxProps extends ComponentPropsWithout<
+  typeof CheckboxGroupPrimitive.Item,
+  RemovedProps
+> {}
 
 const CheckboxGroupItemCheckbox = React.forwardRef<
   CheckboxGroupItemCheckboxElement,
@@ -100,14 +105,14 @@ const CheckboxGroupItemCheckbox = React.forwardRef<
   )
 
   return (
-      <CheckboxGroupPrimitive.Item
-        {...props}
-        data-accent-color={color}
-        ref={React.coerceRef(forwardedRef)}
-        class={classNames(
-          'rt-reset',
-          'rt-BaseCheckboxRoot',
-          'rt-CheckboxGroupItemCheckbox',
+    <CheckboxGroupPrimitive.Item
+      {...props}
+      data-accent-color={color}
+      ref={React.coerceRef(forwardedRef)}
+      class={classNames(
+        'rt-reset',
+        'rt-BaseCheckboxRoot',
+        'rt-CheckboxGroupItemCheckbox',
         extractedClassName,
         className,
       )}

@@ -9,10 +9,10 @@ import {
   Strong,
   Text,
   Table,
-} from '@fictjs/radix-ui-themes';
-import { scrollAreaPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { AspectRatioImage } from '../_components';
+} from '@fictjs/radix-ui-themes'
+import { scrollAreaPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { AspectRatioImage } from '../_components'
 
 export default function ScrollAreaPage() {
   return (
@@ -123,5 +123,5 @@ export default function ScrollAreaPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

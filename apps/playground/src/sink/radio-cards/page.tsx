@@ -1,9 +1,9 @@
-import type { FictNode } from 'fict';
-import { RadioCards, Flex, Text, Code, Box, Table } from '@fictjs/radix-ui-themes';
-import { CodeIcon } from '@radix-ui/react-icons';
-import { radioCardsRootPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped } from '../_utils';
+import type { FictNode } from 'fict'
+import { RadioCards, Flex, Text, Code, Box, Table } from '@fictjs/radix-ui-themes'
+import { CodeIcon } from '@radix-ui/react-icons'
+import { radioCardsRootPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
 
 export default function RadioCardsPage() {
   const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
@@ -65,7 +65,7 @@ export default function RadioCardsPage() {
         ))}
       </Table.Body>
     </Table.Root>,
-  ]);
+  ])
 
   return (
     <DocsSection>
@@ -133,5 +133,5 @@ export default function RadioCardsPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

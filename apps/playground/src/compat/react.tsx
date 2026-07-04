@@ -21,7 +21,7 @@ function Suspense(props: { children?: ReactNode; fallback?: ReactNode }) {
 
 const ReactCompat = {
   Fragment,
-  Suspense
+  Suspense,
 }
 
 export default ReactCompat

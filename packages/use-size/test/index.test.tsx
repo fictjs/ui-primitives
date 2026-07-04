@@ -86,10 +86,12 @@ describe('@fictjs/use-size', () => {
         <>
           <div ref={(node) => target(node)} data-width="120" data-height="48" />
           <output>
-            {reactive(() => {
-              const nextSize = size()
-              return nextSize ? `${nextSize.width}x${nextSize.height}` : 'none'
-            }) as unknown as string}
+            {
+              reactive(() => {
+                const nextSize = size()
+                return nextSize ? `${nextSize.width}x${nextSize.height}` : 'none'
+              }) as unknown as string
+            }
           </output>
         </>
       )

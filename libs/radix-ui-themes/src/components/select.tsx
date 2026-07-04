@@ -6,11 +6,7 @@ import { Select as SelectPrimitive } from '@fictjs/radix-ui'
 import { extractProps } from '../helpers/extract-props.js'
 import { marginPropDefs } from '../props/margin.props.js'
 import { ChevronDownIcon, ThickCheckIcon } from './icons.js'
-import {
-  selectRootPropDefs,
-  selectTriggerPropDefs,
-  selectContentPropDefs,
-} from './select.props.js'
+import { selectRootPropDefs, selectTriggerPropDefs, selectContentPropDefs } from './select.props.js'
 import { ThemeContext, useThemeContext } from './theme.js'
 
 import type { MarginProps } from '../props/margin.props.js'
@@ -85,7 +81,9 @@ type SelectContentElement = React.ElementRef<typeof SelectPrimitive.Content>
 type SelectContentOwnProps = GetPropDefTypes<typeof selectContentPropDefs>
 
 interface SelectContentProps
-  extends ComponentPropsWithout<typeof SelectPrimitive.Content, RemovedProps>, SelectContentOwnProps {
+  extends
+    ComponentPropsWithout<typeof SelectPrimitive.Content, RemovedProps>,
+    SelectContentOwnProps {
   container?: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Portal>['container']
 }
 
@@ -134,7 +132,10 @@ const SelectContent = React.forwardRef<SelectContentElement, SelectContentProps>
 SelectContent.displayName = 'Select.Content'
 
 type SelectItemElement = React.ElementRef<typeof SelectPrimitive.Item>
-interface SelectItemProps extends ComponentPropsWithout<typeof SelectPrimitive.Item, RemovedProps> {}
+interface SelectItemProps extends ComponentPropsWithout<
+  typeof SelectPrimitive.Item,
+  RemovedProps
+> {}
 
 const SelectItem = React.forwardRef<SelectItemElement, SelectItemProps>((props, forwardedRef) => {
   const { className, children, ...itemProps } = props
@@ -155,7 +156,10 @@ const SelectItem = React.forwardRef<SelectItemElement, SelectItemProps>((props, 
 SelectItem.displayName = 'Select.Item'
 
 type SelectGroupElement = React.ElementRef<typeof SelectPrimitive.Group>
-interface SelectGroupProps extends ComponentPropsWithout<typeof SelectPrimitive.Group, RemovedProps> {}
+interface SelectGroupProps extends ComponentPropsWithout<
+  typeof SelectPrimitive.Group,
+  RemovedProps
+> {}
 
 const SelectGroup = React.forwardRef<SelectGroupElement, SelectGroupProps>(
   ({ className, ...props }, forwardedRef) => (
@@ -170,7 +174,10 @@ const SelectGroup = React.forwardRef<SelectGroupElement, SelectGroupProps>(
 SelectGroup.displayName = 'Select.Group'
 
 type SelectLabelElement = React.ElementRef<typeof SelectPrimitive.Label>
-interface SelectLabelProps extends ComponentPropsWithout<typeof SelectPrimitive.Label, RemovedProps> {}
+interface SelectLabelProps extends ComponentPropsWithout<
+  typeof SelectPrimitive.Label,
+  RemovedProps
+> {}
 
 const SelectLabel = React.forwardRef<SelectLabelElement, SelectLabelProps>(
   ({ className, ...props }, forwardedRef) => (
@@ -185,8 +192,10 @@ const SelectLabel = React.forwardRef<SelectLabelElement, SelectLabelProps>(
 SelectLabel.displayName = 'Select.Label'
 
 type SelectSeparatorElement = React.ElementRef<typeof SelectPrimitive.Separator>
-interface SelectSeparatorProps
-  extends ComponentPropsWithout<typeof SelectPrimitive.Separator, RemovedProps> {}
+interface SelectSeparatorProps extends ComponentPropsWithout<
+  typeof SelectPrimitive.Separator,
+  RemovedProps
+> {}
 
 const SelectSeparator = React.forwardRef<SelectSeparatorElement, SelectSeparatorProps>(
   ({ className, ...props }, forwardedRef) => (

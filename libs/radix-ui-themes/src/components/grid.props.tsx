@@ -1,15 +1,15 @@
-import { asChildPropDef } from '../props/as-child.prop.js';
-import { gapPropDefs } from '../props/gap.props.js';
+import { asChildPropDef } from '../props/as-child.prop.js'
+import { gapPropDefs } from '../props/gap.props.js'
 
-import type { PropDef, GetPropDefTypes } from '../props/prop-def.js';
+import type { PropDef, GetPropDefTypes } from '../props/prop-def.js'
 
-const as = ['div', 'span'] as const;
-const displayValues = ['none', 'inline-grid', 'grid'] as const;
-const columnsValues = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
-const rowsValues = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
-const flowValues = ['row', 'column', 'dense', 'row-dense', 'column-dense'] as const;
-const alignValues = ['start', 'center', 'end', 'baseline', 'stretch'] as const;
-const justifyValues = ['start', 'center', 'end', 'between'] as const;
+const as = ['div', 'span'] as const
+const displayValues = ['none', 'inline-grid', 'grid'] as const
+const columnsValues = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const
+const rowsValues = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const
+const flowValues = ['row', 'column', 'dense', 'row-dense', 'column-dense'] as const
+const alignValues = ['start', 'center', 'end', 'baseline', 'stretch'] as const
+const justifyValues = ['start', 'center', 'end', 'between'] as const
 const alignContentValues = [
   'start',
   'center',
@@ -19,8 +19,8 @@ const alignContentValues = [
   'around',
   'evenly',
   'stretch',
-] as const;
-const justifyItemsValues = ['start', 'center', 'end', 'baseline', 'stretch'] as const;
+] as const
+const justifyItemsValues = ['start', 'center', 'end', 'baseline', 'stretch'] as const
 
 const gridPropDefs = {
   /**
@@ -198,45 +198,45 @@ const gridPropDefs = {
   },
   ...gapPropDefs,
 } satisfies {
-  as: PropDef<(typeof as)[number]>;
-  display: PropDef<(typeof displayValues)[number]>;
-  areas: PropDef<string>;
-  columns: PropDef<(typeof columnsValues)[number]>;
-  rows: PropDef<(typeof rowsValues)[number]>;
-  flow: PropDef<(typeof flowValues)[number]>;
-  align: PropDef<(typeof alignValues)[number]>;
-  justify: PropDef<(typeof justifyValues)[number]>;
-  alignContent: PropDef<(typeof alignContentValues)[number]>;
-  justifyItems: PropDef<(typeof justifyItemsValues)[number]>;
-};
+  as: PropDef<(typeof as)[number]>
+  display: PropDef<(typeof displayValues)[number]>
+  areas: PropDef<string>
+  columns: PropDef<(typeof columnsValues)[number]>
+  rows: PropDef<(typeof rowsValues)[number]>
+  flow: PropDef<(typeof flowValues)[number]>
+  align: PropDef<(typeof alignValues)[number]>
+  justify: PropDef<(typeof justifyValues)[number]>
+  alignContent: PropDef<(typeof alignContentValues)[number]>
+  justifyItems: PropDef<(typeof justifyItemsValues)[number]>
+}
 
 function parseGridValue(value: string): string {
   if ((gridPropDefs.columns.values as readonly string[]).includes(value)) {
-    return value;
+    return value
   }
 
-  return value?.match(/^\d+$/) ? `repeat(${value}, minmax(0, 1fr))` : value;
+  return value?.match(/^\d+$/) ? `repeat(${value}, minmax(0, 1fr))` : value
 }
 
 function parseJustifyValue(value: string) {
-  return value === 'between' ? 'space-between' : value;
+  return value === 'between' ? 'space-between' : value
 }
 
 function parseAlignContentValue(value: string) {
   switch (value) {
     case 'between':
-      return 'space-between';
+      return 'space-between'
     case 'around':
-      return 'space-around';
+      return 'space-around'
     case 'evenly':
-      return 'space-evenly';
+      return 'space-evenly'
     default:
-      return value;
+      return value
   }
 }
 
 // Use all of the imported prop defs to ensure that JSDoc works
-type GridOwnProps = GetPropDefTypes<typeof gridPropDefs & typeof asChildPropDef>;
+type GridOwnProps = GetPropDefTypes<typeof gridPropDefs & typeof asChildPropDef>
 
-export { gridPropDefs };
-export type { GridOwnProps };
+export { gridPropDefs }
+export type { GridOwnProps }

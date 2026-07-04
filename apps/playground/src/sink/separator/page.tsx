@@ -1,6 +1,6 @@
-import { Flex, Separator } from '@fictjs/radix-ui-themes';
-import { accentColors } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { Flex, Separator } from '@fictjs/radix-ui-themes'
+import { accentColors } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function SeparatorPage() {
   return (
@@ -19,5 +19,5 @@ export default function SeparatorPage() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

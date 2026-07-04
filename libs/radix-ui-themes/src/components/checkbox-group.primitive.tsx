@@ -31,8 +31,10 @@ function useCheckboxGroupContext(consumerName: string) {
 type CheckboxRootProps = Parameters<typeof CheckboxPrimitive.Root>[0]
 type CheckboxIndicatorProps = Parameters<typeof CheckboxPrimitive.Indicator>[0]
 
-interface CheckboxGroupProps
-  extends Omit<CheckboxRootProps, 'checked' | 'defaultChecked' | 'onCheckedChange' | 'name' | 'value'> {
+interface CheckboxGroupProps extends Omit<
+  CheckboxRootProps,
+  'checked' | 'defaultChecked' | 'onCheckedChange' | 'name' | 'value'
+> {
   defaultValue?: string[]
   value?: MaybeAccessor<string[] | undefined>
   onValueChange?: (value: string[]) => void
@@ -41,8 +43,10 @@ interface CheckboxGroupProps
   disabled?: boolean
 }
 
-interface CheckboxGroupItemProps
-  extends Omit<CheckboxRootProps, 'checked' | 'defaultChecked' | 'name' | 'value'> {
+interface CheckboxGroupItemProps extends Omit<
+  CheckboxRootProps,
+  'checked' | 'defaultChecked' | 'name' | 'value'
+> {
   value: string
 }
 

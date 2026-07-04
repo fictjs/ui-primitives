@@ -1,7 +1,7 @@
-import { Box, Button, Code, DataList, Flex, Link, Table, Tabs, Text } from '@fictjs/radix-ui-themes';
-import { dataListLabelPropDefs, dataListRootPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { upperFirst } from '../_utils';
+import { Box, Button, Code, DataList, Flex, Link, Table, Tabs, Text } from '@fictjs/radix-ui-themes'
+import { dataListLabelPropDefs, dataListRootPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { upperFirst } from '../_utils'
 
 export default function DataListPage() {
   return (
@@ -194,12 +194,12 @@ export default function DataListPage() {
                       </DataList.Root>
                     </Table.Cell>
                   </Table.Row>
-                );
+                )
               })}
             </Table.Body>
           </Table.Root>
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

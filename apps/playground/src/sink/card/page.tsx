@@ -1,6 +1,6 @@
-import { Avatar, Card, Flex, Grid, Heading, Text, Table } from '@fictjs/radix-ui-themes';
-import { cardPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { Avatar, Card, Flex, Grid, Heading, Text, Table } from '@fictjs/radix-ui-themes'
+import { cardPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function CardPage() {
   return (
@@ -102,7 +102,7 @@ export default function CardPage() {
         </Table.Root>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }
 
 function ContactCard({ variant }: { variant: (typeof cardPropDefs.variant.values)[number] }) {
@@ -122,5 +122,5 @@ function ContactCard({ variant }: { variant: (typeof cardPropDefs.variant.values
         </Flex>
       </a>
     </Card>
-  );
+  )
 }

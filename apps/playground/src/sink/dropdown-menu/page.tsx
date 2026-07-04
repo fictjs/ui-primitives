@@ -119,7 +119,11 @@ export default function DropdownMenuPage() {
                                   <DotsHorizontalIcon />
                                 </IconButton>
                               </DropdownMenu.Trigger>
-                              <DropdownMenuContentDemo variant={variant} color={color} highContrast />
+                              <DropdownMenuContentDemo
+                                variant={variant}
+                                color={color}
+                                highContrast
+                              />
                             </DropdownMenu.Root>
                           </Table.Cell>
                         ))}

@@ -1,6 +1,6 @@
-import { Theme } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { SampleNestedUI } from '../_components';
+import { Theme } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { SampleNestedUI } from '../_components'
 
 export default function NestedColorsTest() {
   return (
@@ -22,5 +22,5 @@ export default function NestedColorsTest() {
         </SampleNestedUI>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

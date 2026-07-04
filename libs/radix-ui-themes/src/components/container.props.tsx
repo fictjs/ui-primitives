@@ -1,10 +1,10 @@
-import { asChildPropDef } from '../props/as-child.prop.js';
+import { asChildPropDef } from '../props/as-child.prop.js'
 
-import type { PropDef, GetPropDefTypes } from '../props/prop-def.js';
+import type { PropDef, GetPropDefTypes } from '../props/prop-def.js'
 
-const sizes = ['1', '2', '3', '4'] as const;
-const displayValues = ['none', 'initial'] as const;
-const alignValues = ['left', 'center', 'right'] as const;
+const sizes = ['1', '2', '3', '4'] as const
+const displayValues = ['none', 'initial'] as const
+const alignValues = ['left', 'center', 'right'] as const
 
 const containerPropDefs = {
   ...asChildPropDef,
@@ -64,21 +64,21 @@ const containerPropDefs = {
     responsive: true,
   },
 } satisfies {
-  size: PropDef<(typeof sizes)[number]>;
-  display: PropDef<(typeof displayValues)[number]>;
-  align: PropDef<(typeof alignValues)[number]>;
-};
+  size: PropDef<(typeof sizes)[number]>
+  display: PropDef<(typeof displayValues)[number]>
+  align: PropDef<(typeof alignValues)[number]>
+}
 
 function parseDisplayValue(value: string) {
-  return value === 'initial' ? 'flex' : value;
+  return value === 'initial' ? 'flex' : value
 }
 
 function parseAlignValue(value: string) {
-  return value === 'left' ? 'start' : value === 'right' ? 'end' : value;
+  return value === 'left' ? 'start' : value === 'right' ? 'end' : value
 }
 
 // Use all of the imported prop defs to ensure that JSDoc works
-type ContainerOwnProps = GetPropDefTypes<typeof containerPropDefs & typeof asChildPropDef>;
+type ContainerOwnProps = GetPropDefTypes<typeof containerPropDefs & typeof asChildPropDef>
 
-export { containerPropDefs };
-export type { ContainerOwnProps };
+export { containerPropDefs }
+export type { ContainerOwnProps }

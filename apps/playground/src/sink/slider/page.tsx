@@ -1,27 +1,29 @@
-import type { FictNode } from 'fict';
-import { Slider, Grid, Text, Flex, Code, Box, Table } from '@fictjs/radix-ui-themes';
-import { sliderPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped } from '../_utils';
+import type { FictNode } from 'fict'
+import { Slider, Grid, Text, Flex, Code, Box, Table } from '@fictjs/radix-ui-themes'
+import { sliderPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
 
 export default function SliderPage() {
   const verticalSliderColumns: FictNode[] = sliderPropDefs.size.values.map((size, i, sizes) =>
-    [...sliderPropDefs.variant.values, ...sliderPropDefs.variant.values].sort().map((variant, j, variants) => {
-      const stepCount = variants.length * sizes.length - 1;
-      const step = i * variants.length + j;
-      const value = 25 + Math.round(Math.sin(Math.PI * (step / stepCount)) * 50);
-      return (
-        <Slider
-          key={step}
-          orientation="vertical"
-          defaultValue={[value]}
-          size={size}
-          variant={variant}
-          highContrast={step % 2 === 1 ? true : false}
-        />
-      );
-    })
-  );
+    [...sliderPropDefs.variant.values, ...sliderPropDefs.variant.values]
+      .sort()
+      .map((variant, j, variants) => {
+        const stepCount = variants.length * sizes.length - 1
+        const step = i * variants.length + j
+        const value = 25 + Math.round(Math.sin(Math.PI * (step / stepCount)) * 50)
+        return (
+          <Slider
+            key={step}
+            orientation="vertical"
+            defaultValue={[value]}
+            size={size}
+            variant={variant}
+            highContrast={step % 2 === 1 ? true : false}
+          />
+        )
+      }),
+  )
   const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
     <Text as="p" weight="bold" mt="6" mb="4">
       {group.label}
@@ -42,14 +44,21 @@ export default function SliderPage() {
             {sliderPropDefs.variant.values.map((variant) => (
               <Table.Cell key={variant} style={{ minWidth: 150 }}>
                 <Slider variant={variant} color={color} defaultValue={[50]} mt="3" />
-                <Slider variant={variant} color={color} highContrast defaultValue={[50]} mt="5" mb="3" />
+                <Slider
+                  variant={variant}
+                  color={color}
+                  highContrast
+                  defaultValue={[50]}
+                  mt="5"
+                  mb="3"
+                />
               </Table.Cell>
             ))}
           </Table.Row>
         ))}
       </Table.Body>
     </Table.Root>,
-  ]);
+  ])
 
   return (
     <DocsSection>
@@ -174,5 +183,5 @@ export default function SliderPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

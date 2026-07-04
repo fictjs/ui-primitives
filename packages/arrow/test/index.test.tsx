@@ -52,7 +52,10 @@ describe('@fictjs/arrow', () => {
   it('applies class and className props to the rendered svg element', async () => {
     const container = document.createElement('div')
 
-    render(() => <Arrow data-testid="arrow" class="slot-class" className="theme-class" />, container)
+    render(
+      () => <Arrow data-testid="arrow" class="slot-class" className="theme-class" />,
+      container,
+    )
 
     await Promise.resolve()
 

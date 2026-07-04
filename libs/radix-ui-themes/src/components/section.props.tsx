@@ -1,9 +1,9 @@
-import { asChildPropDef } from '../props/as-child.prop.js';
+import { asChildPropDef } from '../props/as-child.prop.js'
 
-import type { PropDef, GetPropDefTypes } from '../props/prop-def.js';
+import type { PropDef, GetPropDefTypes } from '../props/prop-def.js'
 
-const sizes = ['1', '2', '3', '4'] as const;
-const displayValues = ['none', 'initial'] as const;
+const sizes = ['1', '2', '3', '4'] as const
+const displayValues = ['none', 'initial'] as const
 
 const sectionPropDefs = {
   ...asChildPropDef,
@@ -48,16 +48,16 @@ const sectionPropDefs = {
     responsive: true,
   },
 } satisfies {
-  size: PropDef<(typeof sizes)[number]>;
-  display: PropDef<(typeof displayValues)[number]>;
-};
+  size: PropDef<(typeof sizes)[number]>
+  display: PropDef<(typeof displayValues)[number]>
+}
 
 function parseDisplayValue(value: string) {
-  return value === 'initial' ? 'block' : value;
+  return value === 'initial' ? 'block' : value
 }
 
 // Use all of the imported prop defs to ensure that JSDoc works
-type SectionOwnProps = GetPropDefTypes<typeof sectionPropDefs & typeof asChildPropDef>;
+type SectionOwnProps = GetPropDefTypes<typeof sectionPropDefs & typeof asChildPropDef>
 
-export { sectionPropDefs };
-export type { SectionOwnProps };
+export { sectionPropDefs }
+export type { SectionOwnProps }

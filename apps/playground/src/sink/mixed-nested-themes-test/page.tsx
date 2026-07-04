@@ -1,6 +1,6 @@
-import { Theme } from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { SampleNestedUI } from '../_components';
+import { Theme } from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { SampleNestedUI } from '../_components'
 
 export default function MixedNestedThemesTest() {
   return (
@@ -28,5 +28,5 @@ export default function MixedNestedThemesTest() {
         </SampleNestedUI>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

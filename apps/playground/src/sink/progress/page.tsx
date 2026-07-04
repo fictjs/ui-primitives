@@ -1,8 +1,8 @@
-import type { FictNode } from 'fict';
-import { Progress, Grid, Text, Code, Box, Flex, Table } from '@fictjs/radix-ui-themes';
-import { progressPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped } from '../_utils';
+import type { FictNode } from 'fict'
+import { Progress, Grid, Text, Code, Box, Flex, Table } from '@fictjs/radix-ui-themes'
+import { progressPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
 
 export default function ProgressPage() {
   const colorCombinationContent: FictNode[] = accentColorsGrouped.map((group) => [
@@ -33,7 +33,7 @@ export default function ProgressPage() {
         ))}
       </Table.Body>
     </Table.Root>,
-  ]);
+  ])
 
   return (
     <DocsSection>
@@ -156,5 +156,5 @@ export default function ProgressPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

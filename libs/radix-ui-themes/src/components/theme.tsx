@@ -67,55 +67,57 @@ const Theme = React.forwardRef<ThemeImplElement, ThemeProps>((props, forwardedRe
 
 Theme.displayName = 'Theme'
 
-const ThemeRoot = React.forwardRef<ThemeImplElement, ThemeImplPublicProps>((props, forwardedRef) => {
-  const {
-    appearance: appearanceProp = themePropDefs.appearance.default,
-    accentColor: accentColorProp = themePropDefs.accentColor.default,
-    grayColor: grayColorProp = themePropDefs.grayColor.default,
-    panelBackground: panelBackgroundProp = themePropDefs.panelBackground.default,
-    radius: radiusProp = themePropDefs.radius.default,
-    scaling: scalingProp = themePropDefs.scaling.default,
-    hasBackground = themePropDefs.hasBackground.default,
-    ...rootProps
-  } = props
+const ThemeRoot = React.forwardRef<ThemeImplElement, ThemeImplPublicProps>(
+  (props, forwardedRef) => {
+    const {
+      appearance: appearanceProp = themePropDefs.appearance.default,
+      accentColor: accentColorProp = themePropDefs.accentColor.default,
+      grayColor: grayColorProp = themePropDefs.grayColor.default,
+      panelBackground: panelBackgroundProp = themePropDefs.panelBackground.default,
+      radius: radiusProp = themePropDefs.radius.default,
+      scaling: scalingProp = themePropDefs.scaling.default,
+      hasBackground = themePropDefs.hasBackground.default,
+      ...rootProps
+    } = props
 
-  const appearance = createSignal(appearanceProp)
-  const accentColor = createSignal(accentColorProp)
-  const grayColor = createSignal(grayColorProp)
-  const panelBackground = createSignal(panelBackgroundProp)
-  const radius = createSignal(radiusProp)
-  const scaling = createSignal(scalingProp)
+    const appearance = createSignal(appearanceProp)
+    const accentColor = createSignal(accentColorProp)
+    const grayColor = createSignal(grayColorProp)
+    const panelBackground = createSignal(panelBackgroundProp)
+    const radius = createSignal(radiusProp)
+    const scaling = createSignal(scalingProp)
 
-  createEffect(() => {
-    appearance(appearanceProp)
-    accentColor(accentColorProp)
-    grayColor(grayColorProp)
-    panelBackground(panelBackgroundProp)
-    radius(radiusProp)
-    scaling(scalingProp)
-  })
+    createEffect(() => {
+      appearance(appearanceProp)
+      accentColor(accentColorProp)
+      grayColor(grayColorProp)
+      panelBackground(panelBackgroundProp)
+      radius(radiusProp)
+      scaling(scalingProp)
+    })
 
-  return (
-    <ThemeImpl
-      {...rootProps}
-      ref={React.coerceRef(forwardedRef)}
-      isRoot
-      hasBackground={hasBackground}
-      appearance={appearance()}
-      accentColor={accentColor()}
-      grayColor={grayColor()}
-      panelBackground={panelBackground()}
-      radius={radius()}
-      scaling={scaling()}
-      onAppearanceChange={appearance}
-      onAccentColorChange={accentColor}
-      onGrayColorChange={grayColor}
-      onPanelBackgroundChange={panelBackground}
-      onRadiusChange={radius}
-      onScalingChange={scaling}
-    />
-  )
-})
+    return (
+      <ThemeImpl
+        {...rootProps}
+        ref={React.coerceRef(forwardedRef)}
+        isRoot
+        hasBackground={hasBackground}
+        appearance={appearance()}
+        accentColor={accentColor()}
+        grayColor={grayColor()}
+        panelBackground={panelBackground()}
+        radius={radius()}
+        scaling={scaling()}
+        onAppearanceChange={appearance}
+        onAccentColorChange={accentColor}
+        onGrayColorChange={grayColor}
+        onPanelBackgroundChange={panelBackground}
+        onRadiusChange={radius}
+        onScalingChange={scaling}
+      />
+    )
+  },
+)
 
 ThemeRoot.displayName = 'ThemeRoot'
 
@@ -123,7 +125,8 @@ type ThemeImplElement = Element
 
 interface ThemeImplProps extends ThemeImplPublicProps, ThemeImplPrivateProps {}
 
-interface ThemeImplPublicProps extends ComponentPropsWithout<'div', RemovedProps | 'dir'>, ThemeOwnProps {}
+interface ThemeImplPublicProps
+  extends ComponentPropsWithout<'div', RemovedProps | 'dir'>, ThemeOwnProps {}
 
 interface ThemeImplPrivateProps extends Partial<ThemeChangeHandlers> {
   isRoot?: boolean
@@ -132,10 +135,12 @@ interface ThemeImplPrivateProps extends Partial<ThemeChangeHandlers> {
 const ThemeImpl = React.forwardRef<ThemeImplElement, ThemeImplProps>((props, forwardedRef) => {
   const context = useContext(ThemeContext)
 
-  const appearance = () => props.appearance ?? context?.appearance ?? themePropDefs.appearance.default
+  const appearance = () =>
+    props.appearance ?? context?.appearance ?? themePropDefs.appearance.default
   const accentColor = () =>
     props.accentColor ?? context?.accentColor ?? themePropDefs.accentColor.default
-  const grayColor = () => props.grayColor ?? context?.resolvedGrayColor ?? themePropDefs.grayColor.default
+  const grayColor = () =>
+    props.grayColor ?? context?.resolvedGrayColor ?? themePropDefs.grayColor.default
   const panelBackground = () =>
     props.panelBackground ?? context?.panelBackground ?? themePropDefs.panelBackground.default
   const radius = () => props.radius ?? context?.radius ?? themePropDefs.radius.default

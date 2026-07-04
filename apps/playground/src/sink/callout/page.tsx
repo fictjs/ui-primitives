@@ -1,20 +1,29 @@
-import type { FictNode } from 'fict';
-import { InfoCircledIcon, Cross1Icon } from '@radix-ui/react-icons';
-import { Callout, Flex, IconButton, Link, Separator, Text, Code, Table } from '@fictjs/radix-ui-themes';
-import { calloutRootPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { accentColorsGrouped } from '../_utils';
+import type { FictNode } from 'fict'
+import { InfoCircledIcon, Cross1Icon } from '@radix-ui/react-icons'
+import {
+  Callout,
+  Flex,
+  IconButton,
+  Link,
+  Separator,
+  Text,
+  Code,
+  Table,
+} from '@fictjs/radix-ui-themes'
+import { calloutRootPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { accentColorsGrouped } from '../_utils'
 
 export default function CalloutPage() {
-  const colorCombinationContent: FictNode[] = [];
-  const layoutSizeContent: FictNode[] = [];
+  const colorCombinationContent: FictNode[] = []
+  const layoutSizeContent: FictNode[] = []
 
   for (const group of accentColorsGrouped) {
     colorCombinationContent.push(
       <Text key={`${group.label}-heading`} as="p" weight="bold" mt="6" mb="4">
         {group.label}
       </Text>,
-    );
+    )
     colorCombinationContent.push(
       <Table.Root key={`${group.label}-table`}>
         <Table.Header>
@@ -63,7 +72,7 @@ export default function CalloutPage() {
           ))}
         </Table.Body>
       </Table.Root>,
-    );
+    )
   }
 
   for (const size of calloutRootPropDefs.size.values) {
@@ -74,7 +83,7 @@ export default function CalloutPage() {
           <Link href="/">Configuration Guide</Link> for more details.
         </Callout.Text>
       </Callout.Root>,
-    );
+    )
     layoutSizeContent.push(
       <Callout.Root key={`${size}-trim-paired`} size={size}>
         <Callout.Text trim="start">There was an error in your configuration.</Callout.Text>
@@ -83,7 +92,7 @@ export default function CalloutPage() {
           <Link href="/">Configuration Guide</Link> for more details.
         </Callout.Text>
       </Callout.Root>,
-    );
+    )
     layoutSizeContent.push(
       <Callout.Root key={`${size}-icon-single`} size={size}>
         <Callout.Icon>
@@ -94,7 +103,7 @@ export default function CalloutPage() {
           <Link href="/">Configuration Guide</Link> for more details.
         </Callout.Text>
       </Callout.Root>,
-    );
+    )
     layoutSizeContent.push(
       <Callout.Root key={`${size}-icon-double`} size={size}>
         <Callout.Icon>
@@ -106,8 +115,8 @@ export default function CalloutPage() {
           <Link href="/">Configuration Guide</Link> for more details.
         </Callout.Text>
       </Callout.Root>,
-    );
-    layoutSizeContent.push(<Separator key={`${size}-separator`} />);
+    )
+    layoutSizeContent.push(<Separator key={`${size}-separator`} />)
   }
 
   return (
@@ -214,5 +223,5 @@ export default function CalloutPage() {
         </details>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

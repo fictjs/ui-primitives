@@ -1,14 +1,14 @@
-import { asChildPropDef } from '../props/as-child.prop.js';
-import { gapPropDefs } from '../props/gap.props.js';
+import { asChildPropDef } from '../props/as-child.prop.js'
+import { gapPropDefs } from '../props/gap.props.js'
 
-import type { PropDef, GetPropDefTypes } from '../props/prop-def.js';
+import type { PropDef, GetPropDefTypes } from '../props/prop-def.js'
 
-const as = ['div', 'span'] as const;
-const displayValues = ['none', 'inline-flex', 'flex'] as const;
-const directionValues = ['row', 'column', 'row-reverse', 'column-reverse'] as const;
-const alignValues = ['start', 'center', 'end', 'baseline', 'stretch'] as const;
-const justifyValues = ['start', 'center', 'end', 'between'] as const;
-const wrapValues = ['nowrap', 'wrap', 'wrap-reverse'] as const;
+const as = ['div', 'span'] as const
+const displayValues = ['none', 'inline-flex', 'flex'] as const
+const directionValues = ['row', 'column', 'row-reverse', 'column-reverse'] as const
+const alignValues = ['start', 'center', 'end', 'baseline', 'stretch'] as const
+const justifyValues = ['start', 'center', 'end', 'between'] as const
+const wrapValues = ['nowrap', 'wrap', 'wrap-reverse'] as const
 
 const flexPropDefs = {
   /**
@@ -108,22 +108,22 @@ const flexPropDefs = {
   },
   ...gapPropDefs,
 } satisfies {
-  as: PropDef<(typeof as)[number]>;
-  display: PropDef<(typeof displayValues)[number]>;
-  direction: PropDef<(typeof directionValues)[number]>;
-  align: PropDef<(typeof alignValues)[number]>;
-  justify: PropDef<(typeof justifyValues)[number]>;
-  wrap: PropDef<(typeof wrapValues)[number]>;
-};
+  as: PropDef<(typeof as)[number]>
+  display: PropDef<(typeof displayValues)[number]>
+  direction: PropDef<(typeof directionValues)[number]>
+  align: PropDef<(typeof alignValues)[number]>
+  justify: PropDef<(typeof justifyValues)[number]>
+  wrap: PropDef<(typeof wrapValues)[number]>
+}
 
 function parseJustifyValue(value: string) {
-  return value === 'between' ? 'space-between' : value;
+  return value === 'between' ? 'space-between' : value
 }
 
 // Use all of the imported prop defs to ensure that JSDoc works
 type FlexOwnProps = GetPropDefTypes<
   typeof flexPropDefs & typeof gapPropDefs & typeof asChildPropDef
->;
+>
 
-export { flexPropDefs };
-export type { FlexOwnProps };
+export { flexPropDefs }
+export type { FlexOwnProps }

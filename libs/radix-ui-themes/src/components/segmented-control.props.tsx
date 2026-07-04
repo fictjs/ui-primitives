@@ -1,9 +1,9 @@
-import { radiusPropDef } from '../props/radius.prop.js';
+import { radiusPropDef } from '../props/radius.prop.js'
 
-import type { PropDef } from '../props/prop-def.js';
+import type { PropDef } from '../props/prop-def.js'
 
-const sizes = ['1', '2', '3'] as const;
-const variants = ['surface', 'classic'] as const;
+const sizes = ['1', '2', '3'] as const
+const variants = ['surface', 'classic'] as const
 
 const segmentedControlRootPropDefs = {
   disabled: { type: 'boolean', className: 'disabled', default: false },
@@ -11,9 +11,9 @@ const segmentedControlRootPropDefs = {
   variant: { type: 'enum', className: 'rt-variant', values: variants, default: 'surface' },
   ...radiusPropDef,
 } satisfies {
-  disabled?: PropDef<boolean>;
-  size: PropDef<(typeof sizes)[number]>;
-  variant: PropDef<(typeof variants)[number]>;
-};
+  disabled?: PropDef<boolean>
+  size: PropDef<(typeof sizes)[number]>
+  variant: PropDef<(typeof variants)[number]>
+}
 
-export { segmentedControlRootPropDefs };
+export { segmentedControlRootPropDefs }

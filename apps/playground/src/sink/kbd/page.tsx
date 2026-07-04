@@ -1,6 +1,6 @@
-import { Kbd, Flex, Table } from '@fictjs/radix-ui-themes';
-import { kbdPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+import { Kbd, Flex, Table } from '@fictjs/radix-ui-themes'
+import { kbdPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function KbdPage() {
   return (
@@ -56,5 +56,5 @@ export default function KbdPage() {
         </Table.Root>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

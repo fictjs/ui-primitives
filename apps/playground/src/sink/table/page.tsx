@@ -1,7 +1,7 @@
-import { Flex, Grid, Text } from '@fictjs/radix-ui-themes';
-import { tableRootPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { TableExample } from '../_components';
+import { Flex, Grid, Text } from '@fictjs/radix-ui-themes'
+import { tableRootPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { TableExample } from '../_components'
 
 export default function TablePage() {
   return (
@@ -36,5 +36,5 @@ export default function TablePage() {
         </Grid>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

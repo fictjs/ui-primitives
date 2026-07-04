@@ -1,9 +1,9 @@
-import { colorPropDef } from '../props/color.prop.js';
+import { colorPropDef } from '../props/color.prop.js'
 
-import type { PropDef } from '../props/prop-def.js';
+import type { PropDef } from '../props/prop-def.js'
 
-const orientationValues = ['horizontal', 'vertical'] as const;
-const sizes = ['1', '2', '3', '4'] as const;
+const orientationValues = ['horizontal', 'vertical'] as const
+const sizes = ['1', '2', '3', '4'] as const
 
 const separatorPropDefs = {
   orientation: {
@@ -17,10 +17,10 @@ const separatorPropDefs = {
   color: { ...colorPropDef.color, default: 'gray' },
   decorative: { type: 'boolean', default: true },
 } satisfies {
-  orientation: PropDef<(typeof orientationValues)[number]>;
-  size: PropDef<(typeof sizes)[number]>;
-  color: typeof colorPropDef.color;
-  decorative: PropDef<boolean>;
-};
+  orientation: PropDef<(typeof orientationValues)[number]>
+  size: PropDef<(typeof sizes)[number]>
+  color: typeof colorPropDef.color
+  decorative: PropDef<boolean>
+}
 
-export { separatorPropDefs };
+export { separatorPropDefs }

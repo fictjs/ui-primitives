@@ -1,27 +1,30 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
-import { Slot } from '@fictjs/radix-ui';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
+import { Slot } from '@fictjs/radix-ui'
 
-import { badgePropDefs } from './badge.props.js';
-import { extractProps } from '../helpers/extract-props.js';
-import { renderChildren } from '../helpers/render-children.js';
-import { marginPropDefs } from '../props/margin.props.js';
+import { badgePropDefs } from './badge.props.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { renderChildren } from '../helpers/render-children.js'
+import { marginPropDefs } from '../props/margin.props.js'
 
-import type { MarginProps } from '../props/margin.props.js';
-import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
-import type { GetPropDefTypes } from '../props/prop-def.js';
+import type { MarginProps } from '../props/margin.props.js'
+import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
+import type { GetPropDefTypes } from '../props/prop-def.js'
 
-type BadgeElement = React.ElementRef<'span'>;
-type BadgeOwnProps = GetPropDefTypes<typeof badgePropDefs>;
+type BadgeElement = React.ElementRef<'span'>
+type BadgeOwnProps = GetPropDefTypes<typeof badgePropDefs>
 interface BadgeProps
   extends ComponentPropsWithout<'span', RemovedProps>, MarginProps, BadgeOwnProps {}
 const Badge = React.forwardRef<BadgeElement, BadgeProps>((props, forwardedRef) => {
-  const { asChild, children: _children, className, color, radius, ...badgeProps } = extractProps(
-    props,
-    badgePropDefs,
-    marginPropDefs,
-  );
-  const Comp = asChild ? Slot.Root : 'span';
+  const {
+    asChild,
+    children: _children,
+    className,
+    color,
+    radius,
+    ...badgeProps
+  } = extractProps(props, badgePropDefs, marginPropDefs)
+  const Comp = asChild ? Slot.Root : 'span'
   return (
     <Comp
       data-accent-color={color}
@@ -32,9 +35,9 @@ const Badge = React.forwardRef<BadgeElement, BadgeProps>((props, forwardedRef) =
     >
       {renderChildren(props.children)}
     </Comp>
-  );
-});
-Badge.displayName = 'Badge';
+  )
+})
+Badge.displayName = 'Badge'
 
-export { Badge };
-export type { BadgeProps };
+export { Badge }
+export type { BadgeProps }

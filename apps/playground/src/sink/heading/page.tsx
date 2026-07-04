@@ -1,7 +1,7 @@
-import { Flex, Heading, Text } from '@fictjs/radix-ui-themes';
-import { headingPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { upperFirst } from '../_utils';
+import { Flex, Heading, Text } from '@fictjs/radix-ui-themes'
+import { headingPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { upperFirst } from '../_utils'
 
 export default function HeadingPage() {
   return (
@@ -73,5 +73,5 @@ export default function HeadingPage() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

@@ -1,26 +1,26 @@
-import * as React from '../helpers/element.js';
-import classNames from 'classnames';
-import { ToggleGroup as ToggleGroupPrimitive } from '@fictjs/radix-ui';
-import { useControllableState } from '@fictjs/radix-ui/internal';
+import * as React from '../helpers/element.js'
+import classNames from 'classnames'
+import { ToggleGroup as ToggleGroupPrimitive } from '@fictjs/radix-ui'
+import { useControllableState } from '@fictjs/radix-ui/internal'
 
-import { segmentedControlRootPropDefs } from './segmented-control.props.js';
-import { extractProps } from '../helpers/extract-props.js';
-import { marginPropDefs } from '../props/margin.props.js';
+import { segmentedControlRootPropDefs } from './segmented-control.props.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { marginPropDefs } from '../props/margin.props.js'
 
-import type { MarginProps } from '../props/margin.props.js';
-import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js';
-import type { GetPropDefTypes } from '../props/prop-def.js';
+import type { MarginProps } from '../props/margin.props.js'
+import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
+import type { GetPropDefTypes } from '../props/prop-def.js'
 
-type SegmentedControlRootOwnProps = GetPropDefTypes<typeof segmentedControlRootPropDefs>;
+type SegmentedControlRootOwnProps = GetPropDefTypes<typeof segmentedControlRootPropDefs>
 
 interface SegmentedControlRootProps
   extends
     ComponentPropsWithout<'div', RemovedProps | 'dir'>,
     SegmentedControlRootOwnProps,
     MarginProps {
-  value?: string;
-  defaultValue?: string;
-  onValueChange?(value: string): void;
+  value?: string
+  defaultValue?: string
+  onValueChange?(value: string): void
 }
 
 const SegmentedControlRoot = React.forwardRef<HTMLDivElement, SegmentedControlRootProps>(
@@ -33,13 +33,13 @@ const SegmentedControlRoot = React.forwardRef<HTMLDivElement, SegmentedControlRo
       defaultValue: defaultValueProp,
       onValueChange: onValueChangeProp,
       ...rootProps
-    } = extractProps(props, segmentedControlRootPropDefs, marginPropDefs);
+    } = extractProps(props, segmentedControlRootPropDefs, marginPropDefs)
 
     const [value, setValue] = useControllableState({
       prop: valueProp,
       onChange: onValueChangeProp,
       defaultProp: defaultValueProp ?? '',
-    });
+    })
 
     return (
       <ToggleGroupPrimitive.Root
@@ -49,26 +49,25 @@ const SegmentedControlRoot = React.forwardRef<HTMLDivElement, SegmentedControlRo
         class={classNames('rt-SegmentedControlRoot', className)}
         onValueChange={(value) => {
           if (value) {
-            setValue(value);
+            setValue(value)
           }
         }}
         {...rootProps}
         type="single"
         value={value}
-       
         disabled={!!props.disabled}
       >
         {children}
         <div class="rt-SegmentedControlIndicator" />
       </ToggleGroupPrimitive.Root>
-    );
+    )
   },
-);
+)
 
-SegmentedControlRoot.displayName = 'SegmentedControl.Root';
+SegmentedControlRoot.displayName = 'SegmentedControl.Root'
 
 interface SegmentedControlItemOwnProps {
-  value: string;
+  value: string
 }
 
 interface SegmentedControlItemProps
@@ -82,7 +81,7 @@ interface SegmentedControlItemProps
 const SegmentedControlItem = React.forwardRef<HTMLButtonElement, SegmentedControlItemProps>(
   ({ children, className, ...props }, forwardedRef) => {
     const itemLabel =
-      typeof children === 'string' || typeof children === 'number' ? String(children) : undefined;
+      typeof children === 'string' || typeof children === 'number' ? String(children) : undefined
 
     return (
       <ToggleGroupPrimitive.Item
@@ -100,11 +99,11 @@ const SegmentedControlItem = React.forwardRef<HTMLButtonElement, SegmentedContro
           </span>
         </span>
       </ToggleGroupPrimitive.Item>
-    );
+    )
   },
-);
+)
 
-SegmentedControlItem.displayName = 'SegmentedControl.Item';
+SegmentedControlItem.displayName = 'SegmentedControl.Item'
 
-export { SegmentedControlRoot as Root, SegmentedControlItem as Item };
-export type { SegmentedControlRootProps as RootProps, SegmentedControlItemProps as ItemProps };
+export { SegmentedControlRoot as Root, SegmentedControlItem as Item }
+export type { SegmentedControlRootProps as RootProps, SegmentedControlItemProps as ItemProps }

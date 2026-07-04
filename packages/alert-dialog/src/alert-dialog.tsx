@@ -103,9 +103,7 @@ function AlertDialogContent(props: ScopedProps<AlertDialogContentProps>): FictNo
   const { __scopeAlertDialog, children, ...contentProps } = props
   const dialogScope = useDialogScope(__scopeAlertDialog)
   const cancelRef = { current: null as AlertDialogCancelElement | null }
-  const composedRefs = useComposedRefs(
-    props.ref as PossibleRef<AlertDialogContentElement>,
-  )
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<AlertDialogContentElement>)
 
   return (
     <DialogContent

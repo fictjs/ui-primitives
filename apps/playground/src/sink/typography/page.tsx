@@ -13,8 +13,8 @@ import {
   Separator,
   Strong,
   Text,
-} from '@fictjs/radix-ui-themes';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
+} from '@fictjs/radix-ui-themes'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
 
 export default function TypographyPage() {
   return (
@@ -329,5 +329,5 @@ export default function TypographyPage() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

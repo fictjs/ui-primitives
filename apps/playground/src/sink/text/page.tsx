@@ -1,7 +1,7 @@
-import { Flex, Text } from '@fictjs/radix-ui-themes';
-import { textPropDefs } from '@fictjs/radix-ui-themes/props';
-import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section';
-import { upperFirst } from '../_utils';
+import { Flex, Text } from '@fictjs/radix-ui-themes'
+import { textPropDefs } from '@fictjs/radix-ui-themes/props'
+import { DocsSection, DocsSectionBody, DocsSectionHeading } from '../docs-section'
+import { upperFirst } from '../_utils'
 
 export default function TextPage() {
   return (
@@ -43,5 +43,5 @@ export default function TextPage() {
         </Flex>
       </DocsSectionBody>
     </DocsSection>
-  );
+  )
 }

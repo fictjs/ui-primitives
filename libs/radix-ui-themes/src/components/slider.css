@@ -217,14 +217,15 @@
 
   & :where(.rt-SliderRange) {
     background-image:
-      linear-gradient(var(--accent-a5), var(--accent-a5)), var(--slider-range-high-contrast-background-image);
+      linear-gradient(var(--accent-a5), var(--accent-a5)),
+      var(--slider-range-high-contrast-background-image);
     background-color: var(--accent-6);
   }
 
   & :where(.rt-SliderThumb) {
     --slider-thumb-box-shadow:
-      0 0 0 1px var(--black-a3), 0 0 0 1px var(--gray-a2), 0 0 0 1px var(--accent-a2), 0 1px 2px var(--gray-a4),
-      0 1px 3px -0.5px var(--gray-a3);
+      0 0 0 1px var(--black-a3), 0 0 0 1px var(--gray-a2), 0 0 0 1px var(--accent-a2),
+      0 1px 2px var(--gray-a4), 0 1px 3px -0.5px var(--gray-a3);
 
     &:where([data-disabled])::after {
       background-color: var(--gray-1);

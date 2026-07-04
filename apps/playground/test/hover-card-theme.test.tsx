@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from 'fict';
-import { HoverCard, Link, Text } from '@fictjs/radix-ui-themes';
+import { render } from 'fict'
+import { HoverCard, Link, Text } from '@fictjs/radix-ui-themes'
 
-const cleanups: Array<() => void> = [];
+const cleanups: Array<() => void> = []
 
 function pointerEvent(target: Element, type: string, init: PointerEventInit = {}) {
   target.dispatchEvent(
@@ -13,44 +13,44 @@ function pointerEvent(target: Element, type: string, init: PointerEventInit = {}
       pointerType: 'mouse',
       ...init,
     }),
-  );
+  )
 }
 
 async function flushEffects(cycles = 4) {
   for (let index = 0; index < cycles; index += 1) {
     await new Promise<void>((resolve) => {
       if (typeof queueMicrotask === 'function') {
-        queueMicrotask(resolve);
-        return;
+        queueMicrotask(resolve)
+        return
       }
 
-      Promise.resolve().then(resolve);
-    });
+      Promise.resolve().then(resolve)
+    })
   }
 }
 
 async function advance(ms: number) {
-  await vi.advanceTimersByTimeAsync(ms);
-  await flushEffects();
+  await vi.advanceTimersByTimeAsync(ms)
+  await flushEffects()
 }
 
 describe('themes hover card', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
-  });
+    vi.useFakeTimers()
+  })
 
   afterEach(() => {
     while (cleanups.length > 0) {
-      cleanups.pop()?.();
+      cleanups.pop()?.()
     }
-    vi.useRealTimers();
-    vi.restoreAllMocks();
-    document.body.innerHTML = '';
-  });
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+    document.body.innerHTML = ''
+  })
 
   it.skip('closes content after leaving the trigger', async () => {
-    const container = document.createElement('div');
-    document.body.append(container);
+    const container = document.createElement('div')
+    document.body.append(container)
 
     cleanups.push(
       render(
@@ -68,24 +68,24 @@ describe('themes hover card', () => {
         ),
         container,
       ),
-    );
+    )
 
-    const trigger = container.querySelector('[data-testid="trigger"]');
-    expect(trigger).not.toBeNull();
-    expect(document.body.querySelector('[data-testid="content"]')).toBeNull();
+    const trigger = container.querySelector('[data-testid="trigger"]')
+    expect(trigger).not.toBeNull()
+    expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
 
-    pointerEvent(trigger as Element, 'pointerenter');
-    await advance(0);
+    pointerEvent(trigger as Element, 'pointerenter')
+    await advance(0)
 
-    const content = document.body.querySelector('[data-testid="content"]');
-    expect(content).not.toBeNull();
+    const content = document.body.querySelector('[data-testid="content"]')
+    expect(content).not.toBeNull()
 
-    const currentTrigger = container.querySelector('[data-testid="trigger"]');
-    expect(currentTrigger).not.toBeNull();
+    const currentTrigger = container.querySelector('[data-testid="trigger"]')
+    expect(currentTrigger).not.toBeNull()
 
-    pointerEvent(currentTrigger as Element, 'pointerleave');
-    await advance(20);
+    pointerEvent(currentTrigger as Element, 'pointerleave')
+    await advance(20)
 
-    expect(document.body.querySelector('[data-testid="content"]')).toBeNull();
-  });
-});
+    expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+  })
+})
