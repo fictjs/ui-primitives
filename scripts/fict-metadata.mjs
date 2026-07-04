@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -299,12 +300,14 @@ function runVerify({ pack }) {
 
   if (!pack) return
 
-  const packDir = resolve(repoRoot, '.tmp', 'fict-metadata-pack')
-  rmSync(packDir, { recursive: true, force: true })
-  mkdirSync(packDir, { recursive: true })
+  const packDir = mkdtempSync(join(tmpdir(), 'ui-primitives-fict-metadata-pack-'))
 
-  for (const [name, config] of Object.entries(metadataPackages)) {
-    packAndVerifyPackage(name, config, packDir)
+  try {
+    for (const [name, config] of Object.entries(metadataPackages)) {
+      packAndVerifyPackage(name, config, packDir)
+    }
+  } finally {
+    rmSync(packDir, { recursive: true, force: true })
   }
 }
 
