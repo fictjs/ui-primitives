@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/announce",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Live-region announcement primitive for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

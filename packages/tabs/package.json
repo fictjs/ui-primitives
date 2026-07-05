@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/tabs",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Tabs primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

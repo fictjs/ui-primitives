@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/separator",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Accessible separator primitive for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

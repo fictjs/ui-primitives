@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/use-is-hydrated",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Hydration state accessor for Fict UI primitives.",
   "license": "MIT",
   "type": "module",
