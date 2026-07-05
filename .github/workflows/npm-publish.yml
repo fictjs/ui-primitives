@@ -32,21 +32,22 @@ jobs:
       - name: Use npm 11 for trusted publishing
         run: npm install -g npm@11
       - run: pnpm install --frozen-lockfile
+      - name: Verify npm publish token
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "::error::NPM_TOKEN secret is required for the first publish of new @fictjs packages. npm trusted publishing can only be used after the packages exist and are configured as trusted publishers on npm."
+            exit 1
+          fi
+
+          npm whoami --registry=https://registry.npmjs.org
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm verify
         env:
           CI: true
       - name: Publish packages
-        run: |
-          if [ -n "${NPM_TOKEN:-}" ]; then
-            echo "Publishing with NPM_TOKEN authentication."
-            export NODE_AUTH_TOKEN="$NPM_TOKEN"
-          else
-            echo "NPM_TOKEN is not set; publishing with npm trusted publishing (OIDC)."
-            echo "Ensure every npm package is configured with this repository and workflow as a trusted publisher."
-          fi
-
-          pnpm release
+        run: pnpm release
         env:
           CI: true
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
