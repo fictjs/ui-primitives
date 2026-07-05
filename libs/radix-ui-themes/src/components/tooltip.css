@@ -24,6 +24,11 @@
         animation-name: rt-slide-from-right, rt-fade-in;
       }
     }
+
+    &:where([data-state='closed']) {
+      animation-duration: 100ms;
+      animation-name: rt-fade-out;
+    }
   }
 }
 
