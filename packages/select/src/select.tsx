@@ -1,5 +1,14 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import {
+  createContext as createRuntimeContext,
+  createElement,
+  createPortal as createFictPortal,
+  mergeProps,
+  prop,
+  useContext as useRuntimeContext,
+  type FictNode,
+  type JSX,
+} from '@fictjs/runtime'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createContextScope, type Scope } from '@fictjs/context'
 import { composeEventHandlers } from '@fictjs/core-primitive'
@@ -7,11 +16,9 @@ import { useId } from '@fictjs/id'
 import {
   createMenuScope,
   Menu,
-  MenuPortal,
   MenuContent,
   MenuSeparator,
   MenuArrow,
-  type MenuPortalProps,
   type MenuContentProps,
   type MenuSeparatorProps,
   type MenuArrowProps,
@@ -50,6 +57,9 @@ type SelectItemContextValue = {
   selected: () => boolean
   onSelect(): void
 }
+type SelectPortalContextValue = {
+  forceMount: boolean | undefined
+}
 
 const SELECT_NAME = 'Select'
 const TRIGGER_NAME = 'SelectTrigger'
@@ -76,6 +86,9 @@ const [createSelectContext, createSelectScope] = createContextScope(SELECT_NAME,
 const [SelectProvider, useSelectContext] = createSelectContext<SelectContextValue>(SELECT_NAME)
 const [SelectItemProvider, useSelectItemContext] =
   createSelectContext<SelectItemContextValue>(ITEM_NAME)
+const SelectPortalContext = createRuntimeContext<SelectPortalContextValue>({
+  forceMount: undefined,
+})
 const useMenuScope = createMenuScope()
 
 type SelectProps = {
@@ -94,7 +107,11 @@ type SelectValueProps = PrimitiveSpanProps & {
   placeholder?: MaybeAccessor<string | undefined>
 }
 type SelectIconProps = PrimitiveSpanProps
-type SelectPortalProps = MenuPortalProps
+type SelectPortalProps = {
+  children?: FictNode | FictNode[]
+  container?: Element | DocumentFragment | null
+  forceMount?: MaybeAccessor<boolean | undefined>
+}
 type SelectPosition = 'item-aligned' | 'popper'
 type SelectContentProps = MenuContentProps & {
   position?: MaybeAccessor<SelectPosition | undefined>
@@ -437,8 +454,25 @@ function SelectIcon(props: ScopedProps<SelectIconProps>): FictNode {
 SelectIcon.displayName = ICON_NAME
 
 function SelectPortal(props: ScopedProps<SelectPortalProps>): FictNode {
-  const menuScope = useMenuScope(props.__scopeSelect)
-  return <MenuPortal {...menuScope} {...props} />
+  const forceMount =
+    props.forceMount === undefined
+      ? undefined
+      : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
+  const container = props.container ?? globalThis.document?.body ?? null
+
+  if (!container) return null
+
+  createFictPortal(
+    container,
+    () => (
+      <SelectPortalContext.Provider value={{ forceMount }}>
+        <div style={{ display: 'contents' }}>{props.children}</div>
+      </SelectPortalContext.Provider>
+    ),
+    createElement,
+  )
+
+  return null
 }
 
 SelectPortal.displayName = PORTAL_NAME
@@ -446,10 +480,16 @@ SelectPortal.displayName = PORTAL_NAME
 function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
   const { position: _position, ...contentProps } = props
   const menuScope = useMenuScope(props.__scopeSelect)
+  const portalContext = useRuntimeContext(SelectPortalContext)
   const context = useSelectContext(
     CONTENT_NAME,
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
   )
+  const fragment = createSignal<DocumentFragment | null>(null)
+  const forceMount =
+    props.forceMount === undefined
+      ? portalContext.forceMount
+      : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
   const position = () =>
     props.position === undefined
       ? 'item-aligned'
@@ -477,12 +517,18 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     style: prop(wrapperStyle),
   })
 
+  useLayoutEffect(() => {
+    if (fragment() || typeof DocumentFragment === 'undefined') return
+    fragment(new DocumentFragment())
+  })
+
   const contentNode = (
     <MenuContent
       {...menuScope}
       {...contentProps}
       id={context.contentId()}
       role="listbox"
+      forceMount={forceMount}
       aria-labelledby={context.triggerId()}
       data-side={prop(() => (position() === 'popper' ? side() : undefined))}
       data-align={prop(() => (position() === 'popper' ? align() : undefined))}
@@ -510,9 +556,27 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
   )
 
   return (
-    <div data-radix-popper-content-wrapper="" {...(wrapperProps as Record<string, unknown>)}>
-      {contentNode}
-    </div>
+    <>
+      {reactive(() => {
+        if (!forceMount && !context.open()) {
+          const detachedFragment = fragment()
+
+          if (!detachedFragment) return null
+
+          return createFictPortal(
+            detachedFragment,
+            () => <div>{props.children}</div>,
+            createElement,
+          ) as unknown as FictNode
+        }
+
+        return (
+          <div data-radix-popper-content-wrapper="" {...(wrapperProps as Record<string, unknown>)}>
+            {contentNode}
+          </div>
+        )
+      })}
+    </>
   )
 }
 

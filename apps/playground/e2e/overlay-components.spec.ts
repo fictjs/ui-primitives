@@ -359,6 +359,9 @@ test('select opens and applies a new value', async ({ page }) => {
     .locator('details')
     .filter({ hasText: 'See colors & variants combinations' })
 
+  await expect(trigger).toContainText('Apple')
+  await expect(contentVariantTrigger).toContainText('Apple')
+
   await trigger.click()
   await expect(listbox).toBeVisible()
 

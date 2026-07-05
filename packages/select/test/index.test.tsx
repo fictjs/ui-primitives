@@ -89,6 +89,35 @@ describe('@fictjs/select', () => {
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
   })
 
+  it('renders the selected item text for defaultValue while content is closed', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root defaultValue="apple">
+          <Trigger data-testid="trigger">
+            <Value data-testid="value" placeholder="Choose one" />
+          </Trigger>
+          <Content data-testid="content">
+            <Item value="apple" data-testid="item-apple">
+              <ItemText>Apple</ItemText>
+            </Item>
+            <Item value="orange" data-testid="item-orange">
+              <ItemText>Orange</ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="content"]')).toBeNull()
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Apple')
+  })
+
   it('wraps default content in a positioned popper wrapper', async () => {
     const container = document.createElement('div')
     document.body.append(container)
