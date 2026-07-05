@@ -359,8 +359,36 @@ test('select opens and applies a new value', async ({ page }) => {
     .locator('details')
     .filter({ hasText: 'See colors & variants combinations' })
 
-  await trigger.dispatchEvent('click')
+  await trigger.click()
   await expect(listbox).toBeVisible()
+
+  const firstTriggerBox = await trigger.boundingBox()
+  const firstListboxBox = await listbox.boundingBox()
+
+  expect(firstTriggerBox, 'first select trigger should be measurable').not.toBeNull()
+  expect(firstListboxBox, 'first select listbox should be measurable').not.toBeNull()
+
+  if (!firstTriggerBox || !firstListboxBox) {
+    throw new Error('Unable to measure first select geometry')
+  }
+
+  expect(
+    firstListboxBox.y,
+    'first select content should open inside the current viewport instead of at the page bottom',
+  ).toBeGreaterThanOrEqual(0)
+  expect(
+    firstListboxBox.y,
+    'first select content should stay visible in the current viewport',
+  ).toBeLessThanOrEqual(page.viewportSize()?.height ?? 0)
+  expect(
+    Math.abs(firstTriggerBox.x - firstListboxBox.x),
+    'first select content should stay aligned with the trigger',
+  ).toBeLessThanOrEqual(4)
+  expect(
+    firstListboxBox.y - (firstTriggerBox.y + firstTriggerBox.height),
+    'first select content should render just below the trigger',
+  ).toBeLessThanOrEqual(8)
+
   await page.getByRole('option', { name: 'Orange' }).click()
   await expect(trigger).toContainText('Orange')
   await expect(listbox).toBeHidden()

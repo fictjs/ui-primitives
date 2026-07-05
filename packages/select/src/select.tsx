@@ -473,6 +473,9 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
       : (readValue(props.alignOffset as MaybeAccessor<number | undefined>) ?? 0)
   const wrapperStyle = () =>
     getSelectWrapperStyle(context.triggerRef.current, side(), align(), sideOffset(), alignOffset())
+  const wrapperProps = mergeProps({
+    style: prop(wrapperStyle),
+  })
 
   const contentNode = (
     <MenuContent
@@ -506,12 +509,8 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     />
   )
 
-  if (position() !== 'popper') {
-    return contentNode
-  }
-
   return (
-    <div data-radix-popper-content-wrapper="" style={wrapperStyle()}>
+    <div data-radix-popper-content-wrapper="" {...(wrapperProps as Record<string, unknown>)}>
       {contentNode}
     </div>
   )

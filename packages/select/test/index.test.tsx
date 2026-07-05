@@ -89,6 +89,42 @@ describe('@fictjs/select', () => {
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
   })
 
+  it('wraps default content in a positioned popper wrapper', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root>
+          <Trigger data-testid="trigger">
+            <Value data-testid="value" placeholder="Choose one" />
+          </Trigger>
+          <Content data-testid="content">
+            <Item value="apple" data-testid="item-apple">
+              <ItemText>Apple</ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    click(container.querySelector('[data-testid="trigger"]') as HTMLButtonElement)
+    await waitForEffects()
+
+    const wrapper = document.querySelector(
+      '[data-radix-popper-content-wrapper]',
+    ) as HTMLDivElement | null
+    const content = document.querySelector('[data-testid="content"]') as HTMLDivElement | null
+
+    expect(wrapper).not.toBeNull()
+    expect(content).not.toBeNull()
+    expect(wrapper?.style.position).toBe('fixed')
+    expect(wrapper?.style.transform).not.toBe('')
+  })
+
   it('renders the indicator for the selected item', async () => {
     const container = document.createElement('div')
     document.body.append(container)
