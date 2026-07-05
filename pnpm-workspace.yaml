@@ -32,3 +32,5 @@ catalogMode: strict
 
 onlyBuiltDependencies:
   - esbuild
+patchedDependencies:
+  '@fictjs/runtime@0.23.0': patches/@fictjs__runtime@0.23.0.patch

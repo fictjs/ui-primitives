@@ -56,7 +56,7 @@ test('alert dialog opens and closes from the cancel action', async ({ page }) =>
   expectTrackedBrowserErrors(tracker, 'testing the alert dialog demo')
 })
 
-test('hover card opens on pointer enter and closes on pointer leave', async ({ page }) => {
+test('hover card opens on hover and closes when the pointer leaves', async ({ page }) => {
   const section = await gotoSinkSection(page, 'hover-card')
   const tracker = trackBrowserErrors(page)
   const trigger = section.locator('.rt-Link').filter({ hasText: 'A fancy link' }).first()
@@ -65,9 +65,9 @@ test('hover card opens on pointer enter and closes on pointer leave', async ({ p
     .filter({ hasText: 'Jan Tschichold was a German calligrapher' })
     .first()
 
-  await trigger.dispatchEvent('pointerenter', { bubbles: true, pointerType: 'mouse' })
+  await trigger.hover()
   await expect(content).toBeVisible()
-  await trigger.dispatchEvent('pointerleave', { bubbles: true, pointerType: 'mouse' })
+  await page.mouse.move(8, 8)
   await expect(content).toBeHidden()
 
   tracker.stop()

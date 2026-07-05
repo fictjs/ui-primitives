@@ -1,0 +1,39 @@
+diff --git a/dist/dom-BAGb35d1.js b/dist/dom-BAGb35d1.js
+index d967a1281c8446089f84818a86ef556dd917886a..0bf2f027ca47c7347ac2d8f2d8a9d282b42edf9e 100644
+--- a/dist/dom-BAGb35d1.js
++++ b/dist/dom-BAGb35d1.js
+@@ -1417,7 +1417,7 @@ function createChildBinding(parent, getValue, createElementFn) {
+ 				destroyRoot(root);
+ 				return;
+ 			}
+-			nodes = toNodeArray(createElementFn(value), marker.ownerDocument ?? parent.ownerDocument ?? document);
++			nodes = toNodeArray(untrack$1(() => createElementFn(value)), marker.ownerDocument ?? parent.ownerDocument ?? document);
+ 			const parentNode = marker.parentNode;
+ 			if (parentNode) nodes = insertNodesBefore(parentNode, nodes, marker);
+ 			keepRoot = true;
+diff --git a/dist/dom-BVJeqIRs.cjs b/dist/dom-BVJeqIRs.cjs
+index e72f296b7f11dc74960871cafb023d64ba337a83..d898bbb368eb5e2a9ea8c1f026474d43208e1a4f 100644
+--- a/dist/dom-BVJeqIRs.cjs
++++ b/dist/dom-BVJeqIRs.cjs
+@@ -1417,7 +1417,7 @@ function createChildBinding(parent, getValue, createElementFn) {
+ 				require_resume.destroyRoot(root);
+ 				return;
+ 			}
+-			nodes = toNodeArray(createElementFn(value), marker.ownerDocument ?? parent.ownerDocument ?? document);
++			nodes = toNodeArray(untrack$1(() => createElementFn(value)), marker.ownerDocument ?? parent.ownerDocument ?? document);
+ 			const parentNode = marker.parentNode;
+ 			if (parentNode) nodes = insertNodesBefore(parentNode, nodes, marker);
+ 			keepRoot = true;
+diff --git a/src/binding.ts b/src/binding.ts
+index cccf1269153f8001b1e3fa7d1950d4a2f32e07ec..dc1254b16d55f631bca1cd091ee6230962b11aec 100644
+--- a/src/binding.ts
++++ b/src/binding.ts
+@@ -1418,7 +1418,7 @@ export function createChildBinding(
+         return
+       }
+ 
+-      const output = createElementFn(value)
++      const output = untrack(() => createElementFn(value))
+       nodes = toNodeArray(output, marker.ownerDocument ?? parent.ownerDocument ?? document)
+       const parentNode = marker.parentNode as (ParentNode & Node) | null
+       if (parentNode) {
