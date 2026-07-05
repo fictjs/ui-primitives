@@ -95,14 +95,7 @@ const avatarApiFallback = () => ({
 
 export default defineConfig(() => {
   const useBuiltPackages = true
-  const rootRuntimeDir = resolve(
-    currentDir,
-    useBuiltPackages ? '../../../packages/runtime/dist' : '../../../packages/runtime/src',
-  )
-  const rootFictDir = resolve(
-    currentDir,
-    useBuiltPackages ? '../../../packages/fict/dist' : '../../../packages/fict/src',
-  )
+  const resolveImport = (id: string) => fileURLToPath(import.meta.resolve(id))
 
   return {
     plugins: [
@@ -125,36 +118,27 @@ export default defineConfig(() => {
         },
         {
           find: '@fictjs/runtime/internal/list',
-          replacement: resolve(
-            rootRuntimeDir,
-            useBuiltPackages ? 'internal-list.js' : 'internal/list.ts',
-          ),
+          replacement: resolveImport('@fictjs/runtime/internal/list'),
         },
         {
           find: '@fictjs/runtime/internal',
-          replacement: resolve(rootRuntimeDir, useBuiltPackages ? 'internal.js' : 'internal.ts'),
+          replacement: resolveImport('@fictjs/runtime/internal'),
         },
         {
           find: '@fictjs/runtime/advanced',
-          replacement: resolve(rootRuntimeDir, useBuiltPackages ? 'advanced.js' : 'advanced.ts'),
+          replacement: resolveImport('@fictjs/runtime/advanced'),
         },
         {
           find: '@fictjs/runtime/jsx-runtime',
-          replacement: resolve(
-            rootRuntimeDir,
-            useBuiltPackages ? 'jsx-runtime.js' : 'jsx-runtime.ts',
-          ),
+          replacement: resolveImport('@fictjs/runtime/jsx-runtime'),
         },
         {
           find: '@fictjs/runtime/jsx-dev-runtime',
-          replacement: resolve(
-            rootRuntimeDir,
-            useBuiltPackages ? 'jsx-dev-runtime.js' : 'jsx-dev-runtime.ts',
-          ),
+          replacement: resolveImport('@fictjs/runtime/jsx-dev-runtime'),
         },
         {
           find: '@fictjs/runtime',
-          replacement: resolve(rootRuntimeDir, useBuiltPackages ? 'index.js' : 'index.ts'),
+          replacement: resolveImport('@fictjs/runtime'),
         },
         {
           find: '@fictjs/radix-ui',
@@ -207,37 +191,31 @@ export default defineConfig(() => {
         },
         {
           find: 'fict/internal/list',
-          replacement: resolve(
-            rootFictDir,
-            useBuiltPackages ? 'internal-list.js' : 'internal-list.ts',
-          ),
+          replacement: resolveImport('fict/internal/list'),
         },
         {
           find: 'fict/internal',
-          replacement: resolve(rootFictDir, useBuiltPackages ? 'internal.js' : 'internal.ts'),
+          replacement: resolveImport('fict/internal'),
         },
         {
           find: 'fict/advanced',
-          replacement: resolve(rootFictDir, useBuiltPackages ? 'advanced.js' : 'advanced.ts'),
+          replacement: resolveImport('fict/advanced'),
         },
         {
           find: 'fict/jsx-runtime',
-          replacement: resolve(rootFictDir, useBuiltPackages ? 'jsx-runtime.js' : 'jsx-runtime.ts'),
+          replacement: resolveImport('fict/jsx-runtime'),
         },
         {
           find: 'fict/jsx-dev-runtime',
-          replacement: resolve(
-            rootFictDir,
-            useBuiltPackages ? 'jsx-dev-runtime.js' : 'jsx-dev-runtime.ts',
-          ),
+          replacement: resolveImport('fict/jsx-dev-runtime'),
         },
         {
           find: 'fict/plus',
-          replacement: resolve(rootFictDir, useBuiltPackages ? 'plus.js' : 'plus.ts'),
+          replacement: resolveImport('fict/plus'),
         },
         {
           find: 'fict',
-          replacement: resolve(rootFictDir, useBuiltPackages ? 'index.js' : 'index.ts'),
+          replacement: resolveImport('fict'),
         },
         { find: 'next/link', replacement: resolve(currentDir, './src/compat/next-link.tsx') },
         {
