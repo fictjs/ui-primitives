@@ -36,7 +36,17 @@ jobs:
         env:
           CI: true
       - name: Publish packages
-        run: pnpm release
+        run: |
+          if [ -n "${NPM_TOKEN:-}" ]; then
+            echo "Publishing with NPM_TOKEN authentication."
+            export NODE_AUTH_TOKEN="$NPM_TOKEN"
+          else
+            echo "NPM_TOKEN is not set; publishing with npm trusted publishing (OIDC)."
+            echo "Ensure every npm package is configured with this repository and workflow as a trusted publisher."
+          fi
+
+          pnpm release
         env:
           CI: true
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
