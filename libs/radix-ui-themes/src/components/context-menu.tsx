@@ -181,7 +181,14 @@ interface ContextMenuRadioGroupProps extends ComponentPropsWithout<
 const ContextMenuRadioGroup = React.forwardRef<
   ContextMenuRadioGroupElement,
   ContextMenuRadioGroupProps
->(({ className, ...props }, _forwardedRef) => <ContextMenuPrimitive.RadioGroup {...props} />)
+>(({ className, ...props }, forwardedRef) => (
+  <ContextMenuPrimitive.RadioGroup
+    {...props}
+    asChild={false}
+    ref={React.coerceRef(forwardedRef)}
+    class={classNames('rt-BaseMenuRadioGroup', 'rt-ContextMenuRadioGroup', className)}
+  />
+))
 ContextMenuRadioGroup.displayName = 'ContextMenu.RadioGroup'
 
 type ContextMenuRadioItemElement = React.ElementRef<typeof ContextMenuPrimitive.RadioItem>

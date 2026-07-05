@@ -178,7 +178,14 @@ interface DropdownMenuRadioGroupProps extends ComponentPropsWithout<
 const DropdownMenuRadioGroup = React.forwardRef<
   DropdownMenuRadioGroupElement,
   DropdownMenuRadioGroupProps
->(({ className, ...props }, _forwardedRef) => <DropdownMenuPrimitive.RadioGroup {...props} />)
+>(({ className, ...props }, forwardedRef) => (
+  <DropdownMenuPrimitive.RadioGroup
+    {...props}
+    asChild={false}
+    ref={React.coerceRef(forwardedRef)}
+    class={classNames('rt-BaseMenuRadioGroup', 'rt-DropdownMenuRadioGroup', className)}
+  />
+))
 DropdownMenuRadioGroup.displayName = 'DropdownMenu.RadioGroup'
 
 type DropdownMenuRadioItemElement = React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>

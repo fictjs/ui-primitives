@@ -10,6 +10,7 @@ import {
   Button,
   Card,
   CheckboxGroup,
+  ContextMenu,
   DropdownMenu,
   IconButton,
   Kbd,
@@ -31,6 +32,24 @@ function click(target: Element): void {
     }),
   )
   target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+}
+
+function rightClick(target: Element): void {
+  target.dispatchEvent(
+    new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      button: 2,
+      pointerType: 'mouse',
+    }),
+  )
+  target.dispatchEvent(
+    new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      button: 2,
+    }),
+  )
 }
 
 function keydown(target: EventTarget, key: string): void {
@@ -503,5 +522,57 @@ describe('@fictjs/radix-ui-themes', () => {
 
     expect(document.body.querySelector('[data-testid="dropdown-content"]')).not.toBeNull()
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('preserves themed menu radio group classes', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <DropdownMenu.Root defaultOpen>
+            <DropdownMenu.Trigger>
+              <Button data-testid="dropdown-radio-trigger">Open</Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.RadioGroup className="custom-radio-group" value="one">
+                <DropdownMenu.RadioItem value="one">One</DropdownMenu.RadioItem>
+              </DropdownMenu.RadioGroup>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+
+          <ContextMenu.Root>
+            <ContextMenu.Trigger>
+              <div data-testid="context-radio-trigger">Area</div>
+            </ContextMenu.Trigger>
+            <ContextMenu.Content>
+              <ContextMenu.RadioGroup className="custom-radio-group" value="one">
+                <ContextMenu.RadioItem value="one">One</ContextMenu.RadioItem>
+              </ContextMenu.RadioGroup>
+            </ContextMenu.Content>
+          </ContextMenu.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const dropdownGroup = document.body.querySelector('.rt-DropdownMenuRadioGroup')
+    expect(dropdownGroup).not.toBeNull()
+    expect(dropdownGroup?.className).toContain('rt-BaseMenuRadioGroup')
+    expect(dropdownGroup?.className).toContain('custom-radio-group')
+
+    const contextTrigger = container.querySelector('[data-testid="context-radio-trigger"]')
+    expect(contextTrigger).not.toBeNull()
+
+    rightClick(contextTrigger as Element)
+    await flushEffects()
+
+    const contextGroup = document.body.querySelector('.rt-ContextMenuRadioGroup')
+    expect(contextGroup).not.toBeNull()
+    expect(contextGroup?.className).toContain('rt-BaseMenuRadioGroup')
+    expect(contextGroup?.className).toContain('custom-radio-group')
   })
 })
