@@ -20,7 +20,7 @@ index e72f296b7f11dc74960871cafb023d64ba337a83..d898bbb368eb5e2a9ea8c1f026474d43
  				return;
  			}
 -			nodes = toNodeArray(createElementFn(value), marker.ownerDocument ?? parent.ownerDocument ?? document);
-+			nodes = toNodeArray(untrack$1(() => createElementFn(value)), marker.ownerDocument ?? parent.ownerDocument ?? document);
++			nodes = toNodeArray(require_resume.untrack(() => createElementFn(value)), marker.ownerDocument ?? parent.ownerDocument ?? document);
  			const parentNode = marker.parentNode;
  			if (parentNode) nodes = insertNodesBefore(parentNode, nodes, marker);
  			keepRoot = true;
