@@ -1,7 +1,7 @@
 {
   "name": "@fictjs/radix-ui-themes-playground",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "build:deps": "pnpm --dir ../.. --filter @fictjs/radix-ui-themes... --filter '!@fictjs/one-time-password-field' --filter '!@fictjs/password-toggle-field' build",

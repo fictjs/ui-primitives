@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/tooltip",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Tooltip primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

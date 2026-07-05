@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/fict-remove-scroll",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scroll isolation primitives for Fict, based on react-remove-scroll.",
   "keywords": [
     "fict",
