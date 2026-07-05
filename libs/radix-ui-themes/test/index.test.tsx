@@ -15,6 +15,7 @@ import {
   Kbd,
   Link,
   Popover,
+  Select,
   TabNav,
   Theme,
   ThemePanel,
@@ -158,6 +159,36 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(onValueChange).toHaveBeenLastCalledWith(['alpha', 'beta'])
 
     expect((checkboxes[0] as HTMLButtonElement).getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('renders select content with themed scroll viewport classes', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Select.Root defaultValue="apple" defaultOpen>
+            <Select.Trigger />
+            <Select.Content position="popper">
+              <Select.Item value="apple">Apple</Select.Item>
+              <Select.Item value="orange">Orange</Select.Item>
+            </Select.Content>
+          </Select.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const content = document.body.querySelector('.rt-SelectContent')
+    expect(content).not.toBeNull()
+    expect(content?.querySelector('.rt-ScrollAreaRoot')).not.toBeNull()
+    expect(content?.querySelector('.rt-SelectViewport')).not.toBeNull()
+    expect(content?.querySelector('.rt-ScrollAreaViewport')).not.toBeNull()
+    expect(content?.querySelector('.rt-ScrollAreaScrollbar.rt-r-size-1')).not.toBeNull()
+    expect(content?.querySelector('.rt-ScrollAreaThumb')).not.toBeNull()
   })
 
   it('copies a theme snippet from the theme panel', async () => {

@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'fict'
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
-import { Select as SelectPrimitive } from '@fictjs/radix-ui'
+import { Select as SelectPrimitive, ScrollArea as ScrollAreaPrimitive } from '@fictjs/radix-ui'
 
 import { extractProps } from '../helpers/extract-props.js'
 import { marginPropDefs } from '../props/margin.props.js'
@@ -108,6 +108,7 @@ const SelectContent = React.forwardRef<SelectContentElement, SelectContentProps>
           data-panel-background={themeContext.panelBackground}
           data-radius={themeContext.radius}
           data-scaling={themeContext.scaling}
+          sideOffset={4}
           asChild={false}
           {...contentProps}
           ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLDivElement>)}
@@ -122,7 +123,21 @@ const SelectContent = React.forwardRef<SelectContentElement, SelectContentProps>
             className,
           )}
         >
-          <ThemeContext.Provider value={themeContext}>{props.children}</ThemeContext.Provider>
+          <ThemeContext.Provider value={themeContext}>
+            <ScrollAreaPrimitive.Root type="auto" class="rt-ScrollAreaRoot">
+              <SelectPrimitive.Viewport asChild class="rt-SelectViewport">
+                <ScrollAreaPrimitive.Viewport class="rt-ScrollAreaViewport">
+                  {props.children}
+                </ScrollAreaPrimitive.Viewport>
+              </SelectPrimitive.Viewport>
+              <ScrollAreaPrimitive.Scrollbar
+                class="rt-ScrollAreaScrollbar rt-r-size-1"
+                orientation="vertical"
+              >
+                <ScrollAreaPrimitive.Thumb class="rt-ScrollAreaThumb" />
+              </ScrollAreaPrimitive.Scrollbar>
+            </ScrollAreaPrimitive.Root>
+          </ThemeContext.Provider>
         </SelectPrimitive.Content>
       </SelectPrimitive.Portal>
     )
