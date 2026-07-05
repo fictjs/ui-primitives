@@ -11,6 +11,32 @@ test('checkbox toggles from its labeled example', async ({ page }) => {
   await expect(checkbox).not.toBeChecked()
   await checkbox.click()
   await expect(checkbox).toBeChecked()
+  await expect
+    .poll(() =>
+      checkbox.evaluate((element) => {
+        const indicator = element.querySelector('.rt-BaseCheckboxIndicator')
+        const icon = indicator?.querySelector('svg')
+        const indicatorBox = indicator?.getBoundingClientRect()
+        const iconBox = icon?.getBoundingClientRect()
+
+        if (!indicatorBox || !iconBox) {
+          return null
+        }
+
+        return {
+          heightAligned: Math.abs(indicatorBox.height - iconBox.height) <= 0.5,
+          widthAligned: Math.abs(indicatorBox.width - iconBox.width) <= 0.5,
+          xAligned: Math.abs(indicatorBox.x - iconBox.x) <= 0.5,
+          yAligned: Math.abs(indicatorBox.y - iconBox.y) <= 0.5,
+        }
+      }),
+    )
+    .toEqual({
+      heightAligned: true,
+      widthAligned: true,
+      xAligned: true,
+      yAligned: true,
+    })
 
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')

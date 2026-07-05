@@ -74,6 +74,11 @@ function readNormalizedFile(filePath: string): string {
 const fictCssNormalizers: Record<string, (contents: string) => string> = {
   'components/_internal/base-button.css': (contents) =>
     contents.replace(/, \.rt-variant-ghost-offset/g, ''),
+  'components/_internal/base-checkbox.css': (contents) =>
+    contents.replace(
+      "\n\n  & :where(svg) {\n    display: block;\n    width: 100%;\n    height: 100%;\n  }",
+      '',
+    ),
   'components/container.css': (contents) =>
     contents.replace(
       /:where\(\.rt-Container\.rt-r-size-(\d)\) > &/g,
