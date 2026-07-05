@@ -200,13 +200,17 @@ function NavigationMenuTrigger(props: ScopedProps<NavigationMenuTriggerProps>): 
 NavigationMenuTrigger.displayName = TRIGGER_NAME
 
 function NavigationMenuLink(props: ScopedProps<NavigationMenuLinkProps>): FictNode {
+  const { active: activeProp, ...linkProps } = props
   const active = () =>
-    props.active === undefined
+    activeProp === undefined
       ? false
-      : Boolean(readValue(props.active as MaybeAccessor<boolean | undefined>) ?? false)
+      : Boolean(readValue(activeProp as MaybeAccessor<boolean | undefined>) ?? false)
 
   return (
-    <Primitive.a {...(props as Record<string, unknown>)} data-active={active() ? '' : undefined} />
+    <Primitive.a
+      {...(linkProps as Record<string, unknown>)}
+      data-active={prop(() => (active() ? '' : undefined))}
+    />
   )
 }
 

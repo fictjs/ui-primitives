@@ -3,8 +3,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
-import { Content, Indicator, Item, List, Root, Trigger, Viewport } from '../src/index.js'
+import { Content, Indicator, Item, Link, List, Root, Trigger, Viewport } from '../src/index.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -93,5 +94,55 @@ describe('@fictjs/navigation-menu', () => {
 
     const viewport = container.querySelector('[data-testid="viewport"]') as HTMLDivElement
     expect(viewport.querySelector('[data-testid="content"]')?.textContent).toBe('Panel')
+  })
+
+  it('updates link active state reactively', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const current = createSignal('docs')
+
+    mount(
+      () => (
+        <Root>
+          <List>
+            <Item>
+              <Link
+                href="/docs"
+                data-testid="docs-link"
+                active={() => current() === 'docs'}
+              >
+                Docs
+              </Link>
+            </Item>
+            <Item>
+              <Link
+                href="/blog"
+                data-testid="blog-link"
+                active={() => current() === 'blog'}
+              >
+                Blog
+              </Link>
+            </Item>
+          </List>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const docsLink = container.querySelector('[data-testid="docs-link"]') as HTMLAnchorElement
+    const blogLink = container.querySelector('[data-testid="blog-link"]') as HTMLAnchorElement
+
+    expect(docsLink.getAttribute('data-active')).toBe('')
+    expect(docsLink.hasAttribute('active')).toBe(false)
+    expect(blogLink.hasAttribute('data-active')).toBe(false)
+    expect(blogLink.hasAttribute('active')).toBe(false)
+
+    current('blog')
+    await waitForEffects()
+
+    expect(docsLink.hasAttribute('data-active')).toBe(false)
+    expect(blogLink.getAttribute('data-active')).toBe('')
   })
 })

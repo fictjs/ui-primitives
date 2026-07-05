@@ -244,18 +244,21 @@ describe('@fictjs/radix-ui-themes', () => {
     )
   })
 
-  it('renders tab nav links without crashing when props are getter-backed', async () => {
+  it('renders only the active tab nav link with the active attribute', async () => {
     const container = document.createElement('div')
     document.body.append(container)
+    const current = createSignal('account')
 
     mount(
       () => (
         <Theme>
           <TabNav.Root size="1">
-            <TabNav.Link href="/account" active>
+            <TabNav.Link href="/account" active={() => current() === 'account'}>
               Account
             </TabNav.Link>
-            <TabNav.Link href="/documents">Documents</TabNav.Link>
+            <TabNav.Link asChild active={() => current() === 'documents'}>
+              <a href="/documents">Documents</a>
+            </TabNav.Link>
           </TabNav.Root>
         </Theme>
       ),
@@ -269,7 +272,16 @@ describe('@fictjs/radix-ui-themes', () => {
 
     expect(root).not.toBeNull()
     expect(links).toHaveLength(2)
-    expect(links[0]?.getAttribute('data-active')).toBe('true')
+    expect(root?.querySelectorAll('.rt-TabNavLink[data-active]')).toHaveLength(1)
+    expect(links[0]?.getAttribute('data-active')).toBe('')
+    expect(links[1]?.hasAttribute('data-active')).toBe(false)
+
+    current('documents')
+    await flushEffects()
+
+    expect(root?.querySelectorAll('.rt-TabNavLink[data-active]')).toHaveLength(1)
+    expect(links[0]?.hasAttribute('data-active')).toBe(false)
+    expect(links[1]?.getAttribute('data-active')).toBe('')
   })
 
   it('updates getter-backed DOM props through themed buttons', async () => {

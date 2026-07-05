@@ -227,11 +227,13 @@ test('tab nav updates the active link when a new tab is selected', async ({ page
   const account = demo.getByRole('link', { name: 'Account' })
   const documents = demo.getByRole('link', { name: 'Documents' })
 
-  await expect(account).toHaveAttribute('data-active', 'true')
-  await expect(documents).toHaveAttribute('data-active', 'false')
+  await expect(demo.locator('.rt-TabNavLink[data-active]')).toHaveCount(1)
+  await expect(account).toHaveAttribute('data-active', '')
+  await expect(documents).not.toHaveAttribute('data-active', /.*/)
   await documents.press('Enter')
-  await expect(account).toHaveAttribute('data-active', 'false')
-  await expect(documents).toHaveAttribute('data-active', 'true')
+  await expect(demo.locator('.rt-TabNavLink[data-active]')).toHaveCount(1)
+  await expect(account).not.toHaveAttribute('data-active', /.*/)
+  await expect(documents).toHaveAttribute('data-active', '')
 
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')

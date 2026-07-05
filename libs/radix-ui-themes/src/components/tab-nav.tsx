@@ -1,9 +1,8 @@
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
-import { NavigationMenu } from '@fictjs/radix-ui'
+import { NavigationMenu, Slot as SlotPrimitive } from '@fictjs/radix-ui'
 import { prop } from 'fict'
 
-import { Slot } from './slot.js'
 import { tabNavRootPropDefs } from './tab-nav.props.js'
 import { extractProps } from '../helpers/extract-props.js'
 import { getSubtree } from '../helpers/get-subtree.js'
@@ -18,6 +17,7 @@ type MaybeAccessor<T> = T | (() => T)
 type TabNavRootElement = React.ElementRef<typeof NavigationMenu.Root>
 type TabNavRootElementProps = ComponentPropsWithout<'nav', RemovedProps>
 type TabNavOwnProps = GetPropDefTypes<typeof tabNavRootPropDefs>
+type SlotRootProps = Parameters<typeof SlotPrimitive.Root>[0]
 interface TabNavRootProps
   extends
     Omit<TabNavRootElementProps, 'defaultValue' | 'dir' | 'color'>,
@@ -84,19 +84,18 @@ const TabNavLink = React.forwardRef<TabNavLinkElement, TabNavLinkProps>((props, 
   return (
     <NavigationMenu.Item class="rt-TabNavItem">
       {asChild ? (
-        <Slot
-          {...linkProps}
-          ref={React.coerceRef(forwardedRef)}
-          data-active={prop(() => (activeValue() ? 'true' : 'false'))}
-          class={classNames('rt-reset', 'rt-BaseTabListTrigger', 'rt-TabNavLink', className)}
-        >
-          {content}
-        </Slot>
+        SlotPrimitive.Root({
+          ...linkProps,
+          ref: React.coerceRef(forwardedRef),
+          'data-active': prop(() => (activeValue() ? '' : undefined)),
+          class: classNames('rt-reset', 'rt-BaseTabListTrigger', 'rt-TabNavLink', className),
+          children: content,
+        } as unknown as SlotRootProps)
       ) : (
         <a
           {...linkProps}
           ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLAnchorElement>)}
-          data-active={prop(() => (activeValue() ? 'true' : 'false'))}
+          data-active={prop(() => (activeValue() ? '' : undefined))}
           class={classNames('rt-reset', 'rt-BaseTabListTrigger', 'rt-TabNavLink', className)}
         >
           {content}
