@@ -141,7 +141,7 @@ function getContextMenuWrapperStyle(
   alignOffset: number,
 ): StyleRecord {
   if (!anchorPoint) {
-    return {}
+    return { pointerEvents: 'auto' }
   }
 
   const availableWidth = globalThis.innerWidth || document.documentElement.clientWidth || 0
@@ -214,6 +214,7 @@ function getContextMenuWrapperStyle(
     left: '0px',
     top: '0px',
     transform: `translate(${Math.round(left)}px, ${Math.round(top)}px)${translateSuffix}`,
+    pointerEvents: 'auto',
     minWidth: 'max-content',
     zIndex: 'auto',
     '--radix-popper-transform-origin': `${originX} ${originY}`,

@@ -24,6 +24,16 @@ function click(target: Element): void {
   )
 }
 
+function pointerMove(target: Element): void {
+  const PointerEventCtor = globalThis.PointerEvent ?? MouseEvent
+  target.dispatchEvent(
+    new PointerEventCtor('pointermove', {
+      bubbles: true,
+      cancelable: true,
+    }),
+  )
+}
+
 async function waitForEffects(cycles = 6): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0))
   for (let index = 0; index < cycles; index++) {
@@ -51,6 +61,8 @@ describe('@fictjs/select', () => {
     }
 
     document.body.innerHTML = ''
+    document.body.style.pointerEvents = ''
+    document.body.removeAttribute('data-scroll-locked')
     vi.clearAllMocks()
   })
 
@@ -277,5 +289,54 @@ describe('@fictjs/select', () => {
     expect(content?.getAttribute('data-side')).toBe('bottom')
     expect(content?.style.width).toBe('100%')
     expect(wrapper?.style.position).toBe('fixed')
+  })
+
+  it('locks document scroll while open and highlights hovered items', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root>
+          <Trigger data-testid="trigger">
+            <Value data-testid="value" placeholder="Choose one" />
+          </Trigger>
+          <Content data-testid="content">
+            <Item value="apple" data-testid="item-apple">
+              <ItemText>Apple</ItemText>
+            </Item>
+            <Item value="orange" data-testid="item-orange">
+              <ItemText>Orange</ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    click(container.querySelector('[data-testid="trigger"]') as HTMLButtonElement)
+    await waitForEffects()
+
+    const apple = document.querySelector('[data-testid="item-apple"]') as HTMLDivElement | null
+    const orange = document.querySelector('[data-testid="item-orange"]') as HTMLDivElement | null
+
+    expect(document.body.getAttribute('data-scroll-locked')).toBe('1')
+    expect(apple).not.toBeNull()
+    expect(orange).not.toBeNull()
+
+    pointerMove(orange as HTMLDivElement)
+    await waitForEffects()
+
+    expect(orange?.hasAttribute('data-highlighted')).toBe(true)
+    expect(apple?.hasAttribute('data-highlighted')).toBe(false)
+
+    click(orange as HTMLDivElement)
+    await waitForEffects()
+    await waitForEffects()
+
+    expect(document.querySelector('[data-testid="content"]')).toBeNull()
+    expect(document.body.getAttribute('data-scroll-locked')).toBeNull()
   })
 })

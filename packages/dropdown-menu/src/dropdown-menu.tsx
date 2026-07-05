@@ -150,7 +150,7 @@ function getDropdownMenuWrapperStyle(
   alignOffset: number,
 ): StyleRecord {
   if (!trigger) {
-    return {}
+    return { pointerEvents: 'auto' }
   }
 
   const rect = trigger.getBoundingClientRect()
@@ -232,6 +232,7 @@ function getDropdownMenuWrapperStyle(
     left: '0px',
     top: '0px',
     transform: `translate(${roundedLeft}px, ${roundedTop}px)${translateSuffix}`,
+    pointerEvents: 'auto',
     minWidth: 'max-content',
     zIndex: 'auto',
     '--radix-popper-transform-origin': `${originX} ${originY}`,

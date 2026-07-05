@@ -575,12 +575,16 @@ type MenuItemImplProps = MenuItemProps & {
 }
 
 function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
-  const { __scopeMenu, checked, role = 'menuitem', closeOnSelect = true, ...itemProps } = props
+  const __scopeMenu = props.__scopeMenu
+  const checked = props.checked
   const menuContext = useMenuContext(ITEM_NAME, __scopeMenu as Scope<MenuContextValue | undefined>)
   const contentContext = useMenuContentContext(
     ITEM_NAME,
     __scopeMenu as Scope<MenuContentContextValue | undefined>,
   )
+  const highlighted = createSignal(false)
+  const role = () => (props.role === undefined ? 'menuitem' : props.role)
+  const closeOnSelect = () => props.closeOnSelect !== false
   const disabled = () =>
     props.disabled === undefined
       ? false
@@ -594,20 +598,46 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
 
   const primitiveProps = mergeProps(
     {
-      role,
+      role: prop(role),
       tabIndex: -1,
       'data-menu-item': '',
       'data-menu-content-id': prop(contentContext.contentId),
+      'data-highlighted': prop(() => (highlighted() ? '' : undefined)),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
       'data-state': checked ? prop(dataState) : undefined,
       'aria-disabled': prop(() => (disabled() ? 'true' : undefined)),
       'aria-checked': checked
         ? prop(() => String(checked() === 'indeterminate' ? 'mixed' : checked() === true))
         : undefined,
+    },
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeMenu: undefined,
+      checked: undefined,
+      closeOnSelect: undefined,
+      disabled: undefined,
+      onSelect: undefined,
+      ref: undefined,
+      textValue: undefined,
+      onFocus: composeEventHandlers<FocusEvent>(
+        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        () => {
+          if (!disabled()) {
+            highlighted(true)
+          }
+        },
+      ),
+      onBlur: composeEventHandlers<FocusEvent>(
+        props.onBlur as ((event: FocusEvent) => void) | undefined,
+        () => {
+          highlighted(false)
+        },
+      ),
       onPointerMove: composeEventHandlers<PointerEvent>(
         props.onPointerMove as ((event: PointerEvent) => void) | undefined,
         () => {
           if (disabled()) return
+          highlighted(true)
           ;(document.activeElement as HTMLElement | null)?.blur?.()
           ;(primitivePropsRef.current as HTMLElement | null)?.focus()
         },
@@ -621,7 +651,7 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
           }
 
           props.onSelect?.(event)
-          if (!event.defaultPrevented && closeOnSelect) {
+          if (!event.defaultPrevented && closeOnSelect()) {
             menuContext.onOpenChange(false)
           }
         },
@@ -637,14 +667,6 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
           }
         },
       ),
-    },
-    prop(() => itemProps as Record<string, unknown>),
-    {
-      __scopeMenu: undefined,
-      checked: undefined,
-      closeOnSelect: undefined,
-      disabled: undefined,
-      onSelect: undefined,
     },
   )
   const primitivePropsRef = { current: null as HTMLElement | null }
@@ -804,7 +826,7 @@ function MenuSub(props: ScopedProps<MenuSubProps>): FictNode {
   const triggerRef = { current: null as HTMLElement | null }
 
   return (
-    <Menu open={prop(open)} onOpenChange={setOpen} modal={false} __scopeMenu={props.__scopeMenu}>
+    <Menu open={open} onOpenChange={setOpen} modal={false} __scopeMenu={props.__scopeMenu}>
       <MenuSubProvider
         scope={props.__scopeMenu as Scope<MenuSubContextValue | undefined>}
         open={open}
@@ -847,6 +869,10 @@ function MenuSubTrigger(props: ScopedProps<MenuSubTriggerProps>): FictNode {
       role="menuitem"
       closeOnSelect={false}
       aria-haspopup="menu"
+      aria-expanded={prop(() => (subContext.open() ? 'true' : 'false')) as unknown as
+        | 'true'
+        | 'false'}
+      data-state={prop(() => getState(subContext.open()))}
       onSelect={(event) => {
         props.onSelect?.(event)
         if (!event.defaultPrevented) {

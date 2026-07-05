@@ -274,6 +274,17 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
     'dropdown menu content should fill the popper wrapper width',
   ).toBeLessThanOrEqual(1)
 
+  const subTrigger = page.locator('.rt-DropdownMenuSubTrigger').filter({ hasText: 'More Tools' })
+  const subContent = page.locator('.rt-DropdownMenuSubContent').first()
+  await subTrigger.hover()
+  await expect(subTrigger).toHaveAttribute('data-state', 'open')
+  await expect(subContent).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'Developer Tools' })).toBeVisible()
+
+  await page.keyboard.press('Escape')
+  await expect(subContent).toBeHidden()
+  await expect(menuItem).toBeVisible()
+
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()
   await expect
@@ -364,6 +375,9 @@ test('select opens and applies a new value', async ({ page }) => {
 
   await trigger.click()
   await expect(listbox).toBeVisible()
+  await expect
+    .poll(() => page.evaluate(() => document.body.getAttribute('data-scroll-locked')))
+    .toBe('1')
 
   const firstTriggerBox = await trigger.boundingBox()
   const firstListboxBox = await listbox.boundingBox()
@@ -392,9 +406,15 @@ test('select opens and applies a new value', async ({ page }) => {
     'first select content should render just below the trigger',
   ).toBeLessThanOrEqual(8)
 
-  await page.getByRole('option', { name: 'Orange' }).click()
+  const orangeOption = page.getByRole('option', { name: 'Orange' })
+  await orangeOption.hover()
+  await expect(orangeOption).toHaveAttribute('data-highlighted', '')
+  await orangeOption.click()
   await expect(trigger).toContainText('Orange')
   await expect(listbox).toBeHidden()
+  await expect
+    .poll(() => page.evaluate(() => document.body.getAttribute('data-scroll-locked')))
+    .toBeNull()
 
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
@@ -438,6 +458,9 @@ test('select opens and applies a new value', async ({ page }) => {
 
   await page.keyboard.press('Escape')
   await expect(listbox).toBeHidden()
+  await expect
+    .poll(() => page.evaluate(() => document.body.getAttribute('data-scroll-locked')))
+    .toBeNull()
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the select demo')

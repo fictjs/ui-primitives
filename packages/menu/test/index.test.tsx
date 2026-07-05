@@ -20,6 +20,9 @@ import {
   Portal,
   RadioGroup,
   RadioItem,
+  Sub,
+  SubContent,
+  SubTrigger,
 } from '../src/index.js'
 import { useEffectEvent } from '../../use-effect-event/src/index.js'
 
@@ -38,6 +41,16 @@ function pressEscape(target: Document): void {
       bubbles: true,
       cancelable: true,
       key: 'Escape',
+    }),
+  )
+}
+
+function pointerMove(target: Element): void {
+  const PointerEventCtor = globalThis.PointerEvent ?? MouseEvent
+  target.dispatchEvent(
+    new PointerEventCtor('pointermove', {
+      bubbles: true,
+      cancelable: true,
     }),
   )
 }
@@ -69,6 +82,8 @@ describe('@fictjs/menu', () => {
     }
 
     document.body.innerHTML = ''
+    document.body.style.pointerEvents = ''
+    document.body.removeAttribute('data-scroll-locked')
     vi.clearAllMocks()
   })
 
@@ -156,6 +171,77 @@ describe('@fictjs/menu', () => {
 
     expect(radioValue()).toBe('two')
     expect(container.querySelector('[data-testid="radio-indicator"]')?.textContent).toBe('dot')
+  })
+
+  it('marks the focused pointer target as highlighted', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const open = createSignal(true)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Content data-testid="content">
+            <Item data-testid="first">First</Item>
+            <Item data-testid="second">Second</Item>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const first = container.querySelector('[data-testid="first"]') as HTMLDivElement
+    const second = container.querySelector('[data-testid="second"]') as HTMLDivElement
+
+    pointerMove(first)
+    await waitForEffects()
+
+    expect(first.hasAttribute('data-highlighted')).toBe(true)
+    expect(second.hasAttribute('data-highlighted')).toBe(false)
+
+    pointerMove(second)
+    await waitForEffects()
+
+    expect(first.hasAttribute('data-highlighted')).toBe(false)
+    expect(second.hasAttribute('data-highlighted')).toBe(true)
+  })
+
+  it('opens submenu content when the sub trigger is hovered', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const open = createSignal(true)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Content data-testid="content">
+            <Item data-testid="first">First</Item>
+            <Sub>
+              <SubTrigger data-testid="sub-trigger">More</SubTrigger>
+              <SubContent data-testid="sub-content">
+                <Item data-testid="nested">Nested</Item>
+              </SubContent>
+            </Sub>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const trigger = container.querySelector('[data-testid="sub-trigger"]') as HTMLDivElement
+
+    expect(container.querySelector('[data-testid="sub-content"]')).toBeNull()
+
+    pointerMove(trigger)
+    await waitForEffects()
+
+    expect(trigger.getAttribute('data-state')).toBe('open')
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(container.querySelector('[data-testid="sub-content"]')).not.toBeNull()
   })
 
   it('closes portal content on escape', async () => {

@@ -17,6 +17,7 @@ import {
   createMenuScope,
   Menu,
   MenuContent,
+  MenuItem,
   MenuSeparator,
   MenuArrow,
   type MenuContentProps,
@@ -60,6 +61,9 @@ type SelectItemContextValue = {
 type SelectPortalContextValue = {
   forceMount: boolean | undefined
 }
+type SelectCollectionContextValue = {
+  detached: boolean
+}
 
 const SELECT_NAME = 'Select'
 const TRIGGER_NAME = 'SelectTrigger'
@@ -88,6 +92,9 @@ const [SelectItemProvider, useSelectItemContext] =
   createSelectContext<SelectItemContextValue>(ITEM_NAME)
 const SelectPortalContext = createRuntimeContext<SelectPortalContextValue>({
   forceMount: undefined,
+})
+const SelectCollectionContext = createRuntimeContext<SelectCollectionContextValue>({
+  detached: false,
 })
 const useMenuScope = createMenuScope()
 
@@ -171,6 +178,7 @@ function getSelectWrapperStyle(
       left: '0px',
       top: '0px',
       transform: 'translate(0px, 0px)',
+      pointerEvents: 'auto',
       minWidth: 'max-content',
       zIndex: 'auto',
       '--radix-popper-transform-origin': '0% 0px',
@@ -271,6 +279,7 @@ function getSelectWrapperStyle(
     left: '0px',
     top: '0px',
     transform: `translate(${roundedLeft}px, ${roundedTop}px)${translateSuffix}`,
+    pointerEvents: 'auto',
     minWidth: 'max-content',
     zIndex: 'auto',
     '--radix-popper-transform-origin': `${originX} ${originY}`,
@@ -346,7 +355,7 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
         }
       }}
     >
-      <Menu {...menuScope} open={open} onOpenChange={setOpen} modal={false}>
+      <Menu {...menuScope} open={open} onOpenChange={setOpen}>
         {props.children}
       </Menu>
     </SelectProvider>
@@ -565,7 +574,11 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
 
           return createFictPortal(
             detachedFragment,
-            () => <div>{props.children}</div>,
+            () => (
+              <SelectCollectionContext.Provider value={{ detached: true }}>
+                <div>{props.children}</div>
+              </SelectCollectionContext.Provider>
+            ),
             createElement,
           ) as unknown as FictNode
         }
@@ -605,6 +618,9 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
     ITEM_NAME,
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
   )
+  const collectionContext = useRuntimeContext(SelectCollectionContext)
+  const menuScope = useMenuScope(props.__scopeSelect)
+  const { __scopeSelect: _scopeSelect, value: _value, ...itemProps } = props
   const selected = () => context.value() === props.value
   const disabled = () =>
     props.disabled === undefined
@@ -622,34 +638,47 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
         context.onOpenChange(false)
       }}
     >
-      <Primitive.div
-        {...(props as unknown as Record<string, unknown>)}
-        role="option"
-        aria-selected={selected() ? 'true' : 'false'}
-        data-state={selected() ? 'checked' : 'unchecked'}
-        data-disabled={disabled() ? '' : undefined}
-        onClick={composeEventHandlers<MouseEvent>(
-          props.onClick as ((event: MouseEvent) => void) | undefined,
-          (event) => {
+      {collectionContext.detached ? (
+        <Primitive.div
+          {...(itemProps as Record<string, unknown>)}
+          role="option"
+          aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as
+            | 'true'
+            | 'false'}
+          data-state={prop(() => (selected() ? 'checked' : 'unchecked'))}
+          data-disabled={prop(() => (disabled() ? '' : undefined))}
+          data-select-item=""
+          data-value={props.value}
+        />
+      ) : (
+        <MenuItem
+          {...menuScope}
+          {...itemProps}
+          role="option"
+          aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as
+            | 'true'
+            | 'false'}
+          data-state={prop(() => (selected() ? 'checked' : 'unchecked'))}
+          data-select-item=""
+          data-value={props.value}
+          disabled={props.disabled}
+          onSelect={(event) => {
             if (disabled()) {
               event.preventDefault()
               return
             }
+
             context.onValueChange(props.value)
             context.onOpenChange(false)
-          },
-        )}
-        onKeyDown={composeEventHandlers<KeyboardEvent>(
-          props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-          (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault()
-              context.onValueChange(props.value)
-              context.onOpenChange(false)
-            }
-          },
-        )}
-      />
+          }}
+          onKeyDown={composeEventHandlers<KeyboardEvent>(
+            itemProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+            (event) => {
+              if (disabled()) return
+            },
+          )}
+        />
+      )}
     </SelectItemProvider>
   )
 }
