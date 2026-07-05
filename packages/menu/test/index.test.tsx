@@ -233,15 +233,43 @@ describe('@fictjs/menu', () => {
     await waitForEffects()
 
     const trigger = container.querySelector('[data-testid="sub-trigger"]') as HTMLDivElement
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      x: 18,
+      y: 24,
+      width: 96,
+      height: 28,
+      top: 24,
+      right: 114,
+      bottom: 52,
+      left: 18,
+      toJSON: () => ({}),
+    } as DOMRect)
 
     expect(container.querySelector('[data-testid="sub-content"]')).toBeNull()
 
     pointerMove(trigger)
     await waitForEffects()
 
+    const wrapper = container.querySelector('[data-radix-popper-content-wrapper]') as HTMLDivElement
+    const subContent = container.querySelector('[data-testid="sub-content"]') as HTMLDivElement
+
     expect(trigger.getAttribute('data-state')).toBe('open')
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
-    expect(container.querySelector('[data-testid="sub-content"]')).not.toBeNull()
+    expect(subContent).not.toBeNull()
+    expect(wrapper.style.position).toBe('fixed')
+    expect(wrapper.style.left).toBe('0px')
+    expect(wrapper.style.top).toBe('0px')
+    expect(wrapper.style.transform).toBe('translate(118px, 24px)')
+    expect(wrapper.style.minWidth).toBe('max-content')
+    expect(subContent.style.width).toBe('100%')
+    expect(subContent.getAttribute('data-side')).toBe('right')
+    expect(subContent.getAttribute('data-align')).toBe('start')
+    expect(
+      subContent.style.getPropertyValue('--radix-dropdown-menu-content-transform-origin'),
+    ).toBe('var(--radix-popper-transform-origin)')
+    expect(subContent.style.getPropertyValue('--radix-context-menu-content-transform-origin')).toBe(
+      'var(--radix-popper-transform-origin)',
+    )
   })
 
   it('closes portal content on escape', async () => {

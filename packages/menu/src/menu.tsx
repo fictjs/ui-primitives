@@ -206,6 +206,53 @@ function readStyle(value: unknown): StyleRecord {
   return value as StyleRecord
 }
 
+function getSubContentWrapperStyle(
+  trigger: HTMLElement | null,
+  side: 'right' | 'left',
+  align: 'start' | 'center' | 'end',
+  sideOffset: number,
+  alignOffset: number,
+): StyleRecord {
+  if (!trigger) {
+    return { pointerEvents: 'auto' }
+  }
+
+  const rect = trigger.getBoundingClientRect()
+  const availableWidth = globalThis.innerWidth || document.documentElement.clientWidth || 0
+  const availableHeight = globalThis.innerHeight || document.documentElement.clientHeight || 0
+  let top = rect.top
+  const left = side === 'left' ? rect.left - sideOffset : rect.right + sideOffset
+  let translateSuffix = side === 'left' ? ' translate(-100%, 0)' : ''
+
+  if (align === 'center') {
+    top = rect.top + rect.height / 2
+    translateSuffix = side === 'left' ? ' translate(-100%, -50%)' : ' translate(0, -50%)'
+  } else if (align === 'end') {
+    top = rect.bottom
+    translateSuffix = side === 'left' ? ' translate(-100%, -100%)' : ' translate(0, -100%)'
+  }
+
+  top += alignOffset
+
+  const originX = side === 'left' ? '100%' : '0px'
+  const originY = align === 'center' ? '50%' : align === 'end' ? '100%' : '0%'
+
+  return {
+    position: 'fixed',
+    left: '0px',
+    top: '0px',
+    transform: `translate(${Math.round(left)}px, ${Math.round(top)}px)${translateSuffix}`,
+    pointerEvents: 'auto',
+    minWidth: 'max-content',
+    zIndex: 'auto',
+    '--radix-popper-transform-origin': `${originX} ${originY}`,
+    '--radix-popper-available-width': `${Math.max(availableWidth, 0)}px`,
+    '--radix-popper-available-height': `${Math.max(availableHeight, 0)}px`,
+    '--radix-popper-anchor-width': `${Math.max(rect.width, 0)}px`,
+    '--radix-popper-anchor-height': `${Math.max(rect.height, 0)}px`,
+  }
+}
+
 function getState(open: boolean): 'open' | 'closed' {
   return open ? 'open' : 'closed'
 }
@@ -869,9 +916,9 @@ function MenuSubTrigger(props: ScopedProps<MenuSubTriggerProps>): FictNode {
       role="menuitem"
       closeOnSelect={false}
       aria-haspopup="menu"
-      aria-expanded={prop(() => (subContext.open() ? 'true' : 'false')) as unknown as
-        | 'true'
-        | 'false'}
+      aria-expanded={
+        prop(() => (subContext.open() ? 'true' : 'false')) as unknown as 'true' | 'false'
+      }
       data-state={prop(() => getState(subContext.open()))}
       onSelect={(event) => {
         props.onSelect?.(event)
@@ -904,34 +951,99 @@ function MenuSubTrigger(props: ScopedProps<MenuSubTriggerProps>): FictNode {
 MenuSubTrigger.displayName = SUB_TRIGGER_NAME
 
 function MenuSubContent(props: ScopedProps<MenuSubContentProps>): FictNode {
+  const menuContext = useMenuContext(
+    SUB_CONTENT_NAME,
+    props.__scopeMenu as Scope<MenuContextValue | undefined>,
+  )
   const subContext = useMenuSubContext(
     SUB_CONTENT_NAME,
     props.__scopeMenu as Scope<MenuSubContextValue | undefined>,
   )
+  const side = () => {
+    const defaultSide = menuContext.dir() === 'rtl' ? 'left' : 'right'
+    const value =
+      props.side === undefined
+        ? defaultSide
+        : (readValue(
+            props.side as MaybeAccessor<'top' | 'right' | 'bottom' | 'left' | undefined>,
+          ) ?? defaultSide)
+
+    return value === 'left' ? 'left' : 'right'
+  }
+  const align = () =>
+    props.align === undefined
+      ? 'start'
+      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ?? 'start')
+  const sideOffset = () =>
+    props.sideOffset === undefined
+      ? 4
+      : (readValue(props.sideOffset as MaybeAccessor<number | undefined>) ?? 4)
+  const alignOffset = () =>
+    props.alignOffset === undefined
+      ? 0
+      : (readValue(props.alignOffset as MaybeAccessor<number | undefined>) ?? 0)
+  const forceMount = () =>
+    props.forceMount === undefined
+      ? false
+      : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
+  const wrapperStyle = () =>
+    getSubContentWrapperStyle(
+      subContext.triggerRef.current,
+      side(),
+      align(),
+      sideOffset(),
+      alignOffset(),
+    )
 
   return (
-    <MenuContent
-      {...props}
-      forceMount={() =>
-        props.forceMount === undefined
-          ? subContext.open()
-          : Boolean(
-              readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ??
-              subContext.open(),
-            )
-      }
-      onCloseAutoFocus={(event) => {
-        props.onCloseAutoFocus?.(event)
-        if (event.defaultPrevented) return
+    <>
+      {reactive(() =>
+        subContext.open() || forceMount() ? (
+          <div data-radix-popper-content-wrapper="" style={wrapperStyle()}>
+            <MenuContent
+              {...props}
+              forceMount={forceMount}
+              data-side={prop(side)}
+              data-align={prop(align)}
+              onCloseAutoFocus={(event) => {
+                props.onCloseAutoFocus?.(event)
+                if (event.defaultPrevented) return
 
-        event.preventDefault()
-        subContext.triggerRef.current?.focus()
-      }}
-      style={{
-        marginInlineStart: 4,
-        ...readStyle(props.style),
-      }}
-    />
+                event.preventDefault()
+                subContext.triggerRef.current?.focus()
+              }}
+              style={{
+                outline: 'none',
+                width: '100%',
+                pointerEvents: 'auto',
+                '--radix-dropdown-menu-content-transform-origin':
+                  'var(--radix-popper-transform-origin)',
+                '--radix-dropdown-menu-content-available-width':
+                  'var(--radix-popper-available-width)',
+                '--radix-dropdown-menu-content-available-height':
+                  'var(--radix-popper-available-height)',
+                '--radix-dropdown-menu-trigger-width': 'var(--radix-popper-anchor-width)',
+                '--radix-dropdown-menu-trigger-height': 'var(--radix-popper-anchor-height)',
+                '--radix-context-menu-content-transform-origin':
+                  'var(--radix-popper-transform-origin)',
+                '--radix-context-menu-content-available-width':
+                  'var(--radix-popper-available-width)',
+                '--radix-context-menu-content-available-height':
+                  'var(--radix-popper-available-height)',
+                '--radix-context-menu-trigger-width': 'var(--radix-popper-anchor-width)',
+                '--radix-context-menu-trigger-height': 'var(--radix-popper-anchor-height)',
+                '--radix-menubar-content-transform-origin': 'var(--radix-popper-transform-origin)',
+                '--radix-menubar-content-available-width': 'var(--radix-popper-available-width)',
+                '--radix-menubar-content-available-height': 'var(--radix-popper-available-height)',
+                '--radix-menubar-trigger-width': 'var(--radix-popper-anchor-width)',
+                '--radix-menubar-trigger-height': 'var(--radix-popper-anchor-height)',
+                ...readStyle(props.style),
+              }}
+            />
+          </div>
+        ) : null,
+      )}
+    </>
   )
 }
 

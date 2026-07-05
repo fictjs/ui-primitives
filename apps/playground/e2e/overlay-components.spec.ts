@@ -281,6 +281,29 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
   await expect(subContent).toBeVisible()
   await expect(page.getByRole('menuitem', { name: 'Developer Tools' })).toBeVisible()
 
+  const subTriggerBox = await subTrigger.boundingBox()
+  const subContentBox = await subContent.boundingBox()
+
+  expect(subTriggerBox, 'dropdown submenu trigger should be measurable').not.toBeNull()
+  expect(subContentBox, 'dropdown submenu content should be measurable').not.toBeNull()
+
+  if (!subTriggerBox || !subContentBox) {
+    throw new Error('Unable to measure dropdown submenu geometry')
+  }
+
+  expect(
+    subContentBox.x - (subTriggerBox.x + subTriggerBox.width),
+    'dropdown submenu should render to the right of its trigger',
+  ).toBeGreaterThanOrEqual(0)
+  expect(
+    subContentBox.x - (subTriggerBox.x + subTriggerBox.width),
+    'dropdown submenu should stay close to its trigger',
+  ).toBeLessThanOrEqual(8)
+  expect(
+    Math.abs(subContentBox.y - subTriggerBox.y),
+    'dropdown submenu should align with its trigger top edge',
+  ).toBeLessThanOrEqual(4)
+
   await page.keyboard.press('Escape')
   await expect(subContent).toBeHidden()
   await expect(menuItem).toBeVisible()
@@ -332,6 +355,41 @@ test('context menu opens on right click and closes on escape', async ({ page }) 
   await expect(menuItem).toBeVisible()
   await expect(popperWrapper).toBeVisible()
   await expect(menuContent).toBeVisible()
+
+  const subTrigger = page.locator('.rt-ContextMenuSubTrigger').filter({ hasText: 'More Tools' })
+  const subContent = page.locator('.rt-ContextMenuSubContent').first()
+
+  await subTrigger.hover()
+  await expect(subTrigger).toHaveAttribute('data-state', 'open')
+  await expect(subContent).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'Developer Tools' })).toBeVisible()
+
+  const subTriggerBox = await subTrigger.boundingBox()
+  const subContentBox = await subContent.boundingBox()
+
+  expect(subTriggerBox, 'context submenu trigger should be measurable').not.toBeNull()
+  expect(subContentBox, 'context submenu content should be measurable').not.toBeNull()
+
+  if (!subTriggerBox || !subContentBox) {
+    throw new Error('Unable to measure context submenu geometry')
+  }
+
+  expect(
+    subContentBox.x - (subTriggerBox.x + subTriggerBox.width),
+    'context submenu should render to the right of its trigger',
+  ).toBeGreaterThanOrEqual(0)
+  expect(
+    subContentBox.x - (subTriggerBox.x + subTriggerBox.width),
+    'context submenu should stay close to its trigger',
+  ).toBeLessThanOrEqual(8)
+  expect(
+    Math.abs(subContentBox.y - subTriggerBox.y),
+    'context submenu should align with its trigger top edge',
+  ).toBeLessThanOrEqual(4)
+
+  await page.keyboard.press('Escape')
+  await expect(subContent).toBeHidden()
+  await expect(menuItem).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()
   await expect
