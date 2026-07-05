@@ -100,6 +100,11 @@ const fictCssNormalizers: Record<string, (contents: string) => string> = {
         '  outline-offset: 2px;\n  &:where(:checked)',
         '  outline-offset: 2px;\n\n  &:where(:checked)',
       ),
+  'components/tooltip.css': (contents) =>
+    contents.replace(
+      "\n\n    &:where([data-state='closed']) {\n      animation-duration: 100ms;\n      animation-name: rt-fade-out;\n    }",
+      '',
+    ),
 }
 
 function normalizeFictCss(relativeFile: string, contents: string): string {
