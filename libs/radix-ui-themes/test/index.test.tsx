@@ -175,6 +175,12 @@ describe('@fictjs/radix-ui-themes', () => {
 
     await flushEffects()
 
+    expect(container.querySelector('.rt-ThemePanelShortcut')).not.toBeNull()
+    expect(container.querySelectorAll('.rt-ThemePanelSwatch').length).toBeGreaterThan(0)
+    expect(container.querySelectorAll('.rt-ThemePanelSwatchInput').length).toBeGreaterThan(0)
+    expect(container.querySelectorAll('.rt-ThemePanelRadioCard').length).toBeGreaterThan(0)
+    expect(container.querySelectorAll('.rt-ThemePanelRadioCardInput').length).toBeGreaterThan(0)
+
     const buttons = Array.from(container.querySelectorAll('button'))
     const copyButton = buttons.find((button) => button.textContent === 'Copy Theme')
     expect(copyButton).not.toBeUndefined()
