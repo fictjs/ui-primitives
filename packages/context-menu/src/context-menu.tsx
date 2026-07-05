@@ -386,10 +386,30 @@ function ContextMenuContent(props: ScopedProps<ContextMenuContentProps>): FictNo
 
                 hasInteractedOutside = false
               }}
+              onFocusOutside={(event) => {
+                props.onFocusOutside?.(event)
+                if (!event.defaultPrevented && context.modal()) {
+                  event.preventDefault()
+                }
+              }}
               onInteractOutside={(event) => {
                 props.onInteractOutside?.(event)
 
-                if (!event.defaultPrevented && !context.modal()) {
+                if (event.defaultPrevented) {
+                  return
+                }
+
+                const originalEvent = event.detail.originalEvent as PointerEvent | FocusEvent
+                const target = originalEvent.target as HTMLElement | null
+                const isMenuFocus =
+                  originalEvent.type === 'focusin' && !!target?.closest('[role="menu"]')
+
+                if (isMenuFocus) {
+                  event.preventDefault()
+                  return
+                }
+
+                if (!context.modal()) {
                   hasInteractedOutside = true
                 }
               }}

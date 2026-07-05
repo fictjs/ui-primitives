@@ -4,7 +4,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 
-import { Content, ContextMenu, Item, Portal, Trigger } from '../src/index.js'
+import {
+  Content,
+  ContextMenu,
+  Item,
+  Portal,
+  Sub,
+  SubContent,
+  SubTrigger,
+  Trigger,
+} from '../src/index.js'
 
 function contextMenu(target: Element, clientX = 40, clientY = 80): void {
   target.dispatchEvent(
@@ -21,6 +30,16 @@ function escape(): void {
   document.dispatchEvent(
     new KeyboardEvent('keydown', {
       key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    }),
+  )
+}
+
+function pointerMove(target: Element): void {
+  const PointerEventCtor = globalThis.PointerEvent ?? MouseEvent
+  target.dispatchEvent(
+    new PointerEventCtor('pointermove', {
       bubbles: true,
       cancelable: true,
     }),
@@ -175,5 +194,58 @@ describe('@fictjs/context-menu', () => {
     await waitForEffects()
 
     expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+  })
+
+  it('keeps the root menu open when hovering a submenu trigger', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    mount(
+      () => (
+        <ContextMenu>
+          <Trigger data-testid="trigger">Area</Trigger>
+          <Portal container={portalRoot}>
+            <Content data-testid="content">
+              <Item data-testid="item">Action</Item>
+              <Sub>
+                <SubTrigger data-testid="sub-trigger">More</SubTrigger>
+                <SubContent data-testid="sub-content">
+                  <Item data-testid="nested-item">Nested action</Item>
+                </SubContent>
+              </Sub>
+            </Content>
+          </Portal>
+        </ContextMenu>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLDivElement
+
+    contextMenu(trigger, 32, 64)
+    await waitForEffects()
+    await waitForEffects()
+
+    const subTrigger = portalRoot.querySelector('[data-testid="sub-trigger"]') as HTMLDivElement
+    vi.spyOn(subTrigger, 'getBoundingClientRect').mockReturnValue({
+      x: 40,
+      y: 72,
+      width: 96,
+      height: 28,
+      top: 72,
+      right: 136,
+      bottom: 100,
+      left: 40,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    pointerMove(subTrigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+    expect(portalRoot.querySelector('[data-testid="sub-content"]')).not.toBeNull()
+    expect(subTrigger.getAttribute('data-state')).toBe('open')
   })
 })
