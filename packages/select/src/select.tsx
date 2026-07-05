@@ -642,9 +642,7 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
         <Primitive.div
           {...(itemProps as Record<string, unknown>)}
           role="option"
-          aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as
-            | 'true'
-            | 'false'}
+          aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as 'true' | 'false'}
           data-state={prop(() => (selected() ? 'checked' : 'unchecked'))}
           data-disabled={prop(() => (disabled() ? '' : undefined))}
           data-select-item=""
@@ -655,9 +653,7 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
           {...menuScope}
           {...itemProps}
           role="option"
-          aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as
-            | 'true'
-            | 'false'}
+          aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as 'true' | 'false'}
           data-state={prop(() => (selected() ? 'checked' : 'unchecked'))}
           data-select-item=""
           data-value={props.value}

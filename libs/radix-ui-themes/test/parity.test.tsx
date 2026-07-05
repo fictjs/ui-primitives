@@ -76,7 +76,7 @@ const fictCssNormalizers: Record<string, (contents: string) => string> = {
     contents.replace(/, \.rt-variant-ghost-offset/g, ''),
   'components/_internal/base-checkbox.css': (contents) =>
     contents.replace(
-      "\n\n  & :where(svg) {\n    display: block;\n    width: 100%;\n    height: 100%;\n  }",
+      '\n\n  & :where(svg) {\n    display: block;\n    width: 100%;\n    height: 100%;\n  }',
       '',
     ),
   'components/container.css': (contents) =>

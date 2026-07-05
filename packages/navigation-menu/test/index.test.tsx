@@ -106,20 +106,12 @@ describe('@fictjs/navigation-menu', () => {
         <Root>
           <List>
             <Item>
-              <Link
-                href="/docs"
-                data-testid="docs-link"
-                active={() => current() === 'docs'}
-              >
+              <Link href="/docs" data-testid="docs-link" active={() => current() === 'docs'}>
                 Docs
               </Link>
             </Item>
             <Item>
-              <Link
-                href="/blog"
-                data-testid="blog-link"
-                active={() => current() === 'blog'}
-              >
+              <Link href="/blog" data-testid="blog-link" active={() => current() === 'blog'}>
                 Blog
               </Link>
             </Item>

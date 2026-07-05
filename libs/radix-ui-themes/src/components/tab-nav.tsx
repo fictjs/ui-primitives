@@ -67,8 +67,7 @@ function readValue<T>(value: MaybeAccessor<T>): T {
 type TabNavLinkElement = React.ElementRef<typeof NavigationMenu.Link>
 type TabNavLinkOwnProps = GetPropDefTypes<typeof tabNavLinkPropDefs>
 interface TabNavLinkProps
-  extends ComponentPropsWithout<'a', RemovedProps | 'active'>,
-    Omit<TabNavLinkOwnProps, 'active'> {
+  extends ComponentPropsWithout<'a', RemovedProps | 'active'>, Omit<TabNavLinkOwnProps, 'active'> {
   active?: MaybeAccessor<boolean | undefined>
 }
 const TabNavLink = React.forwardRef<TabNavLinkElement, TabNavLinkProps>((props, forwardedRef) => {
