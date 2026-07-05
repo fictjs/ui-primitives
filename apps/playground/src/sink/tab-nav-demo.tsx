@@ -10,26 +10,38 @@ function TabNavDemoImpl(props: React.ComponentPropsWithRef<typeof TabNav.Root>) 
     tab(nextTab)
   }
 
+  const handleTabKeyDown = (nextTab: string) => (event: KeyboardEvent) => {
+    if (event.key !== 'Enter' || event.defaultPrevented) {
+      return
+    }
+
+    event.preventDefault()
+    tab(nextTab)
+  }
+
   return (
     <TabNav.Root {...props}>
       <TabNav.Link
-        active={tab() === 'account'}
+        active={() => tab() === 'account'}
         href="#tab-nav-account"
         onClick={handleTabClick('account')}
+        onKeyDown={handleTabKeyDown('account')}
       >
         Account
       </TabNav.Link>
       <TabNav.Link
-        active={tab() === 'documents'}
+        active={() => tab() === 'documents'}
         href="#tab-nav-documents"
         onClick={handleTabClick('documents')}
+        onKeyDown={handleTabKeyDown('documents')}
       >
         Documents
       </TabNav.Link>
       <TabNav.Link
-        active={tab() === 'settings'}
+        active={() => tab() === 'settings'}
         href="#tab-nav-settings"
         onClick={handleTabClick('settings')}
+        onKeyDown={handleTabKeyDown('settings')}
       >
         Settings
       </TabNav.Link>
