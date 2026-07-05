@@ -659,7 +659,7 @@ function TitleWarning({ titleId }: TitleWarningProps): null {
       return
     }
 
-    queueMicrotask(() => {
+    const timerId = window.setTimeout(() => {
       const hasTitle = document.getElementById(titleId)
       if (!hasTitle) {
         console.error(
@@ -667,6 +667,10 @@ function TitleWarning({ titleId }: TitleWarningProps): null {
         )
       }
     })
+
+    return () => {
+      window.clearTimeout(timerId)
+    }
   })
 
   return null
@@ -681,7 +685,7 @@ function DescriptionWarning({ contentRef, descriptionId }: DescriptionWarningPro
   const warningContext = useContext(WarningContext)
 
   useLayoutEffect(() => {
-    queueMicrotask(() => {
+    const timerId = window.setTimeout(() => {
       const describedById = contentRef.current?.getAttribute('aria-describedby')
       if (descriptionId && describedById) {
         const hasDescription = document.getElementById(descriptionId)
@@ -692,6 +696,10 @@ function DescriptionWarning({ contentRef, descriptionId }: DescriptionWarningPro
         }
       }
     })
+
+    return () => {
+      window.clearTimeout(timerId)
+    }
   })
 
   return null
