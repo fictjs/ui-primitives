@@ -158,6 +158,68 @@ describe('@fictjs/slider', () => {
     expect(thumb.getAttribute('aria-valuenow')).toBe('15')
   })
 
+  it('keeps the thumb wrapper position in sync with the current value', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root defaultValue={[10]} step={5}>
+          <Track>
+            <Range />
+          </Track>
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const thumb = container.querySelector('[role="slider"]') as HTMLSpanElement
+    const wrapper = thumb.parentElement as HTMLSpanElement
+
+    expect(wrapper.style.left).toBe('calc(10% + 0px)')
+
+    thumb.focus()
+    keyDown(thumb, 'ArrowRight')
+    await waitForEffects()
+
+    expect(thumb.getAttribute('aria-valuenow')).toBe('15')
+    expect(wrapper.style.left).toBe('calc(15% + 0px)')
+  })
+
+  it('keeps vertical thumb wrapper position in sync with the current value', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root defaultValue={[25]} orientation="vertical" step={25}>
+          <Track>
+            <Range />
+          </Track>
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const thumb = container.querySelector('[role="slider"]') as HTMLSpanElement
+    const wrapper = thumb.parentElement as HTMLSpanElement
+
+    expect(wrapper.style.bottom).toBe('calc(25% + 0px)')
+
+    thumb.focus()
+    keyDown(thumb, 'ArrowUp')
+    await waitForEffects()
+
+    expect(thumb.getAttribute('aria-valuenow')).toBe('50')
+    expect(wrapper.style.bottom).toBe('calc(50% + 0px)')
+  })
+
   it('respects minStepsBetweenThumbs for multiple thumbs', async () => {
     const container = document.createElement('div')
     document.body.append(container)

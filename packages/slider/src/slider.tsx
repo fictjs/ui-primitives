@@ -802,9 +802,12 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
       />
     ) : null,
   ) as unknown as FictNode
+  const wrapperProps = mergeProps({
+    style: prop(wrapperStyle),
+  })
 
   return (
-    <span style={wrapperStyle()}>
+    <span {...(wrapperProps as Record<string, unknown>)}>
       <Collection.ItemSlot scope={props.__scopeSlider}>
         <Primitive.span
           {...(thumbProps as Record<string, unknown>)}

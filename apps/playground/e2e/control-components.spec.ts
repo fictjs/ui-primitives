@@ -164,12 +164,30 @@ test('slider responds to keyboard input', async ({ page }) => {
   const slider = section.getByRole('slider').first()
   const colorCombinations = section.locator('details').filter({ hasText: 'See colors' })
   const before = Number(await slider.getAttribute('aria-valuenow'))
+  const beforePosition = await slider.evaluate((element) => {
+    const wrapper = element.parentElement
+    return {
+      left: wrapper?.style.left ?? '',
+      x: wrapper?.getBoundingClientRect().x ?? 0,
+    }
+  })
 
   await slider.focus()
   await page.keyboard.press('ArrowRight')
 
   const after = Number(await slider.getAttribute('aria-valuenow'))
+  const afterPosition = await slider.evaluate((element) => {
+    const wrapper = element.parentElement
+    return {
+      left: wrapper?.style.left ?? '',
+      x: wrapper?.getBoundingClientRect().x ?? 0,
+    }
+  })
   expect(after).toBeGreaterThan(before)
+  expect(beforePosition.left).toContain(`${before}%`)
+  expect(afterPosition.left).toContain(`${after}%`)
+  expect(afterPosition.left).not.toBe(beforePosition.left)
+  expect(afterPosition.x).toBeGreaterThan(beforePosition.x)
 
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
