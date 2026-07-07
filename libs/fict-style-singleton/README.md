@@ -123,3 +123,9 @@ sheet.remove()
 - `dynamic` is intended for a single mounted instance. Multiple mounted instances with different dynamic styles remain undefined behavior, matching the original singleton model.
 - CSP nonces are forwarded through `get-nonce`.
 - The package is DOM-only. If `document` is unavailable, injection becomes a no-op.
+
+Part of [`ui-primitives`](https://github.com/fictjs/ui-primitives). See the [monorepo overview](https://github.com/fictjs/ui-primitives#readme) and the [architecture guide](https://github.com/fictjs/ui-primitives/blob/main/docs/ARCHITECTURE.md).
+
+## License
+
+[MIT](https://github.com/fictjs/ui-primitives/blob/main/LICENSE) © Fict contributors.

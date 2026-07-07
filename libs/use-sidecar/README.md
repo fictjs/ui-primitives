@@ -2,7 +2,7 @@
 
 Fict-first sidecar utilities for splitting non-visual logic out of UI components without requiring `Suspense`.
 
-This package is a Fict port of the React `use-sidecar` package in this repository. The core idea stays the same:
+This package is a Fict port of the React `use-sidecar` package design. The core idea stays the same:
 
 - keep the visible UI small and eagerly available
 - move effects or heavier logic into a lazily loaded sidecar
@@ -180,3 +180,9 @@ pnpm --filter @fictjs/use-sidecar typecheck
 pnpm --filter @fictjs/use-sidecar test
 pnpm --filter @fictjs/use-sidecar build
 ```
+
+Part of [`ui-primitives`](https://github.com/fictjs/ui-primitives). See the [monorepo overview](https://github.com/fictjs/ui-primitives#readme) and the [architecture guide](https://github.com/fictjs/ui-primitives/blob/main/docs/ARCHITECTURE.md).
+
+## License
+
+[MIT](https://github.com/fictjs/ui-primitives/blob/main/LICENSE) © Fict contributors.
