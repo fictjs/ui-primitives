@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/use-rect",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Element rect observation hook for Fict UI primitives.",
   "license": "MIT",
   "type": "module",
@@ -56,7 +56,7 @@
     "@fictjs/rect": "workspace:*"
   },
   "peerDependencies": {
-    "@fictjs/runtime": ">=0.25.0"
+    "@fictjs/runtime": ">=0.26.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",

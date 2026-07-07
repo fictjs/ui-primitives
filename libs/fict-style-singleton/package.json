@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/fict-style-singleton",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Style singleton utilities for Fict components.",
   "keywords": [
     "fict",
@@ -53,7 +53,7 @@
     "get-nonce": "^1.0.1"
   },
   "peerDependencies": {
-    "fict": "^0.25.0"
+    "fict": "^0.26.0"
   },
   "devDependencies": {
     "fict": "catalog:",

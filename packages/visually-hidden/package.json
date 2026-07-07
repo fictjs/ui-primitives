@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/visually-hidden",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Visually hidden content helper for Fict UI primitives.",
   "license": "MIT",
   "type": "module",
@@ -53,7 +53,7 @@
     "@fictjs/primitive": "workspace:*"
   },
   "peerDependencies": {
-    "@fictjs/runtime": ">=0.25.0"
+    "@fictjs/runtime": ">=0.26.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",

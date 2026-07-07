@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/fict-remove-scroll",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Scroll isolation primitives for Fict, based on react-remove-scroll.",
   "keywords": [
     "fict",
@@ -69,7 +69,7 @@
     "@fictjs/use-sidecar": "workspace:*"
   },
   "peerDependencies": {
-    "fict": "^0.25.0"
+    "fict": "^0.26.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",

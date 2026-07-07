@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/floating-ui-dom",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Floating UI bindings for Fict DOM.",
   "license": "MIT",
   "type": "module",
@@ -55,7 +55,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "peerDependencies": {
-    "@fictjs/runtime": ">=0.25.0"
+    "@fictjs/runtime": ">=0.26.0"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.6"

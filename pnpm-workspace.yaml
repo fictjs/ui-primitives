@@ -8,9 +8,9 @@ catalog:
   '@commitlint/cli': 20.4.3
   '@commitlint/config-conventional': 20.4.3
   '@eslint/js': 10.0.1
-  '@fictjs/hooks': 0.26.0
-  '@fictjs/runtime': 0.25.0
-  '@fictjs/vite-plugin': 0.25.0
+  '@fictjs/hooks': 0.28.0
+  '@fictjs/runtime': 0.26.0
+  '@fictjs/vite-plugin': 0.26.0
   '@playwright/test': 1.56.1
   '@radix-ui/themes': 3.3.0
   '@types/node': 25.3.5
@@ -29,7 +29,7 @@ catalog:
   typescript: 5.9.3
   typescript-eslint: 8.56.1
   vitest: 4.0.18
-  fict: 0.25.0
+  fict: 0.26.0
 
 catalogMode: strict
 

@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/fict-remove-scroll-bar",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Removes body scroll in Fict without layout shake.",
   "keywords": [
     "fict",
@@ -62,7 +62,7 @@
     "@fictjs/fict-style-singleton": "workspace:*"
   },
   "peerDependencies": {
-    "fict": "^0.25.0"
+    "fict": "^0.26.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",

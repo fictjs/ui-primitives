@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/use-sidecar",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Sidecar code-splitting utilities for Fict components.",
   "license": "MIT",
   "type": "module",
@@ -46,7 +46,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "peerDependencies": {
-    "@fictjs/runtime": ">=0.25.0"
+    "@fictjs/runtime": ">=0.26.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",
