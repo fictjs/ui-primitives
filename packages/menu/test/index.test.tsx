@@ -45,6 +45,16 @@ function pressEscape(target: Document): void {
   )
 }
 
+function keyDown(target: Element, key: string): void {
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      key,
+    }),
+  )
+}
+
 function pointerMove(target: Element): void {
   const PointerEventCtor = globalThis.PointerEvent ?? MouseEvent
   target.dispatchEvent(
@@ -85,6 +95,7 @@ describe('@fictjs/menu', () => {
     document.body.style.pointerEvents = ''
     document.body.removeAttribute('data-scroll-locked')
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('renders content in a portal and closes after selecting an item', async () => {
@@ -252,10 +263,13 @@ describe('@fictjs/menu', () => {
 
     const wrapper = container.querySelector('[data-radix-popper-content-wrapper]') as HTMLDivElement
     const subContent = container.querySelector('[data-testid="sub-content"]') as HTMLDivElement
+    const nested = container.querySelector('[data-testid="nested"]') as HTMLDivElement
 
     expect(trigger.getAttribute('data-state')).toBe('open')
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
     expect(subContent).not.toBeNull()
+    expect(nested.hasAttribute('data-highlighted')).toBe(false)
+    expect(document.activeElement).toBe(trigger)
     expect(wrapper.style.position).toBe('fixed')
     expect(wrapper.style.left).toBe('0px')
     expect(wrapper.style.top).toBe('0px')
@@ -270,7 +284,119 @@ describe('@fictjs/menu', () => {
     expect(subContent.style.getPropertyValue('--radix-context-menu-content-transform-origin')).toBe(
       'var(--radix-popper-transform-origin)',
     )
+
+    pointerMove(trigger)
+    await waitForEffects()
+
+    expect(trigger.getAttribute('data-state')).toBe('open')
+    expect(container.querySelector('[data-testid="sub-content"]')).not.toBeNull()
+    expect(nested.hasAttribute('data-highlighted')).toBe(false)
   })
+
+  it('flips submenu content to the left when the right edge has less available space', async () => {
+    vi.stubGlobal('innerWidth', 180)
+    vi.stubGlobal('innerHeight', 320)
+
+    const container = document.createElement('div')
+    document.body.append(container)
+    const open = createSignal(true)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Content data-testid="content">
+            <Sub>
+              <SubTrigger data-testid="sub-trigger">More</SubTrigger>
+              <SubContent data-testid="sub-content">
+                <Item data-testid="nested">Nested</Item>
+              </SubContent>
+            </Sub>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const trigger = container.querySelector('[data-testid="sub-trigger"]') as HTMLDivElement
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      x: 140,
+      y: 24,
+      width: 30,
+      height: 28,
+      top: 24,
+      right: 170,
+      bottom: 52,
+      left: 140,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    pointerMove(trigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    const wrapper = container.querySelector('[data-radix-popper-content-wrapper]') as HTMLDivElement
+    const subContent = container.querySelector('[data-testid="sub-content"]') as HTMLDivElement
+
+    expect(subContent.getAttribute('data-side')).toBe('left')
+    expect(wrapper.style.transform).toBe('translate(136px, 24px) translate(-100%, 0)')
+    expect(wrapper.style.getPropertyValue('--radix-popper-available-width')).toBe('136px')
+  })
+
+  it.each(['ArrowRight', 'Enter', ' '])(
+    'focuses the first submenu item when the sub trigger opens from keyboard with %s',
+    async (key) => {
+      const container = document.createElement('div')
+      document.body.append(container)
+      const open = createSignal(true)
+
+      mount(
+        () => (
+          <Menu open={open} onOpenChange={open} modal={false}>
+            <Content data-testid="content">
+              <Item data-testid="first">First</Item>
+              <Sub>
+                <SubTrigger data-testid="sub-trigger">More</SubTrigger>
+                <SubContent data-testid="sub-content">
+                  <Item data-testid="nested">Nested</Item>
+                </SubContent>
+              </Sub>
+            </Content>
+          </Menu>
+        ),
+        container,
+      )
+
+      await waitForEffects()
+
+      const trigger = container.querySelector('[data-testid="sub-trigger"]') as HTMLDivElement
+      vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+        x: 18,
+        y: 24,
+        width: 96,
+        height: 28,
+        top: 24,
+        right: 114,
+        bottom: 52,
+        left: 18,
+        toJSON: () => ({}),
+      } as DOMRect)
+
+      trigger.focus()
+      keyDown(trigger, key)
+      await waitForEffects()
+
+      const subContent = container.querySelector('[data-testid="sub-content"]') as HTMLDivElement
+      const nested = container.querySelector('[data-testid="nested"]') as HTMLDivElement
+
+      expect(trigger.getAttribute('data-state')).toBe('open')
+      expect(trigger.getAttribute('aria-expanded')).toBe('true')
+      expect(subContent).not.toBeNull()
+      expect(nested.hasAttribute('data-highlighted')).toBe(true)
+      expect(document.activeElement).toBe(nested)
+    },
+  )
 
   it('closes portal content on escape', async () => {
     const container = document.createElement('div')

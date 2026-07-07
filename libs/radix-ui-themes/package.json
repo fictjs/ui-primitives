@@ -105,12 +105,12 @@
     "classnames": "^2.3.2"
   },
   "peerDependencies": {
-    "fict": "^0.23.0"
+    "fict": "^0.25.0"
   },
   "devDependencies": {
     "@radix-ui/themes": "catalog:",
     "autoprefixer": "10.4.24",
-    "fict": "^0.23.0",
+    "fict": "catalog:",
     "jsdom": "^28.1.0",
     "postcss": "8.5.6",
     "postcss-cli": "11.0.1",

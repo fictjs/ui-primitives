@@ -6,17 +6,30 @@ import { render } from '@fictjs/runtime'
 
 vi.mock('@fictjs/popper', async () => {
   const { Primitive } = await import('@fictjs/primitive')
+  const { mergeProps, prop } = await import('@fictjs/runtime')
 
   const Popper = (props: { children?: unknown }) => props.children ?? null
-  const PopperAnchor = (props: Record<string, unknown>) => (
-    <Primitive.div {...props} data-popper-anchor="" />
-  )
-  const PopperContent = (props: Record<string, unknown>) => (
-    <Primitive.div {...props} data-popper-content="" />
-  )
-  const PopperArrow = (props: Record<string, unknown>) => (
-    <Primitive.svg {...props} data-popper-arrow="" />
-  )
+  const PopperAnchor = (props: Record<string, unknown>) => {
+    const primitiveProps = mergeProps(
+      prop(() => props),
+      { 'data-popper-anchor': '' },
+    )
+    return <Primitive.div {...primitiveProps} />
+  }
+  const PopperContent = (props: Record<string, unknown>) => {
+    const primitiveProps = mergeProps(
+      prop(() => props),
+      { 'data-popper-content': '' },
+    )
+    return <Primitive.div {...primitiveProps} />
+  }
+  const PopperArrow = (props: Record<string, unknown>) => {
+    const primitiveProps = mergeProps(
+      prop(() => props),
+      { 'data-popper-arrow': '' },
+    )
+    return <Primitive.svg {...primitiveProps} />
+  }
 
   return {
     createPopperScope: () => () => ({}),
@@ -208,6 +221,9 @@ describe('@fictjs/hover-card', () => {
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLAnchorElement
     pointerEvent(trigger, 'pointerenter')
     await advance(0)
+
+    expect(trigger.getAttribute('data-state')).toBe('open')
+    expect(portalRoot.querySelectorAll('[data-testid="content"]')).toHaveLength(1)
 
     const updatedContent = portalRoot.querySelector('[data-testid="content"]') as HTMLDivElement
     expect(updatedContent.getAttribute('data-state')).toBe('open')

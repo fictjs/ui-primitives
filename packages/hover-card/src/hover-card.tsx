@@ -276,7 +276,6 @@ function HoverCardContent(props: ScopedProps<HoverCardContentProps>): FictNode {
   return (
     <Presence present={present}>
       <HoverCardContentImpl
-        data-state={prop(() => getState(context.open()))}
         {...(contentProps as ScopedProps<HoverCardContentImplProps>)}
         onPointerEnter={composeEventHandlers<PointerEvent>(
           props.onPointerEnter as ((event: PointerEvent) => void) | undefined,
@@ -362,6 +361,9 @@ function HoverCardContentImpl(props: ScopedProps<HoverCardContentImplProps>): Fi
   })
 
   const popperContentProps = mergeProps(
+    {
+      'data-state': prop(() => getState(context.open())),
+    },
     prop(() => contentProps as Record<string, unknown>),
     {
       onPointerDown: composeEventHandlers<PointerEvent>(

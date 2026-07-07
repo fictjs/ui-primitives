@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { expectTrackedBrowserErrors, gotoSinkSection, trackBrowserErrors } from './support'
 
@@ -9,6 +9,94 @@ function parseRgbChannels(color: string) {
   }
 
   return matches.slice(0, 3).map(Number)
+}
+
+async function expectStableSubmenuMotion(subContent: Locator) {
+  const motion = await subContent.evaluate((node) => {
+    const styles = getComputedStyle(node)
+
+    return {
+      animationName: styles.animationName,
+      transform: styles.transform,
+    }
+  })
+
+  expect(
+    motion.animationName,
+    'submenu content should avoid slide/scale motion that shifts its hover anchor while opening',
+  ).not.toContain('rt-slide')
+  expect(
+    motion.transform,
+    'submenu content should not animate transform because the wrapper already owns positioning',
+  ).toBe('none')
+}
+
+async function expectSubmenuDoesNotFlickerWhileMovingWithinTrigger(
+  page: Page,
+  subTrigger: Locator,
+  triggerSelector: string,
+  contentSelector: string,
+  label: string,
+) {
+  const subTriggerBox = await subTrigger.boundingBox()
+  expect(subTriggerBox, `${label} submenu trigger should be measurable`).not.toBeNull()
+
+  if (!subTriggerBox) {
+    throw new Error(`Unable to measure the ${label} submenu trigger`)
+  }
+
+  await page.evaluate(
+    ({ contentSelector: contentSelectorValue, triggerSelector: triggerSelectorValue }) => {
+      const win = window as Window & {
+        __submenuFlickerObserver?: MutationObserver
+        __submenuFlickerSnapshots?: Array<{ present: boolean; state: string | null }>
+      }
+
+      win.__submenuFlickerObserver?.disconnect()
+      win.__submenuFlickerSnapshots = []
+
+      const record = () => {
+        win.__submenuFlickerSnapshots?.push({
+          present: Boolean(document.querySelector(contentSelectorValue)),
+          state: document.querySelector(triggerSelectorValue)?.getAttribute('data-state') ?? null,
+        })
+      }
+
+      win.__submenuFlickerObserver = new MutationObserver(record)
+      win.__submenuFlickerObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['data-state'],
+        childList: true,
+        subtree: true,
+      })
+    },
+    { contentSelector, triggerSelector },
+  )
+
+  for (let index = 0; index < 30; index += 1) {
+    const xOffset = 8 + (index % Math.max(1, Math.floor(subTriggerBox.width - 16)))
+    const yOffset = subTriggerBox.height / 2 + ((index % 3) - 1)
+    await page.mouse.move(subTriggerBox.x + xOffset, subTriggerBox.y + yOffset)
+  }
+
+  await page.waitForTimeout(120)
+
+  const snapshots = await page.evaluate(() => {
+    const win = window as Window & {
+      __submenuFlickerObserver?: MutationObserver
+      __submenuFlickerSnapshots?: Array<{ present: boolean; state: string | null }>
+    }
+    win.__submenuFlickerObserver?.disconnect()
+    return win.__submenuFlickerSnapshots ?? []
+  })
+  const closedSnapshots = snapshots.filter(
+    (snapshot) => !snapshot.present || snapshot.state !== 'open',
+  )
+
+  expect(
+    closedSnapshots,
+    `${label} submenu should stay open while the pointer moves within its trigger`,
+  ).toEqual([])
 }
 
 test('dialog opens and closes from the cancel action', async ({ page }) => {
@@ -211,6 +299,50 @@ test('tooltip opens on hover and closes when the pointer leaves', async ({ page 
   expectTrackedBrowserErrors(tracker, 'testing the tooltip demo')
 })
 
+test('tooltip flips below the trigger when there is no room above', async ({ page }) => {
+  const section = await gotoSinkSection(page, 'tooltip')
+  const tracker = trackBrowserErrors(page)
+  const trigger = section.getByRole('button', { name: 'Singleline' })
+  const tooltip = page.locator('.rt-TooltipContent')
+  const arrow = page.locator('.rt-TooltipArrow')
+
+  await trigger.evaluate((node) => {
+    node.style.position = 'fixed'
+    node.style.top = '2px'
+    node.style.left = '120px'
+    node.style.zIndex = '1'
+  })
+
+  await trigger.hover()
+  await expect(tooltip).toBeVisible()
+  await expect(arrow).toBeVisible()
+  await expect(tooltip).toHaveAttribute('data-side', 'bottom')
+
+  const triggerBox = await trigger.boundingBox()
+  const tooltipBox = await tooltip.boundingBox()
+  const arrowBox = await arrow.boundingBox()
+
+  expect(triggerBox, 'tooltip trigger should be measurable near the viewport top').not.toBeNull()
+  expect(tooltipBox, 'flipped tooltip should be measurable').not.toBeNull()
+  expect(arrowBox, 'flipped tooltip arrow should be measurable').not.toBeNull()
+
+  if (!triggerBox || !tooltipBox || !arrowBox) {
+    throw new Error('Unable to measure the flipped tooltip geometry')
+  }
+
+  expect(
+    tooltipBox.y,
+    'tooltip should render below a trigger that is too close to the viewport top',
+  ).toBeGreaterThan(triggerBox.y + triggerBox.height)
+  expect(
+    arrowBox.y + arrowBox.height,
+    'bottom-side tooltip arrow should sit on the tooltip top edge',
+  ).toBeLessThanOrEqual(tooltipBox.y + 2)
+
+  tracker.stop()
+  expectTrackedBrowserErrors(tracker, 'testing tooltip collision flipping')
+})
+
 test('popover opens on click and closes on outside press', async ({ page }) => {
   const section = await gotoSinkSection(page, 'popover')
   const tracker = trackBrowserErrors(page)
@@ -276,10 +408,25 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
 
   const subTrigger = page.locator('.rt-DropdownMenuSubTrigger').filter({ hasText: 'More Tools' })
   const subContent = page.locator('.rt-DropdownMenuSubContent').first()
+  const developerToolsItem = subContent.getByRole('menuitem', { name: 'Developer Tools' })
   await subTrigger.hover()
   await expect(subTrigger).toHaveAttribute('data-state', 'open')
   await expect(subContent).toBeVisible()
-  await expect(page.getByRole('menuitem', { name: 'Developer Tools' })).toBeVisible()
+  await expect(developerToolsItem).toBeVisible()
+  await expectStableSubmenuMotion(subContent)
+  await expect(
+    subContent.locator('[role="menuitem"][data-highlighted]'),
+    'dropdown submenu should not pre-highlight an item before the pointer enters it',
+  ).toHaveCount(0)
+  await expectSubmenuDoesNotFlickerWhileMovingWithinTrigger(
+    page,
+    subTrigger,
+    '.rt-DropdownMenuSubTrigger',
+    '.rt-DropdownMenuSubContent',
+    'dropdown',
+  )
+  await developerToolsItem.hover()
+  await expect(developerToolsItem).toHaveAttribute('data-highlighted', '')
 
   const subTriggerBox = await subTrigger.boundingBox()
   const subContentBox = await subContent.boundingBox()
@@ -332,6 +479,53 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
     )
     .toEqual({ pointerEvents: '', scrollLocked: null })
 
+  await trigger.evaluate((node) => {
+    node.scrollIntoView({ block: 'end', inline: 'nearest' })
+  })
+
+  const bottomTriggerBox = await trigger.boundingBox()
+  expect(bottomTriggerBox, 'bottom dropdown menu trigger should be measurable').not.toBeNull()
+
+  if (!bottomTriggerBox) {
+    throw new Error('Unable to measure bottom dropdown menu trigger geometry')
+  }
+
+  expect(
+    bottomTriggerBox.y + bottomTriggerBox.height,
+    'bottom dropdown menu trigger should be near the viewport bottom before opening',
+  ).toBeGreaterThan((page.viewportSize()?.height ?? 0) - 80)
+
+  await trigger.click()
+  await expect(menuContent).toBeVisible()
+  await expect(menuContent).toHaveAttribute('data-side', 'top')
+
+  const flippedMenuBox = await menuContent.boundingBox()
+  expect(flippedMenuBox, 'flipped dropdown menu content should be measurable').not.toBeNull()
+
+  if (!flippedMenuBox) {
+    throw new Error('Unable to measure flipped dropdown menu geometry')
+  }
+
+  expect(
+    flippedMenuBox.y,
+    'flipped dropdown menu should stay inside the top edge of the viewport',
+  ).toBeGreaterThanOrEqual(0)
+  expect(
+    flippedMenuBox.y + flippedMenuBox.height,
+    'dropdown menu should flip above a trigger near the viewport bottom',
+  ).toBeLessThanOrEqual(bottomTriggerBox.y)
+
+  await page.keyboard.press('Escape')
+  await expect(menuItem).toBeHidden()
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        pointerEvents: document.body.style.pointerEvents,
+        scrollLocked: document.body.getAttribute('data-scroll-locked'),
+      })),
+    )
+    .toEqual({ pointerEvents: '', scrollLocked: null })
+
   await colorDetails.locator('summary').evaluate((node) => {
     ;(node as HTMLElement).click()
   })
@@ -358,11 +552,26 @@ test('context menu opens on right click and closes on escape', async ({ page }) 
 
   const subTrigger = page.locator('.rt-ContextMenuSubTrigger').filter({ hasText: 'More Tools' })
   const subContent = page.locator('.rt-ContextMenuSubContent').first()
+  const developerToolsItem = subContent.getByRole('menuitem', { name: 'Developer Tools' })
 
   await subTrigger.hover()
   await expect(subTrigger).toHaveAttribute('data-state', 'open')
   await expect(subContent).toBeVisible()
-  await expect(page.getByRole('menuitem', { name: 'Developer Tools' })).toBeVisible()
+  await expect(developerToolsItem).toBeVisible()
+  await expectStableSubmenuMotion(subContent)
+  await expect(
+    subContent.locator('[role="menuitem"][data-highlighted]'),
+    'context submenu should not pre-highlight an item before the pointer enters it',
+  ).toHaveCount(0)
+  await expectSubmenuDoesNotFlickerWhileMovingWithinTrigger(
+    page,
+    subTrigger,
+    '.rt-ContextMenuSubTrigger',
+    '.rt-ContextMenuSubContent',
+    'context',
+  )
+  await developerToolsItem.hover()
+  await expect(developerToolsItem).toHaveAttribute('data-highlighted', '')
 
   const subTriggerBox = await subTrigger.boundingBox()
   const subContentBox = await subContent.boundingBox()
@@ -403,6 +612,59 @@ test('context menu opens on right click and closes on escape', async ({ page }) 
 
   await trigger.click({ button: 'right' })
   await expect(menuItem).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(menuItem).toBeHidden()
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        pointerEvents: document.body.style.pointerEvents,
+        scrollLocked: document.body.getAttribute('data-scroll-locked'),
+      })),
+    )
+    .toEqual({ pointerEvents: '', scrollLocked: null })
+
+  await trigger.evaluate((node) => {
+    node.scrollIntoView({ block: 'end', inline: 'nearest' })
+  })
+
+  const bottomContextTriggerBox = await trigger.boundingBox()
+  expect(bottomContextTriggerBox, 'bottom context menu trigger should be measurable').not.toBeNull()
+
+  if (!bottomContextTriggerBox) {
+    throw new Error('Unable to measure bottom context menu trigger geometry')
+  }
+
+  const viewportHeight = page.viewportSize()?.height ?? 0
+  const contextClickX = bottomContextTriggerBox.x + bottomContextTriggerBox.width / 2
+  const contextClickY = Math.min(
+    viewportHeight - 4,
+    bottomContextTriggerBox.y + bottomContextTriggerBox.height - 4,
+  )
+
+  expect(
+    contextClickY,
+    'context menu right-click point should be near the viewport bottom before opening',
+  ).toBeGreaterThan(viewportHeight - 80)
+
+  await page.mouse.click(contextClickX, contextClickY, { button: 'right' })
+  await expect(menuContent).toBeVisible()
+
+  const bottomContextMenuBox = await menuContent.boundingBox()
+  expect(bottomContextMenuBox, 'bottom context menu content should be measurable').not.toBeNull()
+
+  if (!bottomContextMenuBox) {
+    throw new Error('Unable to measure bottom context menu geometry')
+  }
+
+  expect(
+    bottomContextMenuBox.y,
+    'context menu should stay inside the top edge of the viewport',
+  ).toBeGreaterThanOrEqual(0)
+  expect(
+    bottomContextMenuBox.y + bottomContextMenuBox.height,
+    'context menu should stay inside the bottom edge of the viewport',
+  ).toBeLessThanOrEqual(viewportHeight)
+
   await page.keyboard.press('Escape')
   await expect(menuItem).toBeHidden()
   await expect
@@ -469,6 +731,48 @@ test('select opens and applies a new value', async ({ page }) => {
   await expect(orangeOption).toHaveAttribute('data-highlighted', '')
   await orangeOption.click()
   await expect(trigger).toContainText('Orange')
+  await expect(listbox).toBeHidden()
+  await expect
+    .poll(() => page.evaluate(() => document.body.getAttribute('data-scroll-locked')))
+    .toBeNull()
+
+  await trigger.evaluate((node) => {
+    node.scrollIntoView({ block: 'end', inline: 'nearest' })
+  })
+
+  const bottomTriggerBox = await trigger.boundingBox()
+  expect(bottomTriggerBox, 'bottom select trigger should be measurable').not.toBeNull()
+
+  if (!bottomTriggerBox) {
+    throw new Error('Unable to measure bottom select trigger geometry')
+  }
+
+  expect(
+    bottomTriggerBox.y + bottomTriggerBox.height,
+    'bottom select trigger should be near the viewport bottom before opening',
+  ).toBeGreaterThan((page.viewportSize()?.height ?? 0) - 80)
+
+  await trigger.click()
+  await expect(listbox).toBeVisible()
+  await expect(listbox).toHaveAttribute('data-side', 'top')
+
+  const topListboxBox = await listbox.boundingBox()
+  expect(topListboxBox, 'flipped select listbox should be measurable').not.toBeNull()
+
+  if (!topListboxBox) {
+    throw new Error('Unable to measure flipped select listbox geometry')
+  }
+
+  expect(
+    topListboxBox.y,
+    'flipped select content should stay inside the top edge of the viewport',
+  ).toBeGreaterThanOrEqual(0)
+  expect(
+    topListboxBox.y + topListboxBox.height,
+    'select content should flip above a trigger near the viewport bottom',
+  ).toBeLessThanOrEqual(bottomTriggerBox.y)
+
+  await page.keyboard.press('Escape')
   await expect(listbox).toBeHidden()
   await expect
     .poll(() => page.evaluate(() => document.body.getAttribute('data-scroll-locked')))

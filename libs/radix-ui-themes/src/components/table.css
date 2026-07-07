@@ -2,6 +2,8 @@
   --table-row-background-color: transparent;
   --table-row-box-shadow: inset 0 -1px var(--gray-a5);
 
+  /* Preserve native table layout inside ScrollArea's direct-child reset. */
+  display: table !important;
   width: 100%;
   text-align: left;
   vertical-align: top;

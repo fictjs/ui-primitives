@@ -15,6 +15,55 @@ type SkeletonElement = React.ElementRef<'span'>
 type SkeletonOwnProps = GetPropDefTypes<typeof skeletonPropDefs>
 interface SkeletonProps
   extends ComponentPropsWithout<'span', RemovedProps>, MarginProps, SkeletonOwnProps {}
+const replacedElementTags = new Set([
+  'audio',
+  'canvas',
+  'embed',
+  'iframe',
+  'img',
+  'object',
+  'svg',
+  'video',
+])
+const paintedControlTags = new Set(['button', 'input', 'meter', 'progress', 'select', 'textarea'])
+const paintedControlComponentNames = new Set([
+  'Button',
+  'Checkbox',
+  'CheckboxCards.Item',
+  'CheckboxGroup.Item',
+  'IconButton',
+  'Radio',
+  'RadioCards.Item',
+  'RadioGroup.Item',
+  'SegmentedControl.Item',
+  'Select.Trigger',
+  'Slider',
+  'Switch',
+  'TextArea',
+  'TextField.Root',
+])
+
+function getElementTypeName(type: unknown): string | undefined {
+  if (typeof type === 'string') return type
+  if (!type || (typeof type !== 'function' && typeof type !== 'object')) return undefined
+
+  const component = type as { displayName?: string; name?: string }
+  return component.displayName || component.name
+}
+
+function shouldWrapChild(children: React.ReactNode): boolean {
+  if (!React.isValidElement(children)) return true
+
+  const typeName = getElementTypeName(children.type)
+  if (!typeName) return false
+
+  return (
+    replacedElementTags.has(typeName) ||
+    paintedControlTags.has(typeName) ||
+    paintedControlComponentNames.has(typeName)
+  )
+}
+
 const Skeleton = React.forwardRef<SkeletonElement, SkeletonProps>((props, forwardedRef) => {
   const { children, className, loading, ...skeletonProps } = extractProps(
     props,
@@ -24,14 +73,15 @@ const Skeleton = React.forwardRef<SkeletonElement, SkeletonProps>((props, forwar
 
   if (!loading) return children
 
-  const Tag = React.isValidElement(children) ? Slot.Root : 'span'
+  const useWrapper = shouldWrapChild(children)
+  const Tag = useWrapper ? 'span' : Slot.Root
 
   return (
     <Tag
       ref={React.coerceRef(forwardedRef)}
       aria-hidden
       class={classNames('rt-Skeleton', className)}
-      data-inline-skeleton={React.isValidElement(children) ? undefined : true}
+      data-inline-skeleton={useWrapper && !React.isValidElement(children) ? true : undefined}
       tabIndex={-1}
       inert={inert}
       {...skeletonProps}

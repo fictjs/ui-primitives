@@ -1,9 +1,9 @@
 import { createSignal, reactive } from 'fict/advanced'
 
 import * as React from '../helpers/element.js'
+import { Avatar as AvatarPrimitive } from '@fictjs/radix-ui'
 import classNames from 'classnames'
 
-import { Slot } from './slot.js'
 import { avatarPropDefs } from './avatar.props.js'
 import { extractProps } from '../helpers/extract-props.js'
 import { getSubtree } from '../helpers/get-subtree.js'
@@ -42,7 +42,7 @@ function Avatar(props: AvatarProps): React.ReactNode {
     ...imageProps
   } = extractProps(props, avatarPropDefs, marginPropDefs)
 
-  const status = createSignal<AvatarImageStatus>(src ? 'loading' : 'error')
+  const status = createSignal<AvatarImageStatus>('idle')
 
   const handleStatusChange = (nextStatus: AvatarImageStatus) => {
     status(nextStatus)
@@ -52,29 +52,26 @@ function Avatar(props: AvatarProps): React.ReactNode {
   const content = (
     <>
       {reactive(() =>
-        status() !== 'loaded' ? (
+        status() === 'idle' || status() === 'loading' ? (
+          <span class="rt-AvatarFallback" />
+        ) : status() === 'error' ? (
           <span
             class={classNames('rt-AvatarFallback', {
               'rt-one-letter': typeof fallback === 'string' && fallback.length === 1,
               'rt-two-letters': typeof fallback === 'string' && fallback.length === 2,
             })}
           >
-            {status() === 'error' ? fallback : null}
+            {fallback}
           </span>
         ) : null,
       )}
-      <img
+      <AvatarPrimitive.Image
         {...imageProps}
         src={src}
         class="rt-AvatarImage"
-        onLoad={(event) => {
-          handleStatusChange('loaded')
-          onLoad?.(event)
-        }}
-        onError={(event) => {
-          handleStatusChange('error')
-          onError?.(event)
-        }}
+        onLoad={onLoad}
+        onError={onError}
+        onLoadingStatusChange={handleStatusChange}
       />
     </>
   )
@@ -83,19 +80,20 @@ function Avatar(props: AvatarProps): React.ReactNode {
 
   if (asChild) {
     return (
-      <Slot
+      <AvatarPrimitive.Root
         data-accent-color={color}
         data-radius={radius}
         class={classNames('rt-reset', 'rt-AvatarRoot', className)}
         style={style}
+        asChild
       >
         {subtree}
-      </Slot>
+      </AvatarPrimitive.Root>
     )
   }
 
   return (
-    <span
+    <AvatarPrimitive.Root
       data-accent-color={color}
       data-radius={radius}
       class={classNames('rt-reset', 'rt-AvatarRoot', className)}
@@ -103,7 +101,7 @@ function Avatar(props: AvatarProps): React.ReactNode {
       ref={React.coerceRef(ref as React.PossibleRef<HTMLSpanElement>)}
     >
       {subtree}
-    </span>
+    </AvatarPrimitive.Root>
   )
 }
 

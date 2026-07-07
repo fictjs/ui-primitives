@@ -62,12 +62,12 @@
     "@fictjs/fict-style-singleton": "workspace:*"
   },
   "peerDependencies": {
-    "fict": "^0.23.0"
+    "fict": "^0.25.0"
   },
   "devDependencies": {
-    "@fictjs/runtime": "^0.23.0",
-    "@fictjs/vite-plugin": "^0.23.0",
-    "fict": "^0.23.0",
+    "@fictjs/runtime": "catalog:",
+    "@fictjs/vite-plugin": "catalog:",
+    "fict": "catalog:",
     "jsdom": "^28.1.0",
     "vite": "^7.3.1"
   }

@@ -72,6 +72,17 @@ function readNormalizedFile(filePath: string): string {
 }
 
 const fictCssNormalizers: Record<string, (contents: string) => string> = {
+  'components/animations.css': (contents) =>
+    contents.replace(
+      "\n\n  .rt-BaseMenuSubContent {\n    &:where([data-state='open']) {\n      animation-name: rt-fade-in;\n    }\n\n    &:where([data-state='closed']) {\n      animation-name: rt-fade-out;\n    }\n  }",
+      '',
+    ),
+  'components/avatar.css': (contents) =>
+    contents
+      .replace('  position: relative;\n', '')
+      .replace('  overflow: hidden;\n', '')
+      .replace('  position: absolute;\n  inset: 0;\n  display: block;\n', '')
+      .replace('  position: absolute;\n  inset: 0;\n', ''),
   'components/_internal/base-button.css': (contents) =>
     contents.replace(/, \.rt-variant-ghost-offset/g, ''),
   'components/_internal/base-checkbox.css': (contents) =>
@@ -85,12 +96,26 @@ const fictCssNormalizers: Record<string, (contents: string) => string> = {
       ':where(.rt-Container.rt-r-size-$1) &',
     ),
   'components/select.css': (contents) =>
-    contents.replace(/,\n\.rt-SelectTrigger:where\(\.rt-variant-ghost-offset\)/g, ''),
+    contents
+      .replace(/,\n\.rt-SelectTrigger:where\(\.rt-variant-ghost-offset\)/g, '')
+      .replace('  width: 100%;\n', '')
+      .replace(
+        '\n.rt-SelectViewport > :where(.rt-SelectItem, .rt-SelectLabel) {\n  display: flex !important;\n}\n',
+        '',
+      )
+      .replace('  top: 0;\n  bottom: 0;\n', ''),
+  'components/skeleton.css': (contents) =>
+    contents.replace('.rt-Skeleton :where(*),', '.rt-Skeleton > *,'),
   'components/table.css': (contents) =>
-    contents.replace(
-      '  /* Fict collapses ScrollArea tables when this is forced to zero. */\n  height: auto;',
-      '  /* Makes "height: 100%" work on content inside cells */\n  height: 0;',
-    ),
+    contents
+      .replace(
+        "\n  /* Preserve native table layout inside ScrollArea's direct-child reset. */\n  display: table !important;",
+        '',
+      )
+      .replace(
+        '  /* Fict collapses ScrollArea tables when this is forced to zero. */\n  height: auto;',
+        '  /* Makes "height: 100%" work on content inside cells */\n  height: 0;',
+      ),
   'components/theme-panel.css': (contents) =>
     contents
       .replace(

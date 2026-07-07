@@ -75,6 +75,7 @@ describe('@fictjs/context-menu', () => {
     document.body.innerHTML = ''
     document.body.style.pointerEvents = ''
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('opens at the pointer position from the trigger context menu event', async () => {
@@ -107,6 +108,70 @@ describe('@fictjs/context-menu', () => {
     expect(wrapper.style.transform).toBe('translate(34px, 64px)')
     expect(wrapper.style.minWidth).toBe('max-content')
     expect(content.style.width).toBe('100%')
+  })
+
+  it('keeps content inside the viewport when opened near the bottom edge', async () => {
+    vi.stubGlobal('innerWidth', 480)
+    vi.stubGlobal('innerHeight', 320)
+
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <ContextMenu>
+          <Trigger data-testid="trigger">Area</Trigger>
+          <Content data-testid="content">
+            <Item data-testid="first">First action</Item>
+            <Item data-testid="second">Second action</Item>
+          </Content>
+        </ContextMenu>
+      ),
+      container,
+    )
+
+    contextMenu(container.querySelector('[data-testid="trigger"]') as HTMLDivElement, 40, 300)
+    await waitForEffects()
+    await waitForEffects()
+
+    const wrapper = container.querySelector('[data-radix-popper-content-wrapper]') as HTMLDivElement
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+
+    expect(content.getAttribute('data-side')).toBe('right')
+    expect(wrapper.style.transform).toBe('translate(42px, 160px)')
+    expect(wrapper.style.getPropertyValue('--radix-popper-available-height')).toBe('320px')
+  })
+
+  it('flips bottom-positioned content above the pointer near the viewport bottom', async () => {
+    vi.stubGlobal('innerWidth', 480)
+    vi.stubGlobal('innerHeight', 320)
+
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <ContextMenu>
+          <Trigger data-testid="trigger">Area</Trigger>
+          <Content data-testid="content" side="bottom">
+            <Item data-testid="first">First action</Item>
+            <Item data-testid="second">Second action</Item>
+          </Content>
+        </ContextMenu>
+      ),
+      container,
+    )
+
+    contextMenu(container.querySelector('[data-testid="trigger"]') as HTMLDivElement, 40, 300)
+    await waitForEffects()
+    await waitForEffects()
+
+    const wrapper = container.querySelector('[data-radix-popper-content-wrapper]') as HTMLDivElement
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+
+    expect(content.getAttribute('data-side')).toBe('top')
+    expect(wrapper.style.transform).toBe('translate(40px, 298px) translate(0, -100%)')
+    expect(wrapper.style.getPropertyValue('--radix-popper-available-height')).toBe('298px')
   })
 
   it('can reopen after closing the first context menu instance', async () => {

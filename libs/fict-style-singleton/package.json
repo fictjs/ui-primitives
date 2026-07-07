@@ -53,10 +53,10 @@
     "get-nonce": "^1.0.1"
   },
   "peerDependencies": {
-    "fict": "^0.23.0"
+    "fict": "^0.25.0"
   },
   "devDependencies": {
-    "fict": "^0.23.0",
+    "fict": "catalog:",
     "jsdom": "^28.1.0"
   }
 }

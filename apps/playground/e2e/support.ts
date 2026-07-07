@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 import { sinkRoutes } from '../src/sink/routes'
 
@@ -92,6 +92,64 @@ export async function gotoSinkSection(page: Page, href: (typeof sinkRoutes)[numb
   await expect(section).toBeInViewport()
 
   return section
+}
+
+export async function expectSelectHighlightedItemFillsContent(page: Page, trigger: Locator) {
+  await trigger.click()
+
+  const content = page.locator('.rt-SelectContent').last()
+  await expect(content).toBeVisible()
+
+  const dimensions = await content.evaluate((node) => {
+    const viewport = node.querySelector('.rt-SelectViewport')
+    const highlightedItem = node.querySelector('.rt-SelectItem[data-highlighted]')
+    const checkedItem = node.querySelector('.rt-SelectItem[data-state="checked"]')
+
+    if (!viewport || !highlightedItem || !checkedItem) {
+      return null
+    }
+
+    const viewportRect = viewport.getBoundingClientRect()
+    const viewportStyle = getComputedStyle(viewport)
+    const viewportPaddingX =
+      Number.parseFloat(viewportStyle.paddingLeft) + Number.parseFloat(viewportStyle.paddingRight)
+    const itemRect = highlightedItem.getBoundingClientRect()
+    const itemStyle = getComputedStyle(highlightedItem)
+    const textNode = Array.from(highlightedItem.querySelectorAll('span')).find(
+      (span) => !span.classList.contains('rt-SelectItemIndicator'),
+    )
+    const textRect = textNode?.getBoundingClientRect()
+    const checkedItemRect = checkedItem.getBoundingClientRect()
+    const indicator = checkedItem.querySelector('.rt-SelectItemIndicator')
+    const indicatorRect = indicator?.getBoundingClientRect()
+
+    return {
+      indicatorCenterOffset: indicatorRect
+        ? Math.abs(
+            indicatorRect.top +
+              indicatorRect.height / 2 -
+              (checkedItemRect.top + checkedItemRect.height / 2),
+          )
+        : null,
+      itemDisplay: itemStyle.display,
+      itemWidth: itemRect.width,
+      textCenterOffset: textRect
+        ? Math.abs(textRect.top + textRect.height / 2 - (itemRect.top + itemRect.height / 2))
+        : null,
+      viewportInnerWidth: viewportRect.width - viewportPaddingX,
+    }
+  })
+
+  expect(dimensions).not.toBeNull()
+  expect(dimensions!.itemDisplay).toBe('flex')
+  expect(Math.abs(dimensions!.itemWidth - dimensions!.viewportInnerWidth)).toBeLessThanOrEqual(1)
+  expect(dimensions!.textCenterOffset).not.toBeNull()
+  expect(dimensions!.textCenterOffset!).toBeLessThanOrEqual(1)
+  expect(dimensions!.indicatorCenterOffset).not.toBeNull()
+  expect(dimensions!.indicatorCenterOffset!).toBeLessThanOrEqual(1)
+
+  await page.keyboard.press('Escape')
+  await expect(content).toBeHidden()
 }
 
 export function expectTrackedBrowserErrors(

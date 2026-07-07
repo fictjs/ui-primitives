@@ -60,6 +60,7 @@
 .rt-SelectItem {
   display: flex;
   align-items: center;
+  width: 100%;
   height: var(--select-item-height);
   padding-left: var(--select-item-indicator-width);
   padding-right: var(--select-item-indicator-width);
@@ -78,8 +79,14 @@
   }
 }
 
+.rt-SelectViewport > :where(.rt-SelectItem, .rt-SelectLabel) {
+  display: flex !important;
+}
+
 .rt-SelectItemIndicator {
   position: absolute;
+  top: 0;
+  bottom: 0;
   left: 0;
   width: var(--select-item-indicator-width);
   display: inline-flex;

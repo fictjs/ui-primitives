@@ -266,4 +266,69 @@ describe('@fictjs/avatar', () => {
     expect(failure.container.querySelector('img')).toBeNull()
     expect(failure.container.textContent).toContain(FALLBACK_TEXT)
   })
+
+  it('calls onError when the preload image fails', async () => {
+    window.Image = MockNoReferrerImage as unknown as typeof window.Image
+    const onError = vi.fn()
+    const { container } = mount(() => (
+      <Root>
+        <AvatarFallback>{FALLBACK_TEXT}</AvatarFallback>
+        <AvatarImage
+          alt={IMAGE_ALT_TEXT}
+          onError={onError}
+          referrerPolicy="origin"
+          src="/blocked.png"
+        />
+      </Root>
+    ))
+
+    await flushHydration()
+    await flushLoad()
+
+    expect(container.querySelector('img')).toBeNull()
+    expect(onError).toHaveBeenCalledTimes(1)
+    expect(onError.mock.calls[0]?.[0]).toBeInstanceOf(Event)
+  })
+
+  it('calls onError for cached preload failures on subsequent mounts', async () => {
+    window.Image = MockNoReferrerImage as unknown as typeof window.Image
+    const firstOnError = vi.fn()
+    const first = mount(() => (
+      <Root>
+        <AvatarFallback>{FALLBACK_TEXT}</AvatarFallback>
+        <AvatarImage
+          alt={IMAGE_ALT_TEXT}
+          onError={firstOnError}
+          referrerPolicy="origin"
+          src="/cached-blocked.png"
+        />
+      </Root>
+    ))
+
+    await flushHydration()
+    await flushLoad()
+    expect(first.container.querySelector('img')).toBeNull()
+    expect(firstOnError).toHaveBeenCalledTimes(1)
+    first.dispose()
+
+    const secondOnError = vi.fn()
+    const second = mount(() => (
+      <Root>
+        <AvatarFallback>{FALLBACK_TEXT}</AvatarFallback>
+        <AvatarImage
+          alt={IMAGE_ALT_TEXT}
+          onError={secondOnError}
+          referrerPolicy="origin"
+          src="/cached-blocked.png"
+        />
+      </Root>
+    ))
+
+    await flushHydration()
+    await flushEffects()
+
+    expect(second.container.querySelector('img')).toBeNull()
+    expect(secondOnError).toHaveBeenCalledTimes(1)
+    expect(secondOnError.mock.calls[0]?.[0]).toBeInstanceOf(Event)
+  })
 })

@@ -17,10 +17,41 @@ import {
   Link,
   Popover,
   Select,
+  Skeleton,
   TabNav,
   Theme,
   ThemePanel,
 } from '../src/index.js'
+
+const OriginalImage = window.Image
+
+class MockImage extends EventTarget {
+  protected currentSrc = ''
+
+  get src(): string {
+    return this.currentSrc
+  }
+
+  set src(src: string) {
+    this.currentSrc = src
+    window.setTimeout(() => {
+      this.dispatchEvent(new Event('load'))
+    }, 0)
+  }
+}
+
+class MockErrorImage extends MockImage {
+  override get src(): string {
+    return this.currentSrc
+  }
+
+  override set src(src: string) {
+    this.currentSrc = src
+    window.setTimeout(() => {
+      this.dispatchEvent(new Event('error'))
+    }, 0)
+  }
+}
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -96,6 +127,7 @@ describe('@fictjs/radix-ui-themes', () => {
       cleanups.pop()?.()
     }
     document.body.innerHTML = ''
+    window.Image = OriginalImage
     vi.restoreAllMocks()
   })
 
@@ -148,7 +180,130 @@ describe('@fictjs/radix-ui-themes', () => {
 
     const fallback = container.querySelector('.rt-AvatarFallback')
     expect(fallback?.textContent).toBe('AB')
-    expect(container.querySelector('.rt-AvatarImage')).not.toBeNull()
+    expect(container.querySelector('.rt-AvatarImage')).toBeNull()
+  })
+
+  it('renders avatar image only after the source loads', async () => {
+    window.Image = MockImage as unknown as typeof window.Image
+    const onLoadingStatusChange = vi.fn()
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Avatar
+            alt="User avatar"
+            fallback="AB"
+            onLoadingStatusChange={onLoadingStatusChange}
+            src="/api/avatar"
+          />
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    await flushEffects()
+
+    const image = container.querySelector('.rt-AvatarImage')
+    expect(image?.getAttribute('src')).toBe('/api/avatar')
+    expect(image?.getAttribute('alt')).toBe('User avatar')
+    expect(container.textContent).not.toContain('AB')
+    expect(onLoadingStatusChange).toHaveBeenLastCalledWith('loaded')
+  })
+
+  it('forwards avatar image load errors from the preload image', async () => {
+    window.Image = MockErrorImage as unknown as typeof window.Image
+    const onError = vi.fn()
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Avatar alt="User avatar" fallback="AB" onError={onError} src="/api/missing-avatar" />
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    await flushEffects()
+
+    expect(container.querySelector('.rt-AvatarImage')).toBeNull()
+    expect(container.querySelector('.rt-AvatarFallback')?.textContent).toBe('AB')
+    expect(onError).toHaveBeenCalledTimes(1)
+  })
+
+  it('applies skeleton props to element children without adding a wrapper', async () => {
+    const ref = { current: null as Element | null }
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Skeleton ref={ref}>
+          <div data-testid="skeleton-child">
+            <span>Submit</span>
+          </div>
+        </Skeleton>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const child = container.querySelector('[data-testid="skeleton-child"]')
+    expect(container.firstElementChild).toBe(child)
+    expect(child?.classList.contains('rt-Skeleton')).toBe(true)
+    expect(child?.getAttribute('aria-hidden')).not.toBeNull()
+    expect(ref.current).toBe(child)
+  })
+
+  it('wraps painted form controls so the real control can be hidden', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Skeleton>
+          <Button data-testid="skeleton-button">Submit</Button>
+        </Skeleton>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const wrapper = container.firstElementChild
+    const button = container.querySelector('[data-testid="skeleton-button"]')
+    expect(wrapper?.tagName).toBe('SPAN')
+    expect(wrapper).not.toBe(button)
+    expect(wrapper?.classList.contains('rt-Skeleton')).toBe(true)
+    expect(button?.closest('.rt-Skeleton')).toBe(wrapper)
+  })
+
+  it('wraps replaced skeleton children so the painted element can be hidden', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Skeleton>
+          <img alt="" data-testid="skeleton-image" src="/avatar.png" />
+        </Skeleton>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const wrapper = container.firstElementChild
+    const image = container.querySelector('[data-testid="skeleton-image"]')
+    expect(wrapper?.tagName).toBe('SPAN')
+    expect(wrapper).not.toBe(image)
+    expect(wrapper?.classList.contains('rt-Skeleton')).toBe(true)
   })
 
   it('updates checkbox group values through themed items', async () => {
@@ -208,6 +363,42 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(content?.querySelector('.rt-ScrollAreaViewport')).not.toBeNull()
     expect(content?.querySelector('.rt-ScrollAreaScrollbar.rt-r-size-1')).not.toBeNull()
     expect(content?.querySelector('.rt-ScrollAreaThumb')).not.toBeNull()
+  })
+
+  it('renders themed select default value while content is closed', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    function FruitItemsDemo() {
+      return (
+        <>
+          <Select.Group>
+            <Select.Label>Fruits</Select.Label>
+            <Select.Item value="orange">Orange</Select.Item>
+            <Select.Item value="apple">Apple</Select.Item>
+          </Select.Group>
+        </>
+      )
+    }
+
+    mount(
+      () => (
+        <Theme>
+          <Select.Root defaultValue="apple">
+            <Select.Trigger />
+            <Select.Content>
+              <FruitItemsDemo />
+            </Select.Content>
+          </Select.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    expect(document.body.querySelector('.rt-SelectContent')).toBeNull()
+    expect(container.querySelector('.rt-SelectTrigger')?.textContent).toContain('Apple')
   })
 
   it('copies a theme snippet from the theme panel', async () => {

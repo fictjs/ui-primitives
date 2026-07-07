@@ -69,11 +69,11 @@
     "@fictjs/use-sidecar": "workspace:*"
   },
   "peerDependencies": {
-    "fict": "^0.23.0"
+    "fict": "^0.25.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",
-    "fict": "^0.23.0",
+    "fict": "catalog:",
     "jsdom": "^28.1.0"
   }
 }

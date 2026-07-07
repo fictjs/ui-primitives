@@ -39,7 +39,7 @@
   height: var(--space-3);
 }
 
-.rt-Skeleton > *,
+.rt-Skeleton :where(*),
 .rt-Skeleton::after,
 .rt-Skeleton::before {
   visibility: hidden !important;

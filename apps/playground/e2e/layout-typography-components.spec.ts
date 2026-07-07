@@ -1,6 +1,11 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
-import { expectTrackedBrowserErrors, gotoSinkSection, trackBrowserErrors } from './support'
+import {
+  expectSelectHighlightedItemFillsContent,
+  expectTrackedBrowserErrors,
+  gotoSinkSection,
+  trackBrowserErrors,
+} from './support'
 
 type LayoutRoute =
   | 'blockquote'
@@ -167,9 +172,39 @@ test('shadow tokens renders all six depth samples', async ({ page }) => {
 
 test('skeleton renders both live and skeletonized examples', async ({ page }) => {
   await runSectionTest(page, 'skeleton', 'testing the skeleton demo', async (section) => {
+    const subjectTrigger = section
+      .locator('.rt-Grid')
+      .filter({ hasText: 'Subject' })
+      .locator('.rt-SelectTrigger')
+      .first()
+    const skeletonFormCard = section
+      .locator('.rt-Card')
+      .filter({ has: page.locator('.rt-Skeleton').filter({ hasText: 'Email' }) })
+      .first()
+
     expect(await section.locator('.rt-Skeleton').count()).toBeGreaterThan(5)
     await expect(section.getByRole('button', { name: /^Next$/ }).first()).toBeVisible()
     await expect(section.getByText('Configuration Guide').first()).toBeVisible()
+    await expect(skeletonFormCard).toBeVisible()
+    await expectSelectHighlightedItemFillsContent(page, subjectTrigger)
+
+    const unskeletonizedControls = await skeletonFormCard
+      .locator('input, textarea, button')
+      .evaluateAll((controls) =>
+        controls
+          .map((control) => ({
+            className: control.getAttribute('class'),
+            hasSkeletonAncestor: Boolean(control.closest('.rt-Skeleton')),
+            tagName: control.tagName.toLowerCase(),
+            visibility: getComputedStyle(control).visibility,
+          }))
+          .filter(
+            ({ hasSkeletonAncestor, visibility }) =>
+              !hasSkeletonAncestor || visibility !== 'hidden',
+          ),
+      )
+
+    expect(unskeletonizedControls).toEqual([])
   })
 })
 

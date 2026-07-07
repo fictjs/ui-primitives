@@ -126,4 +126,14 @@
       }
     }
   }
+
+  .rt-BaseMenuSubContent {
+    &:where([data-state='open']) {
+      animation-name: rt-fade-in;
+    }
+
+    &:where([data-state='closed']) {
+      animation-name: rt-fade-out;
+    }
+  }
 }

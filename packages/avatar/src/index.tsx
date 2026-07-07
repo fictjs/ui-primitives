@@ -16,6 +16,10 @@ type AvatarStateProps = {
   __avatarOnImageLoadingStatusChange?: (status: ImageLoadingStatus) => void
 }
 type ScopedProps<P> = P & { __scopeAvatar?: Scope<unknown> }
+type ImageStatusSubscriber = {
+  onError?: (event: Event) => void
+  onStatusChange(status: ImageLoadingStatus): void
+}
 
 const AVATAR_NAME = 'Avatar'
 const IMAGE_NAME = 'AvatarImage'
@@ -25,7 +29,7 @@ const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 const imageStatusCache = new Map<string, ImageLoadingStatus>()
 const pendingImageLoads = new Map<string, HTMLImageElement>()
-const imageStatusSubscribers = new Map<string, Set<(status: ImageLoadingStatus) => void>>()
+const imageStatusSubscribers = new Map<string, Set<ImageStatusSubscriber>>()
 
 const [, createAvatarScope] = createContextScope(AVATAR_NAME)
 
@@ -126,6 +130,10 @@ function AvatarImage(props: ScopedProps<AvatarImageProps & AvatarStateProps>): F
       props.crossOrigin === undefined
         ? undefined
         : readValue(props.crossOrigin as MaybeAccessor<ImgCrossOrigin | undefined>),
+    onError: useCallbackRef((event: Event) => {
+      const onError = props.onError as ((event: Event) => void) | undefined
+      onError?.(event)
+    }),
     referrerPolicy: () =>
       props.referrerPolicy === undefined
         ? undefined
@@ -231,11 +239,13 @@ function useImageLoadingStatus(
   src: () => string | undefined,
   options: {
     crossOrigin: () => ImgCrossOrigin | undefined
+    onError?: (event: Event) => void
     referrerPolicy: () => ImgReferrerPolicy | undefined
   },
 ): () => ImageLoadingStatus {
   const isHydrated = useIsHydrated()
   const loadingStatus = createSignal<ImageLoadingStatus>('idle')
+  const lastErrorNotificationKeyRef = { current: undefined as string | undefined }
   const imageKey = () => {
     const currentSrc = src()
     if (!currentSrc) {
@@ -259,9 +269,20 @@ function useImageLoadingStatus(
       return
     }
 
+    if (
+      lastErrorNotificationKeyRef.current !== undefined &&
+      lastErrorNotificationKeyRef.current !== currentKey
+    ) {
+      lastErrorNotificationKeyRef.current = undefined
+    }
+
     const cachedStatus = imageStatusCache.get(currentKey)
     if (cachedStatus === 'loaded' || cachedStatus === 'error') {
       loadingStatus(cachedStatus)
+      if (cachedStatus === 'error' && lastErrorNotificationKeyRef.current !== currentKey) {
+        lastErrorNotificationKeyRef.current = currentKey
+        options.onError?.(new Event('error'))
+      }
       return
     }
 
@@ -274,11 +295,19 @@ function useImageLoadingStatus(
       imageStatusSubscribers.set(currentKey, subscribers)
     }
 
-    const handleStatusChange = (status: ImageLoadingStatus) => {
-      loadingStatus(status)
+    const subscriber: ImageStatusSubscriber = {
+      onStatusChange: (status) => {
+        loadingStatus(status)
+      },
+    }
+    if (options.onError) {
+      subscriber.onError = (event) => {
+        lastErrorNotificationKeyRef.current = currentKey
+        options.onError?.(event)
+      }
     }
 
-    subscribers.add(handleStatusChange)
+    subscribers.add(subscriber)
     loadingStatus('loading')
 
     if (!pendingImageLoads.has(currentKey)) {
@@ -293,7 +322,7 @@ function useImageLoadingStatus(
         image.crossOrigin = nextCrossOrigin
       }
 
-      const notify = (status: ImageLoadingStatus) => {
+      const notify = (status: ImageLoadingStatus, event: Event) => {
         imageStatusCache.set(currentKey, status)
         pendingImageLoads.delete(currentKey)
         const currentSubscribers = imageStatusSubscribers.get(currentKey)
@@ -302,22 +331,25 @@ function useImageLoadingStatus(
         }
 
         for (const subscriber of currentSubscribers) {
-          subscriber(status)
+          subscriber.onStatusChange(status)
+          if (status === 'error') {
+            subscriber.onError?.(event)
+          }
         }
       }
 
-      image.addEventListener('load', () => {
-        notify('loaded')
+      image.addEventListener('load', (event) => {
+        notify('loaded', event)
       })
-      image.addEventListener('error', () => {
-        notify('error')
+      image.addEventListener('error', (event) => {
+        notify('error', event)
       })
       image.src = currentSrc
     }
 
     return () => {
       const currentSubscribers = imageStatusSubscribers.get(currentKey)
-      currentSubscribers?.delete(handleStatusChange)
+      currentSubscribers?.delete(subscriber)
       if (
         currentSubscribers &&
         currentSubscribers.size === 0 &&

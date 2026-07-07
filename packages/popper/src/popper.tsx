@@ -324,6 +324,7 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
 
       return [
         offset({ mainAxis: sideOffset() + arrowHeight, alignmentAxis: alignOffset() }),
+        avoidCollisions() && flip(detectOverflowOptions),
         avoidCollisions() &&
           shift({
             mainAxis: true,
@@ -331,7 +332,6 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
             ...(sticky() === 'partial' ? { limiter: limitShift() } : {}),
             ...detectOverflowOptions,
           }),
-        avoidCollisions() && flip(detectOverflowOptions),
         size({
           ...detectOverflowOptions,
           apply: ({ elements, rects, availableWidth, availableHeight }) => {
@@ -550,18 +550,19 @@ function PopperArrow(props: ScopedProps<PopperArrowProps>): FictNode {
       return
     }
 
+    const baseSide = OPPOSITE_SIDE[contentContext.placedSide()]
     const nextX = contentContext.arrowX()
     const nextY = contentContext.arrowY()
 
-    if (nextX === undefined) {
+    if (nextX === undefined && baseSide !== 'left') {
       currentNode.style.removeProperty('left')
-    } else {
+    } else if (nextX !== undefined) {
       currentNode.style.left = `${nextX}px`
     }
 
-    if (nextY === undefined) {
+    if (nextY === undefined && baseSide !== 'top') {
       currentNode.style.removeProperty('top')
-    } else {
+    } else if (nextY !== undefined) {
       currentNode.style.top = `${nextY}px`
     }
   })

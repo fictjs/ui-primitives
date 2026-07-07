@@ -4,8 +4,10 @@ import {
   createPortal as createFictPortal,
   mergeProps,
   prop,
+  untrack,
   useContext as useRuntimeContext,
   type FictNode,
+  type FictVNode,
   type JSX,
 } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
@@ -40,6 +42,9 @@ type PrimitiveDivProps = JSX.IntrinsicElements['div'] & {
 type PrimitiveSpanProps = JSX.IntrinsicElements['span'] & {
   asChild?: boolean
 }
+type PossibleRef<T> = ((node: T | null) => void) | { current: T | null } | undefined
+type SelectSide = 'top' | 'right' | 'bottom' | 'left'
+type SelectAlign = 'start' | 'center' | 'end'
 type SelectContextValue = {
   value: () => string
   onValueChange(value: string): void
@@ -60,9 +65,6 @@ type SelectItemContextValue = {
 }
 type SelectPortalContextValue = {
   forceMount: boolean | undefined
-}
-type SelectCollectionContextValue = {
-  detached: boolean
 }
 
 const SELECT_NAME = 'Select'
@@ -85,6 +87,8 @@ const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 const READ_VALUE_DEPTH_LIMIT = 10
+const STATIC_COMPONENT_DEPTH_LIMIT = 32
+const SELECT_FALLBACK_COLLISION_SIZE = 160
 
 const [createSelectContext, createSelectScope] = createContextScope(SELECT_NAME, [createMenuScope])
 const [SelectProvider, useSelectContext] = createSelectContext<SelectContextValue>(SELECT_NAME)
@@ -92,9 +96,6 @@ const [SelectItemProvider, useSelectItemContext] =
   createSelectContext<SelectItemContextValue>(ITEM_NAME)
 const SelectPortalContext = createRuntimeContext<SelectPortalContextValue>({
   forceMount: undefined,
-})
-const SelectCollectionContext = createRuntimeContext<SelectCollectionContextValue>({
-  detached: false,
 })
 const useMenuScope = createMenuScope()
 
@@ -165,10 +166,270 @@ function readStyle(value: unknown): Record<string, string | number> {
   return value as Record<string, string | number>
 }
 
+function isVNode(node: unknown): node is FictVNode {
+  return !!node && typeof node === 'object' && 'type' in (node as FictVNode)
+}
+
+function isDomNode(node: unknown): node is Node {
+  return typeof Node !== 'undefined' && node instanceof Node
+}
+
+function getVNodeProps(node: FictVNode): Record<string, unknown> {
+  return (node.props as Record<string, unknown> | null | undefined) ?? {}
+}
+
+let staticTextScanDepth = 0
+
+function isStaticTextScan(): boolean {
+  return staticTextScanDepth > 0
+}
+
+function runStaticTextScan<T>(callback: () => T): T {
+  staticTextScanDepth += 1
+
+  try {
+    return untrack(callback)
+  } finally {
+    staticTextScanDepth -= 1
+  }
+}
+
+function getNodeText(node: FictNode | FictNode[] | undefined): string {
+  if (Array.isArray(node)) {
+    return node.map(getNodeText).join('')
+  }
+
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node)
+  }
+
+  if (isDomNode(node)) {
+    return node.textContent ?? ''
+  }
+
+  if (!isVNode(node)) {
+    return ''
+  }
+
+  return getNodeText(getVNodeProps(node).children as FictNode | FictNode[] | undefined)
+}
+
+function findStaticItemText(
+  node: FictNode | FictNode[] | undefined,
+  depth = 0,
+): { found: boolean; text: string } {
+  if (depth >= STATIC_COMPONENT_DEPTH_LIMIT) {
+    return { found: false, text: '' }
+  }
+
+  if (Array.isArray(node)) {
+    let found = false
+    let text = ''
+
+    for (const child of node) {
+      const result = findStaticItemText(child, depth + 1)
+      if (result.found) {
+        found = true
+        text += result.text
+      }
+    }
+
+    return { found, text }
+  }
+
+  if (!isVNode(node)) {
+    return { found: false, text: '' }
+  }
+
+  const props = getVNodeProps(node)
+  const children = props.children as FictNode | FictNode[] | undefined
+
+  if (node.type === SelectItemText) {
+    return { found: true, text: getNodeText(children) }
+  }
+
+  const childResult = findStaticItemText(children, depth + 1)
+  if (childResult.found) {
+    return childResult
+  }
+
+  const staticChildren = getStaticComponentChildren(node, depth)
+  if (staticChildren !== undefined) {
+    return findStaticItemText(staticChildren, depth + 1)
+  }
+
+  return { found: false, text: '' }
+}
+
+function getStaticComponentChildren(
+  node: FictVNode,
+  depth: number,
+): FictNode | FictNode[] | undefined {
+  if (depth >= STATIC_COMPONENT_DEPTH_LIMIT || typeof node.type !== 'function') {
+    return undefined
+  }
+
+  const props = getVNodeProps(node)
+  if (props.children !== undefined) {
+    return undefined
+  }
+
+  try {
+    return runStaticTextScan(() =>
+      (node.type as (props: Record<string, unknown>) => FictNode | FictNode[] | undefined)(props),
+    )
+  } catch {
+    return undefined
+  }
+}
+
+function registerStaticDomItemTexts(
+  node: Node,
+  registerItemText: (value: string, text: string) => void,
+): void {
+  if (
+    typeof Element !== 'undefined' &&
+    node instanceof Element &&
+    node.hasAttribute('data-select-static-value')
+  ) {
+    const value = node.getAttribute('data-value')
+    const text = node.textContent ?? ''
+    if (value && text) {
+      registerItemText(value, text)
+    }
+    return
+  }
+
+  for (const child of Array.from(node.childNodes)) {
+    registerStaticDomItemTexts(child, registerItemText)
+  }
+}
+
+function registerStaticItemTexts(
+  node: FictNode | FictNode[] | undefined,
+  registerItemText: (value: string, text: string) => void,
+  depth = 0,
+): void {
+  if (depth >= STATIC_COMPONENT_DEPTH_LIMIT) return
+
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      registerStaticItemTexts(child, registerItemText, depth + 1)
+    }
+    return
+  }
+
+  if (isDomNode(node)) {
+    registerStaticDomItemTexts(node, registerItemText)
+    return
+  }
+
+  if (!isVNode(node)) {
+    return
+  }
+
+  const props = getVNodeProps(node)
+  const value =
+    typeof props.value === 'string'
+      ? props.value
+      : props['data-select-static-value'] === ''
+        ? props['data-value']
+        : undefined
+  const children = props.children as FictNode | FictNode[] | undefined
+
+  if (typeof value === 'string') {
+    const itemText = findStaticItemText(children, depth + 1)
+    const text = itemText.found ? itemText.text : getNodeText(children)
+    if (text) {
+      registerItemText(value, text)
+    }
+    return
+  }
+
+  registerStaticItemTexts(children, registerItemText, depth + 1)
+
+  const staticChildren = getStaticComponentChildren(node, depth)
+  if (staticChildren !== undefined) {
+    registerStaticItemTexts(staticChildren, registerItemText, depth + 1)
+  }
+}
+
+function getOppositeSide(side: SelectSide): SelectSide {
+  if (side === 'top') return 'bottom'
+  if (side === 'bottom') return 'top'
+  if (side === 'left') return 'right'
+  return 'left'
+}
+
+function getAvailableWidth(
+  rect: DOMRect,
+  side: SelectSide,
+  sideOffset: number,
+  viewportWidth: number,
+): number {
+  if (side === 'left') return Math.max(rect.left - sideOffset, 0)
+  if (side === 'right') return Math.max(viewportWidth - rect.right - sideOffset, 0)
+  return Math.max(viewportWidth, 0)
+}
+
+function getAvailableHeight(
+  rect: DOMRect,
+  side: SelectSide,
+  sideOffset: number,
+  viewportHeight: number,
+): number {
+  if (side === 'top') return Math.max(rect.top - sideOffset, 0)
+  if (side === 'bottom') return Math.max(viewportHeight - rect.bottom - sideOffset, 0)
+  return Math.max(viewportHeight, 0)
+}
+
+function getSelectContentSize(content: HTMLElement | null): { width: number; height: number } {
+  if (!content) {
+    return { width: 0, height: 0 }
+  }
+
+  const rect = content.getBoundingClientRect()
+
+  return {
+    width: Math.max(rect.width, content.scrollWidth),
+    height: Math.max(rect.height, content.scrollHeight),
+  }
+}
+
+function getSelectPlacedSide(
+  trigger: HTMLElement | null,
+  content: HTMLElement | null,
+  side: SelectSide,
+  sideOffset: number,
+): SelectSide {
+  if (!trigger) {
+    return side
+  }
+
+  const rect = trigger.getBoundingClientRect()
+  const oppositeSide = getOppositeSide(side)
+  const contentSize = getSelectContentSize(content)
+  const isVerticalSide = side === 'top' || side === 'bottom'
+  const desiredAvailable = isVerticalSide
+    ? getAvailableHeight(rect, side, sideOffset, window.innerHeight)
+    : getAvailableWidth(rect, side, sideOffset, window.innerWidth)
+  const oppositeAvailable = isVerticalSide
+    ? getAvailableHeight(rect, oppositeSide, sideOffset, window.innerHeight)
+    : getAvailableWidth(rect, oppositeSide, sideOffset, window.innerWidth)
+  const requiredSize =
+    (isVerticalSide ? contentSize.height : contentSize.width) || SELECT_FALLBACK_COLLISION_SIZE
+
+  if (desiredAvailable < requiredSize && oppositeAvailable > desiredAvailable) {
+    return oppositeSide
+  }
+
+  return side
+}
+
 function getSelectWrapperStyle(
   trigger: HTMLElement | null,
-  side: 'top' | 'right' | 'bottom' | 'left',
-  align: 'start' | 'center' | 'end',
+  side: SelectSide,
+  align: SelectAlign,
   sideOffset: number,
   alignOffset: number,
 ): Record<string, string> {
@@ -190,18 +451,8 @@ function getSelectWrapperStyle(
   }
 
   const rect = trigger.getBoundingClientRect()
-  const availableWidth =
-    side === 'left'
-      ? rect.left
-      : side === 'right'
-        ? window.innerWidth - rect.right
-        : window.innerWidth
-  const availableHeight =
-    side === 'top'
-      ? rect.top
-      : side === 'bottom'
-        ? window.innerHeight - rect.bottom
-        : window.innerHeight
+  const availableWidth = getAvailableWidth(rect, side, sideOffset, window.innerWidth)
+  const availableHeight = getAvailableHeight(rect, side, sideOffset, window.innerHeight)
 
   let left = rect.left
   let top = rect.top
@@ -329,6 +580,12 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
     caller: SELECT_NAME,
     ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
   })
+  const registerItemText = (itemValue: string, text: string) => {
+    textByValue.set(itemValue, text)
+    if (itemValue === value()) {
+      selectedText(text)
+    }
+  }
 
   const onValueChange = (nextValue: string) => {
     setValue(nextValue)
@@ -348,12 +605,7 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
       contentId={contentId}
       selectedText={selectedText}
       setSelectedText={selectedText}
-      registerItemText={(itemValue, text) => {
-        textByValue.set(itemValue, text)
-        if (itemValue === value()) {
-          selectedText(text)
-        }
-      }}
+      registerItemText={registerItemText}
     >
       <Menu {...menuScope} open={open} onOpenChange={setOpen}>
         {props.children}
@@ -431,18 +683,11 @@ function SelectValue(props: ScopedProps<SelectValueProps>): FictNode {
     props.placeholder === undefined
       ? ''
       : (readValue(props.placeholder as MaybeAccessor<string | undefined>) ?? '')
-  const ref = { current: null as HTMLSpanElement | null }
-
-  useLayoutEffect(() => {
-    if (!ref.current) return
-    ref.current.textContent = context.value() ? context.selectedText() : placeholder()
-  })
 
   return (
     <Primitive.span
       {...(props as Record<string, unknown>)}
       ref={(node: HTMLSpanElement | null) => {
-        ref.current = node
         if (!props.ref) return
         if (typeof props.ref === 'function') {
           props.ref(node)
@@ -450,7 +695,13 @@ function SelectValue(props: ScopedProps<SelectValueProps>): FictNode {
         }
         props.ref.current = node
       }}
-    />
+    >
+      {
+        reactive(() =>
+          context.value() ? context.selectedText() : placeholder(),
+        ) as unknown as FictNode
+      }
+    </Primitive.span>
   )
 }
 
@@ -494,7 +745,7 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     CONTENT_NAME,
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
   )
-  const fragment = createSignal<DocumentFragment | null>(null)
+  const content = createSignal<HTMLDivElement | null>(null)
   const forceMount =
     props.forceMount === undefined
       ? portalContext.forceMount
@@ -520,15 +771,34 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     props.alignOffset === undefined
       ? 0
       : (readValue(props.alignOffset as MaybeAccessor<number | undefined>) ?? 0)
+  const placedSide = () =>
+    getSelectPlacedSide(context.triggerRef.current, content(), side(), sideOffset())
   const wrapperStyle = () =>
-    getSelectWrapperStyle(context.triggerRef.current, side(), align(), sideOffset(), alignOffset())
+    getSelectWrapperStyle(
+      context.triggerRef.current,
+      placedSide(),
+      align(),
+      sideOffset(),
+      alignOffset(),
+    )
   const wrapperProps = mergeProps({
     style: prop(wrapperStyle),
   })
+  const setContentRef = (node: HTMLDivElement | null) => {
+    content(node)
+
+    const forwardedRef = (contentProps as { ref?: PossibleRef<HTMLDivElement> }).ref
+    if (!forwardedRef) return
+    if (typeof forwardedRef === 'function') {
+      forwardedRef(node)
+      return
+    }
+
+    forwardedRef.current = node
+  }
 
   useLayoutEffect(() => {
-    if (fragment() || typeof DocumentFragment === 'undefined') return
-    fragment(new DocumentFragment())
+    registerStaticItemTexts(props.children, context.registerItemText)
   })
 
   const contentNode = (
@@ -539,24 +809,19 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
       role="listbox"
       forceMount={forceMount}
       aria-labelledby={context.triggerId()}
-      data-side={prop(() => (position() === 'popper' ? side() : undefined))}
-      data-align={prop(() => (position() === 'popper' ? align() : undefined))}
-      {...(position() === 'popper'
-        ? {
-            style: {
-              outline: 'none',
-              width: '100%',
-              '--radix-select-content-transform-origin': 'var(--radix-popper-transform-origin)',
-              '--radix-select-content-available-width': 'var(--radix-popper-available-width)',
-              '--radix-select-content-available-height': 'var(--radix-popper-available-height)',
-              '--radix-select-trigger-width': 'var(--radix-popper-anchor-width)',
-              '--radix-select-trigger-height': 'var(--radix-popper-anchor-height)',
-              ...readStyle(contentProps.style),
-            },
-          }
-        : contentProps.style === undefined
-          ? {}
-          : { style: contentProps.style })}
+      data-side={prop(placedSide)}
+      data-align={prop(align)}
+      ref={setContentRef}
+      style={{
+        outline: 'none',
+        ...(position() === 'popper' ? { width: '100%' } : {}),
+        '--radix-select-content-transform-origin': 'var(--radix-popper-transform-origin)',
+        '--radix-select-content-available-width': 'var(--radix-popper-available-width)',
+        '--radix-select-content-available-height': 'var(--radix-popper-available-height)',
+        '--radix-select-trigger-width': 'var(--radix-popper-anchor-width)',
+        '--radix-select-trigger-height': 'var(--radix-popper-anchor-height)',
+        ...readStyle(contentProps.style),
+      }}
       onCloseAutoFocus={(event) => {
         props.onCloseAutoFocus?.(event)
         event.preventDefault()
@@ -566,29 +831,13 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
 
   return (
     <>
-      {reactive(() => {
-        if (!forceMount && !context.open()) {
-          const detachedFragment = fragment()
-
-          if (!detachedFragment) return null
-
-          return createFictPortal(
-            detachedFragment,
-            () => (
-              <SelectCollectionContext.Provider value={{ detached: true }}>
-                <div>{props.children}</div>
-              </SelectCollectionContext.Provider>
-            ),
-            createElement,
-          ) as unknown as FictNode
-        }
-
-        return (
+      {reactive(() =>
+        forceMount || context.open() ? (
           <div data-radix-popper-content-wrapper="" {...(wrapperProps as Record<string, unknown>)}>
             {contentNode}
           </div>
-        )
-      })}
+        ) : null,
+      )}
     </>
   )
 }
@@ -614,11 +863,18 @@ function SelectLabel(props: ScopedProps<SelectLabelProps>): FictNode {
 SelectLabel.displayName = LABEL_NAME
 
 function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
+  if (isStaticTextScan()) {
+    return (
+      <div data-select-static-value="" data-value={props.value}>
+        {props.children}
+      </div>
+    )
+  }
+
   const context = useSelectContext(
     ITEM_NAME,
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
   )
-  const collectionContext = useRuntimeContext(SelectCollectionContext)
   const menuScope = useMenuScope(props.__scopeSelect)
   const { __scopeSelect: _scopeSelect, value: _value, ...itemProps } = props
   const selected = () => context.value() === props.value
@@ -638,43 +894,31 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
         context.onOpenChange(false)
       }}
     >
-      {collectionContext.detached ? (
-        <Primitive.div
-          {...(itemProps as Record<string, unknown>)}
-          role="option"
-          aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as 'true' | 'false'}
-          data-state={prop(() => (selected() ? 'checked' : 'unchecked'))}
-          data-disabled={prop(() => (disabled() ? '' : undefined))}
-          data-select-item=""
-          data-value={props.value}
-        />
-      ) : (
-        <MenuItem
-          {...menuScope}
-          {...itemProps}
-          role="option"
-          aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as 'true' | 'false'}
-          data-state={prop(() => (selected() ? 'checked' : 'unchecked'))}
-          data-select-item=""
-          data-value={props.value}
-          disabled={props.disabled}
-          onSelect={(event) => {
-            if (disabled()) {
-              event.preventDefault()
-              return
-            }
+      <MenuItem
+        {...menuScope}
+        {...itemProps}
+        role="option"
+        aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as 'true' | 'false'}
+        data-state={prop(() => (selected() ? 'checked' : 'unchecked'))}
+        data-select-item=""
+        data-value={props.value}
+        disabled={props.disabled}
+        onSelect={(event) => {
+          if (disabled()) {
+            event.preventDefault()
+            return
+          }
 
-            context.onValueChange(props.value)
-            context.onOpenChange(false)
-          }}
-          onKeyDown={composeEventHandlers<KeyboardEvent>(
-            itemProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-            (event) => {
-              if (disabled()) return
-            },
-          )}
-        />
-      )}
+          context.onValueChange(props.value)
+          context.onOpenChange(false)
+        }}
+        onKeyDown={composeEventHandlers<KeyboardEvent>(
+          itemProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+          (event) => {
+            if (disabled()) return
+          },
+        )}
+      />
     </SelectItemProvider>
   )
 }
@@ -682,6 +926,10 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
 SelectItem.displayName = ITEM_NAME
 
 function SelectItemText(props: ScopedProps<SelectItemTextProps>): FictNode {
+  if (isStaticTextScan()) {
+    return <span>{props.children}</span>
+  }
+
   const rootContext = useSelectContext(
     ITEM_TEXT_NAME,
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
@@ -719,6 +967,10 @@ function SelectItemText(props: ScopedProps<SelectItemTextProps>): FictNode {
 SelectItemText.displayName = ITEM_TEXT_NAME
 
 function SelectItemIndicator(props: ScopedProps<SelectItemIndicatorProps>): FictNode {
+  if (isStaticTextScan()) {
+    return null
+  }
+
   const itemContext = useSelectItemContext(
     ITEM_INDICATOR_NAME,
     props.__scopeSelect as Scope<SelectItemContextValue | undefined>,
@@ -746,6 +998,10 @@ function SelectScrollDownButton(props: ScopedProps<SelectScrollDownButtonProps>)
 SelectScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME
 
 function SelectSeparator(props: ScopedProps<SelectSeparatorProps>): FictNode {
+  if (isStaticTextScan()) {
+    return null
+  }
+
   const menuScope = useMenuScope(props.__scopeSelect)
   return <MenuSeparator {...menuScope} {...props} />
 }

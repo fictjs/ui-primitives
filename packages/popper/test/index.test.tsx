@@ -145,8 +145,8 @@ describe('@fictjs/popper', () => {
     expect(content.getAttribute('data-align')).toBe('start')
     expect(middleware.map((entry) => entry.name)).toEqual([
       'offset',
-      'shift',
       'flip',
+      'shift',
       'size',
       'transformOrigin',
     ])
@@ -288,6 +288,42 @@ describe('@fictjs/popper', () => {
     const arrowWrapper = arrow.parentElement as HTMLSpanElement
 
     expect(arrowWrapper.style.visibility).toBe('')
+  })
+
+  it('preserves the arrow side anchor when a coordinate is not provided', async () => {
+    useSizeMock.mockImplementation(() => () => ({ width: 12, height: 6 }))
+
+    floatingUiMocks.useFloating.mockImplementation(() =>
+      createFloatingResult({
+        placement: 'bottom',
+        middlewareData: {
+          arrow: { x: 14, centerOffset: 0 },
+        },
+      }),
+    )
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor data-testid="anchor" />
+          <PopperContent>
+            <PopperArrow data-testid="arrow" />
+          </PopperContent>
+        </Popper>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const arrow = container.querySelector('[data-testid="arrow"]') as SVGSVGElement
+    const arrowWrapper = arrow.parentElement as HTMLSpanElement
+
+    expect(arrowWrapper.style.left).toBe('14px')
+    expect(arrowWrapper.style.top).toBe('0px')
   })
 
   it('falls back to DOM geometry when floating-ui does not provide arrow coordinates', async () => {

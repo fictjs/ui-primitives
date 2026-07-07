@@ -37,10 +37,16 @@ import {
 } from '@fictjs/menu'
 import { Primitive } from '@fictjs/primitive'
 import { useControllableState } from '@fictjs/use-controllable-state'
+import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
 type MaybeAccessor<T> = T | (() => T)
 type ScopedProps<P> = P & { __scopeContextMenu?: Scope }
 type StyleRecord = Record<string, string | number>
+type ContextMenuSide = 'top' | 'right' | 'bottom' | 'left'
+type ContextMenuAlign = 'start' | 'center' | 'end'
+type AnchorRect = Pick<DOMRect, 'bottom' | 'height' | 'left' | 'right' | 'top' | 'width'>
+type ContentSize = { width: number; height: number }
+type PossibleRef<T> = ((node: T | null) => void) | { current: T | null } | undefined
 type TriggerProps = JSX.IntrinsicElements['div'] & {
   asChild?: boolean
   disabled?: MaybeAccessor<boolean | undefined>
@@ -73,6 +79,7 @@ const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 const READ_VALUE_DEPTH_LIMIT = 10
+const CONTEXT_MENU_FALLBACK_COLLISION_SIZE = 160
 
 const [createContextMenuContext, createContextMenuScope] = createContextScope(CONTEXT_MENU_NAME, [
   createMenuScope,
@@ -133,10 +140,111 @@ function readStyle(value: unknown): StyleRecord {
   return value as StyleRecord
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max))
+}
+
+function getViewportWidth(): number {
+  return globalThis.innerWidth || document.documentElement.clientWidth || 0
+}
+
+function getViewportHeight(): number {
+  return globalThis.innerHeight || document.documentElement.clientHeight || 0
+}
+
+function isVerticalSide(side: ContextMenuSide): boolean {
+  return side === 'top' || side === 'bottom'
+}
+
+function getOppositeSide(side: ContextMenuSide): ContextMenuSide {
+  if (side === 'top') return 'bottom'
+  if (side === 'bottom') return 'top'
+  if (side === 'left') return 'right'
+  return 'left'
+}
+
+function getAnchorRect(anchorPoint: { x: number; y: number }): AnchorRect {
+  return {
+    bottom: anchorPoint.y,
+    height: 0,
+    left: anchorPoint.x,
+    right: anchorPoint.x,
+    top: anchorPoint.y,
+    width: 0,
+  }
+}
+
+function getAvailableWidth(
+  rect: AnchorRect,
+  side: ContextMenuSide,
+  sideOffset: number,
+  viewportWidth: number,
+): number {
+  if (side === 'left') return Math.max(rect.left - sideOffset, 0)
+  if (side === 'right') return Math.max(viewportWidth - rect.right - sideOffset, 0)
+  return Math.max(viewportWidth, 0)
+}
+
+function getAvailableHeight(
+  rect: AnchorRect,
+  side: ContextMenuSide,
+  sideOffset: number,
+  viewportHeight: number,
+): number {
+  if (side === 'top') return Math.max(rect.top - sideOffset, 0)
+  if (side === 'bottom') return Math.max(viewportHeight - rect.bottom - sideOffset, 0)
+  return Math.max(viewportHeight, 0)
+}
+
+function measureMenuContentSize(content: HTMLElement | null): ContentSize {
+  if (!content) {
+    return { width: 0, height: 0 }
+  }
+
+  const rect = content.getBoundingClientRect()
+
+  return {
+    width: Math.max(rect.width, content.scrollWidth),
+    height: Math.max(rect.height, content.scrollHeight),
+  }
+}
+
+function getContextMenuPlacedSide(
+  anchorPoint: { x: number; y: number } | null,
+  contentSize: ContentSize,
+  side: ContextMenuSide,
+  sideOffset: number,
+): ContextMenuSide {
+  if (!anchorPoint) {
+    return side
+  }
+
+  const rect = getAnchorRect(anchorPoint)
+  const viewportWidth = getViewportWidth()
+  const viewportHeight = getViewportHeight()
+  const oppositeSide = getOppositeSide(side)
+  const desiredAvailable = isVerticalSide(side)
+    ? getAvailableHeight(rect, side, sideOffset, viewportHeight)
+    : getAvailableWidth(rect, side, sideOffset, viewportWidth)
+  const oppositeAvailable = isVerticalSide(side)
+    ? getAvailableHeight(rect, oppositeSide, sideOffset, viewportHeight)
+    : getAvailableWidth(rect, oppositeSide, sideOffset, viewportWidth)
+  const requiredSize =
+    (isVerticalSide(side) ? contentSize.height : contentSize.width) ||
+    CONTEXT_MENU_FALLBACK_COLLISION_SIZE
+
+  if (desiredAvailable < requiredSize && oppositeAvailable > desiredAvailable) {
+    return oppositeSide
+  }
+
+  return side
+}
+
 function getContextMenuWrapperStyle(
   anchorPoint: { x: number; y: number } | null,
-  side: 'top' | 'right' | 'bottom' | 'left',
-  align: 'start' | 'center' | 'end',
+  contentSize: ContentSize,
+  side: ContextMenuSide,
+  align: ContextMenuAlign,
   sideOffset: number,
   alignOffset: number,
 ): StyleRecord {
@@ -144,48 +252,103 @@ function getContextMenuWrapperStyle(
     return { pointerEvents: 'auto' }
   }
 
-  const availableWidth = globalThis.innerWidth || document.documentElement.clientWidth || 0
-  const availableHeight = globalThis.innerHeight || document.documentElement.clientHeight || 0
-  let left = anchorPoint.x
-  let top = anchorPoint.y
+  const rect = getAnchorRect(anchorPoint)
+  const viewportWidth = getViewportWidth()
+  const viewportHeight = getViewportHeight()
+  const availableWidth = getAvailableWidth(rect, side, sideOffset, viewportWidth)
+  const availableHeight = getAvailableHeight(rect, side, sideOffset, viewportHeight)
+  const collisionWidth = contentSize.width || CONTEXT_MENU_FALLBACK_COLLISION_SIZE
+  const collisionHeight = contentSize.height || CONTEXT_MENU_FALLBACK_COLLISION_SIZE
+  let left = rect.left
+  let top = rect.top
   let translateSuffix = ''
 
   if (side === 'top') {
-    top -= sideOffset
+    top = rect.top - sideOffset
+    let contentLeft = rect.left
+
     if (align === 'center') {
+      contentLeft = rect.left + rect.width / 2 - collisionWidth / 2
+    } else if (align === 'end') {
+      contentLeft = rect.right - collisionWidth
+    }
+
+    contentLeft = clamp(contentLeft + alignOffset, 0, viewportWidth - collisionWidth)
+
+    if (align === 'center') {
+      left = contentLeft + collisionWidth / 2
       translateSuffix = ' translate(-50%, -100%)'
     } else if (align === 'end') {
+      left = contentLeft + collisionWidth
       translateSuffix = ' translate(-100%, -100%)'
     } else {
+      left = contentLeft
       translateSuffix = ' translate(0, -100%)'
     }
-    left += alignOffset
   } else if (side === 'bottom') {
-    top += sideOffset
+    top = rect.bottom + sideOffset
+    let contentLeft = rect.left
+
     if (align === 'center') {
+      contentLeft = rect.left + rect.width / 2 - collisionWidth / 2
+    } else if (align === 'end') {
+      contentLeft = rect.right - collisionWidth
+    }
+
+    contentLeft = clamp(contentLeft + alignOffset, 0, viewportWidth - collisionWidth)
+
+    if (align === 'center') {
+      left = contentLeft + collisionWidth / 2
       translateSuffix = ' translate(-50%, 0)'
     } else if (align === 'end') {
+      left = contentLeft + collisionWidth
       translateSuffix = ' translate(-100%, 0)'
+    } else {
+      left = contentLeft
     }
-    left += alignOffset
   } else if (side === 'left') {
-    left -= sideOffset
+    left = rect.left - sideOffset
+    let contentTop = rect.top
+
     if (align === 'center') {
+      contentTop = rect.top + rect.height / 2 - collisionHeight / 2
+    } else if (align === 'end') {
+      contentTop = rect.bottom - collisionHeight
+    }
+
+    contentTop = clamp(contentTop + alignOffset, 0, viewportHeight - collisionHeight)
+
+    if (align === 'center') {
+      top = contentTop + collisionHeight / 2
       translateSuffix = ' translate(-100%, -50%)'
     } else if (align === 'end') {
+      top = contentTop + collisionHeight
       translateSuffix = ' translate(-100%, -100%)'
     } else {
+      top = contentTop
       translateSuffix = ' translate(-100%, 0)'
     }
-    top += alignOffset
   } else {
-    left += sideOffset
+    left = rect.right + sideOffset
+    let contentTop = rect.top
+
     if (align === 'center') {
+      contentTop = rect.top + rect.height / 2 - collisionHeight / 2
+    } else if (align === 'end') {
+      contentTop = rect.bottom - collisionHeight
+    }
+
+    contentTop = clamp(contentTop + alignOffset, 0, viewportHeight - collisionHeight)
+
+    if (align === 'center') {
+      top = contentTop + collisionHeight / 2
       translateSuffix = ' translate(0, -50%)'
     } else if (align === 'end') {
+      top = contentTop + collisionHeight
       translateSuffix = ' translate(0, -100%)'
+    } else {
+      top = contentTop
     }
-    top += alignOffset
   }
 
   const originX =
@@ -350,8 +513,52 @@ function ContextMenuContent(props: ScopedProps<ContextMenuContentProps>): FictNo
     props.forceMount === undefined
       ? false
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
+  const measuredContentSizeRef = { current: { width: 0, height: 0 } }
+  const contentElementRef = { current: null as HTMLDivElement | null }
+  const contentSize = createSignal<ContentSize>(measuredContentSizeRef.current)
+  const placedSide = () =>
+    getContextMenuPlacedSide(context.anchorPoint(), contentSize(), side(), sideOffset())
   const wrapperStyle = () =>
-    getContextMenuWrapperStyle(context.anchorPoint(), side(), align(), sideOffset(), alignOffset())
+    getContextMenuWrapperStyle(
+      context.anchorPoint(),
+      contentSize(),
+      placedSide(),
+      align(),
+      sideOffset(),
+      alignOffset(),
+    )
+  const updateContentSize = (nextContent: HTMLDivElement | null) => {
+    const nextSize = measureMenuContentSize(nextContent)
+    const previousSize = measuredContentSizeRef.current
+
+    if (nextSize.width === previousSize.width && nextSize.height === previousSize.height) {
+      return
+    }
+
+    measuredContentSizeRef.current = nextSize
+    contentSize(nextSize)
+  }
+  const setContentRef = (nextContent: HTMLDivElement | null) => {
+    contentElementRef.current = nextContent
+
+    const forwardedRef = props.ref as PossibleRef<HTMLDivElement>
+    if (!forwardedRef) return
+    if (typeof forwardedRef === 'function') {
+      forwardedRef(nextContent)
+      return
+    }
+
+    forwardedRef.current = nextContent
+  }
+
+  useLayoutEffect(() => {
+    if (!context.open() && !forceMount()) {
+      updateContentSize(null)
+      return
+    }
+
+    updateContentSize(contentElementRef.current)
+  })
 
   return (
     <>
@@ -361,8 +568,9 @@ function ContextMenuContent(props: ScopedProps<ContextMenuContentProps>): FictNo
             <MenuContent
               {...menuScope}
               {...props}
-              data-side={prop(side)}
+              data-side={prop(placedSide)}
               data-align={prop(align)}
+              ref={setContentRef}
               style={{
                 outline: 'none',
                 width: '100%',

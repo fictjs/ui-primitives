@@ -1,6 +1,11 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
-import { expectTrackedBrowserErrors, gotoSinkSection, trackBrowserErrors } from './support'
+import {
+  expectSelectHighlightedItemFillsContent,
+  expectTrackedBrowserErrors,
+  gotoSinkSection,
+  trackBrowserErrors,
+} from './support'
 
 async function runSectionTest(
   page: Page,
@@ -45,6 +50,38 @@ test('avatar renders both image and fallback variants', async ({ page }) => {
     const colorCombinations = section.locator('details').nth(1)
     await expect(section.locator('img[src$="/api/avatar"]').first()).toBeVisible()
     await expect(section.getByText('BG').first()).toBeVisible()
+    const avatarStates = await section.locator('.rt-AvatarRoot').evaluateAll((roots) =>
+      roots.slice(0, 20).map((root) => {
+        const image = root.querySelector('.rt-AvatarImage')
+        const fallback = root.querySelector('.rt-AvatarFallback')
+        const rootRect = root.getBoundingClientRect()
+        const imageRect = image?.getBoundingClientRect()
+        const fallbackRect = fallback?.getBoundingClientRect()
+
+        return {
+          rootWidth: rootRect.width,
+          rootHeight: rootRect.height,
+          imageSrc: image?.getAttribute('src') ?? null,
+          imageWidth: imageRect?.width ?? null,
+          imageHeight: imageRect?.height ?? null,
+          fallbackText: fallback?.textContent ?? null,
+          fallbackWidth: fallbackRect?.width ?? null,
+          fallbackHeight: fallbackRect?.height ?? null,
+        }
+      }),
+    )
+
+    for (const state of avatarStates) {
+      if (state.imageSrc) {
+        expect(state.imageSrc).toBe('/api/avatar')
+        expect(state.imageWidth).toBe(state.rootWidth)
+        expect(state.imageHeight).toBe(state.rootHeight)
+        expect(state.fallbackText).toBeNull()
+      } else if (state.fallbackText !== null) {
+        expect(state.fallbackWidth).toBe(state.rootWidth)
+        expect(state.fallbackHeight).toBe(state.rootHeight)
+      }
+    }
 
     await colorCombinations.locator('summary').click()
     await expect(colorCombinations).toHaveAttribute('open', '')
@@ -205,12 +242,18 @@ test('playground form accepts typed values', async ({ page }) => {
   await runSectionTest(page, 'playground', 'testing the playground form demo', async (section) => {
     const email = section.getByPlaceholder('Your email').first()
     const feedback = section.getByPlaceholder('Your feedback').first()
+    const subjectTrigger = section
+      .locator('.rt-Grid')
+      .filter({ hasText: 'Subject' })
+      .locator('.rt-SelectTrigger')
+      .first()
 
     await email.fill('playground@example.com')
     await feedback.fill('All systems nominal')
 
     await expect(email).toHaveValue('playground@example.com')
     await expect(feedback).toHaveValue('All systems nominal')
+    await expectSelectHighlightedItemFillsContent(page, subjectTrigger)
   })
 })
 
@@ -275,5 +318,63 @@ test('table renders example data rows', async ({ page }) => {
   await runSectionTest(page, 'table', 'testing the table demo', async (section) => {
     await expect(section.getByRole('columnheader', { name: 'Full name' }).first()).toBeVisible()
     await expect(section.getByRole('rowheader', { name: 'Andy' }).first()).toBeVisible()
+
+    const firstTableRoot = section.locator('.rt-TableRoot').first()
+    const layoutMetrics = await firstTableRoot.evaluate((root) => {
+      const viewport = root.querySelector('.rt-ScrollAreaViewport')
+      const table = root.querySelector('table')
+      const firstRow = root.querySelector('tr')
+
+      if (!viewport || !table || !firstRow) {
+        throw new Error('Unable to measure table layout')
+      }
+
+      const tableRect = table.getBoundingClientRect()
+      const firstRowRect = firstRow.getBoundingClientRect()
+
+      return {
+        tableDisplay: getComputedStyle(table).display,
+        tableWidth: tableRect.width,
+        firstRowWidth: firstRowRect.width,
+        viewportClientWidth: viewport.clientWidth,
+        viewportScrollWidth: viewport.scrollWidth,
+      }
+    })
+
+    expect(layoutMetrics.tableDisplay).toBe('table')
+    expect(Math.abs(layoutMetrics.firstRowWidth - layoutMetrics.tableWidth)).toBeLessThanOrEqual(1)
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.waitForTimeout(100)
+
+    const narrowLayoutMetrics = await firstTableRoot.evaluate((root) => {
+      const viewport = root.querySelector('.rt-ScrollAreaViewport')
+      const table = root.querySelector('table')
+      const firstRow = root.querySelector('tr')
+
+      if (!viewport || !table || !firstRow) {
+        throw new Error('Unable to measure narrow table layout')
+      }
+
+      const tableRect = table.getBoundingClientRect()
+      const firstRowRect = firstRow.getBoundingClientRect()
+
+      return {
+        tableDisplay: getComputedStyle(table).display,
+        tableWidth: tableRect.width,
+        firstRowWidth: firstRowRect.width,
+        viewportClientWidth: viewport.clientWidth,
+        viewportScrollWidth: viewport.scrollWidth,
+      }
+    })
+
+    expect(narrowLayoutMetrics.tableDisplay).toBe('table')
+    expect(
+      narrowLayoutMetrics.viewportScrollWidth,
+      'narrow tables should expose their overflow to ScrollArea instead of clipping rows inside a block table',
+    ).toBeGreaterThan(narrowLayoutMetrics.viewportClientWidth)
+    expect(
+      Math.abs(narrowLayoutMetrics.firstRowWidth - narrowLayoutMetrics.tableWidth),
+    ).toBeLessThanOrEqual(1)
   })
 })

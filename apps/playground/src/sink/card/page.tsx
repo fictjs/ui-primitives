@@ -110,7 +110,7 @@ function ContactCard({ variant }: { variant: (typeof cardPropDefs.variant.values
     <Card variant={variant} asChild>
       <a href="#some-page">
         <Flex align="center" gap="2">
-          <Avatar src="./api/avatar" fallback="D" />
+          <Avatar src="/api/avatar" fallback="D" />
           <div>
             <Text as="p" size="2" weight="medium">
               Poppy Nichols

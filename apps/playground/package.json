@@ -20,11 +20,11 @@
     "@fictjs/radix-ui": "workspace:*",
     "@fictjs/radix-ui-themes": "workspace:*",
     "@fictjs/runtime": "catalog:",
-    "fict": "^0.23.0"
+    "fict": "catalog:"
   },
   "devDependencies": {
     "@playwright/test": "catalog:",
-    "@fictjs/vite-plugin": "^0.23.0",
+    "@fictjs/vite-plugin": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",

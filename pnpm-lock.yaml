@@ -19,8 +19,11 @@ catalogs:
       specifier: 10.0.1
       version: 10.0.1
     '@fictjs/runtime':
-      specifier: 0.23.0
-      version: 0.23.0
+      specifier: 0.25.0
+      version: 0.25.0
+    '@fictjs/vite-plugin':
+      specifier: 0.25.0
+      version: 0.25.0
     '@playwright/test':
       specifier: 1.56.1
       version: 1.56.1
@@ -42,6 +45,9 @@ catalogs:
     eslint:
       specifier: 10.0.3
       version: 10.0.3
+    fict:
+      specifier: 0.25.0
+      version: 0.25.0
     globals:
       specifier: 17.4.0
       version: 17.4.0
@@ -75,11 +81,6 @@ catalogs:
     vitest:
       specifier: 4.0.18
       version: 4.0.18
-
-patchedDependencies:
-  '@fictjs/runtime@0.23.0':
-    hash: f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0
-    path: patches/@fictjs__runtime@0.23.0.patch
 
 importers:
 
@@ -153,14 +154,14 @@ importers:
         version: link:../../libs/radix-ui-themes
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       fict:
-        specifier: ^0.23.0
-        version: 0.23.0
+        specifier: 'catalog:'
+        version: 0.25.0
     devDependencies:
       '@fictjs/vite-plugin':
-        specifier: ^0.23.0
-        version: 0.23.0(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(yaml@2.8.2))
+        specifier: 'catalog:'
+        version: 0.25.0(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(yaml@2.8.2))
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.56.1
@@ -194,10 +195,10 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       fict:
-        specifier: ^0.23.0
-        version: 0.23.0
+        specifier: 'catalog:'
+        version: 0.25.0
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
@@ -209,14 +210,14 @@ importers:
         version: link:../fict-style-singleton
     devDependencies:
       '@fictjs/runtime':
-        specifier: ^0.23.0
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        specifier: 'catalog:'
+        version: 0.25.0
       '@fictjs/vite-plugin':
-        specifier: ^0.23.0
-        version: 0.23.0(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(yaml@2.8.2))
+        specifier: 'catalog:'
+        version: 0.25.0(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(yaml@2.8.2))
       fict:
-        specifier: ^0.23.0
-        version: 0.23.0
+        specifier: 'catalog:'
+        version: 0.25.0
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
@@ -231,8 +232,8 @@ importers:
         version: 1.0.1
     devDependencies:
       fict:
-        specifier: ^0.23.0
-        version: 0.23.0
+        specifier: 'catalog:'
+        version: 0.25.0
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
@@ -244,8 +245,8 @@ importers:
         version: 1.7.6
     devDependencies:
       '@fictjs/runtime':
-        specifier: ^0.23.0
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        specifier: 'catalog:'
+        version: 0.25.0
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
@@ -269,8 +270,8 @@ importers:
         specifier: 10.4.24
         version: 10.4.24(postcss@8.5.6)
       fict:
-        specifier: ^0.23.0
-        version: 0.23.0
+        specifier: 'catalog:'
+        version: 0.25.0
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
@@ -300,7 +301,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -313,7 +314,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -347,7 +348,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -375,7 +376,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -394,7 +395,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -410,7 +411,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -423,7 +424,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -448,7 +449,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -485,7 +486,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -519,7 +520,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -541,7 +542,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -550,7 +551,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -559,7 +560,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -581,10 +582,13 @@ importers:
       '@fictjs/use-controllable-state':
         specifier: workspace:*
         version: link:../use-controllable-state
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -642,7 +646,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -651,7 +655,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -679,7 +683,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -707,10 +711,13 @@ importers:
       '@fictjs/use-controllable-state':
         specifier: workspace:*
         version: link:../use-controllable-state
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -719,7 +726,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -741,7 +748,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -772,7 +779,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -812,7 +819,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -825,7 +832,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -838,7 +845,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -905,7 +912,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -936,7 +943,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -961,7 +968,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -992,7 +999,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1029,7 +1036,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1084,7 +1091,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1121,7 +1128,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1137,7 +1144,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1153,7 +1160,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1166,7 +1173,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1182,7 +1189,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1225,7 +1232,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1400,7 +1407,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1446,7 +1453,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1465,7 +1472,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1496,7 +1503,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1509,7 +1516,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1549,7 +1556,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1562,7 +1569,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1596,7 +1603,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1633,7 +1640,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1679,7 +1686,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1698,7 +1705,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1726,7 +1733,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1760,7 +1767,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1809,7 +1816,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1822,7 +1829,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1838,7 +1845,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1851,7 +1858,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1864,7 +1871,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1873,7 +1880,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1882,7 +1889,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1895,7 +1902,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1908,7 +1915,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1921,7 +1928,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -1934,7 +1941,7 @@ importers:
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
-        version: 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+        version: 0.25.0
       jsdom:
         specifier: 'catalog:'
         version: 28.1.0
@@ -2492,16 +2499,16 @@ packages:
       '@noble/hashes':
         optional: true
 
-  '@fictjs/compiler@0.23.0':
-    resolution: {integrity: sha512-SKJCoBuh8cjSfUV/Nly/SqMNdWaEcJQA++pIC1WMeKSrA9WSqdFn5zX+5TcJYxh9LD+9RMx1f/oplX9FwwH8vw==}
+  '@fictjs/compiler@0.25.0':
+    resolution: {integrity: sha512-8mAlyMczWJ8kODJLX46XVrLF5mlXHL+zi8/IRUHLsRI5XjevLGcC7tsYzIm3Op4TahdpXA+IuxMr4wkxhNXorQ==}
     peerDependencies:
       '@babel/core': '>=7.0.0'
 
-  '@fictjs/runtime@0.23.0':
-    resolution: {integrity: sha512-2+fsgj7pawoWSWAz/ZuNp0cxZhI1141Sp3tIT3UYJ2WsN59Z9bBpDNUOijZ6llD2Pn/6Y/yR4flUzzQWxKH2+w==}
+  '@fictjs/runtime@0.25.0':
+    resolution: {integrity: sha512-ZN0JFH0oV1+Du+wQP0hrF4oiO+/HRpqLu6a4/oAxnZm9YShI54UXW0azeg/bkChSMrDMQRQvSHzjBX5GwubFbQ==}
 
-  '@fictjs/vite-plugin@0.23.0':
-    resolution: {integrity: sha512-czJmKItEHsjTi3G/2VIZ7OKp+Milsht1tO52huz0zN/oNovyhBUIGfIganeu1Ps+RHXFabJxRplOPnMp0FZNaw==}
+  '@fictjs/vite-plugin@0.25.0':
+    resolution: {integrity: sha512-w61/r7NwZhwPUGDW3G+ewYExlpiroBclA8iruCyE/WJrWUJWng8y0lzNXnOJPaTLJdLw9J3Mt4LaLF2SIMxXJw==}
     peerDependencies:
       vite: '>=7.0.0'
 
@@ -4072,8 +4079,8 @@ packages:
       picomatch:
         optional: true
 
-  fict@0.23.0:
-    resolution: {integrity: sha512-ncSGDV6ULp0ahO0Tt7/lsHraP9Za75PQAX7tuxFTjG9qWWkA64wI7l9NNIDLqwgLl7Q2FDLtvhnw3KxYKYMhhg==}
+  fict@0.25.0:
+    resolution: {integrity: sha512-b5FG/VvPBvLnK1yp2oYS4jYuWv0jd3blW0rMPWoHiOrfEESji49y0omhO1OtFJevOQaI9TfYpVbQ2Ec3Jt5czQ==}
 
   figures@3.2.0:
     resolution: {integrity: sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==}
@@ -6131,7 +6138,7 @@ snapshots:
 
   '@exodus/bytes@1.15.0': {}
 
-  '@fictjs/compiler@0.23.0(@babel/core@7.29.0)':
+  '@fictjs/compiler@0.25.0(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/helper-plugin-utils': 7.28.6
@@ -6140,9 +6147,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@fictjs/runtime@0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)': {}
+  '@fictjs/runtime@0.25.0': {}
 
-  '@fictjs/vite-plugin@0.23.0(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(yaml@2.8.2))':
+  '@fictjs/vite-plugin@0.25.0(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(yaml@2.8.2))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/generator': 7.29.1
@@ -6152,7 +6159,7 @@ snapshots:
       '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
       '@babel/traverse': 7.29.0
       '@babel/types': 7.29.0
-      '@fictjs/compiler': 0.23.0(@babel/core@7.29.0)
+      '@fictjs/compiler': 0.25.0(@babel/core@7.29.0)
       vite: 7.3.1(@types/node@25.3.5)(jiti@2.6.1)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
@@ -7620,9 +7627,9 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.3
 
-  fict@0.23.0:
+  fict@0.25.0:
     dependencies:
-      '@fictjs/runtime': 0.23.0(patch_hash=f17b2a6bf0e81ee7626c5f8a3146768d4f167496095b16da8062122bb5e332c0)
+      '@fictjs/runtime': 0.25.0
 
   figures@3.2.0:
     dependencies:

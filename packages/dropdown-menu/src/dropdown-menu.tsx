@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { reactive } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -40,6 +40,7 @@ import {
 } from '@fictjs/menu'
 import { Primitive } from '@fictjs/primitive'
 import { useControllableState } from '@fictjs/use-controllable-state'
+import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
 type MaybeAccessor<T> = T | (() => T)
 type Direction = 'ltr' | 'rtl'
@@ -112,7 +113,12 @@ type DropdownMenuArrowProps = MenuArrowProps
 type DropdownMenuSubProps = MenuSubProps
 type DropdownMenuSubTriggerProps = MenuSubTriggerProps
 type DropdownMenuSubContentProps = MenuSubContentProps
+type DropdownMenuSide = 'top' | 'right' | 'bottom' | 'left'
+type DropdownMenuAlign = 'start' | 'center' | 'end'
+type ContentSize = { width: number; height: number }
 type StyleRecord = Record<string, string | number>
+
+const DROPDOWN_MENU_FALLBACK_COLLISION_SIZE = 160
 
 function isReadableAccessor(value: unknown): value is () => unknown {
   const taggedValue = value as unknown as Record<symbol, unknown>
@@ -142,10 +148,100 @@ function readStyle(value: unknown): StyleRecord {
   return value as StyleRecord
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max))
+}
+
+function getViewportWidth(): number {
+  return globalThis.innerWidth || document.documentElement.clientWidth || 0
+}
+
+function getViewportHeight(): number {
+  return globalThis.innerHeight || document.documentElement.clientHeight || 0
+}
+
+function isVerticalSide(side: DropdownMenuSide): boolean {
+  return side === 'top' || side === 'bottom'
+}
+
+function getOppositeSide(side: DropdownMenuSide): DropdownMenuSide {
+  if (side === 'top') return 'bottom'
+  if (side === 'bottom') return 'top'
+  if (side === 'left') return 'right'
+  return 'left'
+}
+
+function getAvailableWidth(
+  rect: DOMRect,
+  side: DropdownMenuSide,
+  sideOffset: number,
+  viewportWidth: number,
+): number {
+  if (side === 'left') return Math.max(rect.left - sideOffset, 0)
+  if (side === 'right') return Math.max(viewportWidth - rect.right - sideOffset, 0)
+  return Math.max(viewportWidth, 0)
+}
+
+function getAvailableHeight(
+  rect: DOMRect,
+  side: DropdownMenuSide,
+  sideOffset: number,
+  viewportHeight: number,
+): number {
+  if (side === 'top') return Math.max(rect.top - sideOffset, 0)
+  if (side === 'bottom') return Math.max(viewportHeight - rect.bottom - sideOffset, 0)
+  return Math.max(viewportHeight, 0)
+}
+
+function measureMenuContentSize(content: HTMLElement | null): ContentSize {
+  if (!content) {
+    return { width: 0, height: 0 }
+  }
+
+  const rect = content.getBoundingClientRect()
+
+  return {
+    width: Math.max(rect.width, content.scrollWidth),
+    height: Math.max(rect.height, content.scrollHeight),
+  }
+}
+
+function getDropdownMenuPlacedSide(
+  trigger: HTMLElement | null,
+  contentSize: ContentSize,
+  side: DropdownMenuSide,
+  sideOffset: number,
+): DropdownMenuSide {
+  if (!trigger) {
+    return side
+  }
+
+  const rect = trigger.getBoundingClientRect()
+  const viewportWidth = getViewportWidth()
+  const viewportHeight = getViewportHeight()
+  const oppositeSide = getOppositeSide(side)
+  const desiredAvailable = isVerticalSide(side)
+    ? getAvailableHeight(rect, side, sideOffset, viewportHeight)
+    : getAvailableWidth(rect, side, sideOffset, viewportWidth)
+  const oppositeAvailable = isVerticalSide(side)
+    ? getAvailableHeight(rect, oppositeSide, sideOffset, viewportHeight)
+    : getAvailableWidth(rect, oppositeSide, sideOffset, viewportWidth)
+  const requiredSize =
+    (isVerticalSide(side) ? contentSize.height : contentSize.width) ||
+    DROPDOWN_MENU_FALLBACK_COLLISION_SIZE
+
+  if (desiredAvailable < requiredSize && oppositeAvailable > desiredAvailable) {
+    return oppositeSide
+  }
+
+  return side
+}
+
 function getDropdownMenuWrapperStyle(
   trigger: HTMLElement | null,
-  side: 'top' | 'right' | 'bottom' | 'left',
-  align: 'start' | 'center' | 'end',
+  contentSize: ContentSize,
+  side: DropdownMenuSide,
+  align: DropdownMenuAlign,
   sideOffset: number,
   alignOffset: number,
 ): StyleRecord {
@@ -154,8 +250,12 @@ function getDropdownMenuWrapperStyle(
   }
 
   const rect = trigger.getBoundingClientRect()
-  const availableWidth = globalThis.innerWidth || document.documentElement.clientWidth || 0
-  const availableHeight = globalThis.innerHeight || document.documentElement.clientHeight || 0
+  const viewportWidth = getViewportWidth()
+  const viewportHeight = getViewportHeight()
+  const availableWidth = getAvailableWidth(rect, side, sideOffset, viewportWidth)
+  const availableHeight = getAvailableHeight(rect, side, sideOffset, viewportHeight)
+  const collisionWidth = contentSize.width || DROPDOWN_MENU_FALLBACK_COLLISION_SIZE
+  const collisionHeight = contentSize.height || DROPDOWN_MENU_FALLBACK_COLLISION_SIZE
   let left = rect.left
   let top = rect.bottom + sideOffset
   let translateSuffix = ''
@@ -171,36 +271,50 @@ function getDropdownMenuWrapperStyle(
   }
 
   if (side === 'top' || side === 'bottom') {
+    let contentLeft = rect.left
+
     if (align === 'center') {
-      left = rect.left + rect.width / 2
+      contentLeft = rect.left + rect.width / 2 - collisionWidth / 2
     } else if (align === 'end') {
-      left = rect.right
+      contentLeft = rect.right - collisionWidth
     }
 
-    left += alignOffset
+    contentLeft = clamp(contentLeft + alignOffset, 0, viewportWidth - collisionWidth)
 
     if (align === 'center') {
+      left = contentLeft + collisionWidth / 2
       translateSuffix = side === 'top' ? ' translate(-50%, -100%)' : ' translate(-50%, 0)'
     } else if (align === 'end') {
+      left = contentLeft + collisionWidth
       translateSuffix = side === 'top' ? ' translate(-100%, -100%)' : ' translate(-100%, 0)'
-    } else if (side === 'top') {
-      translateSuffix = ' translate(0, -100%)'
+    } else {
+      left = contentLeft
+      if (side === 'top') {
+        translateSuffix = ' translate(0, -100%)'
+      }
     }
   } else {
+    let contentTop = rect.top
+
     if (align === 'center') {
-      top = rect.top + rect.height / 2
+      contentTop = rect.top + rect.height / 2 - collisionHeight / 2
     } else if (align === 'end') {
-      top = rect.bottom
+      contentTop = rect.bottom - collisionHeight
     }
 
-    top += alignOffset
+    contentTop = clamp(contentTop + alignOffset, 0, viewportHeight - collisionHeight)
 
     if (align === 'center') {
+      top = contentTop + collisionHeight / 2
       translateSuffix = side === 'left' ? ' translate(-100%, -50%)' : ' translate(0, -50%)'
     } else if (align === 'end') {
+      top = contentTop + collisionHeight
       translateSuffix = side === 'left' ? ' translate(-100%, -100%)' : ' translate(0, -100%)'
-    } else if (side === 'left') {
-      translateSuffix = ' translate(-100%, 0)'
+    } else {
+      top = contentTop
+      if (side === 'left') {
+        translateSuffix = ' translate(-100%, 0)'
+      }
     }
   }
 
@@ -387,6 +501,9 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
     __scopeDropdownMenu as Scope<DropdownMenuContextValue | undefined>,
   )
   const menuScope = useMenuScope(__scopeDropdownMenu)
+  const measuredContentSizeRef = { current: { width: 0, height: 0 } }
+  const contentElementRef = { current: null as HTMLDivElement | null }
+  const contentSize = createSignal<ContentSize>(measuredContentSizeRef.current)
   let hasInteractedOutside = false
   const side = () =>
     props.side === undefined
@@ -409,14 +526,42 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
     props.forceMount === undefined
       ? false
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
+  const placedSide = () =>
+    getDropdownMenuPlacedSide(context.triggerRef.current, contentSize(), side(), sideOffset())
   const wrapperStyle = () =>
     getDropdownMenuWrapperStyle(
       context.triggerRef.current,
-      side(),
+      contentSize(),
+      placedSide(),
       align(),
       sideOffset(),
       alignOffset(),
     )
+  const updateContentSize = (nextContent: HTMLDivElement | null) => {
+    const nextSize = measureMenuContentSize(nextContent)
+    const previousSize = measuredContentSizeRef.current
+
+    if (nextSize.width === previousSize.width && nextSize.height === previousSize.height) {
+      return
+    }
+
+    measuredContentSizeRef.current = nextSize
+    contentSize(nextSize)
+  }
+  const contentRef = useComposedRefs(
+    contentProps.ref as PossibleRef<HTMLDivElement>,
+    contentElementRef,
+  )
+
+  useLayoutEffect(() => {
+    if (!context.open() && !forceMount()) {
+      updateContentSize(null)
+      return
+    }
+
+    updateContentSize(contentElementRef.current)
+  })
+
   const isTriggerTarget = (target: HTMLElement | null) => {
     if (!target) {
       return false
@@ -445,9 +590,10 @@ function DropdownMenuContent(props: ScopedProps<DropdownMenuContentProps>): Fict
               {...menuScope}
               {...contentProps}
               id={context.contentId()}
-              data-side={prop(side)}
+              data-side={prop(placedSide)}
               data-align={prop(align)}
               aria-labelledby={context.triggerId()}
+              ref={contentRef}
               style={{
                 outline: 'none',
                 width: '100%',

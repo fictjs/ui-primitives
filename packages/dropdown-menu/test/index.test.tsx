@@ -78,6 +78,7 @@ describe('@fictjs/dropdown-menu', () => {
     document.body.innerHTML = ''
     document.body.style.pointerEvents = ''
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('opens from its trigger and renders content in a portal', async () => {
@@ -159,6 +160,56 @@ describe('@fictjs/dropdown-menu', () => {
     expect(wrapper.style.minWidth).toBe('max-content')
     expect(content.style.width).toBe('100%')
     expect(content.getAttribute('data-side')).toBe('bottom')
+  })
+
+  it('flips content above the trigger near the viewport bottom', async () => {
+    vi.stubGlobal('innerWidth', 480)
+    vi.stubGlobal('innerHeight', 320)
+
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    document.body.append(container, portalRoot)
+
+    mount(
+      () => (
+        <DropdownMenu>
+          <Trigger data-testid="trigger">Open</Trigger>
+          <Portal container={portalRoot}>
+            <Content data-testid="content">
+              <Item data-testid="first">First item</Item>
+              <Item data-testid="second">Second item</Item>
+            </Content>
+          </Portal>
+        </DropdownMenu>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      x: 18,
+      y: 280,
+      width: 96,
+      height: 30,
+      top: 280,
+      right: 114,
+      bottom: 310,
+      left: 18,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    click(trigger)
+    await waitForEffects()
+    await waitForEffects()
+
+    const wrapper = portalRoot.querySelector(
+      '[data-radix-popper-content-wrapper]',
+    ) as HTMLDivElement
+    const content = portalRoot.querySelector('[data-testid="content"]') as HTMLDivElement
+
+    expect(content.getAttribute('data-side')).toBe('top')
+    expect(wrapper.style.transform).toBe('translate(18px, 276px) translate(0, -100%)')
+    expect(wrapper.style.getPropertyValue('--radix-popper-available-height')).toBe('276px')
   })
 
   it('restores body pointer events after closing one menu so another trigger can open', async () => {
