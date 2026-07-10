@@ -1,13 +1,13 @@
 import { prop } from 'fict'
 import * as React from '../../helpers/element.js'
-import classNames from 'classnames'
+import { classNames } from '../../helpers/reactive-class-names.js'
 import { Slot } from '@fictjs/radix-ui'
 
 import { baseButtonPropDefs } from './base-button.props.js'
 import { Flex } from '../flex.js'
 import { Spinner } from '../spinner.js'
 import { VisuallyHidden } from '../visually-hidden.js'
-import { extractProps } from '../../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../../helpers/extract-props.js'
 import { mapResponsiveProp, mapButtonSizeToSpinnerSize } from '../../helpers/map-prop-values.js'
 import { marginPropDefs } from '../../props/margin.props.js'
 
@@ -28,7 +28,6 @@ interface BaseButtonProps
   'aria-expanded'?: GetterBacked<JSX.IntrinsicElements['button']['aria-expanded']>
 }
 const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, forwardedRef) => {
-  const { size = baseButtonPropDefs.size.default } = props
   const extractedProps = extractProps(
     props,
     baseButtonPropDefs,
@@ -41,7 +40,9 @@ const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, 
   const asChild = extractedProps.asChild
   const color = extractedProps.color
   const radius = extractedProps.radius
-  const disabled = extractedProps.disabled ?? props.loading
+  const disabled = prop(
+    () => readPropValue(extractedProps.disabled) ?? props.loading,
+  ) as unknown as boolean | undefined
   const baseButtonProps = omitPropsPreservingDescriptors(
     extractedProps as Record<string, unknown>,
     ['className', 'children', 'asChild', 'color', 'radius', 'disabled'],
@@ -63,21 +64,29 @@ const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, 
     // its direct descendants. To get around this we need to clone the child
     // with its wrapped inner children.
     if (asChild && React.isValidElement(children)) {
-      const props = children.props as { children?: React.ReactNode }
-      const childNode = props.children
+      const childProps = children.props as { children?: React.ReactNode }
+      const childNode = childProps.children
       child = React.cloneElement(children, {
-        ...props,
-        children: renderLoadingButtonContents(childNode, size),
+        ...childProps,
+        children: renderLoadingButtonContents(
+          childNode,
+          () => props.size ?? baseButtonPropDefs.size.default,
+        ),
       })
     } else {
-      child = renderLoadingButtonContents(children, size)
+      child = renderLoadingButtonContents(
+        children,
+        () => props.size ?? baseButtonPropDefs.size.default,
+      )
     }
   }
 
   return (
     <Comp
       // The `data-disabled` attribute enables correct styles when doing `<Button asChild disabled>`
-      data-disabled={disabled || undefined}
+      data-disabled={
+        prop(() => readPropValue(disabled) || undefined) as unknown as true | undefined
+      }
       data-accent-color={color}
       data-radius={radius}
       {...baseButtonProps}
@@ -95,7 +104,10 @@ BaseButton.displayName = 'BaseButton'
 export { BaseButton }
 export type { BaseButtonProps }
 
-function renderLoadingButtonContents(children: React.ReactNode, size: BaseButtonProps['size']) {
+function renderLoadingButtonContents(
+  children: React.ReactNode,
+  getSize: () => BaseButtonProps['size'],
+) {
   return (
     <>
       {/*
@@ -113,7 +125,13 @@ function renderLoadingButtonContents(children: React.ReactNode, size: BaseButton
       <VisuallyHidden>{children}</VisuallyHidden>
       <Flex asChild align="center" justify="center" position="absolute" inset="0">
         <span>
-          <Spinner size={mapResponsiveProp(size, mapButtonSizeToSpinnerSize)} />
+          <Spinner
+            size={
+              prop(() =>
+                mapResponsiveProp(getSize(), mapButtonSizeToSpinnerSize),
+              ) as unknown as React.ComponentPropsWithoutRef<typeof Spinner>['size']
+            }
+          />
         </span>
       </Flex>
     </>

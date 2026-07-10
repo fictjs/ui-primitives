@@ -1,4 +1,4 @@
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { mergeProps, prop } from 'fict'
 import * as React from '../helpers/element.js'
 

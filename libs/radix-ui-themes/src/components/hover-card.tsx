@@ -1,6 +1,6 @@
 import * as React from '../helpers/element.js'
 import { mergeProps, prop } from 'fict'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { HoverCard as HoverCardPrimitive } from '@fictjs/radix-ui'
 
 import { hoverCardContentPropDefs } from './hover-card.props.js'

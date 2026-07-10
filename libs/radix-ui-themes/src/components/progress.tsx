@@ -1,9 +1,10 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { prop } from 'fict'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Progress as ProgressPrimitive } from '@fictjs/radix-ui'
 
 import { progressPropDefs } from './progress.props.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { mergeStyles } from '../helpers/merge-styles.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
@@ -39,20 +40,27 @@ const Progress = React.forwardRef<ProgressElement, ProgressProps>((props, forwar
       data-radius={radius}
       ref={React.coerceRef(forwardedRef)}
       class={classNames('rt-ProgressRoot', className)}
-      style={mergeStyles(
-        {
-          '--progress-duration': 'value' in progressProps ? undefined : duration,
-          '--progress-value':
-            'value' in progressProps && progressProps.value !== undefined
-              ? readMaybeAccessor(progressProps.value as MaybeAccessor<number | null | undefined>)
-              : undefined,
-          '--progress-max':
-            'max' in progressProps && progressProps.max !== undefined
+      style={
+        prop(() => {
+          const hasValue = 'value' in progressProps
+          const value = hasValue
+            ? readMaybeAccessor(progressProps.value as MaybeAccessor<number | null | undefined>)
+            : undefined
+          const max =
+            'max' in progressProps
               ? readMaybeAccessor(progressProps.max as MaybeAccessor<number | undefined>)
-              : undefined,
-        },
-        style,
-      )}
+              : undefined
+
+          return mergeStyles(
+            {
+              '--progress-duration': hasValue ? undefined : readPropValue(duration),
+              '--progress-value': value ?? undefined,
+              '--progress-max': max,
+            },
+            readPropValue(style),
+          )
+        }) as unknown as React.CSSProperties
+      }
       {...progressProps}
     >
       <ProgressPrimitive.Indicator class="rt-ProgressIndicator" />

@@ -1,8 +1,9 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { prop } from 'fict'
+import { classNames } from '../helpers/reactive-class-names.js'
 
 import { separatorPropDefs } from './separator.props.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
 import type { MarginProps } from '../props/margin.props.js'
@@ -22,7 +23,7 @@ const Separator = React.forwardRef<SeparatorElement, SeparatorProps>((props, for
   return (
     <span
       data-accent-color={color}
-      role={decorative ? undefined : 'separator'}
+      role={prop(() => (readPropValue(decorative) ? undefined : 'separator')) as unknown as string}
       {...separatorProps}
       ref={React.coerceRef(forwardedRef)}
       class={classNames('rt-Separator', className)}

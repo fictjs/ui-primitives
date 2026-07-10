@@ -7,7 +7,10 @@ import { createSignal } from 'fict/advanced'
 
 import {
   Avatar,
+  Badge,
+  Box,
   Button,
+  Callout,
   Card,
   CheckboxGroup,
   ContextMenu,
@@ -16,14 +19,36 @@ import {
   Kbd,
   Link,
   Popover,
+  Progress,
   ScrollArea,
   Select,
   Skeleton,
   TabNav,
+  Table,
   Text,
+  TextField,
   Theme,
   ThemePanel,
 } from '../src/index.js'
+import { classNames, extractProps } from '../src/helpers/index.js'
+
+type ResponsiveBoolean =
+  | boolean
+  | Partial<Record<'initial' | 'xs' | 'sm' | 'md' | 'lg' | 'xl', boolean>>
+
+const responsiveBooleanPropDefs = {
+  active: {
+    type: 'boolean',
+    className: 'is-active',
+    default: true,
+    responsive: true,
+  },
+} as const
+
+function ResponsiveBooleanProbe(props: { active?: ResponsiveBoolean; 'data-testid'?: string }) {
+  const { className, ...probeProps } = extractProps(props, responsiveBooleanPropDefs)
+  return <div {...probeProps} class={classNames('responsive-boolean-probe', className)} />
+}
 
 const OriginalImage = window.Image
 const resizeObservers: MockResizeObserver[] = []
@@ -236,6 +261,392 @@ describe('@fictjs/radix-ui-themes', () => {
     label('second')
     await flushEffects()
     expect(text?.getAttribute('aria-label')).toBe('second')
+  })
+
+  it('does not enumerate non-enumerable props when extracting props', () => {
+    const props: { visible: string; hidden?: string } = { visible: 'forwarded' }
+    Object.defineProperty(props, 'hidden', {
+      configurable: true,
+      enumerable: false,
+      value: 'internal',
+    })
+
+    const extractedProps = extractProps(props)
+
+    expect(Object.getOwnPropertyDescriptor(extractedProps, 'hidden')?.enumerable).toBe(false)
+    expect({ ...extractedProps }).not.toHaveProperty('hidden')
+    expect({ ...extractedProps }).toHaveProperty('visible')
+  })
+
+  it('updates propDef enum classes without replacing the mounted control', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const size = createSignal<'1' | '3'>('1')
+
+    mount(
+      () => (
+        <Theme>
+          <Button data-testid="reactive-size-button" size={prop(() => size()) as unknown as '1'}>
+            Action
+          </Button>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const button = container.querySelector(
+      '[data-testid="reactive-size-button"]',
+    ) as HTMLButtonElement
+    expect(button.classList.contains('rt-r-size-1')).toBe(true)
+
+    button.focus()
+    size('3')
+    await flushEffects()
+
+    const updatedButton = container.querySelector('[data-testid="reactive-size-button"]')
+    expect(updatedButton).toBe(button)
+    expect(button.classList.contains('rt-r-size-1')).toBe(false)
+    expect(button.classList.contains('rt-r-size-3')).toBe(true)
+    expect(document.activeElement).toBe(button)
+  })
+
+  it('updates forwarded propDef color and radius data attributes', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const color = createSignal<'ruby' | 'blue'>('ruby')
+    const radius = createSignal<'small' | 'large'>('small')
+
+    mount(
+      () => (
+        <Theme>
+          <Badge
+            data-testid="reactive-badge"
+            color={prop(() => color()) as unknown as 'ruby'}
+            radius={prop(() => radius()) as unknown as 'small'}
+          >
+            Status
+          </Badge>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const badge = container.querySelector('[data-testid="reactive-badge"]')
+    expect(badge?.getAttribute('data-accent-color')).toBe('ruby')
+    expect(badge?.getAttribute('data-radius')).toBe('small')
+
+    color('blue')
+    radius('large')
+    await flushEffects()
+
+    expect(badge?.getAttribute('data-accent-color')).toBe('blue')
+    expect(badge?.getAttribute('data-radius')).toBe('large')
+  })
+
+  it('updates arbitrary and responsive propDef styles', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const margin = createSignal<string | { initial?: string; md?: string }>('12px')
+
+    mount(
+      () => (
+        <Theme>
+          <Box data-testid="reactive-margin-box" m={prop(() => margin()) as unknown as '12px'}>
+            Content
+          </Box>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const box = container.querySelector('[data-testid="reactive-margin-box"]') as HTMLElement
+    expect(box.classList.contains('rt-r-m')).toBe(true)
+    expect(box.style.getPropertyValue('--m')).toBe('12px')
+
+    margin({ initial: '4', md: '20px' })
+    await flushEffects()
+
+    expect(box.classList.contains('rt-r-m')).toBe(false)
+    expect(box.classList.contains('rt-r-m-4')).toBe(true)
+    expect(box.classList.contains('md:rt-r-m')).toBe(true)
+    expect(box.style.getPropertyValue('--m')).toBe('')
+    expect(box.style.getPropertyValue('--m-md')).toBe('20px')
+  })
+
+  it('updates nested callout text and table layout classes', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const calloutSize = createSignal<'1' | '3'>('1')
+    const tableLayout = createSignal<'auto' | { md: 'fixed' }>('auto')
+
+    mount(
+      () => (
+        <Theme>
+          <Callout.Root
+            data-testid="reactive-callout"
+            size={prop(() => calloutSize()) as unknown as '1'}
+          >
+            <Callout.Text>Notice</Callout.Text>
+          </Callout.Root>
+          <Table.Root
+            data-testid="reactive-table"
+            layout={prop(() => tableLayout()) as unknown as 'auto'}
+          >
+            <Table.Body>
+              <Table.Row>
+                <Table.Cell>Cell</Table.Cell>
+              </Table.Row>
+            </Table.Body>
+          </Table.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const callout = container.querySelector('[data-testid="reactive-callout"]') as HTMLElement
+    const calloutText = callout.querySelector('.rt-CalloutText') as HTMLElement
+    const table = container.querySelector('.rt-TableRootTable') as HTMLElement
+    expect(callout.classList.contains('rt-r-size-1')).toBe(true)
+    expect(calloutText.classList.contains('rt-r-size-2')).toBe(true)
+    expect(table.classList.contains('rt-r-tl-auto')).toBe(true)
+
+    calloutSize('3')
+    tableLayout({ md: 'fixed' })
+    await flushEffects()
+
+    expect(callout.classList.contains('rt-r-size-3')).toBe(true)
+    expect(calloutText.classList.contains('rt-r-size-3')).toBe(true)
+    expect(table.classList.contains('rt-r-tl-auto')).toBe(false)
+    expect(table.classList.contains('md:rt-r-tl-fixed')).toBe(true)
+  })
+
+  it('keeps a loading button spinner in sync with its responsive size', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const size = createSignal<'1' | '4'>('1')
+
+    mount(
+      () => (
+        <Theme>
+          <Button loading size={prop(() => size()) as unknown as '1'}>
+            Action
+          </Button>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const button = container.querySelector('.rt-Button') as HTMLButtonElement
+    const spinner = button.querySelector('.rt-Spinner') as HTMLElement
+    expect(spinner.classList.contains('rt-r-size-1')).toBe(true)
+
+    size('4')
+    await flushEffects()
+
+    expect(container.querySelector('.rt-Button')).toBe(button)
+    expect(spinner.classList.contains('rt-r-size-3')).toBe(true)
+  })
+
+  it('keeps an explicitly undefined progress value in determinate mode', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Progress data-testid="determinate-progress" duration="1s" value={undefined} />
+          <Progress data-testid="indeterminate-progress" duration="1s" />
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const determinate = container.querySelector(
+      '[data-testid="determinate-progress"]',
+    ) as HTMLElement
+    const indeterminate = container.querySelector(
+      '[data-testid="indeterminate-progress"]',
+    ) as HTMLElement
+    expect(determinate.style.getPropertyValue('--progress-duration')).toBe('')
+    expect(determinate.style.getPropertyValue('--progress-value')).toBe('')
+    expect(indeterminate.style.getPropertyValue('--progress-duration')).toBe('1s')
+  })
+
+  it('retains state and focus across styling prop updates', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const size = createSignal<'1' | '3'>('1')
+
+    mount(
+      () => (
+        <Theme>
+          <TextField.Root
+            data-testid="reactive-text-field"
+            defaultValue="initial"
+            size={prop(() => size()) as unknown as '1'}
+          />
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const input = container.querySelector('[data-testid="reactive-text-field"]') as HTMLInputElement
+    const root = input.parentElement as HTMLElement
+    input.value = 'edited'
+    input.focus()
+
+    size('3')
+    await flushEffects()
+
+    expect(container.querySelector('[data-testid="reactive-text-field"]')).toBe(input)
+    expect(input.value).toBe('edited')
+    expect(root.classList.contains('rt-r-size-3')).toBe(true)
+    expect(document.activeElement).toBe(input)
+  })
+
+  it('updates responsive boolean classes including initial defaults', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const initialValue: ResponsiveBoolean = { md: true }
+    const active = createSignal<ResponsiveBoolean>(initialValue)
+
+    mount(
+      () => (
+        <ResponsiveBooleanProbe
+          data-testid="responsive-boolean"
+          active={prop(() => active()) as unknown as boolean}
+        />
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const probe = container.querySelector('[data-testid="responsive-boolean"]') as HTMLElement
+    expect(initialValue).toEqual({ md: true })
+    expect(probe.classList.contains('is-active')).toBe(true)
+    expect(probe.classList.contains('md:is-active')).toBe(true)
+
+    active({ initial: false, sm: true })
+    await flushEffects()
+
+    expect(probe.classList.contains('is-active')).toBe(false)
+    expect(probe.classList.contains('md:is-active')).toBe(false)
+    expect(probe.classList.contains('sm:is-active')).toBe(true)
+
+    active({})
+    await flushEffects()
+
+    expect(probe.classList.contains('is-active')).toBe(true)
+    expect(probe.classList.contains('sm:is-active')).toBe(false)
+  })
+
+  it('reacts to structural as and asChild props without treating getters as tags', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const tag = createSignal<'div' | 'span'>('div')
+    const asChild = createSignal(false)
+
+    mount(
+      () => (
+        <Theme>
+          <Box data-testid="reactive-tag" as={prop(() => tag()) as unknown as 'div'}>
+            Tag
+          </Box>
+          <Box
+            data-testid="reactive-as-child"
+            asChild={prop(() => asChild()) as unknown as boolean}
+          >
+            <button type="button">Child</button>
+          </Box>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    expect(container.querySelector('[data-testid="reactive-tag"]')?.tagName).toBe('DIV')
+    expect(container.querySelector('[data-testid="reactive-as-child"]')?.tagName).toBe('DIV')
+
+    tag('span')
+    asChild(true)
+    await flushEffects()
+
+    expect(container.querySelector('[data-testid="reactive-tag"]')?.tagName).toBe('SPAN')
+    expect(container.querySelector('[data-testid="reactive-as-child"]')?.tagName).toBe('BUTTON')
+  })
+
+  it('invokes the latest getter-backed event handler', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const first = vi.fn()
+    const second = vi.fn()
+    const handler = createSignal<(event: MouseEvent) => void>(first)
+
+    mount(
+      () => (
+        <Theme>
+          <Button data-testid="latest-handler" onClick={prop(() => handler())}>
+            Action
+          </Button>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const button = container.querySelector('[data-testid="latest-handler"]') as HTMLButtonElement
+    click(button)
+    expect(first).toHaveBeenCalledTimes(1)
+
+    handler(second)
+    click(button)
+
+    expect(first).toHaveBeenCalledTimes(1)
+    expect(second).toHaveBeenCalledTimes(1)
+  })
+
+  it('updates a getter-backed select placeholder propDef', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const placeholder = createSignal('Choose one')
+
+    mount(
+      () => (
+        <Theme>
+          <Select.Root>
+            <Select.Trigger placeholder={prop(() => placeholder()) as unknown as string} />
+          </Select.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const trigger = container.querySelector('.rt-SelectTrigger') as HTMLElement
+    expect(trigger.textContent).toContain('Choose one')
+
+    placeholder('Pick an option')
+    await flushEffects()
+
+    expect(trigger.textContent).toContain('Pick an option')
   })
 
   it('renders avatar fallback content without an image source', async () => {

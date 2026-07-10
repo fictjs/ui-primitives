@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { reactive } from 'fict/advanced'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Slot } from '@fictjs/radix-ui'
 
 import { headingPropDefs } from './heading.props.js'
@@ -16,23 +17,29 @@ interface HeadingProps
   extends ComponentPropsWithout<'h1', RemovedProps>, MarginProps, HeadingOwnProps {}
 
 const Heading = React.forwardRef<HeadingElement, HeadingProps>((props, forwardedRef) => {
-  const {
-    children,
-    className,
-    asChild,
-    as: Tag = 'h1',
-    color,
-    ...headingProps
-  } = extractProps(props, headingPropDefs, marginPropDefs)
   return (
-    <Slot.Root
-      data-accent-color={color}
-      {...headingProps}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-Heading', className)}
-    >
-      {asChild ? children : <Tag>{children}</Tag>}
-    </Slot.Root>
+    <>
+      {reactive(() => {
+        const {
+          children,
+          className,
+          asChild,
+          as: Tag = 'h1',
+          color,
+          ...headingProps
+        } = extractProps(props, headingPropDefs, marginPropDefs)
+        return (
+          <Slot.Root
+            data-accent-color={color}
+            {...headingProps}
+            ref={React.coerceRef(forwardedRef)}
+            class={classNames('rt-Heading', className)}
+          >
+            {asChild ? children : <Tag>{children}</Tag>}
+          </Slot.Root>
+        )
+      })}
+    </>
   )
 })
 Heading.displayName = 'Heading'

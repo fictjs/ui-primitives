@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { reactive } from 'fict/advanced'
+import { classNames } from '../helpers/reactive-class-names.js'
 
 import { Slot } from './slot.js'
 import { boxPropDefs } from './box.props.js'
@@ -20,18 +21,28 @@ type BoxSpanProps = { as: 'span' } & ComponentPropsWithout<'span', RemovedProps>
 type BoxProps = CommonBoxProps & (BoxSpanProps | BoxDivProps)
 
 const Box = React.forwardRef<BoxElement, BoxProps>((props, forwardedRef) => {
-  const {
-    children: _children,
-    className,
-    asChild,
-    as: Tag = 'div',
-    ...boxProps
-  } = extractProps(props, boxPropDefs, layoutPropDefs, marginPropDefs)
-  const Comp = asChild ? Slot : Tag
   return (
-    <Comp {...boxProps} ref={React.coerceRef(forwardedRef)} class={classNames('rt-Box', className)}>
-      {renderChildren(props.children)}
-    </Comp>
+    <>
+      {reactive(() => {
+        const {
+          children: _children,
+          className,
+          asChild,
+          as: Tag = 'div',
+          ...boxProps
+        } = extractProps(props, boxPropDefs, layoutPropDefs, marginPropDefs)
+        const Comp = asChild ? Slot : Tag
+        return (
+          <Comp
+            {...boxProps}
+            ref={React.coerceRef(forwardedRef)}
+            class={classNames('rt-Box', className)}
+          >
+            {renderChildren(props.children)}
+          </Comp>
+        )
+      })}
+    </>
   )
 })
 Box.displayName = 'Box'

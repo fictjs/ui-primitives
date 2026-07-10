@@ -1,5 +1,5 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Tabs as TabsPrimitive } from '@fictjs/radix-ui'
 import { mergeProps, prop } from 'fict'
 

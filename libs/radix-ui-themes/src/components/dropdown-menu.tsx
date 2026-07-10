@@ -1,6 +1,6 @@
 import { createContext, mergeProps, prop, useContext } from 'fict'
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { DropdownMenu as DropdownMenuPrimitive, Slot } from '@fictjs/radix-ui'
 
 import {
@@ -11,7 +11,7 @@ import {
 } from './dropdown-menu.props.js'
 import { ThemeContext, useThemeContext } from './theme.js'
 import { ChevronDownIcon, ThickCheckIcon, ThickChevronRightIcon } from './icons.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { requireReactElement } from '../helpers/require-react-element.js'
 
 import type { IconProps } from './icons.js'
@@ -57,16 +57,22 @@ function DropdownMenuLazyChildren({ children }: { children: LazyMenuChildren }) 
 const DropdownMenuContent = React.forwardRef<DropdownMenuContentElement, DropdownMenuContentProps>(
   (props, forwardedRef) => {
     const themeContext = useThemeContext()
-    const {
-      size = dropdownMenuContentPropDefs.size.default,
-      variant = dropdownMenuContentPropDefs.variant.default,
-      highContrast = dropdownMenuContentPropDefs.highContrast.default,
-    } = props
+    const size = prop(
+      () => props.size ?? dropdownMenuContentPropDefs.size.default,
+    ) as unknown as DropdownMenuContentContextValue['size']
+    const variant = prop(
+      () => props.variant ?? dropdownMenuContentPropDefs.variant.default,
+    ) as unknown as DropdownMenuContentContextValue['variant']
+    const highContrast = prop(
+      () => props.highContrast ?? dropdownMenuContentPropDefs.highContrast.default,
+    ) as unknown as DropdownMenuContentContextValue['highContrast']
     const { className, children, color, container, forceMount, ...contentProps } = extractProps(
       props,
       dropdownMenuContentPropDefs,
     )
-    const resolvedColor = color || themeContext.accentColor
+    const resolvedColor = prop(
+      () => readPropValue(color) || themeContext.accentColor,
+    ) as unknown as DropdownMenuContentContextValue['color']
     return (
       <DropdownMenuPrimitive.Portal container={container} forceMount={forceMount}>
         <DropdownMenuPrimitive.Content
@@ -319,7 +325,10 @@ const DropdownMenuSubContent = React.forwardRef<
   const themeContext = useThemeContext()
   const { size, variant, color, highContrast } = useContext(DropdownMenuContentContext)
   const { className, container, ...subContentProps } = extractProps(
-    { size, variant, color, highContrast, ...props },
+    mergeProps(
+      { size, variant, color, highContrast },
+      prop(() => props as Record<string, unknown>),
+    ) as unknown as DropdownMenuSubContentProps & DropdownMenuContentContextValue,
     dropdownMenuContentPropDefs,
   )
   return (

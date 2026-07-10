@@ -1,6 +1,6 @@
 import { createContext, mergeProps, prop, useContext } from 'fict'
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Slot } from '@fictjs/radix-ui'
 
 import { Text } from './text.js'
@@ -27,12 +27,16 @@ interface CalloutRootProps
   extends ComponentPropsWithout<'div', RemovedProps>, MarginProps, CalloutRootOwnProps {}
 const CalloutRoot = React.forwardRef<CalloutRootElement, CalloutRootProps>(
   (props, forwardedRef) => {
-    const { size = calloutRootPropDefs.size.default } = props
     const { asChild, children, className, color, ...rootProps } = extractProps(
       props,
       calloutRootPropDefs,
       marginPropDefs,
     )
+    const contextValue: CalloutContextValue = {
+      get size() {
+        return props.size ?? calloutRootPropDefs.size.default
+      },
+    }
     const Comp = asChild ? Slot.Root : 'div'
     return (
       <Comp
@@ -41,7 +45,7 @@ const CalloutRoot = React.forwardRef<CalloutRootElement, CalloutRootProps>(
         class={classNames('rt-CalloutRoot', className)}
         ref={React.coerceRef(forwardedRef)}
       >
-        <CalloutContext.Provider value={{ size }}>{children}</CalloutContext.Provider>
+        <CalloutContext.Provider value={contextValue}>{children}</CalloutContext.Provider>
       </Comp>
     )
   },
@@ -73,7 +77,7 @@ type CalloutTextElement = React.ElementRef<'p'>
 type CalloutTextProps = ComponentPropsAs<typeof Text, 'p'>
 const CalloutText = React.forwardRef<CalloutTextElement, CalloutTextProps>(
   (props, forwardedRef) => {
-    const { size } = useContext(CalloutContext)
+    const context = useContext(CalloutContext)
     const textProps = mergeProps(
       prop(() => props as Record<string, unknown>),
       {
@@ -83,7 +87,11 @@ const CalloutText = React.forwardRef<CalloutTextElement, CalloutTextProps>(
     return (
       <Text
         as="p"
-        size={mapResponsiveProp(size, mapCalloutSizeToTextSize)}
+        size={
+          prop(() =>
+            mapResponsiveProp(context.size, mapCalloutSizeToTextSize),
+          ) as unknown as CalloutTextProps['size']
+        }
         {...textProps}
         ref={React.coerceRef(forwardedRef)}
         className={prop(() => classNames('rt-CalloutText', props.className)) as unknown as string}

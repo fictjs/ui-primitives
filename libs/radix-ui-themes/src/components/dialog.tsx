@@ -1,6 +1,6 @@
 import * as React from '../helpers/element.js'
 import { mergeProps, prop } from 'fict'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Dialog as DialogPrimitive } from '@fictjs/radix-ui'
 
 import { dialogContentPropDefs } from './dialog.props.js'
@@ -59,7 +59,7 @@ const DialogContent = React.forwardRef<DialogContentElement, DialogContentProps>
   (props, forwardedRef) => {
     const { align: alignPropDef, ...propDefs } = dialogContentPropDefs
     const { className: alignClassName } = extractProps(
-      { align: props.align },
+      { align: prop(() => props.align) },
       { align: alignPropDef },
     )
     const extractedProps = extractProps(
@@ -81,7 +81,13 @@ const DialogContent = React.forwardRef<DialogContentElement, DialogContentProps>
         <Theme asChild>
           <DialogPrimitive.Overlay class="rt-BaseDialogOverlay rt-DialogOverlay">
             <div class="rt-BaseDialogScroll rt-DialogScroll">
-              <div class={`rt-BaseDialogScrollPadding rt-DialogScrollPadding ${alignClassName}`}>
+              <div
+                class={classNames(
+                  'rt-BaseDialogScrollPadding',
+                  'rt-DialogScrollPadding',
+                  alignClassName,
+                )}
+              >
                 <DialogPrimitive.Content
                   {...contentProps}
                   ref={React.coerceRef(forwardedRef)}

@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { prop } from 'fict'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Switch as SwitchPrimitive } from '@fictjs/radix-ui'
 
 import { extractProps } from '../helpers/extract-props.js'
@@ -35,7 +36,9 @@ const Switch = React.forwardRef<SwitchElement, SwitchProps>((props, forwardedRef
       class={classNames('rt-reset', 'rt-SwitchRoot', className)}
     >
       <SwitchPrimitive.Thumb
-        class={classNames('rt-SwitchThumb', { 'rt-high-contrast': props.highContrast })}
+        class={classNames('rt-SwitchThumb', {
+          'rt-high-contrast': prop(() => props.highContrast),
+        })}
       />
     </SwitchPrimitive.Root>
   )

@@ -1,9 +1,9 @@
 import { createContext, mergeProps, prop, useContext } from 'fict'
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Select as SelectPrimitive, ScrollArea as ScrollAreaPrimitive } from '@fictjs/radix-ui'
 
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { marginPropDefs } from '../props/margin.props.js'
 import { ChevronDownIcon, ThickCheckIcon } from './icons.js'
 import { selectRootPropDefs, selectTriggerPropDefs, selectContentPropDefs } from './select.props.js'
@@ -58,14 +58,17 @@ const SelectTrigger = React.forwardRef<SelectTriggerElement, SelectTriggerProps>
     const context = useContext(SelectContext)
     const { className, color, radius, placeholder, ...triggerProps } = extractProps(
       mergeProps(
-        { size: context?.size },
+        { size: prop(() => context?.size) },
         prop(() => props as Record<string, unknown>),
       ) as unknown as SelectTriggerProps,
       { size: selectRootPropDefs.size },
       selectTriggerPropDefs,
       marginPropDefs,
     )
-    const placeholderText = typeof placeholder === 'string' ? placeholder : undefined
+    const placeholderText = prop(() => {
+      const currentPlaceholder = readPropValue(placeholder)
+      return typeof currentPlaceholder === 'string' ? currentPlaceholder : undefined
+    })
 
     return (
       <SelectPrimitive.Trigger asChild>
@@ -105,14 +108,14 @@ const SelectContent = React.forwardRef<SelectContentElement, SelectContentProps>
     const context = useContext(SelectContext)
     const { className, color, container, ...contentProps } = extractProps(
       mergeProps(
-        { size: context?.size },
+        { size: prop(() => context?.size) },
         prop(() => props as Record<string, unknown>),
       ) as unknown as SelectContentProps,
       { size: selectRootPropDefs.size },
       selectContentPropDefs,
     )
     const themeContext = useThemeContext()
-    const resolvedColor = color || themeContext.accentColor
+    const resolvedColor = prop(() => readPropValue(color) || themeContext.accentColor)
 
     return (
       <SelectPrimitive.Portal container={container}>

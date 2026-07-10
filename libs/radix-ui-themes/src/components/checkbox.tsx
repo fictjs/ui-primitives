@@ -1,5 +1,5 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Checkbox as CheckboxPrimitive } from '@fictjs/radix-ui'
 
 import { checkboxPropDefs } from './checkbox.props.js'

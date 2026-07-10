@@ -1,6 +1,6 @@
 import * as React from '../helpers/element.js'
 import { mergeProps, prop } from 'fict'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { AlertDialog as AlertDialogPrimitive } from '@fictjs/radix-ui'
 
 import { alertDialogContentPropDefs } from './alert-dialog.props.js'
@@ -56,7 +56,7 @@ const AlertDialogContent = React.forwardRef<AlertDialogContentElement, AlertDial
   (props, forwardedRef) => {
     const { align: alignPropDef, ...propDefs } = alertDialogContentPropDefs
     const { className: alignClassName } = extractProps(
-      { align: props.align },
+      { align: prop(() => props.align) },
       { align: alignPropDef },
     )
     const extractedProps = extractProps(
@@ -79,7 +79,11 @@ const AlertDialogContent = React.forwardRef<AlertDialogContentElement, AlertDial
           <AlertDialogPrimitive.Overlay class="rt-BaseDialogOverlay rt-AlertDialogOverlay">
             <div class="rt-BaseDialogScroll rt-AlertDialogScroll">
               <div
-                class={`rt-BaseDialogScrollPadding rt-AlertDialogScrollPadding ${alignClassName}`}
+                class={classNames(
+                  'rt-BaseDialogScrollPadding',
+                  'rt-AlertDialogScrollPadding',
+                  alignClassName,
+                )}
               >
                 <AlertDialogPrimitive.Content
                   {...contentProps}

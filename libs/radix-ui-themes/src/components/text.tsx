@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { reactive } from 'fict/advanced'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Slot } from '@fictjs/radix-ui'
 
 import { extractProps } from '../helpers/extract-props.js'
@@ -20,23 +21,29 @@ type TextPProps = { as: 'p' } & ComponentPropsWithout<'p', RemovedProps>
 type TextProps = CommonTextProps & (TextSpanProps | TextDivProps | TextLabelProps | TextPProps)
 
 const Text = React.forwardRef<TextElement, TextProps>((props, forwardedRef) => {
-  const {
-    children,
-    className,
-    asChild,
-    as: Tag = 'span',
-    color,
-    ...textProps
-  } = extractProps(props, textPropDefs, marginPropDefs)
   return (
-    <Slot.Root
-      data-accent-color={color}
-      {...textProps}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-Text', className)}
-    >
-      {asChild ? children : <Tag>{children}</Tag>}
-    </Slot.Root>
+    <>
+      {reactive(() => {
+        const {
+          children,
+          className,
+          asChild,
+          as: Tag = 'span',
+          color,
+          ...textProps
+        } = extractProps(props, textPropDefs, marginPropDefs)
+        return (
+          <Slot.Root
+            data-accent-color={color}
+            {...textProps}
+            ref={React.coerceRef(forwardedRef)}
+            class={classNames('rt-Text', className)}
+          >
+            {asChild ? children : <Tag>{children}</Tag>}
+          </Slot.Root>
+        )
+      })}
+    </>
   )
 })
 Text.displayName = 'Text'

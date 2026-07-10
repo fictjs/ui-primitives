@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { reactive } from 'fict/advanced'
+import { classNames } from '../helpers/reactive-class-names.js'
 
 import { Slot } from './slot.js'
 import { gridPropDefs } from './grid.props.js'
@@ -20,22 +21,28 @@ type GridSpanProps = { as: 'span' } & ComponentPropsWithout<'span', RemovedProps
 type GridProps = CommonGridProps & (GridSpanProps | GridDivProps)
 
 const Grid = React.forwardRef<GridElement, GridProps>((props, forwardedRef) => {
-  const {
-    children: _children,
-    className,
-    asChild,
-    as: Tag = 'div',
-    ...gridProps
-  } = extractProps(props, gridPropDefs, layoutPropDefs, marginPropDefs)
-  const Comp = asChild ? Slot : Tag
   return (
-    <Comp
-      {...gridProps}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-Grid', className)}
-    >
-      {renderChildren(props.children)}
-    </Comp>
+    <>
+      {reactive(() => {
+        const {
+          children: _children,
+          className,
+          asChild,
+          as: Tag = 'div',
+          ...gridProps
+        } = extractProps(props, gridPropDefs, layoutPropDefs, marginPropDefs)
+        const Comp = asChild ? Slot : Tag
+        return (
+          <Comp
+            {...gridProps}
+            ref={React.coerceRef(forwardedRef)}
+            class={classNames('rt-Grid', className)}
+          >
+            {renderChildren(props.children)}
+          </Comp>
+        )
+      })}
+    </>
   )
 })
 Grid.displayName = 'Grid'

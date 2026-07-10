@@ -1,9 +1,10 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { prop } from 'fict'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Slot } from '@fictjs/radix-ui'
 
 import { codePropDefs } from './code.props.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { renderChildren } from '../helpers/render-children.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
@@ -24,7 +25,10 @@ const Code = React.forwardRef<CodeElement, CodeProps>((props, forwardedRef) => {
     ...codeProps
   } = extractProps(props, codePropDefs, marginPropDefs)
   // Code ghost color prop should work as text color by default
-  const resolvedColor = props.variant === 'ghost' ? color || undefined : color
+  const resolvedColor = prop(() => {
+    const currentColor = readPropValue(color)
+    return props.variant === 'ghost' ? currentColor || undefined : currentColor
+  })
   const Comp = asChild ? Slot.Root : 'code'
   return (
     <Comp

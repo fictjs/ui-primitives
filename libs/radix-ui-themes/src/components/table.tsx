@@ -1,10 +1,9 @@
 import * as React from '../helpers/element.js'
 import { mergeProps, prop } from 'fict'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 
 import { tableRootPropDefs, tableRowPropDefs, tableCellPropDefs } from './table.props.js'
 import { extractProps } from '../helpers/extract-props.js'
-import { getResponsiveClassNames } from '../helpers/get-responsive-styles.js'
 import { marginPropDefs } from '../props/margin.props.js'
 import { ScrollArea } from './scroll-area.js'
 
@@ -18,16 +17,16 @@ interface TableRootProps
   extends ComponentPropsWithout<'div', RemovedProps>, MarginProps, TableRootOwnProps {}
 const TableRoot = React.forwardRef<TableRootElement, TableRootProps>((props, forwardedRef) => {
   const { layout: layoutPropDef, ...rootPropDefs } = tableRootPropDefs
-  const { className, children, layout, ...rootProps } = extractProps(
-    props,
-    rootPropDefs,
-    marginPropDefs,
+  const {
+    className,
+    children,
+    layout: _layout,
+    ...rootProps
+  } = extractProps(props, rootPropDefs, marginPropDefs)
+  const { className: tableLayoutClassNames } = extractProps(
+    { layout: prop(() => props.layout) },
+    { layout: layoutPropDef },
   )
-  const tableLayoutClassNames = getResponsiveClassNames({
-    value: layout,
-    className: layoutPropDef.className,
-    propValues: layoutPropDef.values,
-  })
   return (
     <div
       ref={React.coerceRef(forwardedRef)}

@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { reactive } from 'fict/advanced'
+import { classNames } from '../helpers/reactive-class-names.js'
 
 import { extractProps } from '../helpers/extract-props.js'
 import { renderChildren } from '../helpers/render-children.js'
@@ -20,22 +21,28 @@ type FlexSpanProps = { as: 'span' } & ComponentPropsWithout<'span', RemovedProps
 type FlexProps = CommonFlexProps & (FlexSpanProps | FlexDivProps)
 
 const Flex = React.forwardRef<FlexElement, FlexProps>((props, forwardedRef) => {
-  const {
-    children: _children,
-    className,
-    asChild,
-    as: Tag = 'div',
-    ...flexProps
-  } = extractProps(props, flexPropDefs, layoutPropDefs, marginPropDefs)
-  const Comp = asChild ? Slot : Tag
   return (
-    <Comp
-      {...flexProps}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-Flex', className)}
-    >
-      {renderChildren(props.children)}
-    </Comp>
+    <>
+      {reactive(() => {
+        const {
+          children: _children,
+          className,
+          asChild,
+          as: Tag = 'div',
+          ...flexProps
+        } = extractProps(props, flexPropDefs, layoutPropDefs, marginPropDefs)
+        const Comp = asChild ? Slot : Tag
+        return (
+          <Comp
+            {...flexProps}
+            ref={React.coerceRef(forwardedRef)}
+            class={classNames('rt-Flex', className)}
+          >
+            {renderChildren(props.children)}
+          </Comp>
+        )
+      })}
+    </>
   )
 })
 Flex.displayName = 'Flex'

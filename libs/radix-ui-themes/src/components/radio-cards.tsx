@@ -1,6 +1,6 @@
 import * as React from '../helpers/element.js'
 import { mergeProps, prop } from 'fict'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { RadioGroup as RadioGroupPrimitive } from '@fictjs/radix-ui'
 
 import { radioCardsRootPropDefs } from './radio-cards.props.js'

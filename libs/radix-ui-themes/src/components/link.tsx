@@ -1,5 +1,5 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 
 import { Text } from './text.js'
 import { extractProps } from '../helpers/extract-props.js'

@@ -1,12 +1,13 @@
-import { prop } from 'fict'
-import classNames from 'classnames'
+import { prop, untrack } from 'fict'
+import baseClassNames from 'classnames'
 
+import { breakpoints } from '../props/prop-def.js'
 import { getResponsiveClassNames, getResponsiveStyles } from './get-responsive-styles.js'
-import { isResponsiveObject } from './is-responsive-object.js'
+import { hasOwnProperty } from './has-own-property.js'
 import { mergeStyles } from './merge-styles.js'
 
 import type { CSSProperties } from './element.js'
-import type { PropDef } from '../props/prop-def.js'
+import type { Breakpoint, PropDef } from '../props/prop-def.js'
 
 type PropDefsWithClassName<T> =
   T extends Record<string, PropDef>
@@ -16,7 +17,24 @@ type PropDefsWithClassName<T> =
 type EnumPropDef = Extract<PropDef, { type: 'enum' }>
 type StringLikePropDef = Extract<PropDef, { type: 'string' | 'enum | string' }>
 type PropsRecord = Record<string | symbol, unknown>
+type PropGetter<T> = (() => T) & { [PROP_GETTER_MARKER]?: boolean }
 
+type DerivedProps = {
+  className?: string
+  style?: ReturnType<typeof mergeStyles>
+  values: Record<string, unknown>
+}
+
+const LOCAL_VALUE_KEYS = new Set<PropertyKey>([
+  'as',
+  'asChild',
+  'children',
+  'content',
+  'fallback',
+  'loading',
+  'ref',
+])
+const REACTIVE_STRUCTURE_KEYS = new Set<PropertyKey>(['as', 'asChild'])
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
 function mergePropDefs<T extends Record<string, PropDef>[]>(...args: T): Record<string, PropDef> {
@@ -37,47 +55,51 @@ function hasClassName(propDef: PropDef): propDef is PropDef & { className: strin
   )
 }
 
-function isPropGetter(value: unknown): value is () => unknown {
+function isPropGetter(value: unknown): value is PropGetter<unknown> {
+  return typeof value === 'function' && (value as PropGetter<unknown>)[PROP_GETTER_MARKER] === true
+}
+
+function readPropValue<T>(value: T): T {
+  return (isPropGetter(value) ? value() : value) as T
+}
+
+function isEventHandlerKey(key: PropertyKey): key is string {
   return (
-    typeof value === 'function' &&
-    (value as (() => unknown) & { [PROP_GETTER_MARKER]?: boolean })[PROP_GETTER_MARKER] === true
+    typeof key === 'string' &&
+    (key.startsWith('on:') || key.startsWith('oncapture:') || /^on[A-Z]/.test(key))
   )
 }
 
-function readValue<T>(value: T): T {
-  if (isPropGetter(value)) {
-    return value() as T
+function isResponsiveRecord(value: unknown, allowEmpty = false): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false
   }
 
-  return value
+  const keys = Object.keys(value)
+  return keys.some((key) => breakpoints.has(key as Breakpoint)) || (allowEmpty && keys.length === 0)
 }
 
 function copyPropsPreservingGetters(source: PropsRecord): Record<string, unknown> {
   const target: Record<string, unknown> = {}
 
   for (const key of Reflect.ownKeys(source)) {
-    const descriptor = Object.getOwnPropertyDescriptor(source, key)
-    if (!descriptor) {
+    const descriptor = untrack(() => Object.getOwnPropertyDescriptor(source, key))
+    if (descriptor === undefined) {
       continue
     }
 
-    const value = source[key]
-    const isEventHandler = typeof key === 'string' && /^on[A-Z]/.test(key)
+    const currentValue = REACTIVE_STRUCTURE_KEYS.has(key) ? source[key] : untrack(() => source[key])
     const isLocallyConsumedValue =
-      key === 'children' ||
-      key === 'layout' ||
-      key === 'ref' ||
-      (typeof value === 'function' && !isEventHandler)
+      LOCAL_VALUE_KEYS.has(key) || (typeof currentValue === 'function' && !isEventHandlerKey(key))
+    const value = isLocallyConsumedValue ? readPropValue(currentValue) : prop(() => source[key])
 
     Object.defineProperty(target, key, {
       configurable: true,
-      enumerable: descriptor.enumerable ?? true,
-      // A component receives a Fict props proxy. Its property descriptors expose
-      // the current value, not the underlying prop getter, so copying the
-      // descriptor freezes reactive values. Preserve structural and callable
-      // values that theme components consume locally, while forwarding other
-      // values lazily for the next component/host to unwrap.
-      value: isLocallyConsumedValue ? value : prop(() => source[key]),
+      enumerable: descriptor.enumerable,
+      // Structural and render-callback values are consumed locally. Everything else stays lazy
+      // until it reaches the next component or host, including event handlers whose identity can
+      // change reactively.
+      value,
       writable: true,
     })
   }
@@ -85,20 +107,134 @@ function copyPropsPreservingGetters(source: PropsRecord): Record<string, unknown
   return target
 }
 
-function setPropValue(target: PropsRecord, key: string | symbol, value: unknown): void {
-  const descriptor = Object.getOwnPropertyDescriptor(target, key)
+function normalizeValue(value: unknown, propDef: PropDef): unknown {
+  let normalizedValue = value
+  const isResponsiveValue = isResponsiveRecord(normalizedValue, 'responsive' in propDef)
 
-  if (!descriptor || ('value' in descriptor && descriptor.writable)) {
-    target[key] = value
-    return
+  if (propDef.default !== undefined && normalizedValue === undefined) {
+    normalizedValue = propDef.default
   }
 
-  Object.defineProperty(target, key, {
-    configurable: true,
-    enumerable: descriptor.enumerable ?? true,
-    writable: true,
-    value,
-  })
+  if (isEnumPropDef(propDef)) {
+    const values = [propDef.default, ...propDef.values]
+
+    if (!values.includes(normalizedValue) && !isResponsiveValue) {
+      normalizedValue = propDef.default
+    }
+  }
+
+  if (!isResponsiveRecord(normalizedValue, true) || !('responsive' in propDef)) {
+    return normalizedValue
+  }
+
+  // Never add defaults to the object supplied by the caller. Besides being surprising, mutating a
+  // signal payload here prevents equality-based reactive sources from observing a later change.
+  const responsiveValue: Record<string, unknown> = { ...normalizedValue }
+
+  if (propDef.default !== undefined && responsiveValue.initial === undefined) {
+    responsiveValue.initial = propDef.default
+  }
+
+  if (isEnumPropDef(propDef)) {
+    const values = [propDef.default, ...propDef.values] as ReadonlyArray<unknown>
+    if (!values.includes(responsiveValue.initial)) {
+      responsiveValue.initial = propDef.default
+    }
+  }
+
+  return responsiveValue
+}
+
+function getResponsiveBooleanClassNames(value: unknown, className: string): string | undefined {
+  if (value === true) {
+    return className
+  }
+
+  if (!isResponsiveRecord(value)) {
+    return undefined
+  }
+
+  const classes: string[] = []
+  for (const breakpoint in value) {
+    if (!hasOwnProperty(value, breakpoint) || !breakpoints.has(breakpoint as Breakpoint)) {
+      continue
+    }
+
+    if (value[breakpoint] === true) {
+      classes.push(breakpoint === 'initial' ? className : `${breakpoint}:${className}`)
+    }
+  }
+
+  return classes.length > 0 ? classes.join(' ') : undefined
+}
+
+function deriveProps(props: PropsRecord, allPropDefs: Record<string, PropDef>): DerivedProps {
+  let className: string | undefined
+  let style: ReturnType<typeof mergeStyles>
+  const values: Record<string, unknown> = {}
+
+  for (const key in allPropDefs) {
+    const propDef = allPropDefs[key]
+    if (propDef === undefined) {
+      continue
+    }
+
+    const value = normalizeValue(readPropValue(props[key]), propDef)
+    values[key] = value
+
+    if (!hasClassName(propDef)) {
+      continue
+    }
+
+    const isResponsivePropDef = 'responsive' in propDef
+    // Make sure we are not threading through responsive values for non-responsive prop defs.
+    if (!value || (isResponsiveRecord(value) && !isResponsivePropDef)) {
+      continue
+    }
+
+    if (isEnumPropDef(propDef)) {
+      const propValues = propDef.values as readonly string[]
+      const propClassName = getResponsiveClassNames({
+        allowArbitraryValues: false,
+        value: value as Parameters<typeof getResponsiveClassNames>[0]['value'],
+        className: propDef.className,
+        propValues,
+        parseValue: propDef.parseValue,
+      })
+
+      className = baseClassNames(className, propClassName)
+      continue
+    }
+
+    if (isStringLikePropDef(propDef)) {
+      const propDefValues = propDef.type === 'string' ? [] : (propDef.values as readonly string[])
+
+      const [propClassNames, propCustomProperties] = getResponsiveStyles({
+        className: propDef.className,
+        customProperties: propDef.customProperties,
+        propValues: propDefValues,
+        parseValue: propDef.parseValue,
+        value: value as Parameters<typeof getResponsiveStyles>[0]['value'],
+      })
+
+      style = mergeStyles(style, propCustomProperties)
+      className = baseClassNames(className, propClassNames)
+      continue
+    }
+
+    if (propDef.type === 'boolean') {
+      className = baseClassNames(
+        className,
+        getResponsiveBooleanClassNames(value, propDef.className),
+      )
+    }
+  }
+
+  return {
+    className: baseClassNames(className, readPropValue(props.className) as classNames.Argument),
+    style: mergeStyles(style, readPropValue(props.style) as CSSProperties | undefined),
+    values,
+  }
 }
 
 /**
@@ -114,106 +250,33 @@ function extractProps<
   props: P,
   ...propDefs: T
 ): Omit<P & { className?: string; style?: CSSProperties }, PropDefsWithClassName<T[number]>> {
-  let className: string | undefined
-  let style: ReturnType<typeof mergeStyles>
   const extractedProps = copyPropsPreservingGetters(props as PropsRecord) as Record<string, any>
   const allPropDefs = mergePropDefs(...propDefs)
+  const derivedProps = prop(() => deriveProps(props as PropsRecord, allPropDefs), { unwrap: false })
 
   for (const key in allPropDefs) {
-    let value = readValue(extractedProps[key])
     const propDef = allPropDefs[key]
     if (propDef === undefined) {
       continue
     }
 
-    // Apply prop def defaults
-    if (propDef.default !== undefined && value === undefined) {
-      value = propDef.default
-    }
-
-    // Apply the default value if the value is not a valid enum value
-    if (isEnumPropDef(propDef)) {
-      const values = [propDef.default, ...propDef.values]
-
-      if (!values.includes(value) && !isResponsiveObject(value)) {
-        value = propDef.default
-      }
-    }
-
-    // Apply the value with defaults
-    setPropValue(extractedProps, key, value)
-
     if (hasClassName(propDef)) {
       delete extractedProps[key]
-
-      const isResponsivePropDef = 'responsive' in propDef
-      // Make sure we are not threading through responsive values for non-responsive prop defs
-      if (!value || (isResponsiveObject(value) && !isResponsivePropDef)) {
-        continue
-      }
-
-      if (isResponsiveObject(value)) {
-        // Apply prop def defaults to the `initial` breakpoint
-        if (typeof propDef.default === 'string' && value.initial === undefined) {
-          value.initial = propDef.default
-        }
-
-        // Apply the default value to the `initial` breakpoint when it is not a valid enum value
-        if (isEnumPropDef(propDef)) {
-          const values = [propDef.default, ...propDef.values] as ReadonlyArray<unknown>
-
-          if (!values.includes(value.initial)) {
-            if (typeof propDef.default === 'string') {
-              value.initial = propDef.default
-            }
-          }
-        }
-      }
-
-      if (isEnumPropDef(propDef)) {
-        const propValues = propDef.values as readonly string[]
-        const propClassName = getResponsiveClassNames({
-          allowArbitraryValues: false,
-          value,
-          className: propDef.className,
-          propValues,
-          parseValue: propDef.parseValue,
-        })
-
-        className = classNames(className, propClassName)
-        continue
-      }
-
-      if (isStringLikePropDef(propDef)) {
-        const propDefValues = propDef.type === 'string' ? [] : (propDef.values as readonly string[])
-
-        const [propClassNames, propCustomProperties] = getResponsiveStyles({
-          className: propDef.className,
-          customProperties: propDef.customProperties,
-          propValues: propDefValues,
-          parseValue: propDef.parseValue,
-          value,
-        })
-
-        style = mergeStyles(style, propCustomProperties)
-        className = classNames(className, propClassNames)
-        continue
-      }
-
-      if (propDef.type === 'boolean' && value) {
-        // TODO handle responsive boolean props
-        className = classNames(className, propDef.className)
-        continue
-      }
+      continue
     }
+
+    extractedProps[key] = LOCAL_VALUE_KEYS.has(key)
+      ? normalizeValue(readPropValue((props as PropsRecord)[key]), propDef)
+      : prop(() => derivedProps().values[key])
   }
 
-  setPropValue(extractedProps, 'className', classNames(className, props.className))
-  setPropValue(extractedProps, 'style', mergeStyles(style, props.style))
+  extractedProps.className = prop(() => derivedProps().className)
+  extractedProps.style = prop(() => derivedProps().style)
+
   return extractedProps as Omit<
     P & { className?: string; style?: CSSProperties },
     PropDefsWithClassName<T[number]>
   >
 }
 
-export { extractProps }
+export { extractProps, readPropValue }

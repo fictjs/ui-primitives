@@ -1,6 +1,6 @@
 import * as React from '../helpers/element.js'
 import { mergeProps, prop } from 'fict'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { ToggleGroup as ToggleGroupPrimitive } from '@fictjs/radix-ui'
 import { useControllableState } from '@fictjs/radix-ui/internal'
 

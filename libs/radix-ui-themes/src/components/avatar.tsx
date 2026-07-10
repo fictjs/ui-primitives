@@ -2,7 +2,7 @@ import { createSignal, reactive } from 'fict/advanced'
 
 import * as React from '../helpers/element.js'
 import { Avatar as AvatarPrimitive } from '@fictjs/radix-ui'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 
 import { avatarPropDefs } from './avatar.props.js'
 import { extractProps } from '../helpers/extract-props.js'

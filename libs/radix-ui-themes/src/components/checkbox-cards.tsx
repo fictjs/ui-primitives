@@ -1,7 +1,7 @@
 import { createContext, mergeProps, prop, useContext } from 'fict'
 
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 
 import * as CheckboxGroupPrimitive from './checkbox-group.primitive.js'
 import { checkboxCardsRootPropDefs } from './checkbox-cards.props.js'

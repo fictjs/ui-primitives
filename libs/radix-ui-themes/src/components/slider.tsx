@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { prop } from 'fict'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { Slider as SliderPrimitive } from '@fictjs/radix-ui'
 
 import { sliderPropDefs } from './slider.props.js'
@@ -43,7 +44,9 @@ const Slider = React.forwardRef<SliderElement, SliderProps>((props, forwardedRef
     >
       <SliderPrimitive.Track class="rt-SliderTrack">
         <SliderPrimitive.Range
-          class={classNames('rt-SliderRange', { 'rt-high-contrast': props.highContrast })}
+          class={classNames('rt-SliderRange', {
+            'rt-high-contrast': prop(() => props.highContrast),
+          })}
           data-inverted={sliderProps.inverted ? '' : undefined}
         />
       </SliderPrimitive.Track>

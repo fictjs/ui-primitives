@@ -1,6 +1,6 @@
 import { createContext, mergeProps, prop, useContext } from 'fict'
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
+import { classNames } from '../helpers/reactive-class-names.js'
 import { ContextMenu as ContextMenuPrimitive, Slot } from '@fictjs/radix-ui'
 
 import {
@@ -12,7 +12,7 @@ import {
 import { ScrollArea } from './scroll-area.js'
 import { ThemeContext, useThemeContext } from './theme.js'
 import { ThickCheckIcon, ThickChevronRightIcon } from './icons.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { requireReactElement } from '../helpers/require-react-element.js'
 
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
@@ -57,16 +57,22 @@ function ContextMenuLazyChildren({ children }: { children: LazyMenuChildren }) {
 const ContextMenuContent = React.forwardRef<ContextMenuContentElement, ContextMenuContentProps>(
   (props, forwardedRef) => {
     const themeContext = useThemeContext()
-    const {
-      size = contextMenuContentPropDefs.size.default,
-      variant = contextMenuContentPropDefs.variant.default,
-      highContrast = contextMenuContentPropDefs.highContrast.default,
-    } = props
+    const size = prop(
+      () => props.size ?? contextMenuContentPropDefs.size.default,
+    ) as unknown as ContextMenuContentContextValue['size']
+    const variant = prop(
+      () => props.variant ?? contextMenuContentPropDefs.variant.default,
+    ) as unknown as ContextMenuContentContextValue['variant']
+    const highContrast = prop(
+      () => props.highContrast ?? contextMenuContentPropDefs.highContrast.default,
+    ) as unknown as ContextMenuContentContextValue['highContrast']
     const { className, children, color, container, forceMount, ...contentProps } = extractProps(
       props,
       contextMenuContentPropDefs,
     )
-    const resolvedColor = color || themeContext.accentColor
+    const resolvedColor = prop(
+      () => readPropValue(color) || themeContext.accentColor,
+    ) as unknown as ContextMenuContentContextValue['color']
     return (
       <ContextMenuPrimitive.Portal container={container} forceMount={forceMount}>
         <ContextMenuPrimitive.Content
@@ -77,7 +83,7 @@ const ContextMenuContent = React.forwardRef<ContextMenuContentElement, ContextMe
           data-panel-background={themeContext.panelBackground}
           data-radius={themeContext.radius}
           data-scaling={themeContext.scaling}
-          alignOffset={-Number(size) * 4}
+          alignOffset={prop(() => -Number(readPropValue(size)) * 4) as unknown as number}
           asChild={false}
           {...contentProps}
           ref={React.coerceRef(forwardedRef)}
@@ -323,7 +329,10 @@ const ContextMenuSubContent = React.forwardRef<
   const themeContext = useThemeContext()
   const { size, variant, color, highContrast } = useContext(ContextMenuContentContext)
   const { className, container, ...subContentProps } = extractProps(
-    { size, variant, color, highContrast, ...props },
+    mergeProps(
+      { size, variant, color, highContrast },
+      prop(() => props as Record<string, unknown>),
+    ) as unknown as ContextMenuSubContentProps & ContextMenuContentContextValue,
     contextMenuContentPropDefs,
   )
   return (
