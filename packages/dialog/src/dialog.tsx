@@ -373,11 +373,7 @@ function DialogContentModal(props: ScopedProps<DialogContentTypeProps>): FictNod
     props.__scopeDialog as Scope<DialogContextValue | undefined>,
   )
   const contentRef = { current: null as HTMLDivElement | null }
-  const composedRefs = useComposedRefs(
-    props.ref as PossibleRef<HTMLDivElement>,
-    context.contentRef,
-    contentRef,
-  )
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, contentRef)
 
   useLayoutEffect(() => {
     const content = contentRef.current
@@ -493,8 +489,10 @@ function DialogContentImpl(props: ScopedProps<DialogContentImplProps>): FictNode
     __scopeDialog as Scope<DialogContextValue | undefined>,
   )
   const guardDocument = createSignal<Document | undefined>(undefined)
-  const contentRef = useComposedRefs(props.ref as PossibleRef<DialogContentElement>, (node) =>
-    guardDocument(node?.ownerDocument),
+  const contentRef = useComposedRefs(
+    props.ref as PossibleRef<DialogContentElement>,
+    context.contentRef,
+    (node) => guardDocument(node?.ownerDocument),
   )
 
   useFocusGuards(guardDocument)
@@ -556,7 +554,7 @@ function DialogContentImpl(props: ScopedProps<DialogContentImplProps>): FictNode
       </FocusScope>
       {process.env.NODE_ENV !== 'production' ? (
         <>
-          <TitleWarning titleId={context.titleId()} />
+          <TitleWarning contentRef={context.contentRef} titleId={context.titleId()} />
           <DescriptionWarning
             contentRef={context.contentRef}
             descriptionId={context.descriptionId()}
@@ -650,10 +648,11 @@ function WarningProvider(props: WarningProviderProps): FictNode {
 WarningProvider.displayName = 'DialogWarningProvider'
 
 type TitleWarningProps = {
+  contentRef: { current: DialogContentElement | null }
   titleId?: string
 }
 
-function TitleWarning({ titleId }: TitleWarningProps): null {
+function TitleWarning({ contentRef, titleId }: TitleWarningProps): null {
   const warningContext = useContext(WarningContext)
 
   useLayoutEffect(() => {
@@ -661,8 +660,14 @@ function TitleWarning({ titleId }: TitleWarningProps): null {
       return
     }
 
-    const timerId = window.setTimeout(() => {
-      const hasTitle = document.getElementById(titleId)
+    const ownerWindow = contentRef.current?.ownerDocument.defaultView ?? globalThis.window
+    if (!ownerWindow) return
+
+    const timerId = ownerWindow.setTimeout(() => {
+      const ownerDocument = contentRef.current?.ownerDocument ?? globalThis.document
+      if (!ownerDocument) return
+
+      const hasTitle = ownerDocument.getElementById(titleId)
       if (!hasTitle) {
         console.error(
           `\`${warningContext.contentName}\` requires a \`${warningContext.titleName}\` for the component to be accessible for screen reader users.\n\nIf you want to hide the \`${warningContext.titleName}\`, you can wrap it with our VisuallyHidden component.\n\nFor more information, see https://radix-ui.com/primitives/docs/components/${warningContext.docsSlug}`,
@@ -671,12 +676,14 @@ function TitleWarning({ titleId }: TitleWarningProps): null {
     })
 
     return () => {
-      window.clearTimeout(timerId)
+      ownerWindow.clearTimeout(timerId)
     }
   })
 
   return null
 }
+
+TitleWarning.displayName = TITLE_WARNING_NAME
 
 type DescriptionWarningProps = {
   contentRef: { current: DialogContentElement | null }
@@ -687,10 +694,16 @@ function DescriptionWarning({ contentRef, descriptionId }: DescriptionWarningPro
   const warningContext = useContext(WarningContext)
 
   useLayoutEffect(() => {
-    const timerId = window.setTimeout(() => {
+    const ownerWindow = contentRef.current?.ownerDocument.defaultView ?? globalThis.window
+    if (!ownerWindow) return
+
+    const timerId = ownerWindow.setTimeout(() => {
+      const ownerDocument = contentRef.current?.ownerDocument ?? globalThis.document
+      if (!ownerDocument) return
+
       const describedById = contentRef.current?.getAttribute('aria-describedby')
       if (descriptionId && describedById) {
-        const hasDescription = document.getElementById(descriptionId)
+        const hasDescription = ownerDocument.getElementById(descriptionId)
         if (!hasDescription) {
           console.warn(
             `Warning: Missing \`Description\` or \`aria-describedby={undefined}\` for \`${warningContext.contentName}\`.`,
@@ -700,12 +713,14 @@ function DescriptionWarning({ contentRef, descriptionId }: DescriptionWarningPro
     })
 
     return () => {
-      window.clearTimeout(timerId)
+      ownerWindow.clearTimeout(timerId)
     }
   })
 
   return null
 }
+
+DescriptionWarning.displayName = DESCRIPTION_WARNING_NAME
 
 const Root = Dialog
 const Trigger = DialogTrigger

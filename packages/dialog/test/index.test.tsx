@@ -214,6 +214,49 @@ describe('@fictjs/dialog', () => {
     expect(document.body.style.pointerEvents).toBe('')
   })
 
+  it('checks title and description in the dialog owner document', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const iframe = document.createElement('iframe')
+    document.body.append(iframe)
+    const frameDocument = iframe.contentDocument as Document
+    const container = frameDocument.createElement('div')
+    frameDocument.body.append(container)
+
+    mount(
+      () => (
+        <Dialog defaultOpen modal={false}>
+          <DialogPortal container={frameDocument.body}>
+            <DialogContent data-testid="content">
+              <DialogTitle data-testid="title">Frame title</DialogTitle>
+              <DialogDescription data-testid="description">Frame description</DialogDescription>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    await waitForEffects()
+
+    const content = frameDocument.body.querySelector('[data-testid="content"]') as HTMLElement
+    const title = frameDocument.body.querySelector('[data-testid="title"]') as HTMLElement
+    const description = frameDocument.body.querySelector(
+      '[data-testid="description"]',
+    ) as HTMLElement
+
+    expect(content.ownerDocument).toBe(frameDocument)
+    expect(frameDocument.getElementById(content.getAttribute('aria-labelledby') ?? '')).toBe(title)
+    expect(frameDocument.getElementById(content.getAttribute('aria-describedby') ?? '')).toBe(
+      description,
+    )
+    expect(consoleError).not.toHaveBeenCalled()
+    expect(consoleWarn).not.toHaveBeenCalled()
+    consoleError.mockRestore()
+    consoleWarn.mockRestore()
+  })
+
   it('dismisses non-modal content on outside pointer interaction', async () => {
     const container = document.createElement('div')
     document.body.append(container)
