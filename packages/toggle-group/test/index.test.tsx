@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Item, Root } from '../src/index.js'
 
@@ -210,5 +211,85 @@ describe('@fictjs/toggle-group', () => {
     await flushEffects()
 
     expect(buttons[0]?.getAttribute('data-state')).toBe('off')
+  })
+
+  it('moves the only item tab stop when the current item becomes disabled', async () => {
+    const container = document.createElement('div')
+    const firstDisabled = createSignal(false)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root type="single" defaultValue="one">
+          <Item data-testid="one" value="one" disabled={firstDisabled}>
+            One
+          </Item>
+          <Item data-testid="two" value="two">
+            Two
+          </Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+
+    const one = container.querySelector('[data-testid="one"]') as HTMLButtonElement
+    const two = container.querySelector('[data-testid="two"]') as HTMLButtonElement
+    expect(one.tabIndex).toBe(0)
+    expect(two.tabIndex).toBe(-1)
+
+    firstDisabled(true)
+    await waitForUpdates()
+
+    expect(one.tabIndex).toBe(-1)
+    expect(two.tabIndex).toBe(0)
+    expect(
+      Array.from(container.querySelectorAll<HTMLButtonElement>('button')).filter(
+        (item) => item.tabIndex === 0,
+      ),
+    ).toHaveLength(1)
+  })
+
+  it('uses current DOM order for arrow navigation after items are reordered', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root type="single" defaultValue="one" orientation="horizontal">
+          <div data-testid="one-wrapper">
+            <Item data-testid="one" value="one">
+              One
+            </Item>
+          </div>
+          <div data-testid="two-wrapper">
+            <Item data-testid="two" value="two">
+              Two
+            </Item>
+          </div>
+          <div data-testid="three-wrapper">
+            <Item data-testid="three" value="three">
+              Three
+            </Item>
+          </div>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+
+    const one = container.querySelector('[data-testid="one"]') as HTMLButtonElement
+    const twoWrapper = container.querySelector('[data-testid="two-wrapper"]') as HTMLDivElement
+    const threeWrapper = container.querySelector('[data-testid="three-wrapper"]') as HTMLDivElement
+    twoWrapper.parentElement?.insertBefore(threeWrapper, twoWrapper)
+
+    one.focus()
+    keyDown(one, 'ArrowRight')
+    await waitForUpdates()
+
+    const three = container.querySelector('[data-testid="three"]') as HTMLButtonElement
+    expect(document.activeElement).toBe(three)
   })
 })

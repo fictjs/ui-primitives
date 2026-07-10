@@ -120,6 +120,19 @@ function focusItem(item: RadioGroupItemRecord | undefined): void {
   item?.ref.current?.focus()
 }
 
+function sortItemsByDomOrder(items: RadioGroupItemRecord[]): RadioGroupItemRecord[] {
+  return [...items].sort((first, second) => {
+    const firstNode = first.ref.current
+    const secondNode = second.ref.current
+    if (!firstNode || !secondNode || firstNode === secondNode) return 0
+
+    const position = firstNode.compareDocumentPosition(secondNode)
+    if (position & 4) return -1
+    if (position & 2) return 1
+    return 0
+  })
+}
+
 function getNextItem(
   items: RadioGroupItemRecord[],
   currentValue: string,
@@ -197,12 +210,12 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
     const nextItems = new Map<string, RadioGroupItemRecord>()
 
     for (const item of items) {
-      if (item.ref.current?.isConnected) {
+      if (item.ref.current) {
         nextItems.set(item.value, item)
       }
     }
 
-    return Array.from(nextItems.values())
+    return sortItemsByDomOrder(Array.from(nextItems.values()))
   }
 
   const getEnabledItems = () => getItems().filter((item) => !item.disabled())
@@ -354,18 +367,27 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
     return formElement?.tagName === 'FORM' ? (formElement as HTMLFormElement) : null
   }
   const isCurrentTabStop = () => {
-    const currentValue = context.currentTabStop() ?? context.getEntryValue()
-    return currentValue === value && !disabled()
+    if (disabled()) return false
+    return context.currentTabStop() === value || context.getEntryValue() === value
   }
 
+  useLayoutEffect(() =>
+    untrack(() =>
+      context.registerItem({
+        value,
+        ref: itemRef,
+        checked,
+        disabled,
+        form,
+      }),
+    ),
+  )
+
   useLayoutEffect(() => {
-    return context.registerItem({
-      value,
-      ref: itemRef,
-      checked,
-      disabled,
-      form,
-    })
+    const item = itemRef.current
+    if (item) {
+      item.tabIndex = isCurrentTabStop() ? 0 : -1
+    }
   })
 
   const nextProps = mergeProps(

@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { RadioGroup, RadioGroupIndicator, RadioGroupItem } from '../src/index.js'
 
@@ -303,5 +304,86 @@ describe('@fictjs/radio-group', () => {
     expect(basic.getAttribute('aria-checked')).toBe('false')
     expect(pro.getAttribute('aria-checked')).toBe('true')
     expect(new FormData(form).get('plan')).toBe('pro')
+  })
+
+  it('moves the only tab stop when the current item becomes disabled', async () => {
+    const container = document.createElement('div')
+    const firstDisabled = createSignal(false)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <RadioGroup defaultValue="one">
+          <RadioGroupItem data-testid="one" value="one" disabled={firstDisabled}>
+            One
+          </RadioGroupItem>
+          <RadioGroupItem data-testid="two" value="two">
+            Two
+          </RadioGroupItem>
+        </RadioGroup>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+
+    const one = container.querySelector('[data-testid="one"]') as HTMLButtonElement
+    const two = container.querySelector('[data-testid="two"]') as HTMLButtonElement
+    expect(one.tabIndex).toBe(0)
+    expect(two.tabIndex).toBe(-1)
+
+    firstDisabled(true)
+    await waitForUpdates()
+
+    expect(one.tabIndex).toBe(-1)
+    expect(two.tabIndex).toBe(0)
+    expect(
+      Array.from(container.querySelectorAll<HTMLButtonElement>('[role="radio"]')).filter(
+        (item) => item.tabIndex === 0,
+      ),
+    ).toHaveLength(1)
+  })
+
+  it('uses current DOM order for arrow navigation after items are reordered', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <RadioGroup defaultValue="one" orientation="horizontal">
+          <div data-testid="one-wrapper">
+            <RadioGroupItem data-testid="one" value="one">
+              One
+            </RadioGroupItem>
+          </div>
+          <div data-testid="two-wrapper">
+            <RadioGroupItem data-testid="two" value="two">
+              Two
+            </RadioGroupItem>
+          </div>
+          <div data-testid="three-wrapper">
+            <RadioGroupItem data-testid="three" value="three">
+              Three
+            </RadioGroupItem>
+          </div>
+        </RadioGroup>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+
+    const one = container.querySelector('[data-testid="one"]') as HTMLButtonElement
+    const twoWrapper = container.querySelector('[data-testid="two-wrapper"]') as HTMLDivElement
+    const threeWrapper = container.querySelector('[data-testid="three-wrapper"]') as HTMLDivElement
+    twoWrapper.parentElement?.insertBefore(threeWrapper, twoWrapper)
+
+    one.focus()
+    pressKey(one, 'ArrowRight')
+    await waitForUpdates()
+
+    const three = container.querySelector('[data-testid="three"]') as HTMLButtonElement
+    expect(document.activeElement).toBe(three)
+    expect(three.getAttribute('aria-checked')).toBe('true')
   })
 })

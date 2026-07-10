@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -87,8 +87,12 @@ type ToggleGroupImplMultipleProps = ToggleGroupImplProps & {
   onValueChange?: (value: string[]) => void
 }
 
-type ToggleGroupItemImplProps = Omit<ToggleProps, 'defaultPressed' | 'onPressedChange'> & {
+type ToggleGroupItemImplProps = Omit<
+  ToggleProps,
+  'defaultPressed' | 'disabled' | 'onPressedChange'
+> & {
   value: string
+  disabled?: MaybeAccessor<boolean | undefined>
 }
 
 type ToggleGroupItemProps = Omit<ToggleGroupItemImplProps, 'pressed'>
@@ -150,6 +154,19 @@ function getFocusIntent(key: string, orientation: Orientation, dir: Direction) {
 
 function focusItem(item: ToggleGroupItemRecord | undefined): void {
   item?.ref.current?.focus()
+}
+
+function sortItemsByDomOrder(items: ToggleGroupItemRecord[]): ToggleGroupItemRecord[] {
+  return [...items].sort((first, second) => {
+    const firstNode = first.ref.current
+    const secondNode = second.ref.current
+    if (!firstNode || !secondNode || firstNode === secondNode) return 0
+
+    const position = firstNode.compareDocumentPosition(secondNode)
+    if (position & 4) return -1
+    if (position & 2) return 1
+    return 0
+  })
 }
 
 function getNextItem(
@@ -311,12 +328,12 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
     const nextItems = new Map<string, ToggleGroupItemRecord>()
 
     for (const item of items) {
-      if (item.ref.current?.isConnected) {
+      if (item.ref.current) {
         nextItems.set(item.value, item)
       }
     }
 
-    return Array.from(nextItems.values())
+    return sortItemsByDomOrder(Array.from(nextItems.values()))
   }
   const getEnabledItems = () => getItems().filter((item) => !item.disabled())
   const getEntryValue = () => {
@@ -414,19 +431,27 @@ function ToggleGroupItem(props: ScopedProps<ToggleGroupItemProps>): FictNode {
     context.disabled() ||
     Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
   const isCurrentTabStop = () => {
-    if (!context.rovingFocus()) return false
+    if (!context.rovingFocus() || disabled()) return false
 
-    const currentValue = context.currentTabStop() ?? context.getEntryValue()
-    return currentValue === props.value && !disabled()
+    return context.currentTabStop() === props.value || context.getEntryValue() === props.value
   }
 
+  useLayoutEffect(() =>
+    untrack(() =>
+      context.registerItem({
+        value: props.value,
+        ref: itemRef,
+        disabled,
+        pressed,
+      }),
+    ),
+  )
+
   useLayoutEffect(() => {
-    return context.registerItem({
-      value: props.value,
-      ref: itemRef,
-      disabled,
-      pressed,
-    })
+    const item = itemRef.current
+    if (item && context.rovingFocus()) {
+      item.tabIndex = isCurrentTabStop() ? 0 : -1
+    }
   })
 
   const itemImplProps = mergeProps(
