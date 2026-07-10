@@ -19,8 +19,6 @@ type SyncCustomMatcher = (value: string, formData: FormData) => boolean
 type AsyncCustomMatcher = (value: string, formData: FormData) => Promise<boolean>
 type CustomMatcher = SyncCustomMatcher | AsyncCustomMatcher
 type CustomMatcherEntry = { id: string; match: CustomMatcher }
-type SyncCustomMatcherEntry = { id: string; match: SyncCustomMatcher }
-type AsyncCustomMatcherEntry = { id: string; match: AsyncCustomMatcher }
 type CustomMatcherArgs = [string, FormData]
 
 const FORM_NAME = 'Form'
@@ -428,8 +426,11 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
   const ref = { current: null as HTMLInputElement | null }
   const name = () => props.name ?? fieldContext.name()
   const id = () => props.id ?? fieldContext.id()
+  let validationRun = 0
 
   const updateControlValidity = async (control: HTMLInputElement) => {
+    const currentValidationRun = ++validationRun
+
     if (hasBuiltInError(control.validity)) {
       validationContext.onFieldValidityChange(name(), control.validity)
       return
@@ -438,40 +439,43 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
     const formData = control.form ? new FormData(control.form) : new FormData()
     const matcherArgs: CustomMatcherArgs = [control.value, formData]
     const customMatcherEntries = validationContext.getFieldCustomMatcherEntries(name())
-    const syncCustomMatcherEntries: SyncCustomMatcherEntry[] = []
-    const asyncCustomMatcherEntries: AsyncCustomMatcherEntry[] = []
-
-    for (const customMatcherEntry of customMatcherEntries) {
-      if (isAsyncCustomMatcherEntry(customMatcherEntry, matcherArgs)) {
-        asyncCustomMatcherEntries.push(customMatcherEntry)
-      } else if (isSyncCustomMatcherEntry(customMatcherEntry)) {
-        syncCustomMatcherEntries.push(customMatcherEntry)
-      }
-    }
-
-    const syncCustomErrors = syncCustomMatcherEntries.map(({ id, match }) => {
-      return [id, match(...matcherArgs)] as const
-    })
+    const matcherResults = customMatcherEntries.map(({ id, match }) => ({
+      id,
+      result: match(...matcherArgs),
+    }))
+    const syncCustomErrors = matcherResults
+      .filter((entry): entry is { id: string; result: boolean } => !isPromiseResult(entry.result))
+      .map(({ id: matcherId, result }) => [matcherId, result] as const)
+    const asyncCustomMatcherResults = matcherResults.filter(
+      (entry): entry is { id: string; result: Promise<boolean> } => isPromiseResult(entry.result),
+    )
     const syncCustomErrorsById = Object.fromEntries(syncCustomErrors)
     const hasSyncCustomErrors = Object.values(syncCustomErrorsById).some(Boolean)
     control.setCustomValidity(hasSyncCustomErrors ? DEFAULT_INVALID_MESSAGE : '')
     validationContext.onFieldValidityChange(name(), control.validity)
     validationContext.onFieldCustomErrorsChange(name(), syncCustomErrorsById)
 
-    if (!hasSyncCustomErrors && asyncCustomMatcherEntries.length > 0) {
-      const promisedCustomErrors = asyncCustomMatcherEntries.map(({ id, match }) =>
-        match(...matcherArgs).then((matches) => [id, matches] as const),
+    if (!hasSyncCustomErrors && asyncCustomMatcherResults.length > 0) {
+      const promisedCustomErrors = asyncCustomMatcherResults.map(({ id: matcherId, result }) =>
+        result.then((matches) => [matcherId, matches] as const),
       )
       const asyncCustomErrors = await Promise.all(promisedCustomErrors)
+      if (currentValidationRun !== validationRun || ref.current !== control) return
+
       const asyncCustomErrorsById = Object.fromEntries(asyncCustomErrors)
       const hasAsyncCustomErrors = Object.values(asyncCustomErrorsById).some(Boolean)
       control.setCustomValidity(hasAsyncCustomErrors ? DEFAULT_INVALID_MESSAGE : '')
       validationContext.onFieldValidityChange(name(), control.validity)
       validationContext.onFieldCustomErrorsChange(name(), asyncCustomErrorsById)
+    } else {
+      for (const { result } of asyncCustomMatcherResults) {
+        void result.catch(() => undefined)
+      }
     }
   }
 
   const resetControlValidity = () => {
+    validationRun++
     const control = ref.current
     if (!control) return
 
@@ -492,6 +496,7 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
     control.addEventListener('change', handleChange)
     control.addEventListener('invalid', handleInvalid)
     return () => {
+      validationRun++
       control.removeEventListener('change', handleChange)
       control.removeEventListener('invalid', handleInvalid)
     }
@@ -854,19 +859,8 @@ function getFirstInvalidControl(form: HTMLFormElement): HTMLElement | undefined 
   return firstInvalidControl
 }
 
-function isAsyncCustomMatcherEntry(
-  entry: CustomMatcherEntry,
-  args: CustomMatcherArgs,
-): entry is AsyncCustomMatcherEntry {
-  return entry.match.constructor.name === 'AsyncFunction' || returnsPromise(entry.match, args)
-}
-
-function isSyncCustomMatcherEntry(entry: CustomMatcherEntry): entry is SyncCustomMatcherEntry {
-  return entry.match.constructor.name === 'Function'
-}
-
-function returnsPromise(func: Function, args: Array<unknown>) {
-  return func(...args) instanceof Promise
+function isPromiseResult(result: boolean | Promise<boolean>): result is Promise<boolean> {
+  return typeof result === 'object' && result !== null && typeof result.then === 'function'
 }
 
 function hasBuiltInError(validity: ValidityState) {

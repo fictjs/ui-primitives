@@ -15,6 +15,17 @@ function invalid(target: HTMLInputElement): void {
   target.dispatchEvent(new Event('invalid', { bubbles: false, cancelable: true }))
 }
 
+function deferred<T>(): {
+  promise: Promise<T>
+  resolve: (value: T) => void
+} {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise
+  })
+  return { promise, resolve }
+}
+
 async function waitForEffects(cycles = 6): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0))
   for (let index = 0; index < cycles; index++) {
@@ -113,6 +124,74 @@ describe('@fictjs/form', () => {
 
     expect(message.textContent).toBe('Passwords must match')
     expect(confirmInput.getAttribute('data-invalid')).toBe('true')
+  })
+
+  it('invokes a promise-returning matcher once per validation', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const match = vi.fn(() => Promise.resolve(false))
+
+    mount(
+      () => (
+        <Form>
+          <Field name="username">
+            <Control />
+            <Message match={match}>Username is unavailable</Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const input = container.querySelector('input') as HTMLInputElement
+    changeInput(input, 'ada')
+    await waitForEffects()
+
+    expect(match).toHaveBeenCalledTimes(1)
+    expect(match).toHaveBeenCalledWith('ada', expect.any(FormData))
+    expect(input.validity.valid).toBe(true)
+  })
+
+  it('ignores async validation results superseded by a newer value', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const firstResult = deferred<boolean>()
+    const secondResult = deferred<boolean>()
+    const match = vi
+      .fn<(value: string) => Promise<boolean>>()
+      .mockReturnValueOnce(firstResult.promise)
+      .mockReturnValueOnce(secondResult.promise)
+
+    mount(
+      () => (
+        <Form>
+          <Field name="username">
+            <Control />
+            <Message match={match}>Username is unavailable</Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const input = container.querySelector('input') as HTMLInputElement
+    changeInput(input, 'old')
+    changeInput(input, 'new')
+    expect(match).toHaveBeenCalledTimes(2)
+
+    secondResult.resolve(false)
+    await waitForEffects()
+    expect(input.validity.valid).toBe(true)
+    expect(input.getAttribute('data-invalid')).toBeNull()
+
+    firstResult.resolve(true)
+    await waitForEffects()
+    expect(input.validity.valid).toBe(true)
+    expect(input.getAttribute('data-invalid')).toBeNull()
   })
 
   it('clears server errors on submit and exposes validity state render props', async () => {
