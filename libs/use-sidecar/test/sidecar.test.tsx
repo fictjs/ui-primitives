@@ -25,7 +25,7 @@ describe('sidecar', () => {
   it('does not import sidecars on node when ssr is disabled', async () => {
     env.isNode = true
 
-    const importer = vi.fn(async () => ((() => <div>test</div>) as () => any))
+    const importer = vi.fn(async () => (() => <div>test</div>) as () => any)
     const Sidecar = sidecar(importer)
     const container = document.createElement('div')
 
@@ -39,7 +39,7 @@ describe('sidecar', () => {
   })
 
   it('loads imported components and reuses the cache on remount', async () => {
-    const importer = vi.fn(async () => ((() => <div>test</div>) as () => any))
+    const importer = vi.fn(async () => (() => <div>test</div>) as () => any)
     const Sidecar = sidecar(importer)
     const container = document.createElement('div')
 
@@ -90,9 +90,7 @@ describe('sidecar', () => {
     const container = document.createElement('div')
 
     const dispose = render(
-      () => (
-        <Sidecar sideCar={medium} value={prop(() => value()) as unknown as string} />
-      ),
+      () => <Sidecar sideCar={medium} value={prop(() => value()) as unknown as string} />,
       container,
     )
 

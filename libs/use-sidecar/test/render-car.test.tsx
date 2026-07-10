@@ -14,7 +14,7 @@ describe('renderCar', () => {
   it('uses defaults until the sidecar loads and then reacts to sidecar updates', async () => {
     let resolveExternal: ((value: { default: (props: any) => any }) => void) | undefined
 
-    const external = new Promise<{ default: (props: any) => any }>(resolve => {
+    const external = new Promise<{ default: (props: any) => any }>((resolve) => {
       resolveExternal = resolve
     })
 

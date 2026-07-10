@@ -4,11 +4,11 @@ node_modules
 coverage
 dist
 test-results
-floating-ui
+/floating-ui
 pnpm-lock.yaml
-react-remove-scroll
-react-remove-scroll-bar
-react-style-singleton
-use-callback-ref
-use-sidecar
+/react-remove-scroll
+/react-remove-scroll-bar
+/react-style-singleton
+/use-callback-ref
+/use-sidecar
 libs/radix-ui-themes/**/*.css

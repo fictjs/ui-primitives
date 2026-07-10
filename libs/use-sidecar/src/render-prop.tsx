@@ -12,10 +12,7 @@ type RenderPropComponent<TArgs extends unknown[], TProps extends Record<string, 
   props: CombinedProps<TArgs, TProps>,
 ) => FictNode
 
-export function renderCar<
-  TArgs extends unknown[],
-  TProps extends Record<string, unknown>,
->(
+export function renderCar<TArgs extends unknown[], TProps extends Record<string, unknown>>(
   WrappedComponent: (
     props: TProps & {
       children: (...args: TArgs) => FictNode
