@@ -3,7 +3,16 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": [
+        "dist/**",
+        "styles.css",
+        "components.css",
+        "utilities.css",
+        "tokens.css",
+        "tokens/**",
+        "layout.css",
+        "layout/**"
+      ]
     },
     "clean": {
       "cache": false
