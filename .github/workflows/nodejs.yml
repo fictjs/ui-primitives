@@ -19,6 +19,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
         with:
@@ -32,6 +34,9 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Verify package changesets
+        if: github.event_name == 'pull_request'
+        run: pnpm exec changeset status --since="origin/${{ github.base_ref }}"
       - name: Verify
         run: pnpm verify
         env:
