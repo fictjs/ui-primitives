@@ -51,6 +51,8 @@ type PasswordToggleFieldProps = {
   id?: string
   visible?: MaybeAccessor<boolean | undefined>
   defaultVisible?: MaybeAccessor<boolean | undefined>
+  onVisibilityChange?: (visible: boolean) => void
+  /** @deprecated Use `onVisibilityChange` instead. */
   onVisiblityChange?: (visible: boolean) => void
   children?: FictNode | FictNode[]
 }
@@ -105,11 +107,12 @@ function PasswordToggleField(props: ScopedProps<PasswordToggleFieldProps>): Fict
     props.defaultVisible === undefined
       ? false
       : (readValue(props.defaultVisible as MaybeAccessor<boolean | undefined>) ?? false)
+  const onVisibilityChange = props.onVisibilityChange ?? props.onVisiblityChange
   const [visible, setVisible] = useControllableState<boolean>({
     caller: PASSWORD_TOGGLE_FIELD_NAME,
     prop: visibleProp,
     defaultProp: defaultVisible,
-    ...(props.onVisiblityChange ? { onChange: props.onVisiblityChange } : {}),
+    ...(onVisibilityChange ? { onChange: onVisibilityChange } : {}),
   })
   const inputRef = { current: null as HTMLInputElement | null }
   const focusState = { current: { ...INITIAL_FOCUS_STATE } }

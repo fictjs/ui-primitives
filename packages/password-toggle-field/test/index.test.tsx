@@ -79,6 +79,29 @@ describe('@fictjs/password-toggle-field', () => {
     expect(toggle.getAttribute('aria-controls')).toBe(input.getAttribute('id'))
   })
 
+  it('notifies visibility changes through the documented callback', async () => {
+    const container = document.createElement('div')
+    const onVisibilityChange = vi.fn()
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root onVisibilityChange={onVisibilityChange}>
+          <Input defaultValue="secret" />
+          <Toggle data-testid="toggle">Show</Toggle>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    click(container.querySelector('[data-testid="toggle"]') as HTMLButtonElement)
+    await waitForEffects()
+
+    expect(onVisibilityChange).toHaveBeenCalledOnce()
+    expect(onVisibilityChange).toHaveBeenCalledWith(true)
+  })
+
   it('links the toggle to a provided input id after hydration', async () => {
     const container = document.createElement('div')
     document.body.append(container)
