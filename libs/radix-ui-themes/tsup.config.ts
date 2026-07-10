@@ -7,8 +7,8 @@ export default defineConfig({
   format: ['esm', 'cjs'],
   outDir: 'dist',
   platform: 'neutral',
-  sourcemap: true,
-  splitting: false,
+  sourcemap: false,
+  splitting: true,
   target: 'es2022',
   treeshake: true,
   esbuildOptions(options) {
