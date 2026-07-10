@@ -10,8 +10,24 @@ export default defineConfig({
   resolve: {
     alias: [
       {
+        find: '@fictjs/compose-refs',
+        replacement: path.resolve(packagesRoot, 'compose-refs/src/index.ts'),
+      },
+      {
         find: '@fictjs/context',
         replacement: path.resolve(packagesRoot, 'context/src/index.ts'),
+      },
+      {
+        find: '@fictjs/core-primitive',
+        replacement: path.resolve(packagesRoot, 'core-primitive/src/index.ts'),
+      },
+      {
+        find: '@fictjs/direction',
+        replacement: path.resolve(packagesRoot, 'direction/src/index.ts'),
+      },
+      {
+        find: '@fictjs/dismissable-layer',
+        replacement: path.resolve(packagesRoot, 'dismissable-layer/src/index.tsx'),
       },
       {
         find: '@fictjs/id',
@@ -26,8 +42,28 @@ export default defineConfig({
         replacement: path.resolve(packagesRoot, 'primitive/src/index.tsx'),
       },
       {
+        find: '@fictjs/slot',
+        replacement: path.resolve(packagesRoot, 'slot/src/index.tsx'),
+      },
+      {
+        find: '@fictjs/use-callback-ref',
+        replacement: path.resolve(packagesRoot, 'use-callback-ref/src/index.ts'),
+      },
+      {
         find: '@fictjs/use-controllable-state',
         replacement: path.resolve(packagesRoot, 'use-controllable-state/src/index.ts'),
+      },
+      {
+        find: '@fictjs/use-effect-event',
+        replacement: path.resolve(packagesRoot, 'use-effect-event/src/index.ts'),
+      },
+      {
+        find: '@fictjs/use-escape-keydown',
+        replacement: path.resolve(packagesRoot, 'use-escape-keydown/src/index.ts'),
+      },
+      {
+        find: '@fictjs/use-layout-effect',
+        replacement: path.resolve(packagesRoot, 'use-layout-effect/src/index.ts'),
       },
     ],
   },

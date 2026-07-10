@@ -953,9 +953,21 @@ importers:
 
   packages/navigation-menu:
     dependencies:
+      '@fictjs/compose-refs':
+        specifier: workspace:*
+        version: link:../compose-refs
       '@fictjs/context':
         specifier: workspace:*
         version: link:../context
+      '@fictjs/core-primitive':
+        specifier: workspace:*
+        version: link:../core-primitive
+      '@fictjs/direction':
+        specifier: workspace:*
+        version: link:../direction
+      '@fictjs/dismissable-layer':
+        specifier: workspace:*
+        version: link:../dismissable-layer
       '@fictjs/id':
         specifier: workspace:*
         version: link:../id
@@ -968,6 +980,9 @@ importers:
       '@fictjs/use-controllable-state':
         specifier: workspace:*
         version: link:../use-controllable-state
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
