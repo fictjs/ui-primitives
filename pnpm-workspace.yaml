@@ -33,5 +33,8 @@ catalog:
 
 catalogMode: strict
 
+overrides:
+  'undici@7.22.0': 7.28.0
+
 onlyBuiltDependencies:
   - esbuild
