@@ -194,8 +194,11 @@ describe('@fictjs/tabs', () => {
     await waitForEffects()
 
     let twoTrigger = container.querySelector('[data-testid="two-trigger"]') as HTMLButtonElement
+    oneTrigger = container.querySelector('[data-testid="one-trigger"]') as HTMLButtonElement
     expect(document.activeElement).toBe(twoTrigger)
     expect(twoTrigger.getAttribute('aria-selected')).toBe('false')
+    expect(oneTrigger.tabIndex).toBe(-1)
+    expect(twoTrigger.tabIndex).toBe(0)
 
     keyDown(twoTrigger, 'Enter')
     await waitForEffects()
@@ -204,5 +207,55 @@ describe('@fictjs/tabs', () => {
     const twoContent = container.querySelector('[data-testid="two-content"]') as HTMLDivElement
     expect(twoTrigger.getAttribute('aria-selected')).toBe('true')
     expect(twoContent.hidden).toBe(false)
+  })
+
+  it('keeps exactly one enabled trigger in the tab order without a valid selected value', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <>
+          <Tabs data-testid="unset-tabs">
+            <TabsList>
+              <TabsTrigger value="one">One</TabsTrigger>
+              <TabsTrigger value="two">Two</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Tabs data-testid="invalid-tabs" value="missing">
+            <TabsList>
+              <TabsTrigger value="one">One</TabsTrigger>
+              <TabsTrigger value="two">Two</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Tabs data-testid="disabled-tabs" value="one">
+            <TabsList>
+              <TabsTrigger value="one" disabled>
+                One
+              </TabsTrigger>
+              <TabsTrigger value="two">Two</TabsTrigger>
+              <TabsTrigger value="three">Three</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    for (const testId of ['unset-tabs', 'invalid-tabs', 'disabled-tabs']) {
+      const root = container.querySelector(`[data-testid="${testId}"]`) as HTMLDivElement
+      const triggers = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
+      const tabStops = triggers.filter((trigger) => trigger.tabIndex === 0)
+
+      expect(tabStops).toHaveLength(1)
+      expect(tabStops[0]?.disabled).toBe(false)
+    }
+
+    const disabledRoot = container.querySelector('[data-testid="disabled-tabs"]') as HTMLDivElement
+    const disabledTriggers = disabledRoot.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+    expect(disabledTriggers[0]?.tabIndex).toBe(-1)
+    expect(disabledTriggers[1]?.tabIndex).toBe(0)
   })
 })

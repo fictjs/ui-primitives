@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -16,6 +16,12 @@ type Orientation = 'horizontal' | 'vertical'
 type ActivationMode = 'automatic' | 'manual'
 type ScopedProps<P> = P & { __scopeTabs?: Scope }
 type StyleRecord = Record<string, string | number>
+type TabsTriggerElement = HTMLButtonElement
+type TabsTriggerRecord = {
+  value: string
+  ref: { current: TabsTriggerElement | null }
+  disabled: () => boolean
+}
 
 const TABS_NAME = 'Tabs'
 const LIST_NAME = 'TabsList'
@@ -36,6 +42,10 @@ type TabsContextValue = {
   orientation: () => Orientation
   dir: () => Direction
   activationMode: () => ActivationMode
+  currentTabStop: () => string | null
+  setCurrentTabStop(value: string | null): void
+  getEntryValue(): string | null
+  registerTrigger(trigger: TabsTriggerRecord): () => void
 }
 
 const [TabsProvider, useTabsContext] = createTabsContext<TabsContextValue>(TABS_NAME)
@@ -134,6 +144,65 @@ function Tabs(props: ScopedProps<TabsProps>): FictNode {
     caller: TABS_NAME,
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
+  const currentTabStop = createSignal<string | null>(null)
+  const triggers: TabsTriggerRecord[] = []
+  let previousValue = untrack(() => value())
+
+  const getTriggers = () => {
+    const connectedTriggers = new Map<string, TabsTriggerRecord>()
+
+    for (const trigger of triggers) {
+      if (trigger.ref.current?.isConnected) {
+        connectedTriggers.set(trigger.value, trigger)
+      }
+    }
+
+    return Array.from(connectedTriggers.values())
+  }
+  const getEnabledTriggers = () => getTriggers().filter((trigger) => !trigger.disabled())
+  const getRegisteredEnabledTriggers = () => triggers.filter((trigger) => !trigger.disabled())
+  const getEntryValue = () => {
+    const enabledTriggers = getEnabledTriggers()
+    const currentValue = currentTabStop()
+
+    if (currentValue && enabledTriggers.some((trigger) => trigger.value === currentValue)) {
+      return currentValue
+    }
+
+    const selectedTrigger = enabledTriggers.find((trigger) => trigger.value === value())
+    return selectedTrigger?.value ?? enabledTriggers[0]?.value ?? null
+  }
+  const registerTrigger = (trigger: TabsTriggerRecord) => {
+    triggers.push(trigger)
+
+    const enabledTriggers = getRegisteredEnabledTriggers()
+    const selectedTrigger = enabledTriggers.find((item) => item.value === value())
+    if (currentTabStop() === null || trigger.value === selectedTrigger?.value) {
+      currentTabStop(selectedTrigger?.value ?? enabledTriggers[0]?.value ?? null)
+    }
+
+    return () => {
+      const triggerIndex = triggers.indexOf(trigger)
+      if (triggerIndex !== -1) {
+        triggers.splice(triggerIndex, 1)
+      }
+
+      if (currentTabStop() === trigger.value) {
+        currentTabStop(getEntryValue())
+      }
+    }
+  }
+
+  useLayoutEffect(() => {
+    const nextValue = value()
+    if (Object.is(previousValue, nextValue)) return
+
+    previousValue = nextValue
+    const enabledTriggers = getEnabledTriggers()
+    const selectedTrigger = enabledTriggers.find((trigger) => trigger.value === nextValue)
+    currentTabStop(selectedTrigger?.value ?? enabledTriggers[0]?.value ?? null)
+  })
+
   const handleValueChange = (nextValue: string) => {
     setValue(nextValue)
   }
@@ -159,9 +228,13 @@ function Tabs(props: ScopedProps<TabsProps>): FictNode {
       scope={props.__scopeTabs as Scope<TabsContextValue | undefined>}
       activationMode={activationMode}
       baseId={baseId}
+      currentTabStop={currentTabStop}
       dir={dir}
+      getEntryValue={getEntryValue}
       onValueChange={handleValueChange}
       orientation={orientation}
+      registerTrigger={registerTrigger}
+      setCurrentTabStop={currentTabStop}
       value={value}
     >
       <Primitive.div {...primitiveProps} />
@@ -245,8 +318,21 @@ function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
   const context = useTabsContext(TRIGGER_NAME, __scopeTabs as Scope<TabsContextValue | undefined>)
   const triggerId = () => makeTriggerId(context.baseId(), value)
   const contentId = () => makeContentId(context.baseId(), value)
+  const triggerRef = { current: null as TabsTriggerElement | null }
   const isDisabled = () => Boolean(readValue(disabled as MaybeAccessor<boolean | undefined>))
   const isSelected = () => value === context.value()
+  const isCurrentTabStop = () => context.getEntryValue() === value && !isDisabled()
+
+  useLayoutEffect(() =>
+    untrack(() =>
+      context.registerTrigger({
+        value,
+        ref: triggerRef,
+        disabled: isDisabled,
+      }),
+    ),
+  )
+
   const primitiveProps = mergeProps(
     {
       type: 'button',
@@ -257,7 +343,7 @@ function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
       'data-disabled': prop(() => (isDisabled() ? '' : undefined)),
       disabled: prop(isDisabled),
       id: prop(triggerId),
-      tabIndex: prop(() => (isSelected() ? 0 : -1)),
+      tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
     },
     prop(() => triggerProps as Record<string, unknown>),
     {
@@ -265,6 +351,7 @@ function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
         props.onMouseDown as ((event: MouseEvent) => void) | undefined,
         (event) => {
           if (!isDisabled() && event.button === 0 && event.ctrlKey === false) {
+            context.setCurrentTabStop(value)
             context.onValueChange(value)
           } else {
             event.preventDefault()
@@ -275,6 +362,7 @@ function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
         props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
         (event) => {
           if (event.key === ' ' || event.key === 'Enter') {
+            context.setCurrentTabStop(value)
             context.onValueChange(value)
           }
         },
@@ -282,15 +370,33 @@ function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
       onFocus: composeEventHandlers<FocusEvent>(
         props.onFocus as ((event: FocusEvent) => void) | undefined,
         () => {
+          if (!isDisabled()) {
+            context.setCurrentTabStop(value)
+          }
+
           if (!isSelected() && !isDisabled() && context.activationMode() === 'automatic') {
             context.onValueChange(value)
           }
         },
       ),
+      ref: undefined,
     },
   )
 
-  return <Primitive.button {...primitiveProps} />
+  return (
+    <Primitive.button
+      {...primitiveProps}
+      ref={(node: HTMLButtonElement | null) => {
+        triggerRef.current = node
+        if (!props.ref) return
+        if (typeof props.ref === 'function') {
+          props.ref(node)
+          return
+        }
+        props.ref.current = node
+      }}
+    />
+  )
 }
 
 TabsTrigger.displayName = TRIGGER_NAME
