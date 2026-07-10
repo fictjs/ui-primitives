@@ -26,6 +26,24 @@ import {
 } from '../src/index.js'
 
 const OriginalImage = window.Image
+const resizeObservers: MockResizeObserver[] = []
+
+class MockResizeObserver {
+  readonly callback: ResizeObserverCallback
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback
+    resizeObservers.push(this)
+  }
+
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+
+  trigger(): void {
+    this.callback([], this as unknown as ResizeObserver)
+  }
+}
 
 class MockImage extends EventTarget {
   protected currentSrc = ''
@@ -131,6 +149,7 @@ describe('@fictjs/radix-ui-themes', () => {
     document.body.innerHTML = ''
     window.Image = OriginalImage
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   function mount(view: Parameters<typeof render>[0], container: HTMLElement): void {
@@ -425,6 +444,9 @@ describe('@fictjs/radix-ui-themes', () => {
   })
 
   it('renders select content with themed scroll viewport classes', async () => {
+    resizeObservers.length = 0
+    vi.stubGlobal('ResizeObserver', MockResizeObserver)
+
     const container = document.createElement('div')
     document.body.append(container)
 
@@ -449,8 +471,25 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(content).not.toBeNull()
     expect(content?.querySelector('.rt-ScrollAreaRoot')).not.toBeNull()
     expect(content?.querySelector('.rt-SelectViewport')).not.toBeNull()
-    expect(content?.querySelector('.rt-ScrollAreaViewport')).not.toBeNull()
-    expect(content?.querySelector('.rt-ScrollAreaScrollbar.rt-r-size-1')).not.toBeNull()
+    const viewport = content?.querySelector('.rt-ScrollAreaViewport') as HTMLDivElement | null
+    expect(viewport).not.toBeNull()
+
+    Object.defineProperties(viewport, {
+      clientHeight: { configurable: true, value: 100 },
+      scrollHeight: { configurable: true, value: 400 },
+    })
+    resizeObservers.forEach((observer) => observer.trigger())
+    await flushEffects()
+
+    const scrollbar = content?.querySelector(
+      '.rt-ScrollAreaScrollbar.rt-r-size-1',
+    ) as HTMLDivElement | null
+    expect(scrollbar).not.toBeNull()
+
+    Object.defineProperty(scrollbar, 'clientHeight', { configurable: true, value: 80 })
+    resizeObservers.forEach((observer) => observer.trigger())
+    await flushEffects()
+
     expect(content?.querySelector('.rt-ScrollAreaThumb')).not.toBeNull()
   })
 
