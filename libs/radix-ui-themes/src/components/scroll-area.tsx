@@ -42,6 +42,7 @@ const ScrollArea = React.forwardRef<ScrollAreaElement, ScrollAreaProps>((props, 
       class={classNames('rt-ScrollAreaRoot', marginClassNames, className)}
       style={mergeStyles(marginCustomProperties, style)}
       asChild={asChild}
+      dir={dir}
     >
       {getSubtree({ asChild, children }, (children) => (
         <>

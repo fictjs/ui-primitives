@@ -16,6 +16,7 @@ import {
   Kbd,
   Link,
   Popover,
+  ScrollArea,
   Select,
   Skeleton,
   TabNav,
@@ -451,6 +452,24 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(content?.querySelector('.rt-ScrollAreaViewport')).not.toBeNull()
     expect(content?.querySelector('.rt-ScrollAreaScrollbar.rt-r-size-1')).not.toBeNull()
     expect(content?.querySelector('.rt-ScrollAreaThumb')).not.toBeNull()
+  })
+
+  it('forwards direction to the themed scroll area root', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <ScrollArea dir="rtl">Scrollable content</ScrollArea>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    expect(container.querySelector('.rt-ScrollAreaRoot')?.getAttribute('dir')).toBe('rtl')
   })
 
   it('renders themed select default value while content is closed', async () => {
