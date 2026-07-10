@@ -127,23 +127,19 @@ function usePresence(present: MaybeAccessor<boolean>) {
   }
 
   createEffect(() => {
-    prevAnimationName = state() === 'mounted' ? readAnimationName() : 'none'
-  })
-
-  createEffect(() => {
     const nextPresent = readValue(present)
     const currentAnimationName = readAnimationName()
 
     if (nextPresent !== prevPresent) {
       if (nextPresent) {
         send('MOUNT')
+        prevAnimationName = currentAnimationName
       } else if (currentAnimationName === 'none' || readDisplay() === 'none') {
         send('UNMOUNT')
       } else {
-        const hasActiveAnimation = currentAnimationName !== 'none'
         const isAnimating = prevAnimationName !== currentAnimationName
 
-        if (prevPresent && (isAnimating || hasActiveAnimation)) {
+        if (prevPresent && isAnimating) {
           send('ANIMATION_OUT')
         } else {
           send('UNMOUNT')
@@ -215,6 +211,9 @@ function usePresence(present: MaybeAccessor<boolean>) {
     ref: (nextNode: Element | null) => {
       const element = nextNode instanceof HTMLElement ? nextNode : null
       stylesRef = element ? getComputedStyle(element) : null
+      if (element && state() === 'mounted') {
+        prevAnimationName = element.style.animationName || getAnimationName(stylesRef)
+      }
       node(element ?? undefined)
     },
   }

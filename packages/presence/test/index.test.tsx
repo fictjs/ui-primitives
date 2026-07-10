@@ -20,6 +20,14 @@ function dispatchAnimationEvent(node: HTMLElement, type: string, animationName: 
   node.dispatchEvent(event)
 }
 
+const nonExitAnimationCases: Array<
+  [description: string, options: { complete?: boolean; iterationCount?: string }]
+> = [
+  ['an unchanged animation', {}],
+  ['a completed animation', { complete: true }],
+  ['an infinite animation', { iterationCount: 'infinite' }],
+]
+
 describe('@fictjs/presence', () => {
   afterEach(() => {
     document.body.innerHTML = ''
@@ -95,6 +103,40 @@ describe('@fictjs/presence', () => {
     currentNode.style.animationName = 'fade-out'
     dispatchAnimationEvent(currentNode, 'animationstart', 'fade-out')
     dispatchAnimationEvent(currentNode, 'animationend', 'fade-out')
+    await flushMicrotasks()
+
+    expect(container.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it.each(nonExitAnimationCases)('unmounts immediately for %s', async (_description, options) => {
+    const present = createSignal(true)
+    const container = document.createElement('div')
+
+    render(
+      () => (
+        <Presence present={() => present()}>
+          <div
+            data-testid="content"
+            style={{
+              animationName: 'fade-in',
+              ...(options.iterationCount
+                ? { animationIterationCount: options.iterationCount }
+                : {}),
+            }}
+          >
+            Animated
+          </div>
+        </Presence>
+      ),
+      container,
+    )
+
+    const node = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    if (options.complete) {
+      dispatchAnimationEvent(node, 'animationend', 'fade-in')
+    }
+
+    present(false)
     await flushMicrotasks()
 
     expect(container.querySelector('[data-testid="content"]')).toBeNull()
