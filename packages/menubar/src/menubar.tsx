@@ -1,4 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { jsx as createVNode } from '@fictjs/runtime/jsx-runtime'
 
 import { createContextScope, type Scope } from '@fictjs/context'
 import { composeEventHandlers } from '@fictjs/core-primitive'
@@ -7,6 +8,7 @@ import { useId } from '@fictjs/id'
 import {
   createMenuScope,
   Menu as MenuRoot,
+  MenuAnchor,
   MenuPortal,
   MenuContent,
   MenuGroup,
@@ -47,6 +49,7 @@ type PrimitiveButtonProps = JSX.IntrinsicElements['button'] & {
 type PrimitiveDivProps = JSX.IntrinsicElements['div'] & {
   asChild?: boolean
 }
+type StyleRecord = Record<string, string | number>
 type FocusIntent = 'first' | 'last' | 'next' | 'prev'
 type MenubarContextValue = {
   value: () => string | null
@@ -135,6 +138,33 @@ function readValue<T>(value: MaybeAccessor<T>): T {
   return value as T
 }
 
+function readStyle(value: unknown): StyleRecord {
+  const resolved = value === undefined ? undefined : readValue(value as MaybeAccessor<unknown>)
+  if (!resolved || typeof resolved !== 'object' || Array.isArray(resolved)) return {}
+  return resolved as StyleRecord
+}
+
+function createComponentNode(component: unknown, props: Record<string, unknown>): FictNode {
+  return createVNode(component as (props: Record<string, unknown>) => FictNode, props)
+}
+
+function createMenuComponentNode(
+  component: unknown,
+  menuScope: Record<string, unknown>,
+  props: object,
+  overrides: Record<string, unknown> = {},
+): FictNode {
+  return createComponentNode(
+    component,
+    mergeProps(
+      menuScope,
+      prop(() => props as Record<string, unknown>),
+      { __scopeMenubar: undefined },
+      overrides,
+    ),
+  )
+}
+
 function getDirectionAwareKey(key: string, dir: Direction) {
   if (dir !== 'rtl') return key
   return key === 'ArrowLeft' ? 'ArrowRight' : key === 'ArrowRight' ? 'ArrowLeft' : key
@@ -181,6 +211,20 @@ function Menubar(props: ScopedProps<MenubarProps>): FictNode {
       ref: undefined,
     },
   )
+  const rootNode = createComponentNode(
+    Primitive.div,
+    mergeProps(primitiveProps, {
+      ref: (node: HTMLDivElement | null) => {
+        rootRef.current = node
+        if (!props.ref) return
+        if (typeof props.ref === 'function') {
+          props.ref(node)
+          return
+        }
+        props.ref.current = node
+      },
+    }),
+  )
 
   return (
     <MenubarProvider
@@ -191,18 +235,7 @@ function Menubar(props: ScopedProps<MenubarProps>): FictNode {
       loop={loop}
       rootRef={rootRef}
     >
-      <Primitive.div
-        {...primitiveProps}
-        ref={(node: HTMLDivElement | null) => {
-          rootRef.current = node
-          if (!props.ref) return
-          if (typeof props.ref === 'function') {
-            props.ref(node)
-            return
-          }
-          props.ref.current = node
-        }}
-      />
+      {rootNode}
     </MenubarProvider>
   )
 }
@@ -240,6 +273,7 @@ function MenubarMenu(props: ScopedProps<MenubarMenuProps>): FictNode {
           context.onValueChange(nextOpen ? value() : null)
         }}
         modal={false}
+        dir={context.dir}
       >
         {props.children}
       </MenuRoot>
@@ -296,6 +330,7 @@ function MenubarTrigger(props: ScopedProps<MenubarTriggerProps>): FictNode {
     TRIGGER_NAME,
     props.__scopeMenubar as Scope<MenubarMenuContextValue | undefined>,
   )
+  const menuScope = useMenuScope(props.__scopeMenubar)
   const disabled = () =>
     props.disabled === undefined
       ? false
@@ -321,7 +356,7 @@ function MenubarTrigger(props: ScopedProps<MenubarTriggerProps>): FictNode {
       disabled: undefined,
       ref: undefined,
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => props.onClick?.(event),
         (event) => {
           if (disabled()) {
             event.preventDefault()
@@ -333,7 +368,7 @@ function MenubarTrigger(props: ScopedProps<MenubarTriggerProps>): FictNode {
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => props.onKeyDown?.(event),
         (event) => {
           if (disabled()) return
 
@@ -390,11 +425,10 @@ function MenubarTrigger(props: ScopedProps<MenubarTriggerProps>): FictNode {
       ),
     },
   )
-
-  return (
-    <Primitive.button
-      {...primitiveProps}
-      ref={(node: HTMLButtonElement | null) => {
+  const triggerNode = createComponentNode(
+    Primitive.button,
+    mergeProps(primitiveProps, {
+      ref: (node: HTMLButtonElement | null) => {
         menuContext.triggerRef.current = node
         if (!props.ref) return
         if (typeof props.ref === 'function') {
@@ -402,8 +436,14 @@ function MenubarTrigger(props: ScopedProps<MenubarTriggerProps>): FictNode {
           return
         }
         props.ref.current = node
-      }}
-    />
+      },
+    }),
+  )
+
+  return (
+    <MenuAnchor {...menuScope} asChild>
+      {triggerNode}
+    </MenuAnchor>
   )
 }
 
@@ -411,7 +451,11 @@ MenubarTrigger.displayName = TRIGGER_NAME
 
 function MenubarPortal(props: ScopedProps<MenubarPortalProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuPortal {...menuScope} {...props} />
+  return createMenuComponentNode(
+    MenuPortal,
+    menuScope as Record<string, unknown>,
+    props as Record<string, unknown>,
+  )
 }
 
 MenubarPortal.displayName = PORTAL_NAME
@@ -426,25 +470,41 @@ function MenubarContent(props: ScopedProps<MenubarContentProps>): FictNode {
     CONTENT_NAME,
     props.__scopeMenubar as Scope<MenubarMenuContextValue | undefined>,
   )
-
-  return (
-    <MenuContent
-      {...menuScope}
-      {...props}
-      id={menuContext.contentId()}
-      aria-labelledby={menuContext.triggerId()}
-      onCloseAutoFocus={(event) => {
+  const align = () =>
+    props.align === undefined
+      ? 'start'
+      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ?? 'start')
+  return createMenuComponentNode(
+    MenuContent,
+    menuScope as Record<string, unknown>,
+    props as Record<string, unknown>,
+    {
+      id: prop(menuContext.contentId),
+      'aria-labelledby': prop(menuContext.triggerId),
+      'data-radix-menubar-content': '',
+      align: prop(align),
+      onCloseAutoFocus: (event: Event) => {
         props.onCloseAutoFocus?.(event)
         event.preventDefault()
         menuContext.triggerRef.current?.focus()
-      }}
-      onInteractOutside={(event) => {
+      },
+      onInteractOutside: (
+        event: Parameters<NonNullable<MenuContentProps['onInteractOutside']>>[0],
+      ) => {
         props.onInteractOutside?.(event)
         if (!event.defaultPrevented) {
           rootContext.onValueChange(null)
         }
-      }}
-    />
+      },
+      style: prop(() => ({
+        '--radix-menubar-content-transform-origin': 'var(--radix-popper-transform-origin)',
+        '--radix-menubar-content-available-width': 'var(--radix-popper-available-width)',
+        '--radix-menubar-content-available-height': 'var(--radix-popper-available-height)',
+        '--radix-menubar-trigger-width': 'var(--radix-popper-anchor-width)',
+        '--radix-menubar-trigger-height': 'var(--radix-popper-anchor-height)',
+        ...readStyle(props.style),
+      })) as unknown as Record<string, string | number>,
+    },
   )
 }
 
@@ -452,84 +512,86 @@ MenubarContent.displayName = CONTENT_NAME
 
 function MenubarGroup(props: ScopedProps<MenubarGroupProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuGroup {...menuScope} {...props} />
+  return createMenuComponentNode(MenuGroup, menuScope as Record<string, unknown>, props)
 }
 
 MenubarGroup.displayName = GROUP_NAME
 
 function MenubarLabel(props: ScopedProps<MenubarLabelProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuLabel {...menuScope} {...props} />
+  return createMenuComponentNode(MenuLabel, menuScope as Record<string, unknown>, props)
 }
 
 MenubarLabel.displayName = LABEL_NAME
 
 function MenubarItem(props: ScopedProps<MenubarItemProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuItem {...menuScope} {...props} />
+  return createMenuComponentNode(MenuItem, menuScope as Record<string, unknown>, props)
 }
 
 MenubarItem.displayName = ITEM_NAME
 
 function MenubarCheckboxItem(props: ScopedProps<MenubarCheckboxItemProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuCheckboxItem {...menuScope} {...props} />
+  return createMenuComponentNode(MenuCheckboxItem, menuScope as Record<string, unknown>, props)
 }
 
 MenubarCheckboxItem.displayName = CHECKBOX_ITEM_NAME
 
 function MenubarRadioGroup(props: ScopedProps<MenubarRadioGroupProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuRadioGroup {...menuScope} {...props} />
+  return createMenuComponentNode(MenuRadioGroup, menuScope as Record<string, unknown>, props)
 }
 
 MenubarRadioGroup.displayName = RADIO_GROUP_NAME
 
 function MenubarRadioItem(props: ScopedProps<MenubarRadioItemProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuRadioItem {...menuScope} {...props} />
+  return createMenuComponentNode(MenuRadioItem, menuScope as Record<string, unknown>, props)
 }
 
 MenubarRadioItem.displayName = RADIO_ITEM_NAME
 
 function MenubarItemIndicator(props: ScopedProps<MenubarItemIndicatorProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuItemIndicator {...menuScope} {...props} />
+  return createMenuComponentNode(MenuItemIndicator, menuScope as Record<string, unknown>, props)
 }
 
 MenubarItemIndicator.displayName = ITEM_INDICATOR_NAME
 
 function MenubarSeparator(props: ScopedProps<MenubarSeparatorProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuSeparator {...menuScope} {...props} />
+  return createMenuComponentNode(MenuSeparator, menuScope as Record<string, unknown>, props)
 }
 
 MenubarSeparator.displayName = SEPARATOR_NAME
 
 function MenubarArrow(props: ScopedProps<MenubarArrowProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuArrow {...menuScope} {...props} />
+  return createMenuComponentNode(MenuArrow, menuScope as Record<string, unknown>, props)
 }
 
 MenubarArrow.displayName = ARROW_NAME
 
 function MenubarSub(props: ScopedProps<MenubarSubProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuSub {...menuScope} {...props} onOpenChange={prop(() => props.onOpenChange)} />
+  return createMenuComponentNode(MenuSub, menuScope as Record<string, unknown>, props, {
+    onOpenChange: prop(() => props.onOpenChange),
+  })
 }
 
 MenubarSub.displayName = SUB_NAME
 
 function MenubarSubTrigger(props: ScopedProps<MenubarSubTriggerProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuSubTrigger {...menuScope} {...props} />
+  return createMenuComponentNode(MenuSubTrigger, menuScope as Record<string, unknown>, props)
 }
 
 MenubarSubTrigger.displayName = SUB_TRIGGER_NAME
 
 function MenubarSubContent(props: ScopedProps<MenubarSubContentProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuSubContent {...menuScope} {...props} />
+  return createMenuComponentNode(MenuSubContent, menuScope as Record<string, unknown>, props)
 }
 
 MenubarSubContent.displayName = SUB_CONTENT_NAME

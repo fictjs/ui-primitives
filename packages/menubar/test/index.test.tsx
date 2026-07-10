@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Content, Item, Menu, Menubar, Trigger } from '../src/index.js'
 
@@ -129,6 +130,61 @@ describe('@fictjs/menubar', () => {
     expect(document.activeElement).toBe(fileTrigger)
   })
 
+  it('anchors content to its trigger and repositions after scrolling', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menubar>
+          <Menu value="file">
+            <Trigger data-testid="file-trigger">File</Trigger>
+            <Content data-testid="file-content" avoidCollisions={false}>
+              <Item>New</Item>
+            </Content>
+          </Menu>
+        </Menubar>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="file-trigger"]') as HTMLButtonElement
+    let triggerX = 18
+    vi.spyOn(trigger, 'getBoundingClientRect').mockImplementation(
+      () =>
+        ({
+          x: triggerX,
+          y: 12,
+          width: 34,
+          height: 24,
+          top: 12,
+          right: triggerX + 34,
+          bottom: 36,
+          left: triggerX,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    )
+
+    click(trigger)
+    await waitForEffects()
+
+    const content = container.querySelector('[data-testid="file-content"]') as HTMLDivElement
+    const wrapper = content.parentElement as HTMLDivElement
+    expect(container.querySelectorAll('[data-radix-popper-content-wrapper]')).toHaveLength(1)
+    expect(wrapper.style.position).toBe('fixed')
+    expect(wrapper.style.transform).toBe('translate(18px, 36px)')
+    expect(content.getAttribute('data-side')).toBe('bottom')
+    expect(content.getAttribute('data-align')).toBe('start')
+    expect(content.style.getPropertyValue('--radix-menubar-trigger-width')).toBe(
+      'var(--radix-popper-anchor-width)',
+    )
+
+    triggerX = 48
+    window.dispatchEvent(new Event('scroll'))
+    await waitForEffects()
+    expect(wrapper.style.transform).toBe('translate(48px, 36px)')
+  })
+
   it('keeps content open when outside interaction is prevented', async () => {
     const container = document.createElement('div')
     const outside = document.createElement('button')
@@ -157,5 +213,48 @@ describe('@fictjs/menubar', () => {
     await waitForEffects()
 
     expect(container.querySelector('[data-testid="file-content"]')).not.toBeNull()
+  })
+
+  it('invokes the latest replaced trigger event handler', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const first = vi.fn((event: MouseEvent) => event.preventDefault())
+    const second = vi.fn((event: MouseEvent) => event.preventDefault())
+    const handler = createSignal<(event: MouseEvent) => void>(first)
+
+    function DynamicTrigger() {
+      const callbackProps = {
+        'data-testid': 'trigger',
+        children: 'File',
+        get onClick() {
+          return handler()
+        },
+      } as Parameters<typeof Trigger>[0]
+
+      return Trigger(callbackProps)
+    }
+
+    mount(
+      () => (
+        <Menubar>
+          <Menu value="file">
+            <DynamicTrigger />
+          </Menu>
+        </Menubar>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    click(trigger)
+    expect(first).toHaveBeenCalledOnce()
+
+    handler(second)
+    await waitForEffects()
+    click(trigger)
+    expect(first).toHaveBeenCalledOnce()
+    expect(second).toHaveBeenCalledOnce()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
   })
 })
