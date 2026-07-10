@@ -1,4 +1,4 @@
-import { mergeProps, onMount, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { createCollection } from '@fictjs/collection'
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -10,7 +10,7 @@ import { Primitive } from '@fictjs/primitive'
 import { useCallbackRef } from '@fictjs/use-callback-ref'
 import { useControllableState } from '@fictjs/use-controllable-state'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 type MaybeAccessor<T> = T | (() => T)
 type Orientation = 'horizontal' | 'vertical' | undefined
@@ -268,10 +268,10 @@ function RovingFocusGroupImpl(props: ScopedProps<RovingFocusGroupImplProps>): Fi
       dir={dir}
       loop={loop}
       onFocusableItemAdd={() => {
-        focusableItemsCount(focusableItemsCount() + 1)
+        focusableItemsCount(untrack(() => focusableItemsCount()) + 1)
       }}
       onFocusableItemRemove={() => {
-        focusableItemsCount(focusableItemsCount() - 1)
+        focusableItemsCount(untrack(() => focusableItemsCount()) - 1)
       }}
       onItemFocus={(tabStopId) => {
         setCurrentTabStopId(tabStopId)
@@ -304,7 +304,7 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
   const isCurrentTabStop = () => context.currentTabStopId() === id()
   const getItems = useCollection(props.__scopeRovingFocusGroup)
 
-  onMount(() => {
+  useLayoutEffect(() => {
     if (!focusable()) return
 
     context.onFocusableItemAdd()
@@ -401,23 +401,27 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
       ),
     },
   )
-  const renderedChildren =
-    typeof props.children === 'function'
-      ? props.children({
-          hasTabStop: context.currentTabStopId() != null,
-          isCurrentTabStop: isCurrentTabStop(),
-        })
-      : props.children
+  const children = props.children
+  const collectionItemData = { id, focusable, active } as unknown as ItemData
 
   return (
     <Collection.ItemSlot
       scope={props.__scopeRovingFocusGroup}
-      id={id()}
-      focusable={focusable()}
-      active={active()}
+      {...collectionItemData}
       ref={props.ref as PossibleRef<HTMLSpanElement>}
     >
-      <Primitive.span {...primitiveProps}>{renderedChildren}</Primitive.span>
+      <Primitive.span {...primitiveProps}>
+        <>
+          {typeof children === 'function'
+            ? reactive(() =>
+                children({
+                  hasTabStop: context.currentTabStopId() != null,
+                  isCurrentTabStop: isCurrentTabStop(),
+                }),
+              )
+            : children}
+        </>
+      </Primitive.span>
     </Collection.ItemSlot>
   )
 }

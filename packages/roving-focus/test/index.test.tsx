@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Item, Root } from '../src/index.js'
 
@@ -275,12 +276,13 @@ describe('@fictjs/roving-focus', () => {
   })
 
   it('supports render-prop children state', async () => {
+    const currentTabStopId = createSignal<string | null>('alpha')
     const container = document.createElement('div')
     document.body.append(container)
 
     mount(
       () => (
-        <Root defaultCurrentTabStopId="alpha">
+        <Root currentTabStopId={currentTabStopId}>
           <Item tabStopId="alpha">
             {({ hasTabStop, isCurrentTabStop }) => (
               <span data-testid="state">{String(hasTabStop) + ':' + String(isCurrentTabStop)}</span>
@@ -294,5 +296,66 @@ describe('@fictjs/roving-focus', () => {
     await flushEffects()
 
     expect(container.querySelector('[data-testid="state"]')?.textContent).toBe('true:true')
+
+    currentTabStopId(null)
+    await flushEffects()
+
+    expect(container.querySelector('[data-testid="state"]')?.textContent).toBe('false:false')
+  })
+
+  it('updates focusable item counts and collection metadata reactively', async () => {
+    const firstFocusable = createSignal(true)
+    const secondFocusable = createSignal(false)
+    const secondActive = createSignal(false)
+    const secondId = createSignal('two')
+    const currentTabStopId = createSignal<string | null>(null)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root
+          data-testid="group"
+          currentTabStopId={currentTabStopId}
+          onCurrentTabStopIdChange={currentTabStopId}
+        >
+          <Item data-testid="one" tabStopId="one" focusable={firstFocusable}>
+            One
+          </Item>
+          <Item
+            data-testid="two"
+            tabStopId={secondId}
+            focusable={secondFocusable}
+            active={secondActive}
+          >
+            Two
+          </Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const group = getByTestId<HTMLDivElement>(container, 'group')
+    expect(group.tabIndex).toBe(0)
+
+    firstFocusable(false)
+    await flushEffects()
+    expect(group.tabIndex).toBe(-1)
+
+    secondId('second')
+    secondFocusable(true)
+    secondActive(true)
+    await flushEffects()
+    expect(group.tabIndex).toBe(0)
+
+    group.focus()
+    await flushEffects()
+    expect(document.activeElement).toBe(getByTestId(container, 'two'))
+
+    keyDown(getByTestId(container, 'two'), 'Home')
+    await waitForDeferredFocus()
+    expect(currentTabStopId()).toBe('second')
   })
 })
