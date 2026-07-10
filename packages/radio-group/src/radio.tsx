@@ -32,6 +32,7 @@ const [RadioProvider, useRadioContext] = createRadioContext<RadioContextValue>(R
 type RadioProps = Omit<JSX.IntrinsicElements['button'], 'onChange'> & {
   asChild?: boolean
   checked?: MaybeAccessor<boolean | undefined>
+  defaultChecked?: MaybeAccessor<boolean | undefined>
   required?: MaybeAccessor<boolean | undefined>
   onCheck?: () => void
 }
@@ -85,6 +86,7 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
   const {
     __scopeRadio,
     checked: checkedProp = false,
+    defaultChecked,
     form: formInput,
     name: nameInput,
     required,
@@ -174,6 +176,11 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
         bubbles={() => !hasConsumerStoppedPropagationRef.current}
         checked={checked}
         control={button}
+        defaultChecked={
+          defaultChecked === undefined
+            ? checked()
+            : Boolean(readValue(defaultChecked as MaybeAccessor<boolean | undefined>))
+        }
         disabled={props.disabled}
         form={formInput}
         name={nameInput}

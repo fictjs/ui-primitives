@@ -227,4 +227,81 @@ describe('@fictjs/radio-group', () => {
 
     expect(container.querySelector('input[type="radio"]')).toBeNull()
   })
+
+  it('restores ancestor-form state and submission value on reset', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <form data-testid="form">
+          <RadioGroup name="plan" defaultValue="pro">
+            <RadioGroupItem data-testid="basic" value="basic">
+              Basic
+            </RadioGroupItem>
+            <RadioGroupItem data-testid="pro" value="pro">
+              Pro
+            </RadioGroupItem>
+          </RadioGroup>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const basic = container.querySelector('[data-testid="basic"]') as HTMLButtonElement
+    const pro = container.querySelector('[data-testid="pro"]') as HTMLButtonElement
+
+    click(basic)
+    await waitForUpdates()
+    expect(new FormData(form).get('plan')).toBe('basic')
+
+    form.reset()
+    await waitForUpdates()
+
+    expect(basic.getAttribute('aria-checked')).toBe('false')
+    expect(pro.getAttribute('aria-checked')).toBe('true')
+    expect(new FormData(form).get('plan')).toBe('pro')
+  })
+
+  it('restores explicitly associated radio state and submission value on reset', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <>
+          <form id="billing-form" data-testid="form" />
+          <RadioGroup name="plan" defaultValue="pro">
+            <RadioGroupItem data-testid="basic" form="billing-form" value="basic">
+              Basic
+            </RadioGroupItem>
+            <RadioGroupItem data-testid="pro" form="billing-form" value="pro">
+              Pro
+            </RadioGroupItem>
+          </RadioGroup>
+        </>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const basic = container.querySelector('[data-testid="basic"]') as HTMLButtonElement
+    const pro = container.querySelector('[data-testid="pro"]') as HTMLButtonElement
+
+    click(basic)
+    await waitForUpdates()
+    expect(new FormData(form).get('plan')).toBe('basic')
+
+    form.reset()
+    await waitForUpdates()
+
+    expect(basic.getAttribute('aria-checked')).toBe('false')
+    expect(pro.getAttribute('aria-checked')).toBe('true')
+    expect(new FormData(form).get('plan')).toBe('pro')
+  })
 })

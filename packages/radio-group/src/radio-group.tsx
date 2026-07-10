@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -27,6 +27,7 @@ type RadioGroupItemRecord = {
   ref: { current: RadioGroupItemElement | null }
   disabled: () => boolean
   checked: () => boolean
+  form: () => HTMLFormElement | null
 }
 
 const RADIO_GROUP_NAME = 'RadioGroup'
@@ -47,6 +48,7 @@ type RadioGroupContextValue = {
   required: () => boolean
   disabled: () => boolean
   value: () => string
+  defaultValue: () => string
   orientation: () => Orientation
   dir: () => Direction
   loop: () => boolean
@@ -73,7 +75,10 @@ type RadioGroupProps = Omit<JSX.IntrinsicElements['div'], 'dir'> & {
   onValueChange?: (value: string) => void
 }
 
-type RadioGroupItemProps = Omit<RadioProps, 'checked' | 'name' | 'onCheck' | 'required'> & {
+type RadioGroupItemProps = Omit<
+  RadioProps,
+  'checked' | 'defaultChecked' | 'name' | 'onCheck' | 'required'
+> & {
   value: string
 }
 
@@ -177,6 +182,11 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
     caller: RADIO_GROUP_NAME,
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
+  const initialValue = untrack(() => value())
+  const root = createSignal<HTMLDivElement | null>(null)
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, (node) =>
+    root(node),
+  )
   const handleValueChange = (nextValue: string) => {
     setValue(nextValue)
   }
@@ -227,6 +237,30 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
     }
   }
 
+  useLayoutEffect(() => {
+    const element = root()
+    if (!element) return
+
+    const document = element.ownerDocument
+    let disposed = false
+    const handleReset = (event: Event) => {
+      const form = event.target
+      if (!(form instanceof HTMLFormElement)) return
+      if (!getItems().some((item) => item.form() === form)) return
+
+      queueMicrotask(() => {
+        if (disposed || event.defaultPrevented || valueProp() !== undefined) return
+        setValue(initialValue)
+      })
+    }
+
+    document.addEventListener('reset', handleReset)
+    return () => {
+      disposed = true
+      document.removeEventListener('reset', handleReset)
+    }
+  })
+
   const primitiveProps = mergeProps(
     {
       role: 'radiogroup',
@@ -261,6 +295,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
       onValueChange: undefined,
       orientation: undefined,
       required: undefined,
+      ref: undefined,
       value: undefined,
     },
   )
@@ -269,6 +304,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
     <RadioGroupProvider
       scope={props.__scopeRadioGroup as Scope<RadioGroupContextValue | undefined>}
       currentTabStop={currentTabStop}
+      defaultValue={() => initialValue}
       dir={dir}
       disabled={disabled}
       getEntryValue={getEntryValue}
@@ -282,7 +318,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
       setCurrentTabStop={currentTabStop}
       value={value}
     >
-      <Primitive.div {...primitiveProps} />
+      <Primitive.div {...primitiveProps} ref={composedRefs} />
     </RadioGroupProvider>
   )
 }
@@ -304,6 +340,19 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
   const disabled = () =>
     context.disabled() ||
     Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
+  const form = () => {
+    const item = itemRef.current
+    if (!item) return null
+
+    const formId =
+      props.form === undefined
+        ? undefined
+        : readValue(props.form as MaybeAccessor<string | undefined>)
+    if (!formId) return item.closest('form')
+
+    const formElement = item.ownerDocument.getElementById(formId)
+    return formElement?.tagName === 'FORM' ? (formElement as HTMLFormElement) : null
+  }
   const isCurrentTabStop = () => {
     const currentValue = context.currentTabStop() ?? context.getEntryValue()
     return currentValue === value && !disabled()
@@ -315,6 +364,7 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
       ref: itemRef,
       checked,
       disabled,
+      form,
     })
   })
 
@@ -323,6 +373,7 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
     prop(() => itemProps as Record<string, unknown>),
     {
       checked,
+      defaultChecked: () => context.defaultValue() === value,
       disabled: prop(() => (disabled() ? true : undefined)),
       name: context.name,
       onCheck: () => {
