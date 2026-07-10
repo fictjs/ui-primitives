@@ -250,9 +250,10 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
     props.defaultValue === undefined
       ? []
       : sanitizeValue(readValue(props.defaultValue as MaybeAccessor<string | undefined>) ?? '')
+  const initialDefaultValue = defaultValue()
   const [values, setValues] = useControllableState<string[]>({
     prop: valueProp,
-    defaultProp: defaultValue,
+    defaultProp: initialDefaultValue,
     caller: ONE_TIME_PASSWORD_FIELD_NAME,
     ...(props.onValueChange
       ? {
@@ -402,7 +403,13 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
     const formElement = locateForm()
     if (!formElement) return
 
-    const handleReset = () => clearAll('Reset')
+    const handleReset = (event: Event) => {
+      queueMicrotask(() => {
+        if (!event.defaultPrevented && valueProp() === undefined) {
+          setValuesClamped(initialDefaultValue)
+        }
+      })
+    }
     formElement.addEventListener('reset', handleReset)
     return () => formElement.removeEventListener('reset', handleReset)
   })

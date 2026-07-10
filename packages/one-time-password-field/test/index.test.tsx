@@ -220,4 +220,40 @@ describe('@fictjs/one-time-password-field', () => {
     expect(hiddenInput.disabled).toBe(true)
     expect(new FormData(form).has('code')).toBe(false)
   })
+
+  it('restores the initial default value when its form resets', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <form>
+          <Root name="code" defaultValue="12">
+            <Input />
+            <Input />
+            <HiddenInput />
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const form = container.querySelector('form') as HTMLFormElement
+    const visibleInputs = Array.from(
+      container.querySelectorAll('input:not([type="hidden"])'),
+    ) as HTMLInputElement[]
+    const hiddenInput = container.querySelector('input[type="hidden"]') as HTMLInputElement
+
+    changeInput(visibleInputs[0] as HTMLInputElement, '9')
+    await waitForEffects()
+    expect(hiddenInput.value).toBe('92')
+
+    form.reset()
+    await waitForEffects()
+
+    expect(visibleInputs.map((input) => input.value)).toEqual(['1', '2'])
+    expect(hiddenInput.value).toBe('12')
+  })
 })
