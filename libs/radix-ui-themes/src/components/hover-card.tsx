@@ -1,4 +1,5 @@
 import * as React from '../helpers/element.js'
+import { mergeProps, prop } from 'fict'
 import classNames from 'classnames'
 import { HoverCard as HoverCardPrimitive } from '@fictjs/radix-ui'
 
@@ -14,7 +15,12 @@ interface HoverCardRootProps extends React.ComponentPropsWithoutRef<
   typeof HoverCardPrimitive.Root
 > {}
 const HoverCardRoot: React.FC<HoverCardRootProps> = (props) => (
-  <HoverCardPrimitive.Root closeDelay={150} openDelay={200} {...props} />
+  <HoverCardPrimitive.Root
+    {...mergeProps(
+      { closeDelay: 150, openDelay: 200 },
+      prop(() => props as Record<string, unknown>),
+    )}
+  />
 )
 HoverCardRoot.displayName = 'HoverCard.Root'
 

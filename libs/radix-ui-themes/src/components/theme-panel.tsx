@@ -1,4 +1,4 @@
-import { createEffect } from 'fict'
+import { createEffect, mergeProps, prop } from 'fict'
 import { createSignal } from 'fict/advanced'
 
 import * as React from '../helpers/element.js'
@@ -45,12 +45,17 @@ interface ThemePanelContentProps extends ComponentPropsWithout<'div', RemovedPro
 }
 
 const ThemePanel = React.forwardRef<ThemePanelImplElement, ThemePanelProps>(
-  ({ defaultOpen = true, ...props }, forwardedRef) => {
-    const open = createSignal(defaultOpen)
+  (props, forwardedRef) => {
+    const open = createSignal(props.defaultOpen ?? true)
 
     return (
       <ThemePanelImpl
-        {...props}
+        {...mergeProps(
+          prop(() => props as Record<string, unknown>),
+          {
+            defaultOpen: undefined,
+          },
+        )}
         ref={React.coerceRef(forwardedRef)}
         open={open}
         onOpenChange={open}
@@ -61,7 +66,8 @@ const ThemePanel = React.forwardRef<ThemePanelImplElement, ThemePanelProps>(
 
 const ThemePanelImpl = React.forwardRef<ThemePanelImplElement, ThemePanelImplProps>(
   (props, forwardedRef) => {
-    const { open, onOpenChange, onAppearanceChange, ...panelProps } = props
+    const open = () => props.open()
+    const onOpenChange = (nextOpen: boolean) => props.onOpenChange(nextOpen)
     const themeContext = useThemeContext()
 
     createEffect(() => {
@@ -82,31 +88,36 @@ const ThemePanelImpl = React.forwardRef<ThemePanelImplElement, ThemePanelImplPro
     return (
       <Theme asChild radius="medium" scaling="100%">
         <Flex
-          direction="column"
-          position="fixed"
-          top="0"
-          right="0"
-          mr="4"
-          mt="4"
-          inert={open() ? undefined : inert}
-          {...panelProps}
+          {...mergeProps(
+            prop(() => props as unknown as Record<string, unknown>),
+            {
+              open: undefined,
+              onOpenChange: undefined,
+              onAppearanceChange: undefined,
+              direction: 'column',
+              position: 'fixed',
+              top: '0',
+              right: '0',
+              mr: '4',
+              mt: '4',
+              inert: prop(() => (open() ? undefined : inert)),
+              style: prop(() => ({
+                zIndex: 9999,
+                overflow: 'hidden',
+                maxHeight: 'calc(100vh - var(--space-4) - var(--space-4))',
+                borderRadius: 'var(--radius-4)',
+                backgroundColor: 'var(--color-panel-solid)',
+                transformOrigin: 'top center',
+                transitionProperty: 'transform, box-shadow',
+                transitionDuration: '200ms',
+                transitionTimingFunction: open() ? 'ease-out' : 'ease-in',
+                transform: open() ? 'none' : 'translateX(105%)',
+                boxShadow: open() ? 'var(--shadow-5)' : 'var(--shadow-2)',
+                ...(typeof props.style === 'object' && props.style !== null ? props.style : {}),
+              })),
+            },
+          )}
           ref={React.coerceRef(forwardedRef)}
-          style={{
-            zIndex: 9999,
-            overflow: 'hidden',
-            maxHeight: 'calc(100vh - var(--space-4) - var(--space-4))',
-            borderRadius: 'var(--radius-4)',
-            backgroundColor: 'var(--color-panel-solid)',
-            transformOrigin: 'top center',
-            transitionProperty: 'transform, box-shadow',
-            transitionDuration: '200ms',
-            transitionTimingFunction: open() ? 'ease-out' : 'ease-in',
-            transform: open() ? 'none' : 'translateX(105%)',
-            boxShadow: open() ? 'var(--shadow-5)' : 'var(--shadow-2)',
-            ...(typeof panelProps.style === 'object' && panelProps.style !== null
-              ? panelProps.style
-              : {}),
-          }}
         >
           <ScrollArea>
             <Box flexGrow="1" p="5" position="relative">
@@ -132,7 +143,10 @@ const ThemePanelImpl = React.forwardRef<ThemePanelImplElement, ThemePanelImplPro
                 Theme
               </Heading>
 
-              <ThemePanelContent context={themeContext} onAppearanceChange={onAppearanceChange} />
+              <ThemePanelContent
+                context={themeContext}
+                onAppearanceChange={(value) => props.onAppearanceChange?.(value)}
+              />
             </Box>
           </ScrollArea>
         </Flex>

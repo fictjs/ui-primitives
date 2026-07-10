@@ -19,6 +19,7 @@ import {
   Select,
   Skeleton,
   TabNav,
+  Text,
   Theme,
   ThemePanel,
 } from '../src/index.js'
@@ -161,6 +162,60 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(themes[1]?.getAttribute('data-scaling')).toBe('110%')
     expect(container.textContent).toContain('Outer')
     expect(container.textContent).toContain('Inner')
+  })
+
+  it('updates theme data attributes from getter-backed props', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const accentColor = createSignal<'ruby' | 'blue'>('ruby')
+
+    mount(
+      () => (
+        <Theme accentColor={prop(() => accentColor()) as unknown as 'ruby'}>
+          <Button>Action</Button>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const theme = container.querySelector('.radix-themes')
+    expect(theme?.getAttribute('data-accent-color')).toBe('ruby')
+
+    accentColor('blue')
+    await flushEffects()
+    expect(theme?.getAttribute('data-accent-color')).toBe('blue')
+  })
+
+  it('preserves getter-backed DOM props through extractProps wrappers', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const label = createSignal('first')
+
+    mount(
+      () => (
+        <Theme>
+          <Text
+            as="span"
+            data-testid="reactive-text"
+            aria-label={prop(() => label()) as unknown as string}
+          >
+            Label
+          </Text>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const text = container.querySelector('[data-testid="reactive-text"]')
+    expect(text?.getAttribute('aria-label')).toBe('first')
+
+    label('second')
+    await flushEffects()
+    expect(text?.getAttribute('aria-label')).toBe('second')
   })
 
   it('renders avatar fallback content without an image source', async () => {
@@ -335,6 +390,39 @@ describe('@fictjs/radix-ui-themes', () => {
     expect((checkboxes[0] as HTMLButtonElement).getAttribute('aria-checked')).toBe('true')
   })
 
+  it('updates themed checkbox items from a controlled getter-backed value', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const value = createSignal<string[]>(['alpha'])
+
+    mount(
+      () => (
+        <Theme>
+          <CheckboxGroup.Root value={prop(() => value())}>
+            <CheckboxGroup.Item value="alpha">Alpha</CheckboxGroup.Item>
+            <CheckboxGroup.Item value="beta">Beta</CheckboxGroup.Item>
+          </CheckboxGroup.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const checkboxes = Array.from(container.querySelectorAll('button[role="checkbox"]'))
+    expect(checkboxes.map((checkbox) => checkbox.getAttribute('aria-checked'))).toEqual([
+      'true',
+      'false',
+    ])
+
+    value(['beta'])
+    await flushEffects()
+    expect(checkboxes.map((checkbox) => checkbox.getAttribute('aria-checked'))).toEqual([
+      'false',
+      'true',
+    ])
+  })
+
   it('renders select content with themed scroll viewport classes', async () => {
     const container = document.createElement('div')
     document.body.append(container)
@@ -401,6 +489,36 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(container.querySelector('.rt-SelectTrigger')?.textContent).toContain('Apple')
   })
 
+  it('updates a themed select from a controlled getter-backed value', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const value = createSignal('apple')
+
+    mount(
+      () => (
+        <Theme>
+          <Select.Root value={prop(() => value())}>
+            <Select.Trigger />
+            <Select.Content>
+              <Select.Item value="apple">Apple</Select.Item>
+              <Select.Item value="orange">Orange</Select.Item>
+            </Select.Content>
+          </Select.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const trigger = container.querySelector('.rt-SelectTrigger')
+    expect(trigger?.textContent).toContain('Apple')
+
+    value('orange')
+    await flushEffects()
+    expect(trigger?.textContent).toContain('Orange')
+  })
+
   it('copies a theme snippet from the theme panel', async () => {
     const container = document.createElement('div')
     document.body.append(container)
@@ -433,6 +551,34 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
       '<Theme accentColor="teal" radius="large">',
     )
+  })
+
+  it('updates the root theme from the theme panel controls', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme accentColor="teal">
+          <ThemePanel defaultOpen />
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const rootTheme = container.querySelector('.radix-themes[data-is-root-theme="true"]')
+    const blueInput = Array.from(
+      container.querySelectorAll<HTMLInputElement>('.rt-ThemePanelSwatchInput'),
+    ).find((input) => input.value === 'blue')
+
+    expect(rootTheme?.getAttribute('data-accent-color')).toBe('teal')
+    expect(blueInput).not.toBeUndefined()
+
+    blueInput?.click()
+    await flushEffects()
+    expect(rootTheme?.getAttribute('data-accent-color')).toBe('blue')
   })
 
   it('renders only the active tab nav link with the active attribute', async () => {

@@ -29,17 +29,19 @@ interface RadioGroupRootProps
     RadioGroupRootOwnProps {}
 
 const RadioGroupRoot = React.forwardRef<RadioGroupRootElement, RadioGroupRootProps>(
-  (
-    {
-      color = radioGroupRootPropDefs.color.default,
-      highContrast = radioGroupRootPropDefs.highContrast.default,
-      size = radioGroupRootPropDefs.size.default,
-      variant = radioGroupRootPropDefs.variant.default,
-      ...props
-    },
-    forwardedRef,
-  ) => {
-    const { className, ...rootProps } = extractProps(props, marginPropDefs)
+  (props, forwardedRef) => {
+    const {
+      className,
+      color: _color,
+      highContrast: _highContrast,
+      size: _size,
+      variant: _variant,
+      ...rootProps
+    } = extractProps(props, marginPropDefs)
+    const color = props.color ?? radioGroupRootPropDefs.color.default
+    const highContrast = props.highContrast ?? radioGroupRootPropDefs.highContrast.default
+    const size = props.size ?? radioGroupRootPropDefs.size.default
+    const variant = props.variant ?? radioGroupRootPropDefs.variant.default
 
     return (
       <RadioGroupStyleContext.Provider value={{ color, highContrast, size, variant }}>

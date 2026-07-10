@@ -28,17 +28,19 @@ interface CheckboxGroupRootProps
     CheckboxGroupRootOwnProps {}
 
 const CheckboxGroupRoot = React.forwardRef<CheckboxGroupRootElement, CheckboxGroupRootProps>(
-  (
-    {
-      color = checkboxGroupRootPropDefs.color.default,
-      highContrast = checkboxGroupRootPropDefs.highContrast.default,
-      size = checkboxGroupRootPropDefs.size.default,
-      variant = checkboxGroupRootPropDefs.variant.default,
-      ...props
-    },
-    forwardedRef,
-  ) => {
-    const { className, ...rootProps } = extractProps(props, marginPropDefs)
+  (props, forwardedRef) => {
+    const {
+      className,
+      color: _color,
+      highContrast: _highContrast,
+      size: _size,
+      variant: _variant,
+      ...rootProps
+    } = extractProps(props, marginPropDefs)
+    const color = props.color ?? checkboxGroupRootPropDefs.color.default
+    const highContrast = props.highContrast ?? checkboxGroupRootPropDefs.highContrast.default
+    const size = props.size ?? checkboxGroupRootPropDefs.size.default
+    const variant = props.variant ?? checkboxGroupRootPropDefs.variant.default
 
     return (
       <CheckboxGroupStyleContext.Provider value={{ color, highContrast, size, variant }}>

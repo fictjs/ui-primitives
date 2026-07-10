@@ -1,4 +1,5 @@
 import * as React from '../helpers/element.js'
+import { mergeProps, prop } from 'fict'
 import classNames from 'classnames'
 import { AlertDialog as AlertDialogPrimitive } from '@fictjs/radix-ui'
 
@@ -20,7 +21,7 @@ interface AlertDialogRootProps extends React.ComponentPropsWithoutRef<
   typeof AlertDialogPrimitive.Root
 > {}
 const AlertDialogRoot: React.FC<AlertDialogRootProps> = (props) => (
-  <AlertDialogPrimitive.Root {...props} />
+  <AlertDialogPrimitive.Root {...mergeProps(prop(() => props as Record<string, unknown>))} />
 )
 AlertDialogRoot.displayName = 'AlertDialog.Root'
 

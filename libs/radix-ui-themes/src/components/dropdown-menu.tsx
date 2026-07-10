@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'fict'
+import { createContext, mergeProps, prop, useContext } from 'fict'
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
 import { DropdownMenu as DropdownMenuPrimitive, Slot } from '@fictjs/radix-ui'
@@ -22,7 +22,7 @@ interface DropdownMenuRootProps extends React.ComponentPropsWithoutRef<
   typeof DropdownMenuPrimitive.Root
 > {}
 const DropdownMenuRoot: React.FC<DropdownMenuRootProps> = (props) => (
-  <DropdownMenuPrimitive.Root {...props} />
+  <DropdownMenuPrimitive.Root {...mergeProps(prop(() => props as Record<string, unknown>))} />
 )
 DropdownMenuRoot.displayName = 'DropdownMenu.Root'
 

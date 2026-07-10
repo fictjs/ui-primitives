@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'fict'
+import { createContext, mergeProps, prop, useContext } from 'fict'
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
 import { ContextMenu as ContextMenuPrimitive, Slot } from '@fictjs/radix-ui'
@@ -22,7 +22,7 @@ interface ContextMenuRootProps extends React.ComponentPropsWithoutRef<
   typeof ContextMenuPrimitive.Root
 > {}
 const ContextMenuRoot: React.FC<ContextMenuRootProps> = (props) => (
-  <ContextMenuPrimitive.Root {...props} />
+  <ContextMenuPrimitive.Root {...mergeProps(prop(() => props as Record<string, unknown>))} />
 )
 ContextMenuRoot.displayName = 'ContextMenu.Root'
 

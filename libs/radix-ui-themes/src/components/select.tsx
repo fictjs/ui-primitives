@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'fict'
+import { createContext, mergeProps, prop, useContext } from 'fict'
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
 import { Select as SelectPrimitive, ScrollArea as ScrollAreaPrimitive } from '@fictjs/radix-ui'
@@ -24,10 +24,20 @@ interface SelectRootProps extends SelectPrimitive.SelectProps, SelectContextValu
 }
 
 const SelectRoot: React.FC<SelectRootProps> = (props) => {
-  const { children, size = selectRootPropDefs.size.default, ...rootProps } = props
+  const context: SelectContextValue = {
+    get size() {
+      return props.size ?? selectRootPropDefs.size.default
+    },
+  }
+
   return (
-    <SelectPrimitive.Root {...rootProps}>
-      <SelectContext.Provider value={{ size }}>{children}</SelectContext.Provider>
+    <SelectPrimitive.Root
+      {...mergeProps(
+        prop(() => props as Record<string, unknown>),
+        { children: undefined, size: undefined },
+      )}
+    >
+      <SelectContext.Provider value={context}>{props.children}</SelectContext.Provider>
     </SelectPrimitive.Root>
   )
 }

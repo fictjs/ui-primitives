@@ -61,20 +61,19 @@ function copyPropsPreservingGetters(source: PropsRecord): Record<string, unknown
       continue
     }
 
-    if ('get' in descriptor && typeof descriptor.get === 'function' && !('value' in descriptor)) {
-      Object.defineProperty(target, key, {
-        configurable: true,
-        enumerable: descriptor.enumerable ?? true,
-        value: prop(() => descriptor.get?.call(source)),
-        writable: true,
-      })
-      continue
-    }
+    const value = source[key]
+    const isLocallyConsumedValue =
+      key === 'children' || key === 'layout' || key === 'ref' || typeof value === 'function'
 
     Object.defineProperty(target, key, {
       configurable: true,
       enumerable: descriptor.enumerable ?? true,
-      value: descriptor.value,
+      // A component receives a Fict props proxy. Its property descriptors expose
+      // the current value, not the underlying prop getter, so copying the
+      // descriptor freezes reactive values. Preserve structural and callable
+      // values that theme components consume locally, while forwarding other
+      // values lazily for the next component/host to unwrap.
+      value: isLocallyConsumedValue ? value : prop(() => source[key]),
       writable: true,
     })
   }

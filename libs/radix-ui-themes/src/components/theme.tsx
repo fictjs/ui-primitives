@@ -1,4 +1,4 @@
-import { createContext, createEffect, useContext } from 'fict'
+import { createContext, createEffect, mergeProps, prop, useContext } from 'fict'
 import { createSignal } from 'fict/advanced'
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
@@ -56,64 +56,67 @@ const Theme = React.forwardRef<ThemeImplElement, ThemeProps>((props, forwardedRe
     return (
       <TooltipPrimitive.Provider delayDuration={200}>
         <Direction.DirectionProvider dir="ltr">
-          <ThemeRoot {...props} ref={React.coerceRef(forwardedRef)} />
+          <ThemeRoot
+            {...mergeProps(prop(() => props as Record<string, unknown>))}
+            ref={React.coerceRef(forwardedRef)}
+          />
         </Direction.DirectionProvider>
       </TooltipPrimitive.Provider>
     )
   }
 
-  return <ThemeImpl {...props} ref={React.coerceRef(forwardedRef)} />
+  return (
+    <ThemeImpl
+      {...mergeProps(prop(() => props as Record<string, unknown>))}
+      ref={React.coerceRef(forwardedRef)}
+    />
+  )
 })
 
 Theme.displayName = 'Theme'
 
 const ThemeRoot = React.forwardRef<ThemeImplElement, ThemeImplPublicProps>(
   (props, forwardedRef) => {
-    const {
-      appearance: appearanceProp = themePropDefs.appearance.default,
-      accentColor: accentColorProp = themePropDefs.accentColor.default,
-      grayColor: grayColorProp = themePropDefs.grayColor.default,
-      panelBackground: panelBackgroundProp = themePropDefs.panelBackground.default,
-      radius: radiusProp = themePropDefs.radius.default,
-      scaling: scalingProp = themePropDefs.scaling.default,
-      hasBackground = themePropDefs.hasBackground.default,
-      ...rootProps
-    } = props
-
-    const appearance = createSignal(appearanceProp)
-    const accentColor = createSignal(accentColorProp)
-    const grayColor = createSignal(grayColorProp)
-    const panelBackground = createSignal(panelBackgroundProp)
-    const radius = createSignal(radiusProp)
-    const scaling = createSignal(scalingProp)
+    const appearance = createSignal(props.appearance ?? themePropDefs.appearance.default)
+    const accentColor = createSignal(props.accentColor ?? themePropDefs.accentColor.default)
+    const grayColor = createSignal(props.grayColor ?? themePropDefs.grayColor.default)
+    const panelBackground = createSignal(
+      props.panelBackground ?? themePropDefs.panelBackground.default,
+    )
+    const radius = createSignal(props.radius ?? themePropDefs.radius.default)
+    const scaling = createSignal(props.scaling ?? themePropDefs.scaling.default)
 
     createEffect(() => {
-      appearance(appearanceProp)
-      accentColor(accentColorProp)
-      grayColor(grayColorProp)
-      panelBackground(panelBackgroundProp)
-      radius(radiusProp)
-      scaling(scalingProp)
+      appearance(props.appearance ?? themePropDefs.appearance.default)
+      accentColor(props.accentColor ?? themePropDefs.accentColor.default)
+      grayColor(props.grayColor ?? themePropDefs.grayColor.default)
+      panelBackground(props.panelBackground ?? themePropDefs.panelBackground.default)
+      radius(props.radius ?? themePropDefs.radius.default)
+      scaling(props.scaling ?? themePropDefs.scaling.default)
     })
 
     return (
       <ThemeImpl
-        {...rootProps}
+        {...mergeProps(
+          prop(() => props as Record<string, unknown>),
+          {
+            isRoot: true,
+            hasBackground: prop(() => props.hasBackground ?? themePropDefs.hasBackground.default),
+            appearance: prop(appearance),
+            accentColor: prop(accentColor),
+            grayColor: prop(grayColor),
+            panelBackground: prop(panelBackground),
+            radius: prop(radius),
+            scaling: prop(scaling),
+            onAppearanceChange: appearance,
+            onAccentColorChange: accentColor,
+            onGrayColorChange: grayColor,
+            onPanelBackgroundChange: panelBackground,
+            onRadiusChange: radius,
+            onScalingChange: scaling,
+          },
+        )}
         ref={React.coerceRef(forwardedRef)}
-        isRoot
-        hasBackground={hasBackground}
-        appearance={appearance()}
-        accentColor={accentColor()}
-        grayColor={grayColor()}
-        panelBackground={panelBackground()}
-        radius={radius()}
-        scaling={scaling()}
-        onAppearanceChange={appearance}
-        onAccentColorChange={accentColor}
-        onGrayColorChange={grayColor}
-        onPanelBackgroundChange={panelBackground}
-        onRadiusChange={radius}
-        onScalingChange={scaling}
       />
     )
   },
@@ -177,26 +180,20 @@ const ThemeImpl = React.forwardRef<ThemeImplElement, ThemeImplProps>((props, for
     get scaling() {
       return scaling()
     },
-    onAppearanceChange: props.onAppearanceChange ?? noop,
-    onAccentColorChange: props.onAccentColorChange ?? noop,
-    onGrayColorChange: props.onGrayColorChange ?? noop,
-    onPanelBackgroundChange: props.onPanelBackgroundChange ?? noop,
-    onRadiusChange: props.onRadiusChange ?? noop,
-    onScalingChange: props.onScalingChange ?? noop,
+    onAppearanceChange: (value) => (props.onAppearanceChange ?? noop)(value),
+    onAccentColorChange: (value) => (props.onAccentColorChange ?? noop)(value),
+    onGrayColorChange: (value) => (props.onGrayColorChange ?? noop)(value),
+    onPanelBackgroundChange: (value) => (props.onPanelBackgroundChange ?? noop)(value),
+    onRadiusChange: (value) => (props.onRadiusChange ?? noop)(value),
+    onScalingChange: (value) => (props.onScalingChange ?? noop)(value),
   }
 
-  const {
-    asChild,
-    isRoot,
-    hasBackground: _hasBackground,
-    onAppearanceChange,
-    onAccentColorChange,
-    onGrayColorChange,
-    onPanelBackgroundChange,
-    onRadiusChange,
-    onScalingChange,
-    ...themeProps
-  } = props
+  const asChild = props.asChild
+  const isRoot = props.isRoot
+  const themeProps = copyReactiveProps(
+    props as unknown as Record<string, unknown>,
+    THEME_INTERNAL_PROPS,
+  )
   const forwardedElementRef =
     forwardedRef == null
       ? undefined
@@ -221,19 +218,21 @@ const ThemeImpl = React.forwardRef<ThemeImplElement, ThemeImplProps>((props, for
         }
   const sharedProps = {
     'data-is-root-theme': isRoot ? 'true' : 'false',
-    'data-accent-color': accentColor(),
-    'data-gray-color': resolvedGrayColor(),
-    'data-has-background': hasBackground() ? 'true' : 'false',
-    'data-panel-background': panelBackground(),
-    'data-radius': radius(),
-    'data-scaling': scaling(),
-    className: classNames(
-      'radix-themes',
-      {
-        light: appearance() === 'light',
-        dark: appearance() === 'dark',
-      },
-      (themeProps as { className?: string }).className,
+    'data-accent-color': prop(accentColor),
+    'data-gray-color': prop(resolvedGrayColor),
+    'data-has-background': prop(() => (hasBackground() ? 'true' : 'false')),
+    'data-panel-background': prop(panelBackground),
+    'data-radius': prop(radius),
+    'data-scaling': prop(scaling),
+    className: prop(() =>
+      classNames(
+        'radix-themes',
+        {
+          light: appearance() === 'light',
+          dark: appearance() === 'dark',
+        },
+        props.className,
+      ),
     ),
   }
 
@@ -257,6 +256,41 @@ const ThemeImpl = React.forwardRef<ThemeImplElement, ThemeImplProps>((props, for
 })
 
 ThemeImpl.displayName = 'ThemeImpl'
+
+const THEME_INTERNAL_PROPS = new Set([
+  'accentColor',
+  'appearance',
+  'asChild',
+  'grayColor',
+  'hasBackground',
+  'isRoot',
+  'onAccentColorChange',
+  'onAppearanceChange',
+  'onGrayColorChange',
+  'onPanelBackgroundChange',
+  'onRadiusChange',
+  'onScalingChange',
+  'panelBackground',
+  'radius',
+  'scaling',
+])
+
+function copyReactiveProps(
+  source: Record<string, unknown>,
+  excluded: ReadonlySet<string>,
+): Record<string, unknown> {
+  const target: Record<string, unknown> = {}
+
+  for (const key of Reflect.ownKeys(source)) {
+    if (typeof key !== 'string' || excluded.has(key)) {
+      continue
+    }
+
+    target[key] = prop(() => source[key])
+  }
+
+  return target
+}
 
 export { Theme, ThemeContext, useThemeContext }
 export type { ThemeProps, ThemeContextValue }

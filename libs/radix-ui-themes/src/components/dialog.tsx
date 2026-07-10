@@ -1,4 +1,5 @@
 import * as React from '../helpers/element.js'
+import { mergeProps, prop } from 'fict'
 import classNames from 'classnames'
 import { Dialog as DialogPrimitive } from '@fictjs/radix-ui'
 
@@ -17,7 +18,14 @@ import type {
 } from '../helpers/component-props.js'
 
 interface DialogRootProps extends ComponentPropsWithout<typeof DialogPrimitive.Root, 'modal'> {}
-const DialogRoot: React.FC<DialogRootProps> = (props) => <DialogPrimitive.Root {...props} modal />
+const DialogRoot: React.FC<DialogRootProps> = (props) => (
+  <DialogPrimitive.Root
+    {...mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { modal: true },
+    )}
+  />
+)
 DialogRoot.displayName = 'Dialog.Root'
 
 type DialogTriggerElement = React.ElementRef<typeof DialogPrimitive.Trigger>
