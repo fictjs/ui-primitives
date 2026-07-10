@@ -34,6 +34,8 @@ catalog:
 catalogMode: strict
 
 overrides:
+  'brace-expansion@1.1.12': 1.1.14
+  'brace-expansion@5.0.4': 5.0.6
   'fast-uri@3.1.0': 3.1.2
   'flatted@3.4.1': 3.4.2
   'picomatch@2.3.1': 2.3.2
