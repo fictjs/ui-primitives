@@ -119,6 +119,71 @@ describe('@fictjs/fict-remove-scroll', () => {
     dispose()
   })
 
+  it('keeps wrapper DOM props reactive', async () => {
+    const container = document.createElement('div')
+    const title = createSignal('first title')
+    const className = createSignal('first-class')
+
+    const dispose = render(
+      () => (
+        <RemoveScrollUI
+          enabled={false}
+          title={prop(() => title())}
+          className={prop(() => className()) as unknown as string}
+          sideCar={sidecar(() => import('../src/sidecar.js')) as any}
+        >
+          content
+        </RemoveScrollUI>
+      ),
+      container,
+    )
+
+    await tick()
+
+    const wrapper = container.querySelector('[title]')
+    expect(wrapper?.getAttribute('title')).toBe('first title')
+    expect(wrapper?.className).toBe('first-class')
+
+    title('second title')
+    className('second-class')
+    await tick()
+
+    expect(wrapper?.getAttribute('title')).toBe('second title')
+    expect(wrapper?.className).toBe('second-class')
+
+    dispose()
+  })
+
+  it('keeps child DOM props reactive when forwardProps is enabled', async () => {
+    const container = document.createElement('div')
+    const title = createSignal('first title')
+
+    const dispose = render(
+      () => (
+        <RemoveScrollUI
+          enabled={false}
+          forwardProps
+          title={prop(() => title())}
+          sideCar={sidecar(() => import('../src/sidecar.js')) as any}
+        >
+          <span data-testid="reactive-child">content</span>
+        </RemoveScrollUI>
+      ),
+      container,
+    )
+
+    await tick()
+
+    const child = container.querySelector('[data-testid="reactive-child"]')
+    expect(child?.getAttribute('title')).toBe('first title')
+
+    title('second title')
+    await tick()
+    expect(child?.getAttribute('title')).toBe('second title')
+
+    dispose()
+  })
+
   it('throws when forwardProps does not receive a single element child', () => {
     const container = document.createElement('div')
 

@@ -48,6 +48,7 @@ function normalizePropKey(key: string): string {
 function copyProps(
   source: Record<string, unknown> | null | undefined,
   exclude: ReadonlySet<string> = new Set(),
+  reactiveValues = false,
 ): Record<string, unknown> {
   if (!source) {
     return {}
@@ -60,7 +61,7 @@ function copyProps(
       continue
     }
 
-    next[normalizePropKey(key)] = source[key]
+    next[normalizePropKey(key)] = reactiveValues ? prop(() => source[key]) : source[key]
   }
 
   return next
@@ -107,7 +108,7 @@ const RemoveScroll = ((props: IRemoveScrollUIProps) => {
   }
 
   const forwardedProps = {
-    ...copyProps(props as unknown as Record<string, unknown>, RESERVED_PROP_NAMES),
+    ...copyProps(props as unknown as Record<string, unknown>, RESERVED_PROP_NAMES, true),
     ...captureProps,
     ref: containerRef,
   }
@@ -124,7 +125,7 @@ const RemoveScroll = ((props: IRemoveScrollUIProps) => {
       return cloneVNode(props.children, forwardedProps)
     })()
   ) : (
-    <Container {...forwardedProps} className={props.className} ref={containerRef}>
+    <Container {...forwardedProps} className={prop(() => props.className)} ref={containerRef}>
       {props.children}
     </Container>
   )
