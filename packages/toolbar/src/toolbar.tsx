@@ -212,10 +212,6 @@ function Toolbar(props: ScopedProps<ToolbarProps>): FictNode {
       dir: prop(dir),
       'aria-orientation': prop(orientation),
       'data-orientation': prop(orientation),
-      ref: (node: HTMLDivElement | null) => {
-        rootRef.current = node
-        setRef(props.ref as PossibleRef<HTMLDivElement>, node)
-      },
     },
     prop(() => props as Record<string, unknown>),
     {
@@ -242,7 +238,13 @@ function Toolbar(props: ScopedProps<ToolbarProps>): FictNode {
       setCurrentTabStop={setCurrentTabStop}
       getItems={getItems}
     >
-      <Primitive.div {...(primitiveProps as Record<string, unknown>)} />
+      <Primitive.div
+        {...(primitiveProps as Record<string, unknown>)}
+        ref={(node: Element | null) => {
+          rootRef.current = node as HTMLDivElement | null
+          setRef(props.ref as PossibleRef<HTMLDivElement>, node as HTMLDivElement | null)
+        }}
+      />
     </ToolbarProvider>
   )
 }
@@ -275,56 +277,53 @@ function useToolbarItemProps(
 ) {
   const context = useToolbarContext(name, scope as Scope<ToolbarContextValue | undefined>)
 
-  return mergeProps(
-    {
-      'data-orientation': prop(context.orientation),
-      'data-toolbar-item': '',
-      ref,
-      onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
-        (event) => {
-          if (!disabled()) {
-            context.setCurrentTabStop(event.currentTarget as ToolbarItemElement)
-          }
-        },
-      ),
-      onMouseDown: composeEventHandlers<MouseEvent>(
-        props.onMouseDown as ((event: MouseEvent) => void) | undefined,
-        (event) => {
-          if (disabled()) {
-            event.preventDefault()
-            return
-          }
-
-          if (event.button === 0 && event.ctrlKey === false) {
-            context.setCurrentTabStop(event.currentTarget as ToolbarItemElement)
-          }
-        },
-      ),
-      onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-        (event) => {
-          if (event.target !== event.currentTarget) return
-          if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
-
-          const intent = getFocusIntent(event.key, context.orientation(), context.dir())
-          if (!intent) return
-
-          const currentTarget =
-            (document.activeElement as ToolbarItemElement | null) ??
-            (event.currentTarget as ToolbarItemElement)
-          const enabledItems = context.getItems().filter((item) => !isToolbarItemDisabled(item))
-          const nextItem = getNextItem(enabledItems, currentTarget, intent, context.loop())
-          if (!nextItem) return
-
+  return mergeProps(props, {
+    'data-orientation': prop(context.orientation),
+    'data-toolbar-item': '',
+    ref,
+    onFocus: composeEventHandlers<FocusEvent>(
+      props.onFocus as ((event: FocusEvent) => void) | undefined,
+      (event) => {
+        if (!disabled()) {
+          context.setCurrentTabStop(event.currentTarget as ToolbarItemElement)
+        }
+      },
+    ),
+    onMouseDown: composeEventHandlers<MouseEvent>(
+      props.onMouseDown as ((event: MouseEvent) => void) | undefined,
+      (event) => {
+        if (disabled()) {
           event.preventDefault()
-          context.setCurrentTabStop(nextItem)
-          focusItem(nextItem)
-        },
-      ),
-    },
-    props,
-  )
+          return
+        }
+
+        if (event.button === 0 && event.ctrlKey === false) {
+          context.setCurrentTabStop(event.currentTarget as ToolbarItemElement)
+        }
+      },
+    ),
+    onKeyDown: composeEventHandlers<KeyboardEvent>(
+      props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+      (event) => {
+        if (event.target !== event.currentTarget) return
+        if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
+
+        const intent = getFocusIntent(event.key, context.orientation(), context.dir())
+        if (!intent) return
+
+        const currentTarget =
+          (document.activeElement as ToolbarItemElement | null) ??
+          (event.currentTarget as ToolbarItemElement)
+        const enabledItems = context.getItems().filter((item) => !isToolbarItemDisabled(item))
+        const nextItem = getNextItem(enabledItems, currentTarget, intent, context.loop())
+        if (!nextItem) return
+
+        event.preventDefault()
+        context.setCurrentTabStop(nextItem)
+        focusItem(nextItem)
+      },
+    ),
+  })
 }
 
 function ToolbarButton(props: ScopedProps<ToolbarButtonProps>): FictNode {

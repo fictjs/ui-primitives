@@ -145,4 +145,38 @@ describe('@fictjs/toolbar', () => {
 
     expect(updatedToggleItems[1]?.getAttribute('data-state')).toBe('on')
   })
+
+  it('preserves roving focus when links and buttons provide key handlers', async () => {
+    const onLinkKeyDown = vi.fn()
+    const onButtonKeyDown = vi.fn()
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root orientation="horizontal">
+          <Link href="#docs" onKeyDown={onLinkKeyDown}>
+            Docs
+          </Link>
+          <Button onKeyDown={onButtonKeyDown}>Action</Button>
+          <Button>Last</Button>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForDeferredFocus()
+
+    const link = container.querySelector('a') as HTMLAnchorElement
+    const buttons = Array.from(container.querySelectorAll('button')) as HTMLButtonElement[]
+
+    link.focus()
+    keyDown(link, 'ArrowRight')
+    expect(onLinkKeyDown).toHaveBeenCalledOnce()
+    expect(document.activeElement).toBe(buttons[0])
+
+    keyDown(buttons[0] as HTMLButtonElement, 'ArrowRight')
+    expect(onButtonKeyDown).toHaveBeenCalledOnce()
+    expect(document.activeElement).toBe(buttons[1])
+  })
 })
