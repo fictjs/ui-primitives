@@ -8,6 +8,29 @@ import { createSignal } from '@fictjs/runtime/advanced'
 import { useControllableState, useControllableStateReducer } from '../src/index.js'
 
 describe('@fictjs/use-controllable-state', () => {
+  it('warns when usage changes between uncontrolled and controlled', async () => {
+    const controlled = createSignal<string | undefined>(undefined)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    render(() => {
+      useControllableState({
+        prop: () => controlled(),
+        defaultProp: 'fallback',
+        caller: 'Example',
+      })
+      return <div />
+    }, document.createElement('div'))
+
+    controlled('controlled')
+    await Promise.resolve()
+
+    expect(warn).toHaveBeenCalledOnce()
+    expect(warn).toHaveBeenCalledWith(
+      'Example is changing from uncontrolled to controlled. Components should stay either controlled or uncontrolled for their lifetime.',
+    )
+    warn.mockRestore()
+  })
+
   it('updates uncontrolled state and emits changes', () => {
     let value: (() => string) | undefined
     let setValue: ((next: string) => void) | undefined
@@ -186,5 +209,33 @@ describe('@fictjs/use-controllable-state', () => {
     dispatch?.({ type: 'select', value: 'second' })
     expect(state?.()).toEqual({ count: 1, state: 'first' })
     expect(onChange).toHaveBeenCalledWith('second')
+  })
+
+  it('warns when reducer usage changes between controlled and uncontrolled', async () => {
+    type ReducerAction = { type: 'noop' }
+    const controlled = createSignal<string | undefined>('controlled')
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    render(() => {
+      useControllableStateReducer<string, Record<string, never>, ReducerAction>(
+        (state) => state,
+        {
+          prop: () => controlled(),
+          defaultProp: 'fallback',
+          caller: 'ReducerExample',
+        },
+        {},
+      )
+      return <div />
+    }, document.createElement('div'))
+
+    controlled(undefined)
+    await Promise.resolve()
+
+    expect(warn).toHaveBeenCalledOnce()
+    expect(warn).toHaveBeenCalledWith(
+      'ReducerExample is changing from controlled to uncontrolled. Components should stay either controlled or uncontrolled for their lifetime.',
+    )
+    warn.mockRestore()
   })
 })

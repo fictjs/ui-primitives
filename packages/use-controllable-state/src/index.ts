@@ -63,7 +63,7 @@ function useControllableState<T>({
 
   let lastMode = untrack(() => controlledState() !== undefined)
   useLayoutEffect(() => {
-    const nextMode = untrack(() => controlledState() !== undefined)
+    const nextMode = controlledState() !== undefined
 
     if (process.env.NODE_ENV !== 'production' && lastMode !== nextMode) {
       const from = lastMode ? 'controlled' : 'uncontrolled'
@@ -135,7 +135,7 @@ function useControllableStateReducer<T, S extends object, I extends object, A ex
 
   let lastMode = untrack(() => controlledState() !== undefined)
   useLayoutEffect(() => {
-    const nextMode = untrack(() => controlledState() !== undefined)
+    const nextMode = controlledState() !== undefined
 
     if (process.env.NODE_ENV !== 'production' && lastMode !== nextMode) {
       const from = lastMode ? 'controlled' : 'uncontrolled'
