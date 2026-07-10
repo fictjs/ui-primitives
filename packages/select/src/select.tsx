@@ -105,9 +105,22 @@ type SelectProps = {
   defaultOpen?: MaybeAccessor<boolean | undefined>
   onOpenChange?: (open: boolean) => void
   disabled?: MaybeAccessor<boolean | undefined>
+  form?: MaybeAccessor<string | undefined>
+  name?: MaybeAccessor<string | undefined>
+  required?: MaybeAccessor<boolean | undefined>
   value?: MaybeAccessor<string | undefined>
   defaultValue?: MaybeAccessor<string | undefined>
   onValueChange?: (value: string) => void
+}
+type SelectBubbleSelectProps = {
+  controlled: () => boolean
+  defaultValue: string
+  disabled: () => boolean
+  form: () => string | undefined
+  name: () => string | undefined
+  required: () => boolean
+  value: () => string
+  onReset(): void
 }
 
 type SelectTriggerProps = PrimitiveButtonProps
@@ -541,6 +554,129 @@ function getSelectWrapperStyle(
   }
 }
 
+function setNativeSelectValue(select: HTMLSelectElement, value: string): void {
+  const descriptor = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value')
+  descriptor?.set?.call(select, value)
+}
+
+function SelectBubbleSelect(props: SelectBubbleSelectProps): FictNode {
+  const select = createSignal<HTMLSelectElement | null>(null)
+  let previousValue = props.defaultValue
+  let synchronizingReset = false
+
+  useLayoutEffect(() => {
+    const element = select()
+    const nextValue = props.value()
+
+    if (!element) {
+      previousValue = nextValue
+      return
+    }
+
+    if (!Object.is(previousValue, nextValue)) {
+      setNativeSelectValue(element, nextValue)
+      if (!synchronizingReset) {
+        element.dispatchEvent(new Event('input', { bubbles: true }))
+        element.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+    }
+
+    previousValue = nextValue
+  })
+
+  useLayoutEffect(() => {
+    const element = select()
+    if (!element) return
+    const document = element.ownerDocument
+    const form = element.form
+    let disposed = false
+    let pendingResetEvent: Event | null = null
+    const handleReset = (event: Event) => {
+      if (event.target !== element.form || event === pendingResetEvent) return
+
+      pendingResetEvent = event
+
+      // Wait until reset propagation and the browser's default action finish. This lets
+      // consumers cancel the reset from any phase and gives the native select a chance to
+      // restore its default option before synchronizing Fict state.
+      queueMicrotask(() => {
+        if (pendingResetEvent === event) {
+          pendingResetEvent = null
+        }
+        if (disposed || event.defaultPrevented) return
+
+        if (props.controlled()) {
+          const currentValue = props.value()
+          setNativeSelectValue(element, currentValue)
+          previousValue = currentValue
+          return
+        }
+
+        // The hidden select contains only the current value as an option. Update Fict state
+        // first so that option can adopt the reset value, while suppressing the normal
+        // input/change bridge. A second microtask then covers runtimes that defer DOM prop
+        // bindings beyond the state write.
+        synchronizingReset = true
+        props.onReset()
+        queueMicrotask(() => {
+          if (disposed) return
+
+          const resetValue = props.value()
+          setNativeSelectValue(element, resetValue)
+          previousValue = resetValue
+          synchronizingReset = false
+        })
+      })
+    }
+
+    // Reset is not composed, so a shadow-root form needs a direct listener. The document
+    // listener observes light-DOM and external form ownership; `pendingResetEvent`
+    // deduplicates both listeners when they receive the same reset.
+    document.addEventListener('reset', handleReset, true)
+    form?.addEventListener('reset', handleReset, true)
+    return () => {
+      disposed = true
+      document.removeEventListener('reset', handleReset, true)
+      form?.removeEventListener('reset', handleReset, true)
+    }
+  })
+
+  const selectProps = mergeProps({
+    'aria-hidden': true,
+    defaultValue: props.defaultValue,
+    disabled: prop(() => (props.disabled() ? true : undefined)),
+    'attr:form': prop(props.form),
+    name: prop(props.name),
+    required: prop(() => (props.required() ? true : undefined)),
+    tabIndex: -1,
+    value: prop(props.value),
+    style: {
+      border: 0,
+      clip: 'rect(0 0 0 0)',
+      height: '1px',
+      margin: '-1px',
+      overflow: 'hidden',
+      padding: 0,
+      position: 'absolute',
+      whiteSpace: 'nowrap',
+      width: '1px',
+    },
+  })
+  const option = reactive(() => (
+    <option value={props.value()} selected>
+      {props.value()}
+    </option>
+  )) as unknown as FictNode
+
+  return (
+    <Primitive.select {...selectProps} ref={(node: HTMLSelectElement | null) => select(node)}>
+      {option}
+    </Primitive.select>
+  )
+}
+
+SelectBubbleSelect.displayName = 'SelectBubbleSelect'
+
 function Select(props: ScopedProps<SelectProps>): FictNode {
   const triggerRef = { current: null as HTMLButtonElement | null }
   const menuScope = useMenuScope(props.__scopeSelect)
@@ -564,6 +700,18 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
     props.disabled === undefined
       ? false
       : Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
+  const form = () =>
+    props.form === undefined
+      ? undefined
+      : readValue(props.form as MaybeAccessor<string | undefined>)
+  const name = () =>
+    props.name === undefined
+      ? undefined
+      : readValue(props.name as MaybeAccessor<string | undefined>)
+  const required = () =>
+    props.required === undefined
+      ? false
+      : Boolean(readValue(props.required as MaybeAccessor<boolean | undefined>) ?? false)
   const defaultOpen = () =>
     props.defaultOpen === undefined
       ? false
@@ -574,6 +722,7 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
     caller: SELECT_NAME,
     ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
   })
+  const initialValue = untrack(() => value())
   const [open, setOpen] = useControllableState<boolean>({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -608,7 +757,19 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
       registerItemText={registerItemText}
     >
       <Menu {...menuScope} open={open} onOpenChange={setOpen}>
-        {props.children}
+        <>
+          {props.children}
+          <SelectBubbleSelect
+            controlled={() => valueProp() !== undefined}
+            defaultValue={initialValue}
+            disabled={disabled}
+            form={form}
+            name={name}
+            required={required}
+            value={value}
+            onReset={() => setValue(initialValue)}
+          />
+        </>
       </Menu>
     </SelectProvider>
   )

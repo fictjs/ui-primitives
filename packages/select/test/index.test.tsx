@@ -387,6 +387,260 @@ describe('@fictjs/select', () => {
     expect(container.querySelector('[data-testid="content"]')).toBeNull()
   })
 
+  it('participates in nested and explicitly associated forms', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <>
+          <form data-testid="nested-form">
+            <Root name="fruit" required defaultValue="apple">
+              <Trigger data-testid="nested-trigger">
+                <Value />
+              </Trigger>
+              <Content>
+                <Item value="apple">
+                  <ItemText>Apple</ItemText>
+                </Item>
+              </Content>
+            </Root>
+          </form>
+          <form id="external-form" data-testid="external-form" />
+          <Root name="drink" form="external-form" defaultValue="tea">
+            <Trigger>
+              <Value />
+            </Trigger>
+            <Content>
+              <Item value="tea">
+                <ItemText>Tea</ItemText>
+              </Item>
+            </Content>
+          </Root>
+        </>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const nestedForm = container.querySelector('[data-testid="nested-form"]') as HTMLFormElement
+    const externalForm = container.querySelector('[data-testid="external-form"]') as HTMLFormElement
+    const nativeSelect = nestedForm.querySelector('select[name="fruit"]') as HTMLSelectElement
+
+    expect(nativeSelect.required).toBe(true)
+    expect(nativeSelect.checkValidity()).toBe(true)
+    expect(new FormData(nestedForm).get('fruit')).toBe('apple')
+    expect(new FormData(externalForm).get('drink')).toBe('tea')
+  })
+
+  it('restores the initial value on native form reset and bubbles value changes', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+
+    mount(
+      () => (
+        <form data-testid="form" onInput={onInput} onChange={onChange}>
+          <Root name="fruit" defaultValue="apple">
+            <Trigger data-testid="trigger">
+              <Value data-testid="value" />
+            </Trigger>
+            <Content>
+              <Item value="apple" data-testid="item-apple">
+                <ItemText>Apple</ItemText>
+              </Item>
+              <Item value="orange" data-testid="item-orange">
+                <ItemText>Orange</ItemText>
+              </Item>
+            </Content>
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    click(container.querySelector('[data-testid="trigger"]') as HTMLButtonElement)
+    await waitForEffects()
+    click(container.querySelector('[data-testid="item-orange"]') as HTMLDivElement)
+    await waitForEffects()
+
+    expect(new FormData(form).get('fruit')).toBe('orange')
+    expect(onInput).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledTimes(1)
+
+    form.reset()
+    await waitForEffects()
+
+    expect(new FormData(form).get('fruit')).toBe('apple')
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Apple')
+    expect(onInput).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the current value when native form reset is canceled', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+
+    mount(
+      () => (
+        <form data-testid="form" onInput={onInput} onChange={onChange}>
+          <Root name="fruit" defaultValue="apple">
+            <Trigger data-testid="trigger">
+              <Value data-testid="value" />
+            </Trigger>
+            <Content>
+              <Item value="apple" data-testid="item-apple">
+                <ItemText>Apple</ItemText>
+              </Item>
+              <Item value="orange" data-testid="item-orange">
+                <ItemText>Orange</ItemText>
+              </Item>
+            </Content>
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    form.addEventListener('reset', (event) => event.preventDefault())
+
+    click(container.querySelector('[data-testid="trigger"]') as HTMLButtonElement)
+    await waitForEffects()
+    click(container.querySelector('[data-testid="item-orange"]') as HTMLDivElement)
+    await waitForEffects()
+
+    form.reset()
+    await waitForEffects()
+
+    expect(new FormData(form).get('fruit')).toBe('orange')
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
+    expect(onInput).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('preserves a controlled value without notifying when its form resets', async () => {
+    const container = document.createElement('div')
+    const value = createSignal('apple')
+    const onValueChange = vi.fn()
+    document.body.append(container)
+
+    mount(
+      () => (
+        <form data-testid="form">
+          <Root name="fruit" value={prop(() => value())} onValueChange={onValueChange}>
+            <Trigger>
+              <Value data-testid="value" />
+            </Trigger>
+            <Content>
+              <Item value="apple">
+                <ItemText>Apple</ItemText>
+              </Item>
+              <Item value="orange">
+                <ItemText>Orange</ItemText>
+              </Item>
+            </Content>
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    value('orange')
+    await waitForEffects()
+    onValueChange.mockClear()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    form.reset()
+    await waitForEffects()
+
+    expect(value()).toBe('orange')
+    expect(new FormData(form).get('fruit')).toBe('orange')
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
+    expect(onValueChange).not.toHaveBeenCalled()
+  })
+
+  it('restores the initial value through an explicitly associated form reset', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <>
+          <form id="external-select-form" data-testid="form" />
+          <Root form="external-select-form" name="fruit" defaultValue="apple">
+            <Trigger data-testid="trigger">
+              <Value data-testid="value" />
+            </Trigger>
+            <Content>
+              <Item value="apple" data-testid="item-apple">
+                <ItemText>Apple</ItemText>
+              </Item>
+              <Item value="orange" data-testid="item-orange">
+                <ItemText>Orange</ItemText>
+              </Item>
+            </Content>
+          </Root>
+        </>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    click(container.querySelector('[data-testid="trigger"]') as HTMLButtonElement)
+    await waitForEffects()
+    click(container.querySelector('[data-testid="item-orange"]') as HTMLDivElement)
+    await waitForEffects()
+
+    expect(new FormData(form).get('fruit')).toBe('orange')
+
+    form.reset()
+    await waitForEffects()
+
+    expect(new FormData(form).get('fruit')).toBe('apple')
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Apple')
+  })
+
+  it('exposes native required and disabled form semantics', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <form data-testid="form">
+          <Root name="required-fruit" required>
+            <Trigger />
+          </Root>
+          <Root name="disabled-fruit" disabled defaultValue="apple">
+            <Trigger />
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const requiredSelect = form.querySelector('select[name="required-fruit"]') as HTMLSelectElement
+
+    expect(requiredSelect.validity.valueMissing).toBe(true)
+    expect(form.checkValidity()).toBe(false)
+    expect(new FormData(form).has('disabled-fruit')).toBe(false)
+  })
+
   it('closes portaled content after selecting an item when mounted in document.body', async () => {
     const container = document.createElement('div')
     document.body.append(container)
