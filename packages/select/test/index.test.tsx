@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createElement, Fragment, onMount, render, type FictNode } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import {
   Content,
@@ -100,6 +101,49 @@ describe('@fictjs/select', () => {
 
     expect(container.querySelector('[data-testid="content"]')).toBeNull()
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
+  })
+
+  it('keeps displayed text synchronized with a controlled value that rejects an update', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const value = createSignal('apple')
+    const onValueChange = vi.fn()
+
+    mount(
+      () => (
+        <Root value={value} onValueChange={onValueChange}>
+          <Trigger data-testid="trigger">
+            <Value data-testid="value" />
+          </Trigger>
+          <Content>
+            <Item value="apple" data-testid="item-apple">
+              <ItemText>Apple</ItemText>
+            </Item>
+            <Item value="orange" data-testid="item-orange">
+              <ItemText>Orange</ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    click(container.querySelector('[data-testid="trigger"]') as HTMLButtonElement)
+    await waitForEffects()
+    click(container.querySelector('[data-testid="item-orange"]') as HTMLDivElement)
+    await waitForEffects()
+
+    expect(onValueChange).toHaveBeenCalledWith('orange')
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Apple')
+    expect((container.querySelector('select') as HTMLSelectElement).value).toBe('apple')
+
+    value('orange')
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
+    expect((container.querySelector('select') as HTMLSelectElement).value).toBe('orange')
   })
 
   it('renders the selected item text for defaultValue while content is closed', async () => {

@@ -738,8 +738,12 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
 
   const onValueChange = (nextValue: string) => {
     setValue(nextValue)
-    selectedText(textByValue.get(nextValue) ?? '')
   }
+
+  useLayoutEffect(() => {
+    const currentValue = value()
+    selectedText(textByValue.get(currentValue) ?? '')
+  })
 
   return (
     <SelectProvider
