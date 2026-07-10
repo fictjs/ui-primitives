@@ -31,13 +31,20 @@ type LiveRegionOptions = {
   id?: string | undefined
 }
 
+type LiveRegionListenerEntry = {
+  count: number
+  listener: () => void
+  ownerDocument: Document
+}
+
 const ROLES: Record<RegionType, RegionRole> = {
   polite: 'status',
   assertive: 'alert',
   off: 'none',
 }
 
-const listenerMap = new Map<Element, number>()
+const listenerMap = new Map<Element, LiveRegionListenerEntry>()
+const ownedLiveRegions = new WeakSet<Element>()
 
 function readValue<T>(value: MaybeAccessor<T>): T {
   if (typeof value === 'function' && value.length === 0) {
@@ -61,6 +68,7 @@ function buildLiveRegionElement(
 
   const parent = ownerDocument.body ?? ownerDocument.documentElement
   parent?.appendChild(element)
+  ownedLiveRegions.add(element)
 
   element.setAttribute('aria-live', type)
   element.setAttribute('aria-atomic', String(atomic || false))
@@ -149,28 +157,40 @@ function Announce(props: AnnounceProps): FictNode {
     const doc = currentOwnerDocument
     const liveRegionElement = regionElement
 
-    function updateAttributesOnVisibilityChange() {
-      liveRegionElement.setAttribute('role', doc.hidden ? 'none' : role())
-      liveRegionElement.setAttribute('aria-live', doc.hidden ? 'off' : type())
-    }
-
-    const currentCount = listenerMap.get(liveRegionElement) ?? 0
-    if (currentCount === 0) {
-      doc.addEventListener('visibilitychange', updateAttributesOnVisibilityChange)
-    }
-
-    listenerMap.set(liveRegionElement, currentCount + 1)
-    updateAttributesOnVisibilityChange()
-
-    return () => {
-      const announceCount = listenerMap.get(liveRegionElement) ?? 0
-      if (announceCount <= 1) {
-        listenerMap.delete(liveRegionElement)
-        doc.removeEventListener('visibilitychange', updateAttributesOnVisibilityChange)
-        return
+    let listenerEntry = listenerMap.get(liveRegionElement)
+    if (!listenerEntry) {
+      const visibleRole = role()
+      const visibleType = type()
+      const updateAttributesOnVisibilityChange = () => {
+        liveRegionElement.setAttribute('role', doc.hidden ? 'none' : visibleRole)
+        liveRegionElement.setAttribute('aria-live', doc.hidden ? 'off' : visibleType)
       }
 
-      listenerMap.set(liveRegionElement, announceCount - 1)
+      listenerEntry = {
+        count: 0,
+        listener: updateAttributesOnVisibilityChange,
+        ownerDocument: doc,
+      }
+      listenerMap.set(liveRegionElement, listenerEntry)
+      doc.addEventListener('visibilitychange', listenerEntry.listener)
+    }
+
+    listenerEntry.count += 1
+    listenerEntry.listener()
+
+    return () => {
+      const currentEntry = listenerMap.get(liveRegionElement)
+      if (!currentEntry) return
+
+      currentEntry.count -= 1
+      if (currentEntry.count === 0) {
+        listenerMap.delete(liveRegionElement)
+        currentEntry.ownerDocument.removeEventListener('visibilitychange', currentEntry.listener)
+        if (ownedLiveRegions.has(liveRegionElement)) {
+          liveRegionElement.remove()
+        }
+        return
+      }
     }
   })
 

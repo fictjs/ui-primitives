@@ -1,6 +1,6 @@
 /** @jsxImportSource @fictjs/runtime */
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 
@@ -79,5 +79,41 @@ describe('@fictjs/announce', () => {
     document.dispatchEvent(new Event('visibilitychange'))
     expect(liveRegion.getAttribute('aria-live')).toBe('assertive')
     expect(liveRegion.getAttribute('role')).toBe('alert')
+  })
+
+  it('removes the shared listener and owned region after the final instance unmounts', async () => {
+    const firstContainer = document.createElement('div')
+    const secondContainer = document.createElement('div')
+    document.body.append(firstContainer, secondContainer)
+    const addEventListener = vi.spyOn(document, 'addEventListener')
+    const removeEventListener = vi.spyOn(document, 'removeEventListener')
+
+    const disposeFirst = render(
+      () => <Announce regionIdentifier="shared">First</Announce>,
+      firstContainer,
+    )
+    const disposeSecond = render(
+      () => <Announce regionIdentifier="shared">Second</Announce>,
+      secondContainer,
+    )
+    await flushMicrotasks()
+
+    const liveRegion = document.querySelector('[data-radix-announce-region-shared]')
+    const visibilityListener = addEventListener.mock.calls.find(
+      ([eventName]) => eventName === 'visibilitychange',
+    )?.[1]
+
+    expect(liveRegion).not.toBeNull()
+    expect(visibilityListener).toBeTypeOf('function')
+
+    disposeFirst()
+    expect(liveRegion?.isConnected).toBe(true)
+
+    disposeSecond()
+    expect(liveRegion?.isConnected).toBe(false)
+    expect(removeEventListener).toHaveBeenCalledWith('visibilitychange', visibilityListener)
+
+    addEventListener.mockRestore()
+    removeEventListener.mockRestore()
   })
 })
