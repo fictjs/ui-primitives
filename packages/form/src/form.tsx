@@ -146,6 +146,14 @@ function shallowBooleanRecordEqual(
   return leftKeys.every((key) => left[key] === right[key])
 }
 
+function mergeAriaDescriptionIds(...values: unknown[]): string | undefined {
+  const ids = values
+    .flatMap((value) => (value == null ? [] : String(value).split(/\s+/)))
+    .filter(Boolean)
+
+  return ids.length > 0 ? [...new Set(ids)].join(' ') : undefined
+}
+
 function Form(props: ScopedProps<FormProps>): FictNode {
   const { __scopeForm, onClearServerErrors = () => {}, ...rootProps } = props
   const formRef = { current: null as HTMLFormElement | null }
@@ -522,31 +530,37 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
   })
 
   const validity = () => validationContext.getFieldValidity(name())
+  const describedBy = () =>
+    mergeAriaDescriptionIds(
+      props['aria-describedby'],
+      ariaDescriptionContext.getFieldDescription(name()),
+    )
+  const ariaInvalid = () => (fieldContext.serverInvalid() ? true : props['aria-invalid'])
   useLayoutEffect(() => {
     const control = ref.current
     if (!control) return
 
     const valid = getValidAttribute(validity(), fieldContext.serverInvalid())
     const invalid = getInvalidAttribute(validity(), fieldContext.serverInvalid())
-    const describedBy = ariaDescriptionContext.getFieldDescription(name())
+    const nextDescribedBy = describedBy()
+    const nextAriaInvalid = ariaInvalid()
     if (valid) control.setAttribute('data-valid', valid)
     else control.removeAttribute('data-valid')
 
     if (invalid) control.setAttribute('data-invalid', invalid)
     else control.removeAttribute('data-invalid')
 
-    if (fieldContext.serverInvalid()) control.setAttribute('aria-invalid', 'true')
-    else control.removeAttribute('aria-invalid')
+    if (nextAriaInvalid !== undefined && nextAriaInvalid !== null) {
+      control.setAttribute('aria-invalid', String(nextAriaInvalid))
+    } else control.removeAttribute('aria-invalid')
 
-    if (describedBy) control.setAttribute('aria-describedby', describedBy)
+    if (nextDescribedBy) control.setAttribute('aria-describedby', nextDescribedBy)
     else control.removeAttribute('aria-describedby')
   })
   const primitiveProps = mergeProps(
     {
       'data-valid': prop(() => getValidAttribute(validity(), fieldContext.serverInvalid())),
       'data-invalid': prop(() => getInvalidAttribute(validity(), fieldContext.serverInvalid())),
-      'aria-invalid': prop(() => (fieldContext.serverInvalid() ? true : undefined)),
-      'aria-describedby': prop(() => ariaDescriptionContext.getFieldDescription(name())),
       title: '',
       id: prop(id),
       name: prop(name),
@@ -554,6 +568,8 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
     prop(() => controlProps as Record<string, unknown>),
     {
       ref: undefined,
+      'aria-invalid': prop(ariaInvalid),
+      'aria-describedby': prop(describedBy),
       onInvalid: composeEventHandlers<Event>(
         props.onInvalid as ((event: Event) => void) | undefined,
         (event) => {

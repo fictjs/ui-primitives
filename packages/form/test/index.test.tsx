@@ -89,6 +89,37 @@ describe('@fictjs/form', () => {
     expect(input.getAttribute('aria-describedby')).toBe(message.id)
   })
 
+  it('preserves caller ARIA attributes while adding internal descriptions', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Form>
+          <Field name="email">
+            <Control required aria-describedby="help" aria-invalid="true" />
+            <span id="help">Use a work address</span>
+            <Message match="valueMissing">Email is required</Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(input.getAttribute('aria-describedby')).toBe('help')
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+
+    invalid(input)
+    await waitForEffects()
+
+    const message = container.querySelector('span:not(#help)') as HTMLSpanElement
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual(['help', message.id])
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+  })
+
   it('runs custom matchers against form data', async () => {
     const container = document.createElement('div')
     document.body.append(container)
