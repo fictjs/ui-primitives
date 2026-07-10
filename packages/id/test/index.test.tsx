@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
+import { __fictCreateSSRSession, __fictRunWithSSRSession } from '@fictjs/runtime/internal'
 
 import { useId } from '../src/index.js'
 
@@ -60,5 +61,46 @@ describe('@fictjs/id', () => {
     await Promise.resolve()
 
     expect(resolved?.()).toMatch(/^fict-/)
+  })
+
+  it('starts generated ids from the same seed for every SSR request', () => {
+    const generateRequestIds = () => {
+      const session = __fictCreateSSRSession()
+
+      return __fictRunWithSSRSession(session, () => {
+        let first: (() => string) | undefined
+        let second: (() => string) | undefined
+
+        render(() => {
+          first = useId()
+          second = useId()
+          return <div />
+        }, document.createElement('div'))
+
+        return [first?.(), second?.()]
+      })
+    }
+
+    expect(generateRequestIds()).toEqual(['fict-1', 'fict-2'])
+    expect(generateRequestIds()).toEqual(['fict-1', 'fict-2'])
+  })
+
+  it('isolates counters for nested SSR request sessions', () => {
+    const outerSession = __fictCreateSSRSession()
+    const innerSession = __fictCreateSSRSession()
+
+    const ids = __fictRunWithSSRSession(outerSession, () => {
+      const outerFirst = useId()()
+      const inner = __fictRunWithSSRSession(innerSession, () => useId()())
+      const outerSecond = useId()()
+
+      return { outerFirst, inner, outerSecond }
+    })
+
+    expect(ids).toEqual({
+      outerFirst: 'fict-1',
+      inner: 'fict-1',
+      outerSecond: 'fict-2',
+    })
   })
 })
