@@ -126,6 +126,40 @@ describe('@fictjs/form', () => {
     expect(confirmInput.getAttribute('data-invalid')).toBe('true')
   })
 
+  it('shows only the custom message whose matcher failed', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Form>
+          <Field name="username">
+            <Control />
+            <Message data-testid="reserved" match={(value) => value === 'admin'}>
+              Username is reserved
+            </Message>
+            <Message data-testid="length" match={(value) => value.length < 3}>
+              Username is too short
+            </Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    changeInput(container.querySelector('input') as HTMLInputElement, 'admin')
+    await waitForEffects()
+
+    const reservedMessage = container.querySelector('[data-testid="reserved"]') as HTMLSpanElement
+    const lengthMessage = container.querySelector('[data-testid="length"]') as HTMLSpanElement
+
+    expect(reservedMessage.hidden).toBe(false)
+    expect(reservedMessage.textContent).toBe('Username is reserved')
+    expect(lengthMessage.hidden).toBe(true)
+    expect(lengthMessage.textContent).toBe('')
+  })
+
   it('invokes a promise-returning matcher once per validation', async () => {
     const container = document.createElement('div')
     document.body.append(container)

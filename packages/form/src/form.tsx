@@ -693,10 +693,7 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
   const validity = () => validationContext.getFieldValidity(name)
   const customErrors = () => validationContext.getFieldCustomErrors(name)
   const matches = () =>
-    Boolean(
-      forceMatch ||
-      (validity() && !hasBuiltInError(validity()!) && Object.values(customErrors()).some(Boolean)),
-    )
+    Boolean(forceMatch || (validity() && !hasBuiltInError(validity()!) && customErrors()[id()]))
   const customMessageProps = mergeProps(prop(() => messageProps as Record<string, unknown>))
   const messageText = () => String(children ?? DEFAULT_INVALID_MESSAGE)
 
