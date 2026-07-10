@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { HiddenInput, Input, Root } from '../src/index.js'
 
@@ -84,6 +85,30 @@ describe('@fictjs/one-time-password-field', () => {
     await waitForEffects()
 
     expect(hiddenInput.value).toBe('123')
+  })
+
+  it('updates a registered input index and restores its implicit index', async () => {
+    const container = document.createElement('div')
+    const index = createSignal<number | undefined>(2)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root>
+          <Input data-testid="moving-index" index={prop(() => index()) as unknown as number} />
+          <Input />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const input = container.querySelector('[data-testid="moving-index"]') as HTMLInputElement
+    expect(input.getAttribute('data-radix-index')).toBe('2')
+
+    index(undefined)
+    await waitForEffects()
+    expect(input.getAttribute('data-radix-index')).toBe('0')
   })
 
   it('masks input values when type is password and mirrors them to the hidden input', async () => {

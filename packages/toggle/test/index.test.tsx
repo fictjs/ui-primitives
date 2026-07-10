@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Root } from '../src/index.js'
 
@@ -114,5 +115,34 @@ describe('@fictjs/toggle', () => {
 
     expect(button.getAttribute('aria-pressed')).toBe('false')
     expect(button.getAttribute('data-state')).toBe('off')
+  })
+
+  it('invokes the latest reactive click handler', () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn((event: MouseEvent) => {
+      event.preventDefault()
+    })
+    const onClick = createSignal<(event: MouseEvent) => void>(firstHandler)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(
+      () => (
+        <Root onClick={prop(() => onClick()) as unknown as (event: MouseEvent) => void}>Like</Root>
+      ),
+      container,
+    )
+
+    const button = container.querySelector('button') as HTMLButtonElement
+
+    click(button)
+    expect(button.getAttribute('aria-pressed')).toBe('true')
+
+    onClick(secondHandler)
+    click(button)
+
+    expect(firstHandler).toHaveBeenCalledTimes(1)
+    expect(secondHandler).toHaveBeenCalledTimes(1)
+    expect(button.getAttribute('aria-pressed')).toBe('true')
   })
 })

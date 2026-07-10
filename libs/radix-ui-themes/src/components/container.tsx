@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
+import { mergeProps, prop } from 'fict'
 import { Slot } from '@fictjs/radix-ui'
 
 import { containerPropDefs } from './container.props.js'
@@ -18,38 +19,53 @@ import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-p
 type ContainerElement = React.ElementRef<'div'>
 interface ContainerProps
   extends ComponentPropsWithout<'div', RemovedProps>, MarginProps, LayoutProps, ContainerOwnProps {}
-const Container = React.forwardRef<ContainerElement, ContainerProps>(
-  ({ width, minWidth, maxWidth, height, minHeight, maxHeight, ...props }, forwardedRef) => {
-    const { asChild, children, className, ...containerProps } = extractProps(
-      props,
-      containerPropDefs,
-      layoutPropDefs,
-      marginPropDefs,
-    )
+const Container = React.forwardRef<ContainerElement, ContainerProps>((props, forwardedRef) => {
+  const { asChild, children, className, ...containerProps } = extractProps(
+    mergeProps(
+      prop(() => props as unknown as Record<string, unknown>),
+      {
+        height: undefined,
+        maxHeight: undefined,
+        maxWidth: undefined,
+        minHeight: undefined,
+        minWidth: undefined,
+        width: undefined,
+      },
+    ) as unknown as ContainerProps,
+    containerPropDefs,
+    layoutPropDefs,
+    marginPropDefs,
+  )
 
-    const { className: innerClassName, style: innerStyle } = extractProps(
-      { width, minWidth, maxWidth, height, minHeight, maxHeight },
-      widthPropDefs,
-      heightPropDefs,
-    )
+  const { className: innerClassName, style: innerStyle } = extractProps(
+    {
+      width: prop(() => props.width),
+      minWidth: prop(() => props.minWidth),
+      maxWidth: prop(() => props.maxWidth),
+      height: prop(() => props.height),
+      minHeight: prop(() => props.minHeight),
+      maxHeight: prop(() => props.maxHeight),
+    },
+    widthPropDefs,
+    heightPropDefs,
+  )
 
-    const Comp = asChild ? Slot.Root : 'div'
+  const Comp = asChild ? Slot.Root : 'div'
 
-    return (
-      <Comp
-        {...containerProps}
-        ref={React.coerceRef(forwardedRef)}
-        class={classNames('rt-Container', className)}
-      >
-        {getSubtree({ asChild, children }, (children) => (
-          <div class={classNames('rt-ContainerInner', innerClassName)} style={innerStyle}>
-            {children}
-          </div>
-        ))}
-      </Comp>
-    )
-  },
-)
+  return (
+    <Comp
+      {...containerProps}
+      ref={React.coerceRef(forwardedRef)}
+      class={classNames('rt-Container', className)}
+    >
+      {getSubtree({ asChild, children }, (children) => (
+        <div class={classNames('rt-ContainerInner', innerClassName)} style={innerStyle}>
+          {children}
+        </div>
+      ))}
+    </Comp>
+  )
+})
 Container.displayName = 'Container'
 
 export { Container }

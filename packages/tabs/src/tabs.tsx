@@ -245,14 +245,14 @@ function Tabs(props: ScopedProps<TabsProps>): FictNode {
 Tabs.displayName = TABS_NAME
 
 function TabsList(props: ScopedProps<TabsListProps>): FictNode {
-  const { __scopeTabs, loop, ...listProps } = props
+  const { __scopeTabs } = props
   const context = useTabsContext(LIST_NAME, __scopeTabs as Scope<TabsContextValue | undefined>)
   const shouldLoop = () =>
-    loop === undefined
+    props.loop === undefined
       ? true
-      : Boolean(readValue(loop as MaybeAccessor<boolean | undefined>) ?? true)
+      : Boolean(readValue(props.loop as MaybeAccessor<boolean | undefined>) ?? true)
   const handleKeyDown = composeEventHandlers<KeyboardEvent>(
-    props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+    (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
     (event) => {
       const target = event.target as HTMLElement | null
       if (!target || target.getAttribute('role') !== 'tab') {
@@ -302,8 +302,10 @@ function TabsList(props: ScopedProps<TabsListProps>): FictNode {
       role: 'tablist',
       'aria-orientation': prop(context.orientation),
     },
-    prop(() => listProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeTabs: undefined,
+      loop: undefined,
       onKeyDown: handleKeyDown,
     },
   )
@@ -314,24 +316,27 @@ function TabsList(props: ScopedProps<TabsListProps>): FictNode {
 TabsList.displayName = LIST_NAME
 
 function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
-  const { __scopeTabs, value, disabled = false, ...triggerProps } = props
+  const { __scopeTabs } = props
   const context = useTabsContext(TRIGGER_NAME, __scopeTabs as Scope<TabsContextValue | undefined>)
-  const triggerId = () => makeTriggerId(context.baseId(), value)
-  const contentId = () => makeContentId(context.baseId(), value)
+  const value = () => props.value
+  const triggerId = () => makeTriggerId(context.baseId(), value())
+  const contentId = () => makeContentId(context.baseId(), value())
   const triggerRef = { current: null as TabsTriggerElement | null }
-  const isDisabled = () => Boolean(readValue(disabled as MaybeAccessor<boolean | undefined>))
-  const isSelected = () => value === context.value()
-  const isCurrentTabStop = () => context.getEntryValue() === value && !isDisabled()
+  const isDisabled = () =>
+    Boolean(readValue((props.disabled ?? false) as MaybeAccessor<boolean | undefined>))
+  const isSelected = () => value() === context.value()
+  const isCurrentTabStop = () => context.getEntryValue() === value() && !isDisabled()
 
-  useLayoutEffect(() =>
-    untrack(() =>
+  useLayoutEffect(() => {
+    const currentValue = value()
+    return untrack(() =>
       context.registerTrigger({
-        value,
+        value: currentValue,
         ref: triggerRef,
         disabled: isDisabled,
       }),
-    ),
-  )
+    )
+  })
 
   const primitiveProps = mergeProps(
     {
@@ -345,37 +350,39 @@ function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
       id: prop(triggerId),
       tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
     },
-    prop(() => triggerProps as Record<string, unknown>),
+    prop(() => props as unknown as Record<string, unknown>),
     {
+      __scopeTabs: undefined,
+      value: undefined,
       onMouseDown: composeEventHandlers<MouseEvent>(
-        props.onMouseDown as ((event: MouseEvent) => void) | undefined,
+        (event) => (props.onMouseDown as ((event: MouseEvent) => void) | undefined)?.(event),
         (event) => {
           if (!isDisabled() && event.button === 0 && event.ctrlKey === false) {
-            context.setCurrentTabStop(value)
-            context.onValueChange(value)
+            context.setCurrentTabStop(value())
+            context.onValueChange(value())
           } else {
             event.preventDefault()
           }
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
         (event) => {
           if (event.key === ' ' || event.key === 'Enter') {
-            context.setCurrentTabStop(value)
-            context.onValueChange(value)
+            context.setCurrentTabStop(value())
+            context.onValueChange(value())
           }
         },
       ),
       onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         () => {
           if (!isDisabled()) {
-            context.setCurrentTabStop(value)
+            context.setCurrentTabStop(value())
           }
 
           if (!isSelected() && !isDisabled() && context.activationMode() === 'automatic') {
-            context.onValueChange(value)
+            context.onValueChange(value())
           }
         },
       ),
@@ -402,11 +409,11 @@ function TabsTrigger(props: ScopedProps<TabsTriggerProps>): FictNode {
 TabsTrigger.displayName = TRIGGER_NAME
 
 function TabsContent(props: ScopedProps<TabsContentProps>): FictNode {
-  const { __scopeTabs, value, forceMount, children, ...contentProps } = props
+  const { __scopeTabs } = props
   const context = useTabsContext(CONTENT_NAME, __scopeTabs as Scope<TabsContextValue | undefined>)
-  const triggerId = () => makeTriggerId(context.baseId(), value)
-  const contentId = () => makeContentId(context.baseId(), value)
-  const isSelected = () => value === context.value()
+  const triggerId = () => makeTriggerId(context.baseId(), props.value)
+  const contentId = () => makeContentId(context.baseId(), props.value)
+  const isSelected = () => props.value === context.value()
   const isMountAnimationPrevented = createSignal(isSelected())
 
   useLayoutEffect(() => {
@@ -423,9 +430,9 @@ function TabsContent(props: ScopedProps<TabsContentProps>): FictNode {
     <Presence
       present={() =>
         Boolean(
-          (forceMount === undefined
+          (props.forceMount === undefined
             ? false
-            : readValue(forceMount as MaybeAccessor<boolean | undefined>)) || isSelected(),
+            : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)) || isSelected(),
         )
       }
     >
@@ -441,11 +448,17 @@ function TabsContent(props: ScopedProps<TabsContentProps>): FictNode {
             tabIndex: 0,
             style: prop(() => ({
               animationDuration: isMountAnimationPrevented() ? '0s' : undefined,
-              ...readStyle(contentProps.style as MaybeAccessor<unknown> | undefined),
+              ...readStyle(props.style as MaybeAccessor<unknown> | undefined),
             })),
-            children: prop(() => (present ? children : null)),
+            children: prop(() => (present ? props.children : null)),
           },
-          prop(() => contentProps as Record<string, unknown>),
+          prop(() => props as unknown as Record<string, unknown>),
+          {
+            __scopeTabs: undefined,
+            children: undefined,
+            forceMount: undefined,
+            value: undefined,
+          },
         )
 
         return <Primitive.div {...primitiveProps} />

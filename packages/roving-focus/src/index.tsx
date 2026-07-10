@@ -134,14 +134,18 @@ function wrapArray<T>(array: T[], startIndex: number) {
 }
 
 function RovingFocusGroup(props: ScopedProps<RovingFocusGroupProps>): FictNode {
+  const implProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      onCurrentTabStopIdChange: prop(() => props.onCurrentTabStopIdChange),
+      onEntryFocus: prop(() => props.onEntryFocus),
+    },
+  )
+
   return (
     <Collection.Provider scope={props.__scopeRovingFocusGroup}>
       <Collection.Slot scope={props.__scopeRovingFocusGroup}>
-        <RovingFocusGroupImpl
-          {...props}
-          onCurrentTabStopIdChange={prop(() => props.onCurrentTabStopIdChange)}
-          onEntryFocus={prop(() => props.onEntryFocus)}
-        />
+        <RovingFocusGroupImpl {...implProps} />
       </Collection.Slot>
     </Collection.Provider>
   )
@@ -219,13 +223,13 @@ function RovingFocusGroupImpl(props: ScopedProps<RovingFocusGroupImplProps>): Fi
         ...readStyle(props.style),
       })),
       onBlur: composeEventHandlers<FocusEvent>(
-        props.onBlur as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onBlur as ((event: FocusEvent) => void) | undefined)?.(event),
         () => {
           isTabbingBackOut(false)
         },
       ),
       onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         (event) => {
           const currentTarget = event.currentTarget as HTMLElement | null
           const isKeyboardFocus = !isClickFocusRef.current
@@ -257,7 +261,7 @@ function RovingFocusGroupImpl(props: ScopedProps<RovingFocusGroupImplProps>): Fi
         },
       ),
       onMouseDown: composeEventHandlers<MouseEvent>(
-        props.onMouseDown as ((event: MouseEvent) => void) | undefined,
+        (event) => (props.onMouseDown as ((event: MouseEvent) => void) | undefined)?.(event),
         () => {
           isClickFocusRef.current = true
         },
@@ -322,26 +326,21 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
       tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
       'data-orientation': prop(context.orientation),
     },
-    prop(
-      () =>
-        ({
-          ...props,
-          children: undefined,
-        }) as Record<string, unknown>,
-    ),
+    prop(() => props as Record<string, unknown>),
     {
       __scopeRovingFocusGroup: undefined,
       active: undefined,
+      children: undefined,
       focusable: undefined,
       tabStopId: undefined,
       onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         () => {
           context.onItemFocus(id())
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
         (event) => {
           if (event.key === 'Tab' && event.shiftKey) {
             context.onItemShiftTab()
@@ -393,7 +392,7 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
         },
       ),
       onMouseDown: composeEventHandlers<MouseEvent>(
-        props.onMouseDown as ((event: MouseEvent) => void) | undefined,
+        (event) => (props.onMouseDown as ((event: MouseEvent) => void) | undefined)?.(event),
         (event) => {
           if (!focusable()) {
             event.preventDefault()
@@ -405,7 +404,6 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
       ),
     },
   )
-  const children = props.children
   const collectionItemData = { id, focusable, active } as unknown as ItemData
 
   return (
@@ -416,14 +414,15 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
     >
       <Primitive.span {...primitiveProps}>
         <>
-          {typeof children === 'function'
-            ? reactive(() =>
-                children({
+          {reactive(() => {
+            const children = props.children
+            return typeof children === 'function'
+              ? children({
                   hasTabStop: context.currentTabStopId() != null,
                   isCurrentTabStop: isCurrentTabStop(),
-                }),
-              )
-            : children}
+                })
+              : children
+          })}
         </>
       </Primitive.span>
     </Collection.ItemSlot>

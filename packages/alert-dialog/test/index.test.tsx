@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 const hideOthersMock = vi.hoisted(() => vi.fn(() => () => {}))
 
@@ -113,6 +114,37 @@ describe('@fictjs/alert-dialog', () => {
     expect(content.getAttribute('role')).toBe('alertdialog')
     expect(document.body.querySelector('[data-testid="overlay"]')).not.toBeNull()
     expect(document.activeElement).toBe(cancel)
+  })
+
+  it('forwards the latest autofocus handler through the alert-dialog wrapper chain', async () => {
+    const container = document.createElement('div')
+    const calls: string[] = []
+    const onOpenAutoFocus = createSignal<(event: Event) => void>(() => calls.push('first'))
+    document.body.append(container)
+
+    mount(
+      () => (
+        <AlertDialog>
+          <AlertDialogTrigger data-testid="trigger">Delete</AlertDialogTrigger>
+          <AlertDialogPortal>
+            <AlertDialogContent
+              onOpenAutoFocus={prop(() => onOpenAutoFocus()) as unknown as (event: Event) => void}
+            >
+              <AlertDialogTitle>Delete item</AlertDialogTitle>
+              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+            </AlertDialogContent>
+          </AlertDialogPortal>
+        </AlertDialog>
+      ),
+      container,
+    )
+
+    onOpenAutoFocus(() => calls.push('second'))
+    click(container.querySelector('[data-testid="trigger"]') as HTMLButtonElement)
+    await waitForEffects()
+
+    expect(calls).toEqual(['second'])
   })
 
   it('prevents outside interaction from dismissing the dialog', async () => {

@@ -1,4 +1,4 @@
-import { type FictNode } from '@fictjs/runtime'
+import { mergeProps, prop, type FictNode } from '@fictjs/runtime'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -64,8 +64,13 @@ type AlertDialogContentProps = Omit<
 >
 
 function AlertDialog(props: ScopedProps<AlertDialogProps>): FictNode {
-  const { __scopeAlertDialog, ...alertDialogProps } = props
-  const dialogScope = useDialogScope(__scopeAlertDialog)
+  const dialogScope = useDialogScope(props.__scopeAlertDialog)
+  const alertDialogProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAlertDialog: undefined,
+    },
+  )
 
   return <Dialog {...dialogScope} {...alertDialogProps} modal />
 }
@@ -73,8 +78,13 @@ function AlertDialog(props: ScopedProps<AlertDialogProps>): FictNode {
 AlertDialog.displayName = ROOT_NAME
 
 function AlertDialogTrigger(props: ScopedProps<AlertDialogTriggerProps>): FictNode {
-  const { __scopeAlertDialog, ...triggerProps } = props
-  const dialogScope = useDialogScope(__scopeAlertDialog)
+  const dialogScope = useDialogScope(props.__scopeAlertDialog)
+  const triggerProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAlertDialog: undefined,
+    },
+  )
 
   return <DialogTrigger {...dialogScope} {...triggerProps} />
 }
@@ -82,8 +92,13 @@ function AlertDialogTrigger(props: ScopedProps<AlertDialogTriggerProps>): FictNo
 AlertDialogTrigger.displayName = TRIGGER_NAME
 
 function AlertDialogPortal(props: ScopedProps<AlertDialogPortalProps>): FictNode {
-  const { __scopeAlertDialog, ...portalProps } = props
-  const dialogScope = useDialogScope(__scopeAlertDialog)
+  const dialogScope = useDialogScope(props.__scopeAlertDialog)
+  const portalProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAlertDialog: undefined,
+    },
+  )
 
   return <DialogPortal {...dialogScope} {...portalProps} />
 }
@@ -91,8 +106,13 @@ function AlertDialogPortal(props: ScopedProps<AlertDialogPortalProps>): FictNode
 AlertDialogPortal.displayName = PORTAL_NAME
 
 function AlertDialogOverlay(props: ScopedProps<AlertDialogOverlayProps>): FictNode {
-  const { __scopeAlertDialog, ...overlayProps } = props
-  const dialogScope = useDialogScope(__scopeAlertDialog)
+  const dialogScope = useDialogScope(props.__scopeAlertDialog)
+  const overlayProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAlertDialog: undefined,
+    },
+  )
 
   return <DialogOverlay {...dialogScope} {...overlayProps} />
 }
@@ -100,10 +120,16 @@ function AlertDialogOverlay(props: ScopedProps<AlertDialogOverlayProps>): FictNo
 AlertDialogOverlay.displayName = OVERLAY_NAME
 
 function AlertDialogContent(props: ScopedProps<AlertDialogContentProps>): FictNode {
-  const { __scopeAlertDialog, children, ...contentProps } = props
-  const dialogScope = useDialogScope(__scopeAlertDialog)
+  const dialogScope = useDialogScope(props.__scopeAlertDialog)
   const cancelRef = { current: null as AlertDialogCancelElement | null }
   const composedRefs = useComposedRefs(props.ref as PossibleRef<AlertDialogContentElement>)
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAlertDialog: undefined,
+      children: undefined,
+    },
+  )
 
   return (
     <DialogContent
@@ -111,12 +137,15 @@ function AlertDialogContent(props: ScopedProps<AlertDialogContentProps>): FictNo
       {...contentProps}
       ref={composedRefs}
       role="alertdialog"
-      onOpenAutoFocus={composeEventHandlers(contentProps.onOpenAutoFocus, (event) => {
-        event.preventDefault()
-        queueMicrotask(() => {
-          cancelRef.current?.focus({ preventScroll: true })
-        })
-      })}
+      onOpenAutoFocus={composeEventHandlers(
+        (event) => props.onOpenAutoFocus?.(event),
+        (event) => {
+          event.preventDefault()
+          queueMicrotask(() => {
+            cancelRef.current?.focus({ preventScroll: true })
+          })
+        },
+      )}
       onInteractOutside={(event) => {
         event.preventDefault()
       }}
@@ -125,10 +154,10 @@ function AlertDialogContent(props: ScopedProps<AlertDialogContentProps>): FictNo
       }}
     >
       <AlertDialogContentProvider
-        scope={__scopeAlertDialog as Scope<AlertDialogContentContextValue | undefined>}
+        scope={props.__scopeAlertDialog as Scope<AlertDialogContentContextValue | undefined>}
         cancelRef={cancelRef}
       >
-        {children}
+        {props.children}
       </AlertDialogContentProvider>
     </DialogContent>
   )
@@ -137,8 +166,13 @@ function AlertDialogContent(props: ScopedProps<AlertDialogContentProps>): FictNo
 AlertDialogContent.displayName = CONTENT_NAME
 
 function AlertDialogTitle(props: ScopedProps<AlertDialogTitleProps>): FictNode {
-  const { __scopeAlertDialog, ...titleProps } = props
-  const dialogScope = useDialogScope(__scopeAlertDialog)
+  const dialogScope = useDialogScope(props.__scopeAlertDialog)
+  const titleProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAlertDialog: undefined,
+    },
+  )
 
   return <DialogTitle {...dialogScope} {...titleProps} />
 }
@@ -146,8 +180,13 @@ function AlertDialogTitle(props: ScopedProps<AlertDialogTitleProps>): FictNode {
 AlertDialogTitle.displayName = TITLE_NAME
 
 function AlertDialogDescription(props: ScopedProps<AlertDialogDescriptionProps>): FictNode {
-  const { __scopeAlertDialog, ...descriptionProps } = props
-  const dialogScope = useDialogScope(__scopeAlertDialog)
+  const dialogScope = useDialogScope(props.__scopeAlertDialog)
+  const descriptionProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAlertDialog: undefined,
+    },
+  )
 
   return <DialogDescription {...dialogScope} {...descriptionProps} />
 }
@@ -155,8 +194,13 @@ function AlertDialogDescription(props: ScopedProps<AlertDialogDescriptionProps>)
 AlertDialogDescription.displayName = DESCRIPTION_NAME
 
 function AlertDialogAction(props: ScopedProps<AlertDialogActionProps>): FictNode {
-  const { __scopeAlertDialog, ...actionProps } = props
-  const dialogScope = useDialogScope(__scopeAlertDialog)
+  const dialogScope = useDialogScope(props.__scopeAlertDialog)
+  const actionProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAlertDialog: undefined,
+    },
+  )
 
   return <DialogClose {...dialogScope} {...actionProps} />
 }
@@ -164,12 +208,18 @@ function AlertDialogAction(props: ScopedProps<AlertDialogActionProps>): FictNode
 AlertDialogAction.displayName = ACTION_NAME
 
 function AlertDialogCancel(props: ScopedProps<AlertDialogCancelProps>): FictNode {
-  const { __scopeAlertDialog, ...cancelProps } = props
   const { cancelRef } = useAlertDialogContentContext(
     CANCEL_NAME,
-    __scopeAlertDialog as Scope<AlertDialogContentContextValue | undefined>,
+    props.__scopeAlertDialog as Scope<AlertDialogContentContextValue | undefined>,
   )
-  const dialogScope = useDialogScope(__scopeAlertDialog)
+  const dialogScope = useDialogScope(props.__scopeAlertDialog)
+  const cancelProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAlertDialog: undefined,
+      ref: undefined,
+    },
+  )
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<AlertDialogCancelElement>,
     cancelRef,

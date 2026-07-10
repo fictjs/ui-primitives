@@ -23,21 +23,26 @@ type RadioInputProps = ComponentPropsWithout<
 interface RadioProps extends RadioInputProps, MarginProps, RadioOwnProps {}
 
 const Radio = React.forwardRef<RadioElement, RadioProps>((props, forwardedRef) => {
-  const { className, color, onChange, onValueChange, ...radioProps } = extractProps(
-    props,
-    radioPropDefs,
-    marginPropDefs,
-  )
+  const {
+    className,
+    color,
+    onChange: _onChange,
+    onValueChange: _onValueChange,
+    ...radioProps
+  } = extractProps(props, radioPropDefs, marginPropDefs)
   return (
     <input
       type="radio"
       data-accent-color={color}
       {...radioProps}
-      onChange={composeEventHandlers(onChange, (event) => {
-        const target = event.currentTarget as HTMLInputElement | null
-        if (!target) return
-        onValueChange?.(target.value)
-      })}
+      onChange={composeEventHandlers(
+        (event) => props.onChange?.(event),
+        (event) => {
+          const target = event.currentTarget as HTMLInputElement | null
+          if (!target) return
+          props.onValueChange?.(target.value)
+        },
+      )}
       ref={React.coerceRef(forwardedRef)}
       class={classNames('rt-reset', 'rt-BaseRadioRoot', 'rt-RadioRoot', className)}
     />

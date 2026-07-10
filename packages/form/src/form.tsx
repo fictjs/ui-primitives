@@ -135,7 +135,6 @@ function mergeAriaDescriptionIds(...values: unknown[]): string | undefined {
 }
 
 function Form(props: ScopedProps<FormProps>): FictNode {
-  const { __scopeForm, onClearServerErrors = () => {}, ...rootProps } = props
   const formRef = { current: null as HTMLFormElement | null }
 
   const validityMap = createSignal<ValidityMap>({})
@@ -245,10 +244,10 @@ function Form(props: ScopedProps<FormProps>): FictNode {
   }
 
   const primitiveProps = mergeProps(
-    prop(() => rootProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       onInvalid: composeEventHandlers<Event>(
-        props.onInvalid as ((event: Event) => void) | undefined,
+        (event) => props.onInvalid?.(event),
         (event) => {
           const form = event.currentTarget as HTMLFormElement
           const firstInvalidControl = getFirstInvalidControl(form)
@@ -258,30 +257,32 @@ function Form(props: ScopedProps<FormProps>): FictNode {
           event.preventDefault()
         },
       ),
-      onSubmit: composeEventHandlers<Event>(
-        props.onSubmit as ((event: Event) => void) | undefined,
+      onSubmit: composeEventHandlers<SubmitEvent>(
+        (event) => props.onSubmit?.(event),
         () => {
-          onClearServerErrors()
+          props.onClearServerErrors?.()
         },
         { checkForDefaultPrevented: false },
       ),
       onReset: composeEventHandlers<Event>(
-        props.onReset as ((event: Event) => void) | undefined,
+        (event) => props.onReset?.(event),
         () => {
-          onClearServerErrors()
+          props.onClearServerErrors?.()
         },
       ),
+      __scopeForm: undefined,
+      onClearServerErrors: undefined,
       ref: undefined,
     },
   )
 
   return (
     <ValidationProvider
-      scope={__scopeForm as Scope<ValidationContextValue | undefined>}
+      scope={props.__scopeForm as Scope<ValidationContextValue | undefined>}
       {...validationContext}
     >
       <AriaDescriptionProvider
-        scope={__scopeForm as Scope<AriaDescriptionContextValue | undefined>}
+        scope={props.__scopeForm as Scope<AriaDescriptionContextValue | undefined>}
         {...ariaDescriptionContext}
       >
         <Primitive.form
@@ -296,28 +297,34 @@ function Form(props: ScopedProps<FormProps>): FictNode {
 Form.displayName = FORM_NAME
 
 function FormField(props: ScopedProps<FormFieldProps>): FictNode {
-  const { __scopeForm, name, serverInvalid = false, ...fieldProps } = props
   const validationContext = useValidationContext(
     FIELD_NAME,
-    __scopeForm as Scope<ValidationContextValue | undefined>,
+    props.__scopeForm as Scope<ValidationContextValue | undefined>,
   )
   const id = useId()
   const ref = { current: null as HTMLDivElement | null }
-  const validity = () => validationContext.getFieldValidity(name)
+  const name = () => props.name
+  const serverInvalid = () => Boolean(props.serverInvalid)
+  const validity = () => validationContext.getFieldValidity(name())
   const primitiveProps = mergeProps(
     {
-      'data-valid': prop(() => getValidAttribute(validity(), serverInvalid)),
-      'data-invalid': prop(() => getInvalidAttribute(validity(), serverInvalid)),
+      'data-valid': prop(() => getValidAttribute(validity(), serverInvalid())),
+      'data-invalid': prop(() => getInvalidAttribute(validity(), serverInvalid())),
     },
-    prop(() => fieldProps as Record<string, unknown>),
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      __scopeForm: undefined,
+      name: undefined,
+      serverInvalid: undefined,
+    },
   )
 
   useLayoutEffect(() => {
     const field = ref.current
     if (!field) return
 
-    const valid = getValidAttribute(validity(), serverInvalid)
-    const invalid = getInvalidAttribute(validity(), serverInvalid)
+    const valid = getValidAttribute(validity(), serverInvalid())
+    const invalid = getInvalidAttribute(validity(), serverInvalid())
     if (valid) field.setAttribute('data-valid', valid)
     else field.removeAttribute('data-valid')
     if (invalid) field.setAttribute('data-invalid', invalid)
@@ -326,10 +333,10 @@ function FormField(props: ScopedProps<FormFieldProps>): FictNode {
 
   return (
     <FormFieldProvider
-      scope={__scopeForm as Scope<FormFieldContextValue | undefined>}
+      scope={props.__scopeForm as Scope<FormFieldContextValue | undefined>}
       id={() => id()}
-      name={() => name}
-      serverInvalid={() => serverInvalid}
+      name={name}
+      serverInvalid={serverInvalid}
     >
       {props.ref ? (
         <Primitive.div
@@ -346,14 +353,13 @@ function FormField(props: ScopedProps<FormFieldProps>): FictNode {
 FormField.displayName = FIELD_NAME
 
 function FormLabel(props: ScopedProps<FormLabelProps>): FictNode {
-  const { __scopeForm, ...labelProps } = props
   const validationContext = useValidationContext(
     LABEL_NAME,
-    __scopeForm as Scope<ValidationContextValue | undefined>,
+    props.__scopeForm as Scope<ValidationContextValue | undefined>,
   )
   const fieldContext = useFormFieldContext(
     LABEL_NAME,
-    __scopeForm as Scope<FormFieldContextValue | undefined>,
+    props.__scopeForm as Scope<FormFieldContextValue | undefined>,
   )
   const ref = { current: null as HTMLLabelElement | null }
   const validity = () => validationContext.getFieldValidity(fieldContext.name())
@@ -364,8 +370,9 @@ function FormLabel(props: ScopedProps<FormLabelProps>): FictNode {
       'data-invalid': prop(() => getInvalidAttribute(validity(), fieldContext.serverInvalid())),
       htmlFor: prop(htmlFor),
     },
-    prop(() => labelProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeForm: undefined,
       ref: undefined,
     },
   )
@@ -398,18 +405,17 @@ function FormLabel(props: ScopedProps<FormLabelProps>): FictNode {
 FormLabel.displayName = LABEL_NAME
 
 function FormControl(props: ScopedProps<FormControlProps>): FictNode {
-  const { __scopeForm, ...controlProps } = props
   const validationContext = useValidationContext(
     CONTROL_NAME,
-    __scopeForm as Scope<ValidationContextValue | undefined>,
+    props.__scopeForm as Scope<ValidationContextValue | undefined>,
   )
   const fieldContext = useFormFieldContext(
     CONTROL_NAME,
-    __scopeForm as Scope<FormFieldContextValue | undefined>,
+    props.__scopeForm as Scope<FormFieldContextValue | undefined>,
   )
   const ariaDescriptionContext = useAriaDescriptionContext(
     CONTROL_NAME,
-    __scopeForm as Scope<AriaDescriptionContextValue | undefined>,
+    props.__scopeForm as Scope<AriaDescriptionContextValue | undefined>,
   )
   const ref = { current: null as HTMLInputElement | null }
   const name = () => props.name ?? fieldContext.name()
@@ -545,18 +551,19 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
       id: prop(id),
       name: prop(name),
     },
-    prop(() => controlProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeForm: undefined,
       ref: undefined,
       'aria-invalid': prop(ariaInvalid),
       'aria-describedby': prop(describedBy),
       onInvalid: composeEventHandlers<Event>(
-        props.onInvalid as ((event: Event) => void) | undefined,
+        (event) => props.onInvalid?.(event),
         (event) => {
           void updateControlValidity(event.currentTarget as HTMLInputElement)
         },
       ),
-      onChange: props.onChange as ((event: Event) => void) | undefined,
+      onChange: (event: Event) => props.onChange?.(event),
     },
   )
 
@@ -571,60 +578,43 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
 FormControl.displayName = CONTROL_NAME
 
 function FormMessage(props: ScopedProps<FormMessageProps>): FictNode {
-  const { match, name: nameProp, ...messageProps } = props
   const fieldContext = useFormFieldContext(
     MESSAGE_NAME,
     props.__scopeForm as Scope<FormFieldContextValue | undefined>,
   )
-  const name = nameProp ?? fieldContext.name()
+  const messageProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      match: undefined,
+      name: undefined,
+    },
+  )
 
-  if (match === undefined) {
-    if (props.ref) {
-      return (
-        <FormMessageImpl
-          {...messageProps}
-          ref={toDomRef(props.ref as PossibleRef<HTMLSpanElement>)}
-          name={name}
-        >
-          {props.children ?? DEFAULT_INVALID_MESSAGE}
-        </FormMessageImpl>
-      )
-    }
+  return (
+    <>
+      {reactive(() => {
+        const match = props.match
+        const name = props.name ?? fieldContext.name()
+        const refProps = props.ref
+          ? { ref: toDomRef(props.ref as PossibleRef<HTMLSpanElement>) }
+          : {}
 
-    return (
-      <FormMessageImpl {...messageProps} name={name}>
-        {props.children ?? DEFAULT_INVALID_MESSAGE}
-      </FormMessageImpl>
-    )
-  }
+        if (match === undefined) {
+          return (
+            <FormMessageImpl {...messageProps} {...refProps} name={name}>
+              {props.children ?? DEFAULT_INVALID_MESSAGE}
+            </FormMessageImpl>
+          )
+        }
 
-  if (typeof match === 'function') {
-    if (props.ref) {
-      return (
-        <FormCustomMessage
-          {...messageProps}
-          ref={toDomRef(props.ref as PossibleRef<HTMLSpanElement>)}
-          match={match}
-          name={name}
-        />
-      )
-    }
+        if (typeof match === 'function') {
+          return <FormCustomMessage {...messageProps} {...refProps} match={match} name={name} />
+        }
 
-    return <FormCustomMessage {...messageProps} match={match} name={name} />
-  }
-
-  if (props.ref) {
-    return (
-      <FormBuiltInMessage
-        {...messageProps}
-        ref={toDomRef(props.ref as PossibleRef<HTMLSpanElement>)}
-        match={match}
-        name={name}
-      />
-    )
-  }
-
-  return <FormBuiltInMessage {...messageProps} match={match} name={name} />
+        return <FormBuiltInMessage {...messageProps} {...refProps} match={match} name={name} />
+      })}
+    </>
+  )
 }
 
 FormMessage.displayName = MESSAGE_NAME
@@ -635,15 +625,22 @@ type FormBuiltInMessageProps = FormMessageImplProps & {
 }
 
 function FormBuiltInMessage(props: ScopedProps<FormBuiltInMessageProps>): FictNode {
-  const { match, forceMatch = false, name, children, ...messageProps } = props
   const validationContext = useValidationContext(
     MESSAGE_NAME,
-    messageProps.__scopeForm as Scope<ValidationContextValue | undefined>,
+    props.__scopeForm as Scope<ValidationContextValue | undefined>,
   )
-  const validity = () => validationContext.getFieldValidity(name)
-  const matches = () => Boolean(forceMatch || validity()?.[match])
-  const builtInMessageProps = mergeProps(prop(() => messageProps as Record<string, unknown>))
-  const messageText = () => String(children ?? DEFAULT_BUILT_IN_MESSAGES[match] ?? '')
+  const validity = () => validationContext.getFieldValidity(props.name)
+  const matches = () => Boolean(props.forceMatch || validity()?.[props.match])
+  const builtInMessageProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      match: undefined,
+      forceMatch: undefined,
+      name: undefined,
+      children: undefined,
+    },
+  )
+  const messageText = () => String(props.children ?? DEFAULT_BUILT_IN_MESSAGES[props.match] ?? '')
 
   if (props.ref) {
     return (
@@ -651,7 +648,7 @@ function FormBuiltInMessage(props: ScopedProps<FormBuiltInMessageProps>): FictNo
         {...(builtInMessageProps as Record<string, unknown>)}
         present={matches}
         ref={toDomRef(props.ref as PossibleRef<HTMLSpanElement>)}
-        name={name}
+        name={props.name}
         textContent={messageText}
       />
     )
@@ -660,7 +657,7 @@ function FormBuiltInMessage(props: ScopedProps<FormBuiltInMessageProps>): FictNo
   return (
     <FormMessageImpl
       {...(builtInMessageProps as Record<string, unknown>)}
-      name={name}
+      name={props.name}
       present={matches}
       textContent={messageText}
     />
@@ -673,25 +670,39 @@ type FormCustomMessageProps = FormMessageImplProps & {
 }
 
 function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode {
-  const { match, forceMatch = false, name, id: idProp, children, ...messageProps } = props
   const validationContext = useValidationContext(
     MESSAGE_NAME,
-    messageProps.__scopeForm as Scope<ValidationContextValue | undefined>,
+    props.__scopeForm as Scope<ValidationContextValue | undefined>,
   )
   const generatedId = useId()
-  const id = () => idProp ?? generatedId()
+  const id = () => props.id ?? generatedId()
 
   useLayoutEffect(() => {
-    validationContext.onFieldCustomMatcherEntryAdd(name, { id: id(), match })
-    return () => validationContext.onFieldCustomMatcherEntryRemove(name, id())
+    const currentName = props.name
+    const currentId = id()
+    validationContext.onFieldCustomMatcherEntryAdd(currentName, {
+      id: currentId,
+      match: props.match,
+    })
+    return () => validationContext.onFieldCustomMatcherEntryRemove(currentName, currentId)
   })
 
-  const validity = () => validationContext.getFieldValidity(name)
-  const customErrors = () => validationContext.getFieldCustomErrors(name)
+  const validity = () => validationContext.getFieldValidity(props.name)
+  const customErrors = () => validationContext.getFieldCustomErrors(props.name)
   const matches = () =>
-    Boolean(forceMatch || (validity() && !hasBuiltInError(validity()!) && customErrors()[id()]))
-  const customMessageProps = mergeProps(prop(() => messageProps as Record<string, unknown>))
-  const messageText = () => String(children ?? DEFAULT_INVALID_MESSAGE)
+    Boolean(
+      props.forceMatch || (validity() && !hasBuiltInError(validity()!) && customErrors()[id()]),
+    )
+  const customMessageProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      match: undefined,
+      forceMatch: undefined,
+      name: undefined,
+      children: undefined,
+    },
+  )
+  const messageText = () => String(props.children ?? DEFAULT_INVALID_MESSAGE)
 
   if (props.ref) {
     return (
@@ -700,7 +711,7 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
         id={id()}
         present={matches}
         ref={toDomRef(props.ref as PossibleRef<HTMLSpanElement>)}
-        name={name}
+        name={props.name}
         textContent={messageText}
       />
     )
@@ -710,7 +721,7 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
     <FormMessageImpl
       {...(customMessageProps as Record<string, unknown>)}
       id={id()}
-      name={name}
+      name={props.name}
       present={matches}
       textContent={messageText}
     />
@@ -718,40 +729,46 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
 }
 
 function FormMessageImpl(props: ScopedProps<FormMessageImplProps>): FictNode {
-  const { __scopeForm, id: idProp, name, present, textContent, ...messageProps } = props
   const ariaDescriptionContext = useAriaDescriptionContext(
     MESSAGE_NAME,
-    __scopeForm as Scope<AriaDescriptionContextValue | undefined>,
+    props.__scopeForm as Scope<AriaDescriptionContextValue | undefined>,
   )
-  const id = idProp ?? useId()()
+  const generatedId = useId()
+  const id = () => props.id ?? generatedId()
   const ref = { current: null as HTMLSpanElement | null }
 
   useLayoutEffect(() => {
-    if (present?.() === false) {
-      ariaDescriptionContext.onFieldMessageIdRemove(name, id)
+    const currentName = props.name
+    const currentId = id()
+    if (props.present?.() === false) {
+      ariaDescriptionContext.onFieldMessageIdRemove(currentName, currentId)
       return
     }
 
-    ariaDescriptionContext.onFieldMessageIdAdd(name, id)
-    return () => ariaDescriptionContext.onFieldMessageIdRemove(name, id)
+    ariaDescriptionContext.onFieldMessageIdAdd(currentName, currentId)
+    return () => ariaDescriptionContext.onFieldMessageIdRemove(currentName, currentId)
   })
 
   useLayoutEffect(() => {
     const message = ref.current
-    if (!message || !present || !textContent) return
+    if (!message || !props.present || !props.textContent) return
 
-    const visible = present()
+    const visible = props.present()
     message.hidden = !visible
     message.style.display = visible ? '' : 'none'
-    message.textContent = visible ? textContent() : ''
+    message.textContent = visible ? props.textContent() : ''
   })
 
   const primitiveProps = mergeProps(
     {
-      id,
+      id: prop(id),
     },
-    prop(() => messageProps as Record<string, unknown>),
+    prop(() => props as unknown as Record<string, unknown>),
     {
+      __scopeForm: undefined,
+      name: undefined,
+      present: undefined,
+      textContent: undefined,
       ref: undefined,
     },
   )
@@ -769,29 +786,28 @@ function FormMessageImpl(props: ScopedProps<FormMessageImplProps>): FictNode {
 }
 
 function FormValidityState(props: ScopedProps<FormValidityStateProps>): FictNode {
-  const { __scopeForm, name: nameProp, children } = props
   const validationContext = useValidationContext(
     VALIDITY_STATE_NAME,
-    __scopeForm as Scope<ValidationContextValue | undefined>,
+    props.__scopeForm as Scope<ValidationContextValue | undefined>,
   )
   const fieldContext = useFormFieldContext(
     VALIDITY_STATE_NAME,
-    __scopeForm as Scope<FormFieldContextValue | undefined>,
+    props.__scopeForm as Scope<FormFieldContextValue | undefined>,
   )
-  const name = nameProp ?? fieldContext.name()
-  return <>{reactive(() => children(validationContext.getFieldValidity(name)))}</>
+  const name = () => props.name ?? fieldContext.name()
+  return <>{reactive(() => props.children(validationContext.getFieldValidity(name())))}</>
 }
 
 FormValidityState.displayName = VALIDITY_STATE_NAME
 
 function FormSubmit(props: ScopedProps<FormSubmitProps>): FictNode {
-  const { __scopeForm, ...submitProps } = props
   const primitiveProps = mergeProps(
     {
       type: 'submit',
     },
-    prop(() => submitProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeForm: undefined,
       ref: undefined,
     },
   )

@@ -1,4 +1,5 @@
 import * as React from '../helpers/element.js'
+import { mergeProps, prop } from 'fict'
 import classNames from 'classnames'
 import { RadioGroup as RadioGroupPrimitive } from '@fictjs/radix-ui'
 
@@ -43,11 +44,18 @@ type RadioCardsItemElement = React.ElementRef<typeof RadioGroupPrimitive.Item>
 interface RadioCardsItemProps
   extends ComponentPropsWithout<typeof RadioGroupPrimitive.Item, RemovedProps>, MarginProps {}
 const RadioCardsItem = React.forwardRef<RadioCardsItemElement, RadioCardsItemProps>(
-  ({ className, ...props }, forwardedRef) => (
+  (props, forwardedRef) => (
     <RadioGroupPrimitive.Item
-      {...props}
+      {...(mergeProps(
+        prop(() => props as unknown as Record<string, unknown>),
+        { className: undefined },
+      ) as unknown as RadioCardsItemProps)}
       ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-reset', 'rt-BaseCard', 'rt-RadioCardsItem', className)}
+      class={
+        prop(() =>
+          classNames('rt-reset', 'rt-BaseCard', 'rt-RadioCardsItem', props.className),
+        ) as unknown as string
+      }
     />
   ),
 )

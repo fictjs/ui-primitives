@@ -1,4 +1,4 @@
-import { prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { Primitive } from '@fictjs/primitive'
 
@@ -36,13 +36,19 @@ function mergeFillStyle(style: unknown): string | Record<string, string | number
 }
 
 function AspectRatio(props: AspectRatioProps): FictNode {
-  const { ratio = 1 / 1, style, ...aspectRatioProps } = props
+  const aspectRatioProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      ratio: undefined,
+      style: undefined,
+    },
+  )
   const wrapperProps: Record<string, unknown> = {
     'data-radix-aspect-ratio-wrapper': '',
     style: prop(() => ({
       position: 'relative',
       width: '100%',
-      paddingBottom: `${100 / readValue(ratio)}%`,
+      paddingBottom: `${100 / readValue(props.ratio ?? 1 / 1)}%`,
     })),
   }
 
@@ -50,7 +56,11 @@ function AspectRatio(props: AspectRatioProps): FictNode {
     <div {...wrapperProps}>
       <Primitive.div
         {...(aspectRatioProps as Record<string, unknown>)}
-        style={mergeFillStyle(style)}
+        style={
+          prop(() => mergeFillStyle(props.style)) as unknown as NonNullable<
+            AspectRatioProps['style']
+          >
+        }
       />
     </div>
   )

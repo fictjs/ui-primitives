@@ -161,6 +161,37 @@ describe('@fictjs/collapsible', () => {
     expect(content.textContent).toBe('Body')
   })
 
+  it('keeps content visible while a reactive exit presence is suspended', async () => {
+    const container = document.createElement('div')
+    const open = createSignal(false)
+    document.body.append(container)
+
+    render(
+      () => (
+        <Root open={open}>
+          <Content data-testid="content">Body</Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    open(true)
+    await flushEffects()
+
+    let content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    content.style.animationName = 'collapsible-open'
+    content.dispatchEvent(new Event('animationstart', { bubbles: true }))
+    content.style.animationName = 'collapsible-close'
+
+    open(false)
+    await flushEffects()
+
+    content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    expect(content.hidden).toBe(false)
+    expect(content.textContent).toBe('Body')
+  })
+
   it('forwards ref mount and cleanup through the root element', async () => {
     const calls: Array<string | null> = []
     const container = document.createElement('div')

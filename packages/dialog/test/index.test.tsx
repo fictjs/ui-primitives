@@ -153,7 +153,7 @@ describe('@fictjs/dialog', () => {
 
     mount(
       () => (
-        <Dialog onOpenChange={prop(() => onOpenChange())}>
+        <Dialog onOpenChange={prop(() => onOpenChange()) as unknown as (open: boolean) => void}>
           <DialogTrigger data-testid="trigger">Open</DialogTrigger>
           <DialogPortal>
             <DialogContent>
@@ -174,6 +174,91 @@ describe('@fictjs/dialog', () => {
     await waitForEffects()
 
     expect(calls).toEqual(['first:true', 'second:false'])
+  })
+
+  it.each([
+    ['modal', true],
+    ['non-modal', false],
+  ] as const)(
+    'preserves latest callbacks and reactive DOM props through the %s content chain',
+    async (_mode, modal) => {
+      const container = document.createElement('div')
+      const calls: string[] = []
+      const label = createSignal('first label')
+      const onEscapeKeyDown = createSignal<(event: KeyboardEvent) => void>(() => {
+        calls.push('first')
+      })
+      document.body.append(container)
+
+      mount(
+        () => (
+          <Dialog defaultOpen modal={modal}>
+            <DialogTrigger>Open</DialogTrigger>
+            <DialogPortal>
+              <DialogContent
+                data-testid="content"
+                aria-label={prop(() => label()) as unknown as string}
+                onEscapeKeyDown={
+                  prop(() => onEscapeKeyDown()) as unknown as (event: KeyboardEvent) => void
+                }
+              >
+                <DialogTitle>Title</DialogTitle>
+                <DialogDescription>Description</DialogDescription>
+              </DialogContent>
+            </DialogPortal>
+          </Dialog>
+        ),
+        container,
+      )
+
+      await waitForEffects()
+      label('second label')
+      onEscapeKeyDown(() => calls.push('second'))
+      await flushEffects()
+
+      const content = document.body.querySelector('[data-testid="content"]') as HTMLDivElement
+      expect(content.getAttribute('aria-label')).toBe('second label')
+
+      pressEscape(document)
+      await waitForEffects()
+
+      expect(calls).toEqual(['second'])
+    },
+  )
+
+  it('switches overlay and content implementations when modal changes', async () => {
+    const container = document.createElement('div')
+    const modal = createSignal(true)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Dialog defaultOpen modal={modal}>
+          <DialogPortal>
+            <DialogOverlay data-testid="overlay" />
+            <DialogContent data-testid="content">
+              <DialogTitle>Dialog title</DialogTitle>
+              <DialogDescription>Dialog description</DialogDescription>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    expect(document.body.querySelector('[data-testid="overlay"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    modal(false)
+    await flushEffects()
+    expect(document.body.querySelector('[data-testid="overlay"]')).toBeNull()
+    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    modal(true)
+    await flushEffects()
+    expect(document.body.querySelector('[data-testid="overlay"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
   })
 
   it('locks modal focus flow and restores trigger focus on escape', async () => {

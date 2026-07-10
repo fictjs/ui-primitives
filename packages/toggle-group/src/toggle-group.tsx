@@ -198,24 +198,20 @@ function getNextItem(
 function ToggleGroup(
   props: ScopedProps<ToggleGroupSingleProps | ToggleGroupMultipleProps>,
 ): FictNode {
-  const { type, ...toggleGroupProps } = props
+  const toggleGroupProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      type: undefined,
+      onValueChange: prop(() => props.onValueChange),
+    },
+  )
 
-  if (type === 'single') {
-    return (
-      <ToggleGroupImplSingle
-        {...(toggleGroupProps as Record<string, unknown>)}
-        onValueChange={prop(() => props.onValueChange)}
-      />
-    )
+  if (props.type === 'single') {
+    return <ToggleGroupImplSingle {...(toggleGroupProps as Record<string, unknown>)} />
   }
 
-  if (type === 'multiple') {
-    return (
-      <ToggleGroupImplMultiple
-        {...(toggleGroupProps as Record<string, unknown>)}
-        onValueChange={prop(() => props.onValueChange)}
-      />
-    )
+  if (props.type === 'multiple') {
+    return <ToggleGroupImplMultiple {...(toggleGroupProps as Record<string, unknown>)} />
   }
 
   throw new Error(`Missing prop \`type\` expected on \`${TOGGLE_GROUP_NAME}\``)
@@ -436,26 +432,28 @@ function ToggleGroupItem(props: ScopedProps<ToggleGroupItemProps>): FictNode {
     props.__scopeToggleGroup as Scope<ToggleGroupContextValue | undefined>,
   )
   const itemRef = { current: null as ToggleGroupItemElement | null }
-  const pressed = () => valueContext.value().includes(props.value)
+  const value = () => props.value
+  const pressed = () => valueContext.value().includes(value())
   const disabled = () =>
     context.disabled() ||
     Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
   const isCurrentTabStop = () => {
     if (!context.rovingFocus() || disabled()) return false
 
-    return context.currentTabStop() === props.value || context.getEntryValue() === props.value
+    return context.currentTabStop() === value() || context.getEntryValue() === value()
   }
 
-  useLayoutEffect(() =>
-    untrack(() =>
+  useLayoutEffect(() => {
+    const currentValue = value()
+    return untrack(() =>
       context.registerItem({
-        value: props.value,
+        value: currentValue,
         ref: itemRef,
         disabled,
         pressed,
       }),
-    ),
-  )
+    )
+  })
 
   useLayoutEffect(() => {
     const item = itemRef.current
@@ -474,25 +472,23 @@ function ToggleGroupItem(props: ScopedProps<ToggleGroupItemProps>): FictNode {
         itemRef.current = node
         setRef(props.ref as PossibleRef<ToggleGroupItemElement>, node)
       },
-      ...(context.rovingFocus()
-        ? {
-            tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
-          }
-        : {}),
+      tabIndex: prop(() =>
+        context.rovingFocus() ? (isCurrentTabStop() ? 0 : -1) : props.tabIndex,
+      ),
       onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         () => {
           if (context.rovingFocus() && !disabled()) {
             setTimeout(() => {
               if (context.rovingFocus() && !disabled()) {
-                context.setCurrentTabStop(props.value)
+                context.setCurrentTabStop(value())
               }
             })
           }
         },
       ),
       onMouseDown: composeEventHandlers<MouseEvent>(
-        props.onMouseDown as ((event: MouseEvent) => void) | undefined,
+        (event) => (props.onMouseDown as ((event: MouseEvent) => void) | undefined)?.(event),
         (event) => {
           if (disabled()) {
             event.preventDefault()
@@ -500,7 +496,7 @@ function ToggleGroupItem(props: ScopedProps<ToggleGroupItemProps>): FictNode {
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
         (event) => {
           if (!context.rovingFocus()) return
           if (event.target !== event.currentTarget) return
@@ -510,7 +506,7 @@ function ToggleGroupItem(props: ScopedProps<ToggleGroupItemProps>): FictNode {
           if (!intent) return
 
           const enabledItems = context.getItems().filter((item) => !item.disabled())
-          const nextItem = getNextItem(enabledItems, props.value, intent, context.loop())
+          const nextItem = getNextItem(enabledItems, value(), intent, context.loop())
           if (!nextItem) return
 
           event.preventDefault()
@@ -527,7 +523,7 @@ function ToggleGroupItem(props: ScopedProps<ToggleGroupItemProps>): FictNode {
 ToggleGroupItem.displayName = ITEM_NAME
 
 function ToggleGroupItemImpl(props: ScopedProps<ToggleGroupItemImplProps>): FictNode {
-  const { __scopeToggleGroup, value, ...itemProps } = props
+  const { __scopeToggleGroup } = props
   const valueContext = useToggleGroupValueContext(
     ITEM_NAME,
     __scopeToggleGroup as Scope<ToggleGroupValueContextValue | undefined>,
@@ -538,9 +534,13 @@ function ToggleGroupItemImpl(props: ScopedProps<ToggleGroupItemImplProps>): Fict
   const primitiveProps = mergeProps(
     {
       'data-toggle-group-item': '',
-      'data-toggle-group-value': value,
+      'data-toggle-group-value': prop(() => props.value),
     },
-    prop(() => itemProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeToggleGroup: undefined,
+      value: undefined,
+    },
     valueContext.type === 'single'
       ? {
           role: 'radio',
@@ -551,11 +551,11 @@ function ToggleGroupItemImpl(props: ScopedProps<ToggleGroupItemImplProps>): Fict
     {
       onPressedChange: (nextPressed: boolean) => {
         if (nextPressed) {
-          valueContext.onItemActivate(value)
+          valueContext.onItemActivate(props.value)
           return
         }
 
-        valueContext.onItemDeactivate(value)
+        valueContext.onItemDeactivate(props.value)
       },
     },
   )

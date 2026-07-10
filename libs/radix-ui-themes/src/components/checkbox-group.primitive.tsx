@@ -1,6 +1,6 @@
 import type { FictNode } from 'fict'
 
-import { createContext, useContext } from 'fict'
+import { createContext, mergeProps, prop, useContext } from 'fict'
 import { createSignal } from 'fict/advanced'
 
 import { Checkbox as CheckboxPrimitive } from '@fictjs/radix-ui'
@@ -87,18 +87,20 @@ function CheckboxGroup(props: ScopedProps<CheckboxGroupProps>): FictNode {
     },
   }
 
-  const primitiveProps = {
-    ...(props as Record<string, unknown>),
-    __scopeCheckboxGroup: undefined,
-    defaultValue: undefined,
-    disabled: undefined,
-    name: undefined,
-    onValueChange: undefined,
-    required: undefined,
-    value: undefined,
-    role: 'group',
-    'data-disabled': props.disabled ? '' : undefined,
-  }
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeCheckboxGroup: undefined,
+      defaultValue: undefined,
+      disabled: undefined,
+      name: undefined,
+      onValueChange: undefined,
+      required: undefined,
+      value: undefined,
+      role: 'group',
+      'data-disabled': prop(() => (props.disabled ? '' : undefined)),
+    },
+  )
 
   return (
     <CheckboxGroupContext.Provider value={contextValue}>
@@ -108,10 +110,18 @@ function CheckboxGroup(props: ScopedProps<CheckboxGroupProps>): FictNode {
 }
 
 function CheckboxGroupItem(props: ScopedProps<CheckboxGroupItemProps>): FictNode {
-  const { __scopeCheckboxGroup, value, disabled, onCheckedChange, ...itemProps } = props
   const context = useCheckboxGroupContext('CheckboxGroupItem')
-  const isChecked = () => context.value().includes(value)
-  const isDisabled = () => context.disabled() || Boolean(disabled)
+  const isChecked = () => context.value().includes(props.value)
+  const isDisabled = () => context.disabled() || Boolean(props.disabled)
+  const itemProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      __scopeCheckboxGroup: undefined,
+      disabled: undefined,
+      onCheckedChange: undefined,
+      value: undefined,
+    },
+  )
 
   return (
     <CheckboxPrimitive.Root
@@ -121,15 +131,18 @@ function CheckboxGroupItem(props: ScopedProps<CheckboxGroupItemProps>): FictNode
       name={context.name()}
       required={context.required()}
       onCheckedChange={(nextChecked) => {
-        context.setItemChecked(value, nextChecked === true)
-        onCheckedChange?.(nextChecked)
+        context.setItemChecked(props.value, nextChecked === true)
+        props.onCheckedChange?.(nextChecked)
       }}
     />
   )
 }
 
 function CheckboxGroupIndicator(props: ScopedProps<CheckboxGroupIndicatorProps>): FictNode {
-  const { __scopeCheckboxGroup, ...indicatorProps } = props
+  const indicatorProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    { __scopeCheckboxGroup: undefined },
+  )
   return <CheckboxPrimitive.Indicator {...indicatorProps} />
 }
 

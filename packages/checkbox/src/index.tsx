@@ -230,7 +230,7 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
 CheckboxProvider.displayName = CHECKBOX_NAME + 'Provider'
 
 function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
-  const { __scopeCheckbox, ...triggerProps } = props
+  const { __scopeCheckbox } = props
   const context = useCheckboxContext(TRIGGER_NAME, __scopeCheckbox)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLButtonElement>, (node) =>
     context.setControl(node),
@@ -255,7 +255,7 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
   })
 
   const handleKeyDown = composeEventHandlers<KeyboardEvent>(
-    props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+    (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
     (event) => {
       if (event.key === 'Enter') {
         event.preventDefault()
@@ -264,7 +264,7 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
   )
 
   const handleClick = composeEventHandlers<MouseEvent>(
-    props.onClick as ((event: MouseEvent) => void) | undefined,
+    (event) => (props.onClick as ((event: MouseEvent) => void) | undefined)?.(event),
     (event) => {
       if (context.disabled()) {
         return
@@ -310,8 +310,9 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
       disabled: prop(context.disabled),
       value: prop(context.value),
     },
-    prop(() => triggerProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeCheckbox: undefined,
       onClick: handleClick,
       onKeyDown: handleKeyDown,
       ref: undefined,
@@ -324,7 +325,7 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
 CheckboxTrigger.displayName = TRIGGER_NAME
 
 function CheckboxIndicator(props: ScopedProps<CheckboxIndicatorProps>): FictNode {
-  const { __scopeCheckbox, ...indicatorProps } = props
+  const { __scopeCheckbox } = props
   const context = useCheckboxContext(INDICATOR_NAME, __scopeCheckbox)
   const present = () =>
     Boolean(
@@ -333,8 +334,9 @@ function CheckboxIndicator(props: ScopedProps<CheckboxIndicatorProps>): FictNode
       context.checked() === true,
     )
   const primitiveProps = mergeProps(
-    prop(() => indicatorProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeCheckbox: undefined,
       'data-state': prop(() => getState(context.checked())),
       'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
       forceMount: undefined,
@@ -355,7 +357,7 @@ function CheckboxIndicator(props: ScopedProps<CheckboxIndicatorProps>): FictNode
 CheckboxIndicator.displayName = INDICATOR_NAME
 
 function CheckboxBubbleInput(props: ScopedProps<CheckboxBubbleInputProps>): FictNode {
-  const { __scopeCheckbox, ...inputProps } = props
+  const { __scopeCheckbox } = props
   const context = useCheckboxContext(BUBBLE_INPUT_NAME, __scopeCheckbox)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLInputElement>, (node) =>
     context.setBubbleInput(node),
@@ -383,8 +385,9 @@ function CheckboxBubbleInput(props: ScopedProps<CheckboxBubbleInputProps>): Fict
       value: prop(context.value),
       tabIndex: -1,
     },
-    prop(() => inputProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeCheckbox: undefined,
       ref: undefined,
       style: prop(() => {
         const nextControlSize = controlSize()
@@ -428,38 +431,61 @@ function CheckboxRootBubbleInput(props: {
 }
 
 function Checkbox(props: ScopedProps<CheckboxProps>): FictNode {
-  const {
-    __scopeCheckbox,
-    checked,
-    defaultChecked,
-    disabled,
-    form,
-    name,
-    onCheckedChange: _onCheckedChange,
-    required,
-    value,
-    ...checkboxProps
-  } = props
+  const checkboxProps = omitPropsPreservingValues(
+    props as unknown as Record<string, unknown>,
+    new Set([
+      '__scopeCheckbox',
+      'checked',
+      'defaultChecked',
+      'disabled',
+      'form',
+      'name',
+      'onCheckedChange',
+      'required',
+      'value',
+    ]),
+  )
 
   return (
     <CheckboxProvider
-      __scopeCheckbox={__scopeCheckbox}
-      checked={checked}
-      defaultChecked={defaultChecked}
-      disabled={disabled}
-      form={form}
-      name={name}
+      __scopeCheckbox={props.__scopeCheckbox}
+      checked={prop(() => (props.checked === undefined ? undefined : readValue(props.checked)))}
+      defaultChecked={prop(() =>
+        props.defaultChecked === undefined ? undefined : readValue(props.defaultChecked),
+      )}
+      disabled={prop(() =>
+        props.disabled === undefined ? undefined : Boolean(readValue(props.disabled)),
+      )}
+      form={prop(() => (props.form === undefined ? undefined : readValue(props.form)))}
+      name={prop(() => (props.name === undefined ? undefined : readValue(props.name)))}
       onCheckedChange={prop(() => props.onCheckedChange)}
-      required={required}
-      value={value}
+      required={prop(() =>
+        props.required === undefined ? undefined : Boolean(readValue(props.required)),
+      )}
+      value={prop(() => (props.value === undefined ? undefined : readValue(props.value)))}
     >
-      <CheckboxTrigger __scopeCheckbox={__scopeCheckbox} {...checkboxProps} />
-      <CheckboxRootBubbleInput __scopeCheckbox={__scopeCheckbox} />
+      <CheckboxTrigger __scopeCheckbox={props.__scopeCheckbox} {...checkboxProps} />
+      <CheckboxRootBubbleInput __scopeCheckbox={props.__scopeCheckbox} />
     </CheckboxProvider>
   )
 }
 
 Checkbox.displayName = CHECKBOX_NAME
+
+function omitPropsPreservingValues(
+  source: Record<string, unknown>,
+  omittedKeys: ReadonlySet<string>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+
+  for (const key of Object.keys(source)) {
+    if (!omittedKeys.has(key)) {
+      result[key] = prop(() => source[key])
+    }
+  }
+
+  return result
+}
 
 const Root = Checkbox
 const Provider = CheckboxProvider

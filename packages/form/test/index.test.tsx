@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Control, Field, Form, Label, Message, Submit, ValidityState } from '../src/index.js'
 
@@ -86,6 +87,48 @@ describe('@fictjs/form', () => {
     expect(label.getAttribute('data-invalid')).toBe('true')
     expect(message.textContent).toBe('Email is required')
     expect(input.getAttribute('aria-describedby')).toBe(message.id)
+  })
+
+  it('invokes the latest form and control handlers from getter-backed props', async () => {
+    const container = document.createElement('div')
+    const calls: string[] = []
+    const onSubmit = createSignal<(event: SubmitEvent) => void>(() => calls.push('submit:first'))
+    const onClearServerErrors = createSignal<() => void>(() => calls.push('clear:first'))
+    const onChange = createSignal<(event: Event) => void>(() => calls.push('change:first'))
+    const onInvalid = createSignal<(event: Event) => void>(() => calls.push('invalid:first'))
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Form
+          onSubmit={prop(() => onSubmit()) as unknown as (event: SubmitEvent) => void}
+          onClearServerErrors={prop(() => onClearServerErrors()) as unknown as () => void}
+        >
+          <Field name="email">
+            <Control
+              onChange={prop(() => onChange()) as unknown as (event: Event) => void}
+              onInvalid={prop(() => onInvalid()) as unknown as (event: Event) => void}
+            />
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    onSubmit(() => calls.push('submit:second'))
+    onClearServerErrors(() => calls.push('clear:second'))
+    onChange(() => calls.push('change:second'))
+    onInvalid(() => calls.push('invalid:second'))
+
+    const input = container.querySelector('input') as HTMLInputElement
+    const form = container.querySelector('form') as HTMLFormElement
+    changeInput(input, 'latest')
+    invalid(input)
+    form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }))
+    await waitForEffects()
+
+    expect(calls).toEqual(['change:second', 'invalid:second', 'submit:second', 'clear:second'])
   })
 
   it('preserves caller ARIA attributes while adding internal descriptions', async () => {

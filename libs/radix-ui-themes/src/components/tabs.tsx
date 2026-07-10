@@ -1,6 +1,7 @@
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
 import { Tabs as TabsPrimitive } from '@fictjs/radix-ui'
+import { mergeProps, prop } from 'fict'
 
 import { tabsListPropDefs } from './tabs.props.js'
 import { extractProps } from '../helpers/extract-props.js'
@@ -57,15 +58,24 @@ interface TabsTriggerProps extends ComponentPropsWithout<
 > {}
 const TabsTrigger = React.forwardRef<TabsTriggerElement, TabsTriggerProps>(
   (props, forwardedRef) => {
-    const { className, children, ...triggerProps } = props
+    const triggerProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { children: undefined, className: undefined },
+    ) as unknown as TabsTriggerProps
     return (
       <TabsPrimitive.Trigger
         {...triggerProps}
         ref={React.coerceRef(forwardedRef)}
-        class={classNames('rt-reset', 'rt-BaseTabListTrigger', 'rt-TabsTrigger', className)}
+        class={
+          prop(() =>
+            classNames('rt-reset', 'rt-BaseTabListTrigger', 'rt-TabsTrigger', props.className),
+          ) as unknown as string
+        }
       >
-        <span class="rt-BaseTabListTriggerInner rt-TabsTriggerInner">{children}</span>
-        <span class="rt-BaseTabListTriggerInnerHidden rt-TabsTriggerInnerHidden">{children}</span>
+        <span class="rt-BaseTabListTriggerInner rt-TabsTriggerInner">{props.children}</span>
+        <span class="rt-BaseTabListTriggerInnerHidden rt-TabsTriggerInnerHidden">
+          {props.children}
+        </span>
       </TabsPrimitive.Trigger>
     )
   },

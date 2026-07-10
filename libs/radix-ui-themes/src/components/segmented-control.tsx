@@ -1,4 +1,5 @@
 import * as React from '../helpers/element.js'
+import { mergeProps, prop } from 'fict'
 import classNames from 'classnames'
 import { ToggleGroup as ToggleGroupPrimitive } from '@fictjs/radix-ui'
 import { useControllableState } from '@fictjs/radix-ui/internal'
@@ -43,7 +44,7 @@ const SegmentedControlRoot = React.forwardRef<HTMLDivElement, SegmentedControlRo
 
     return (
       <ToggleGroupPrimitive.Root
-        data-disabled={props.disabled || undefined}
+        data-disabled={prop(() => props.disabled || undefined) as unknown as boolean | undefined}
         data-radius={radius}
         ref={React.coerceRef(forwardedRef)}
         class={classNames('rt-SegmentedControlRoot', className)}
@@ -55,7 +56,7 @@ const SegmentedControlRoot = React.forwardRef<HTMLDivElement, SegmentedControlRo
         {...rootProps}
         type="single"
         value={value}
-        disabled={!!props.disabled}
+        disabled={prop(() => !!props.disabled) as unknown as boolean}
       >
         {children}
         <div class="rt-SegmentedControlIndicator" />
@@ -79,23 +80,36 @@ interface SegmentedControlItemProps
     SegmentedControlItemOwnProps {}
 
 const SegmentedControlItem = React.forwardRef<HTMLButtonElement, SegmentedControlItemProps>(
-  ({ children, className, ...props }, forwardedRef) => {
-    const itemLabel =
-      typeof children === 'string' || typeof children === 'number' ? String(children) : undefined
+  (props, forwardedRef) => {
+    const itemProps = mergeProps(
+      prop(() => props as unknown as Record<string, unknown>),
+      {
+        children: undefined,
+        className: undefined,
+      },
+    ) as unknown as SegmentedControlItemProps
+    const itemLabel = () =>
+      typeof props.children === 'string' || typeof props.children === 'number'
+        ? String(props.children)
+        : undefined
 
     return (
       <ToggleGroupPrimitive.Item
         ref={React.coerceRef(forwardedRef)}
-        class={classNames('rt-reset', 'rt-SegmentedControlItem', className)}
-        aria-label={props['aria-label'] ?? itemLabel}
-        {...props}
+        class={
+          prop(() =>
+            classNames('rt-reset', 'rt-SegmentedControlItem', props.className),
+          ) as unknown as string
+        }
+        aria-label={prop(() => props['aria-label'] ?? itemLabel()) as unknown as string | undefined}
+        {...itemProps}
         disabled={false}
       >
         <span class="rt-SegmentedControlItemSeparator" />
         <span class="rt-SegmentedControlItemLabel">
-          <span class="rt-SegmentedControlItemLabelActive">{children}</span>
+          <span class="rt-SegmentedControlItemLabelActive">{props.children}</span>
           <span class="rt-SegmentedControlItemLabelInactive" aria-hidden="true">
-            {children}
+            {props.children}
           </span>
         </span>
       </ToggleGroupPrimitive.Item>

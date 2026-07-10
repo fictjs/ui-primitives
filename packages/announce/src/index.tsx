@@ -1,6 +1,8 @@
 import {
   createElement,
   createPortal as createFictPortal,
+  mergeProps,
+  prop,
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
@@ -97,35 +99,37 @@ function getLiveRegionPartDataAttr(id?: string): string {
 }
 
 function Announce(props: AnnounceProps): FictNode {
-  const {
-    'aria-relevant': ariaRelevant,
-    children,
-    ref: forwardedRef,
-    role: roleProp,
-    type: typeProp = 'polite',
-    regionIdentifier,
-    ...regionProps
-  } = props
-
   const ownerDocument = createSignal<Document | null>(
     typeof document !== 'undefined' ? document : null,
   )
   const region = createSignal<HTMLElement | null>(null)
-  const ref = useComposedRefs(forwardedRef, (node: HTMLDivElement | null) => {
+  const ref = useComposedRefs(props.ref, (node: HTMLDivElement | null) => {
     if (node) {
       ownerDocument(node.ownerDocument)
     }
   })
+  const regionProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      'aria-relevant': undefined,
+      children: undefined,
+      ref: undefined,
+      role: undefined,
+      type: undefined,
+      regionIdentifier: undefined,
+    },
+  )
 
   const relevant = () => {
+    const ariaRelevant = props['aria-relevant']
     if (!ariaRelevant) return undefined
     return Array.isArray(ariaRelevant) ? ariaRelevant.join(' ') : ariaRelevant
   }
 
-  const type = () => readValue(typeProp)
-  const role = () => roleProp ?? ROLES[type()]
-  const id = () => readValue(regionIdentifier)
-  const atomic = () => ['true', true].includes(regionProps['aria-atomic'] as boolean | string)
+  const type = () => readValue(props.type ?? 'polite')
+  const role = () => props.role ?? ROLES[type()]
+  const id = () => readValue(props.regionIdentifier)
+  const atomic = () => ['true', true].includes(props['aria-atomic'] as boolean | string)
 
   const getLiveRegionElement = (): HTMLElement | null => {
     const currentOwnerDocument = ownerDocument()
@@ -197,13 +201,13 @@ function Announce(props: AnnounceProps): FictNode {
   return (
     <>
       <Primitive.div {...(regionProps as Record<string, unknown>)} ref={ref}>
-        {children}
+        {props.children}
       </Primitive.div>
       {reactive(() => {
         const liveRegion = region()
         if (!liveRegion) return null
 
-        return createFictPortal(liveRegion, () => <div>{children}</div>, createElement)
+        return createFictPortal(liveRegion, () => <div>{props.children}</div>, createElement)
       })}
     </>
   )

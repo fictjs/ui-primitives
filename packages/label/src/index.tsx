@@ -1,11 +1,16 @@
-import type { FictNode, JSX } from '@fictjs/runtime'
+import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { Primitive } from '@fictjs/primitive'
 
 type LabelProps = JSX.IntrinsicElements['label']
 
 function Label(props: LabelProps): FictNode {
-  const { onMouseDown, ...labelProps } = props
+  const labelProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      onMouseDown: undefined,
+    },
+  )
 
   return (
     <Primitive.label
@@ -14,7 +19,7 @@ function Label(props: LabelProps): FictNode {
         const target = event.target as HTMLElement
         if (target.closest('button, input, select, textarea')) return
 
-        onMouseDown?.(event)
+        props.onMouseDown?.(event)
         if (!event.defaultPrevented && event.detail > 1) {
           event.preventDefault()
         }

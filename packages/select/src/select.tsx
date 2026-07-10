@@ -1,6 +1,7 @@
 import {
   createContext as createRuntimeContext,
   createElement,
+  createEffect,
   createPortal as createFictPortal,
   mergeProps,
   prop,
@@ -18,6 +19,7 @@ import { useId } from '@fictjs/id'
 import {
   createMenuScope,
   Menu,
+  MenuAnchor,
   MenuContent,
   MenuItem,
   MenuSeparator,
@@ -64,7 +66,7 @@ type SelectItemContextValue = {
   onSelect(): void
 }
 type SelectPortalContextValue = {
-  forceMount: boolean | undefined
+  forceMount: () => boolean | undefined
 }
 
 const SELECT_NAME = 'Select'
@@ -95,7 +97,7 @@ const [SelectProvider, useSelectContext] = createSelectContext<SelectContextValu
 const [SelectItemProvider, useSelectItemContext] =
   createSelectContext<SelectItemContextValue>(ITEM_NAME)
 const SelectPortalContext = createRuntimeContext<SelectPortalContextValue>({
-  forceMount: undefined,
+  forceMount: () => undefined,
 })
 const useMenuScope = createMenuScope()
 
@@ -786,6 +788,7 @@ function SelectTrigger(props: ScopedProps<SelectTriggerProps>): FictNode {
     TRIGGER_NAME,
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
   )
+  const menuScope = useMenuScope(props.__scopeSelect)
   const primitiveProps = mergeProps(
     {
       type: 'button',
@@ -802,14 +805,14 @@ function SelectTrigger(props: ScopedProps<SelectTriggerProps>): FictNode {
     {
       __scopeSelect: undefined,
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => (props.onClick as ((event: MouseEvent) => void) | undefined)?.(event),
         () => {
           if (context.disabled()) return
           context.onOpenChange(!context.open())
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
         (event) => {
           if (context.disabled()) return
           if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
@@ -822,18 +825,20 @@ function SelectTrigger(props: ScopedProps<SelectTriggerProps>): FictNode {
   )
 
   return (
-    <Primitive.button
-      {...primitiveProps}
-      ref={(node: HTMLButtonElement | null) => {
-        context.triggerRef.current = node
-        if (!props.ref) return
-        if (typeof props.ref === 'function') {
-          props.ref(node)
-          return
-        }
-        props.ref.current = node
-      }}
-    />
+    <MenuAnchor {...menuScope} asChild>
+      <Primitive.button
+        {...primitiveProps}
+        ref={(node: HTMLButtonElement | null) => {
+          context.triggerRef.current = node
+          if (!props.ref) return
+          if (typeof props.ref === 'function') {
+            props.ref(node)
+            return
+          }
+          props.ref.current = node
+        }}
+      />
+    </MenuAnchor>
   )
 }
 
@@ -848,10 +853,18 @@ function SelectValue(props: ScopedProps<SelectValueProps>): FictNode {
     props.placeholder === undefined
       ? ''
       : (readValue(props.placeholder as MaybeAccessor<string | undefined>) ?? '')
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+      placeholder: undefined,
+      ref: undefined,
+    },
+  )
 
   return (
     <Primitive.span
-      {...(props as Record<string, unknown>)}
+      {...primitiveProps}
       ref={(node: HTMLSpanElement | null) => {
         if (!props.ref) return
         if (typeof props.ref === 'function') {
@@ -873,29 +886,37 @@ function SelectValue(props: ScopedProps<SelectValueProps>): FictNode {
 SelectValue.displayName = VALUE_NAME
 
 function SelectIcon(props: ScopedProps<SelectIconProps>): FictNode {
-  return <Primitive.span {...(props as Record<string, unknown>)} />
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+    },
+  )
+  return <Primitive.span {...primitiveProps} />
 }
 
 SelectIcon.displayName = ICON_NAME
 
 function SelectPortal(props: ScopedProps<SelectPortalProps>): FictNode {
-  const forceMount =
+  const forceMount = () =>
     props.forceMount === undefined
       ? undefined
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
-  const container = props.container ?? globalThis.document?.body ?? null
 
-  if (!container) return null
+  createEffect(() => {
+    const container = props.container ?? globalThis.document?.body ?? null
+    if (!container) return
 
-  createFictPortal(
-    container,
-    () => (
-      <SelectPortalContext.Provider value={{ forceMount }}>
-        <div style={{ display: 'contents' }}>{props.children}</div>
-      </SelectPortalContext.Provider>
-    ),
-    createElement,
-  )
+    return createFictPortal(
+      container,
+      () => (
+        <SelectPortalContext.Provider value={{ forceMount }}>
+          <div style={{ display: 'contents' }}>{props.children}</div>
+        </SelectPortalContext.Provider>
+      ),
+      createElement,
+    ).dispose
+  })
 
   return null
 }
@@ -903,7 +924,13 @@ function SelectPortal(props: ScopedProps<SelectPortalProps>): FictNode {
 SelectPortal.displayName = PORTAL_NAME
 
 function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
-  const { position: _position, ...contentProps } = props
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+      position: undefined,
+    },
+  )
   const menuScope = useMenuScope(props.__scopeSelect)
   const portalContext = useRuntimeContext(SelectPortalContext)
   const context = useSelectContext(
@@ -911,9 +938,9 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
   )
   const content = createSignal<HTMLDivElement | null>(null)
-  const forceMount =
+  const forceMount = () =>
     props.forceMount === undefined
-      ? portalContext.forceMount
+      ? portalContext.forceMount()
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
   const position = () =>
     props.position === undefined
@@ -952,7 +979,7 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
   const setContentRef = (node: HTMLDivElement | null) => {
     content(node)
 
-    const forwardedRef = (contentProps as { ref?: PossibleRef<HTMLDivElement> }).ref
+    const forwardedRef = props.ref as PossibleRef<HTMLDivElement>
     if (!forwardedRef) return
     if (typeof forwardedRef === 'function') {
       forwardedRef(node)
@@ -977,16 +1004,18 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
       data-side={prop(placedSide)}
       data-align={prop(align)}
       ref={setContentRef}
-      style={{
-        outline: 'none',
-        ...(position() === 'popper' ? { width: '100%' } : {}),
-        '--radix-select-content-transform-origin': 'var(--radix-popper-transform-origin)',
-        '--radix-select-content-available-width': 'var(--radix-popper-available-width)',
-        '--radix-select-content-available-height': 'var(--radix-popper-available-height)',
-        '--radix-select-trigger-width': 'var(--radix-popper-anchor-width)',
-        '--radix-select-trigger-height': 'var(--radix-popper-anchor-height)',
-        ...readStyle(contentProps.style),
-      }}
+      style={
+        prop(() => ({
+          outline: 'none',
+          ...(position() === 'popper' ? { width: '100%' } : {}),
+          '--radix-select-content-transform-origin': 'var(--radix-popper-transform-origin)',
+          '--radix-select-content-available-width': 'var(--radix-popper-available-width)',
+          '--radix-select-content-available-height': 'var(--radix-popper-available-height)',
+          '--radix-select-trigger-width': 'var(--radix-popper-anchor-width)',
+          '--radix-select-trigger-height': 'var(--radix-popper-anchor-height)',
+          ...readStyle(props.style),
+        })) as unknown as Record<string, string | number>
+      }
       onCloseAutoFocus={(event) => {
         props.onCloseAutoFocus?.(event)
         if (event.defaultPrevented) return
@@ -1000,7 +1029,7 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
   return (
     <>
       {reactive(() =>
-        forceMount || context.open() ? (
+        forceMount() || context.open() ? (
           <div data-radix-popper-content-wrapper="" {...(wrapperProps as Record<string, unknown>)}>
             {contentNode}
           </div>
@@ -1013,19 +1042,36 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
 SelectContent.displayName = CONTENT_NAME
 
 function SelectViewport(props: ScopedProps<SelectViewportProps>): FictNode {
-  return <Primitive.div {...(props as Record<string, unknown>)} />
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+    },
+  )
+  return <Primitive.div {...primitiveProps} />
 }
 
 SelectViewport.displayName = VIEWPORT_NAME
 
 function SelectGroup(props: ScopedProps<SelectGroupProps>): FictNode {
-  return <Primitive.div role="group" {...(props as Record<string, unknown>)} />
+  const primitiveProps = mergeProps(
+    { role: 'group' },
+    prop(() => props as Record<string, unknown>),
+    { __scopeSelect: undefined },
+  )
+  return <Primitive.div {...primitiveProps} />
 }
 
 SelectGroup.displayName = GROUP_NAME
 
 function SelectLabel(props: ScopedProps<SelectLabelProps>): FictNode {
-  return <Primitive.div {...(props as Record<string, unknown>)} />
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+    },
+  )
+  return <Primitive.div {...primitiveProps} />
 }
 
 SelectLabel.displayName = LABEL_NAME
@@ -1044,7 +1090,13 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
   )
   const menuScope = useMenuScope(props.__scopeSelect)
-  const { __scopeSelect: _scopeSelect, value: _value, ...itemProps } = props
+  const itemProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+      value: undefined,
+    },
+  )
   const selected = () => context.value() === props.value
   const disabled = () =>
     props.disabled === undefined
@@ -1069,8 +1121,12 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
         aria-selected={prop(() => (selected() ? 'true' : 'false')) as unknown as 'true' | 'false'}
         data-state={prop(() => (selected() ? 'checked' : 'unchecked'))}
         data-select-item=""
-        data-value={props.value}
-        disabled={props.disabled}
+        data-value={prop(() => props.value)}
+        disabled={() =>
+          props.disabled === undefined
+            ? undefined
+            : Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>))
+        }
         onSelect={(event) => {
           if (disabled()) {
             event.preventDefault()
@@ -1101,6 +1157,13 @@ function SelectItemText(props: ScopedProps<SelectItemTextProps>): FictNode {
     props.__scopeSelect as Scope<SelectItemContextValue | undefined>,
   )
   const ref = { current: null as HTMLSpanElement | null }
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+      ref: undefined,
+    },
+  )
 
   useLayoutEffect(() => {
     const text = ref.current?.textContent ?? ''
@@ -1112,7 +1175,7 @@ function SelectItemText(props: ScopedProps<SelectItemTextProps>): FictNode {
 
   return (
     <Primitive.span
-      {...(props as Record<string, unknown>)}
+      {...primitiveProps}
       ref={(node: HTMLSpanElement | null) => {
         ref.current = node
         if (!props.ref) return
@@ -1137,10 +1200,16 @@ function SelectItemIndicator(props: ScopedProps<SelectItemIndicatorProps>): Fict
     ITEM_INDICATOR_NAME,
     props.__scopeSelect as Scope<SelectItemContextValue | undefined>,
   )
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+    },
+  )
 
   return (
     <Presence present={itemContext.selected}>
-      <Primitive.span {...(props as Record<string, unknown>)} />
+      <Primitive.span {...primitiveProps} />
     </Presence>
   )
 }
@@ -1148,13 +1217,23 @@ function SelectItemIndicator(props: ScopedProps<SelectItemIndicatorProps>): Fict
 SelectItemIndicator.displayName = ITEM_INDICATOR_NAME
 
 function SelectScrollUpButton(props: ScopedProps<SelectScrollUpButtonProps>): FictNode {
-  return <Primitive.button type="button" {...(props as Record<string, unknown>)} />
+  const primitiveProps = mergeProps(
+    { type: 'button' },
+    prop(() => props as Record<string, unknown>),
+    { __scopeSelect: undefined },
+  )
+  return <Primitive.button {...primitiveProps} />
 }
 
 SelectScrollUpButton.displayName = SCROLL_UP_BUTTON_NAME
 
 function SelectScrollDownButton(props: ScopedProps<SelectScrollDownButtonProps>): FictNode {
-  return <Primitive.button type="button" {...(props as Record<string, unknown>)} />
+  const primitiveProps = mergeProps(
+    { type: 'button' },
+    prop(() => props as Record<string, unknown>),
+    { __scopeSelect: undefined },
+  )
+  return <Primitive.button {...primitiveProps} />
 }
 
 SelectScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME
@@ -1165,14 +1244,28 @@ function SelectSeparator(props: ScopedProps<SelectSeparatorProps>): FictNode {
   }
 
   const menuScope = useMenuScope(props.__scopeSelect)
-  return <MenuSeparator {...menuScope} {...props} />
+  const separatorProps = mergeProps(
+    menuScope,
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+    },
+  )
+  return <MenuSeparator {...separatorProps} />
 }
 
 SelectSeparator.displayName = SEPARATOR_NAME
 
 function SelectArrow(props: ScopedProps<SelectArrowProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeSelect)
-  return <MenuArrow {...menuScope} {...props} />
+  const arrowProps = mergeProps(
+    menuScope,
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSelect: undefined,
+    },
+  )
+  return <MenuArrow {...arrowProps} />
 }
 
 SelectArrow.displayName = ARROW_NAME

@@ -359,7 +359,7 @@ function ToastProvider(props: ScopedProps<ToastProviderProps>): FictNode {
 ToastProvider.displayName = PROVIDER_NAME
 
 function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
-  const { __scopeToast, hotkey = VIEWPORT_DEFAULT_HOTKEY, ...viewportProps } = props
+  const { __scopeToast } = props
   const context = useToastProviderContext(
     VIEWPORT_NAME,
     __scopeToast as Scope<ToastProviderContextValue | undefined>,
@@ -374,13 +374,14 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
     ref as PossibleRef<ToastViewportElement>,
     context.onViewportChange,
   )
+  const hotkey = () => props.hotkey ?? VIEWPORT_DEFAULT_HOTKEY
   const label = () => {
     const nextLabel =
       props.label === undefined
         ? 'Notifications ({hotkey})'
         : (readValue(props.label as MaybeAccessor<string | undefined>) ??
           'Notifications ({hotkey})')
-    const hotkeyText = hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, '')
+    const hotkeyText = hotkey().join('+').replace(/Key/g, '').replace(/Digit/g, '')
     return nextLabel.replace('{hotkey}', hotkeyText)
   }
   const getSortedTabbableCandidates = (tabbingDirection: 'forwards' | 'backwards') => {
@@ -398,10 +399,10 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
   useLayoutEffect(() => {
     const ownerDocument = ref.current?.ownerDocument ?? document
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (hotkey.length === 0) return
+      if (hotkey().length === 0) return
 
       const eventRecord = event as unknown as Record<string, unknown>
-      const isHotkeyPressed = hotkey.every((key) => eventRecord[key] || event.code === key)
+      const isHotkeyPressed = hotkey().every((key) => eventRecord[key] || event.code === key)
       if (isHotkeyPressed) {
         ref.current?.focus()
       }
@@ -528,7 +529,7 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
       tabIndex: -1,
       'data-state': prop(() => (context.toastCount() > 0 ? 'open' : 'closed')),
     },
-    prop(() => viewportProps as Record<string, unknown>),
+    prop(() => props as unknown as Record<string, unknown>),
     {
       __scopeToast: undefined,
       hotkey: undefined,
@@ -576,10 +577,18 @@ type ToastFocusProxyProps = JSX.IntrinsicElements['span'] & {
 }
 
 function ToastFocusProxy(props: ToastFocusProxyProps): FictNode {
-  const { __scopeToast, enabled, onFocusFromOutsideViewport, ...proxyProps } = props
+  const { __scopeToast } = props
   const context = useToastProviderContext(
     'ToastFocusProxy',
     __scopeToast as Scope<ToastProviderContextValue | undefined>,
+  )
+  const proxyProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      __scopeToast: undefined,
+      enabled: undefined,
+      onFocusFromOutsideViewport: undefined,
+    },
   )
 
   return (
@@ -587,8 +596,8 @@ function ToastFocusProxy(props: ToastFocusProxyProps): FictNode {
       {...(proxyProps as Record<string, unknown>)}
       data-radix-toast-focus-proxy=""
       style={{ position: 'fixed' }}
-      tabIndex={prop(() => (enabled() ? 0 : -1)) as unknown as number}
-      aria-hidden={prop(() => (enabled() ? undefined : 'true')) as unknown as 'true'}
+      tabIndex={prop(() => (props.enabled() ? 0 : -1)) as unknown as number}
+      aria-hidden={prop(() => (props.enabled() ? undefined : 'true')) as unknown as 'true'}
       onFocus={(event: FocusEvent) => {
         const previousFocusedElement = event.relatedTarget
         const viewport = context.viewport()
@@ -597,7 +606,7 @@ function ToastFocusProxy(props: ToastFocusProxyProps): FictNode {
           !isNodeFromDocument(previousFocusedElement, viewport.ownerDocument) ||
           !viewport.contains(previousFocusedElement)
         ) {
-          onFocusFromOutsideViewport()
+          props.onFocusFromOutsideViewport()
         }
       }}
     />
@@ -605,7 +614,7 @@ function ToastFocusProxy(props: ToastFocusProxyProps): FictNode {
 }
 
 function Toast(props: ScopedProps<ToastProps>): FictNode {
-  const { __scopeToast, forceMount, ...toastProps } = props
+  const { __scopeToast } = props
   const providerContext = useToastProviderContext(
     TOAST_NAME,
     __scopeToast as Scope<ToastProviderContextValue | undefined>,
@@ -640,9 +649,9 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
   })
   const present = () =>
     Boolean(
-      (forceMount === undefined
+      (props.forceMount === undefined
         ? false
-        : readValue(forceMount as MaybeAccessor<boolean | undefined>)) || open(),
+        : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)) || open(),
     )
   const remainingDuration = createSignal(0)
   const closeStartTime = createSignal(0)
@@ -797,7 +806,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
         ...readStyle(props.style),
       })),
     },
-    prop(() => toastProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       __scopeToast: undefined,
       defaultOpen: undefined,
@@ -815,7 +824,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
       ref: undefined,
       type: undefined,
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
         (event) => {
           if (event.key !== 'Escape') return
 
@@ -827,7 +836,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
         },
       ),
       onPointerDown: composeEventHandlers<PointerEvent>(
-        props.onPointerDown as ((event: PointerEvent) => void) | undefined,
+        (event) => (props.onPointerDown as ((event: PointerEvent) => void) | undefined)?.(event),
         (event: PointerEvent) => {
           if (event.button !== 0) return
 
@@ -838,7 +847,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
         },
       ),
       onPointerMove: composeEventHandlers<PointerEvent>(
-        props.onPointerMove as ((event: PointerEvent) => void) | undefined,
+        (event) => (props.onPointerMove as ((event: PointerEvent) => void) | undefined)?.(event),
         (event: PointerEvent) => {
           if (!pointerStartRef.current) return
 
@@ -889,7 +898,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
         },
       ),
       onPointerUp: composeEventHandlers<PointerEvent>(
-        props.onPointerUp as ((event: PointerEvent) => void) | undefined,
+        (event) => (props.onPointerUp as ((event: PointerEvent) => void) | undefined)?.(event),
         (event: PointerEvent) => {
           const delta = swipeDeltaRef.current
           const currentTarget = event.currentTarget as Element | null
@@ -926,7 +935,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
         },
       ),
       onPointerCancel: composeEventHandlers<PointerEvent>(
-        props.onPointerCancel as ((event: PointerEvent) => void) | undefined,
+        (event) => (props.onPointerCancel as ((event: PointerEvent) => void) | undefined)?.(event),
         (event: PointerEvent) => {
           const delta = swipeDeltaRef.current
           const currentTarget = event.currentTarget as Element | null
@@ -1047,35 +1056,56 @@ function ToastAnnounce(props: ToastAnnounceProps): FictNode {
 }
 
 function ToastTitle(props: ScopedProps<ToastTitleProps>): FictNode {
-  const { __scopeToast: _scope, ...titleProps } = props
-  return <Primitive.h3 {...(titleProps as Record<string, unknown>)} />
+  const titleProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeToast: undefined,
+    },
+  )
+  return <Primitive.h3 {...titleProps} />
 }
 
 ToastTitle.displayName = TITLE_NAME
 
 function ToastDescription(props: ScopedProps<ToastDescriptionProps>): FictNode {
-  const { __scopeToast: _scope, ...descriptionProps } = props
-  return <Primitive.p {...(descriptionProps as Record<string, unknown>)} />
+  const descriptionProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeToast: undefined,
+    },
+  )
+  return <Primitive.p {...descriptionProps} />
 }
 
 ToastDescription.displayName = DESCRIPTION_NAME
 
 function ToastAction(props: ScopedProps<ToastActionProps>): FictNode {
-  const { altText, ...actionProps } = props
-
-  if (!altText.trim()) {
-    console.error(
-      `Invalid prop \`altText\` supplied to \`${ACTION_NAME}\`. Expected non-empty \`string\`.`,
-    )
-    return null
-  }
+  const actionProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      altText: undefined,
+    },
+  )
 
   return (
-    <ToastClose
-      {...actionProps}
-      data-radix-toast-announce-exclude=""
-      data-radix-toast-announce-alt={altText}
-    />
+    <>
+      {reactive(() => {
+        if (!props.altText.trim()) {
+          console.error(
+            `Invalid prop \`altText\` supplied to \`${ACTION_NAME}\`. Expected non-empty \`string\`.`,
+          )
+          return null
+        }
+
+        return (
+          <ToastClose
+            {...actionProps}
+            data-radix-toast-announce-exclude=""
+            data-radix-toast-announce-alt={prop(() => props.altText)}
+          />
+        )
+      })}
+    </>
   )
 }
 
@@ -1095,7 +1125,7 @@ function ToastClose(props: ScopedProps<ToastCloseProps>): FictNode {
       __scopeToast: undefined,
       'data-radix-toast-announce-exclude': '',
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => (props.onClick as ((event: MouseEvent) => void) | undefined)?.(event),
         () => {
           context.close()
         },

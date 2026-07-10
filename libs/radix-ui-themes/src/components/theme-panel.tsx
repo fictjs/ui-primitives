@@ -156,8 +156,11 @@ const ThemePanelImpl = React.forwardRef<ThemePanelImplElement, ThemePanelImplPro
 )
 
 function ThemePanelContent(props: ThemePanelContentProps): React.ReactNode {
-  const { context: suppliedContext, onAppearanceChange, ...contentProps } = props
-  const themeContext = suppliedContext ?? useThemeContext()
+  const contentProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    { context: undefined, onAppearanceChange: undefined },
+  )
+  const themeContext = props.context ?? useThemeContext()
   const resolvedAppearance = createSignal<'light' | 'dark'>(
     themeContext.appearance === 'inherit' ? 'light' : themeContext.appearance,
   )
@@ -176,8 +179,8 @@ function ThemePanelContent(props: ThemePanelContentProps): React.ReactNode {
       return
     }
 
-    if (onAppearanceChange) {
-      onAppearanceChange(value)
+    if (props.onAppearanceChange) {
+      props.onAppearanceChange(value)
     } else {
       resolvedAppearance(value)
       updateRootAppearanceClass(value)

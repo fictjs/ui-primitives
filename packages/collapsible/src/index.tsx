@@ -130,7 +130,7 @@ function Collapsible(props: ScopedProps<CollapsibleProps>): FictNode {
 Collapsible.displayName = COLLAPSIBLE_NAME
 
 function CollapsibleTrigger(props: ScopedProps<CollapsibleTriggerProps>): FictNode {
-  const { __scopeCollapsible, ...triggerProps } = props
+  const { __scopeCollapsible } = props
   const context = useCollapsibleContext(TRIGGER_NAME, __scopeCollapsible)
   const primitiveProps = mergeProps(
     {
@@ -141,10 +141,11 @@ function CollapsibleTrigger(props: ScopedProps<CollapsibleTriggerProps>): FictNo
       'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
       disabled: prop(context.disabled),
     },
-    prop(() => triggerProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeCollapsible: undefined,
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => (props.onClick as ((event: MouseEvent) => void) | undefined)?.(event),
         () => {
           context.onOpenToggle()
         },
@@ -158,16 +159,23 @@ function CollapsibleTrigger(props: ScopedProps<CollapsibleTriggerProps>): FictNo
 CollapsibleTrigger.displayName = TRIGGER_NAME
 
 function CollapsibleContent(props: ScopedProps<CollapsibleContentProps>): FictNode {
-  const { forceMount, ...contentProps } = props
   const context = useCollapsibleContext(CONTENT_NAME, props.__scopeCollapsible)
   const present = () =>
-    Boolean((forceMount === undefined ? false : readValue(forceMount)) || context.open())
+    Boolean(
+      (props.forceMount === undefined ? false : readValue(props.forceMount)) || context.open(),
+    )
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      forceMount: undefined,
+    },
+  )
 
   return (
     <Presence present={present}>
       {({ present: isPresent }) => (
         <CollapsibleContentImpl
-          {...(contentProps as ScopedProps<CollapsibleContentImplProps>)}
+          {...(contentProps as unknown as ScopedProps<CollapsibleContentImplProps>)}
           present={isPresent}
         />
       )}
@@ -178,10 +186,10 @@ function CollapsibleContent(props: ScopedProps<CollapsibleContentProps>): FictNo
 CollapsibleContent.displayName = CONTENT_NAME
 
 function CollapsibleContentImpl(props: ScopedProps<CollapsibleContentImplProps>): FictNode {
-  const { __scopeCollapsible, children, present, ...contentProps } = props
+  const { __scopeCollapsible } = props
   const context = useCollapsibleContext(CONTENT_NAME, __scopeCollapsible)
   const node = createSignal<HTMLDivElement | null>(null)
-  const isPresent = createSignal(readValue(present))
+  const isPresent = createSignal(readValue(props.present))
   const height = createSignal<number | undefined>(undefined)
   const width = createSignal<number | undefined>(undefined)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, (nextNode) =>
@@ -203,7 +211,7 @@ function CollapsibleContentImpl(props: ScopedProps<CollapsibleContentImplProps>)
 
   useLayoutEffect(() => {
     const currentNode = node()
-    const nextPresent = readValue(present)
+    const nextPresent = readValue(props.present)
     const currentOpen = context.open()
 
     if (currentNode) {
@@ -233,7 +241,7 @@ function CollapsibleContentImpl(props: ScopedProps<CollapsibleContentImplProps>)
   })
 
   const primitiveProps = mergeProps(
-    prop(() => contentProps as Record<string, unknown>),
+    prop(() => props as unknown as Record<string, unknown>),
     {
       __scopeCollapsible: undefined,
       present: undefined,
@@ -247,7 +255,7 @@ function CollapsibleContentImpl(props: ScopedProps<CollapsibleContentImplProps>)
         '--radix-collapsible-content-width': width() ? `${width()}px` : undefined,
         ...readStyle(props.style as MaybeAccessor<CollapsibleStyle> | undefined),
       })),
-      children: prop(() => (isOpen() ? children : null)),
+      children: prop(() => (isOpen() ? props.children : null)),
     },
   )
 

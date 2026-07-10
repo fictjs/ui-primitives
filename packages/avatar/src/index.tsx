@@ -1,4 +1,4 @@
-import { type FictNode, type FictVNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, type FictNode, type FictVNode, type JSX } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -105,11 +105,13 @@ function injectAvatarState(
 
 function Avatar(props: ScopedProps<AvatarProps>): FictNode {
   const imageLoadingStatus = createSignal<ImageLoadingStatus>('idle')
-  const primitiveProps: Record<string, unknown> = {
-    ...(props as Record<string, unknown>),
-    __scopeAvatar: undefined,
-    children: undefined,
-  }
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAvatar: undefined,
+      children: undefined,
+    },
+  )
   const children = injectAvatarState(props.children as FictNode | FictNode[] | undefined, {
     __avatarImageLoadingStatus: imageLoadingStatus,
     __avatarOnImageLoadingStatusChange: (status) => imageLoadingStatus(status),
@@ -151,20 +153,22 @@ function AvatarImage(props: ScopedProps<AvatarImageProps & AvatarStateProps>): F
     }
   })
 
-  const getPrimitiveProps = (): Record<string, unknown> => ({
-    ...(props as Record<string, unknown>),
-    __scopeAvatar: undefined,
-    __avatarImageLoadingStatus: undefined,
-    __avatarOnImageLoadingStatusChange: undefined,
-    children: undefined,
-    onLoadingStatusChange: undefined,
-    src: src(),
-  })
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAvatar: undefined,
+      __avatarImageLoadingStatus: undefined,
+      __avatarOnImageLoadingStatusChange: undefined,
+      children: undefined,
+      onLoadingStatusChange: undefined,
+      src: prop(src),
+    },
+  )
 
   return (
     <>
       {reactive(() =>
-        imageLoadingStatus() === 'loaded' ? <Primitive.img {...getPrimitiveProps()} /> : null,
+        imageLoadingStatus() === 'loaded' ? <Primitive.img {...primitiveProps} /> : null,
       )}
     </>
   )
@@ -198,13 +202,15 @@ function AvatarFallback(props: ScopedProps<AvatarFallbackProps & AvatarStateProp
     }
   })
 
-  const primitiveProps: Record<string, unknown> = {
-    ...(props as Record<string, unknown>),
-    __scopeAvatar: undefined,
-    __avatarImageLoadingStatus: undefined,
-    __avatarOnImageLoadingStatusChange: undefined,
-    delayMs: undefined,
-  }
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAvatar: undefined,
+      __avatarImageLoadingStatus: undefined,
+      __avatarOnImageLoadingStatusChange: undefined,
+      delayMs: undefined,
+    },
+  )
 
   return (
     <>

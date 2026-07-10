@@ -1,4 +1,5 @@
 import classNames from 'classnames'
+import { mergeProps, prop } from 'fict'
 import * as React from '../helpers/element.js'
 
 import { Text } from './text.js'
@@ -78,13 +79,19 @@ DataListLabel.displayName = 'DataList.Label'
 type DataListValueElement = React.ElementRef<'dd'>
 interface DataListValueProps extends ComponentPropsWithout<'dd', RemovedProps> {}
 const DataListValue = React.forwardRef<DataListValueElement, DataListValueProps>(
-  ({ children, className, ...props }, forwardedRef) => (
+  (props, forwardedRef) => (
     <dd
-      {...props}
+      {...mergeProps(
+        prop(() => props as Record<string, unknown>),
+        {
+          children: undefined,
+          className: undefined,
+        },
+      )}
       ref={React.coerceRef(forwardedRef)}
-      class={classNames(className, 'rt-DataListValue')}
+      class={prop(() => classNames(props.className, 'rt-DataListValue')) as unknown as string}
     >
-      {children}
+      {props.children}
     </dd>
   ),
 )

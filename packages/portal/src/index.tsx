@@ -1,6 +1,9 @@
 import {
   createElement,
+  createEffect,
   createPortal as createFictPortal,
+  mergeProps,
+  prop,
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
@@ -12,18 +15,24 @@ type PortalProps = JSX.IntrinsicElements['div'] & {
 }
 
 function Portal(props: PortalProps): FictNode {
-  const { container: containerProp, ...portalProps } = props
-
-  const resolveContainer = () => containerProp ?? globalThis.document?.body ?? null
-  const container = resolveContainer()
-
-  if (!container) return null
-
-  createFictPortal(
-    container,
-    () => <Primitive.div {...(portalProps as Record<string, unknown>)} />,
-    createElement,
+  const resolveContainer = () => props.container ?? globalThis.document?.body ?? null
+  const portalProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      container: undefined,
+    },
   )
+
+  createEffect(() => {
+    const container = resolveContainer()
+    if (!container) return
+
+    return createFictPortal(
+      container,
+      () => <Primitive.div {...(portalProps as Record<string, unknown>)} />,
+      createElement,
+    ).dispose
+  })
 
   return null
 }

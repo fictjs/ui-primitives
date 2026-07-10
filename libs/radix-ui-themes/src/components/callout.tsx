@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'fict'
+import { createContext, mergeProps, prop, useContext } from 'fict'
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
 import { Slot } from '@fictjs/radix-ui'
@@ -51,11 +51,17 @@ CalloutRoot.displayName = 'Callout.Root'
 type CalloutIconElement = React.ElementRef<'div'>
 interface CalloutIconProps extends ComponentPropsWithout<'div', RemovedProps> {}
 const CalloutIcon = React.forwardRef<CalloutIconElement, CalloutIconProps>(
-  ({ className, ...props }, forwardedRef) => {
+  (props, forwardedRef) => {
+    const iconProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        className: undefined,
+      },
+    )
     return (
       <div
-        {...props}
-        class={classNames('rt-CalloutIcon', className)}
+        {...iconProps}
+        class={prop(() => classNames('rt-CalloutIcon', props.className)) as unknown as string}
         ref={React.coerceRef(forwardedRef)}
       />
     )
@@ -66,15 +72,21 @@ CalloutIcon.displayName = 'Callout.Icon'
 type CalloutTextElement = React.ElementRef<'p'>
 type CalloutTextProps = ComponentPropsAs<typeof Text, 'p'>
 const CalloutText = React.forwardRef<CalloutTextElement, CalloutTextProps>(
-  ({ className, ...props }, forwardedRef) => {
+  (props, forwardedRef) => {
     const { size } = useContext(CalloutContext)
+    const textProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        className: undefined,
+      },
+    )
     return (
       <Text
         as="p"
         size={mapResponsiveProp(size, mapCalloutSizeToTextSize)}
-        {...props}
+        {...textProps}
         ref={React.coerceRef(forwardedRef)}
-        className={classNames('rt-CalloutText', className)}
+        className={prop(() => classNames('rt-CalloutText', props.className)) as unknown as string}
       />
     )
   },

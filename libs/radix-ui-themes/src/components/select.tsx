@@ -57,7 +57,10 @@ const SelectTrigger = React.forwardRef<SelectTriggerElement, SelectTriggerProps>
   (props, forwardedRef) => {
     const context = useContext(SelectContext)
     const { className, color, radius, placeholder, ...triggerProps } = extractProps(
-      { size: context?.size, ...props },
+      mergeProps(
+        { size: context?.size },
+        prop(() => props as Record<string, unknown>),
+      ) as unknown as SelectTriggerProps,
       { size: selectRootPropDefs.size },
       selectTriggerPropDefs,
       marginPropDefs,
@@ -101,7 +104,10 @@ const SelectContent = React.forwardRef<SelectContentElement, SelectContentProps>
   (props, forwardedRef) => {
     const context = useContext(SelectContext)
     const { className, color, container, ...contentProps } = extractProps(
-      { size: context?.size, ...props },
+      mergeProps(
+        { size: context?.size },
+        prop(() => props as Record<string, unknown>),
+      ) as unknown as SelectContentProps,
       { size: selectRootPropDefs.size },
       selectContentPropDefs,
     )
@@ -163,17 +169,20 @@ interface SelectItemProps extends ComponentPropsWithout<
 > {}
 
 const SelectItem = React.forwardRef<SelectItemElement, SelectItemProps>((props, forwardedRef) => {
-  const { className, children, ...itemProps } = props
+  const itemProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    { children: undefined, className: undefined },
+  ) as unknown as SelectItemProps
   return (
     <SelectPrimitive.Item
       {...itemProps}
       ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLDivElement>)}
-      class={classNames('rt-SelectItem', className)}
+      class={prop(() => classNames('rt-SelectItem', props.className)) as unknown as string}
     >
       <SelectPrimitive.ItemIndicator class="rt-SelectItemIndicator">
         <ThickCheckIcon class="rt-SelectItemIndicatorIcon" />
       </SelectPrimitive.ItemIndicator>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemText>{props.children}</SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   )
 })
@@ -187,11 +196,14 @@ interface SelectGroupProps extends ComponentPropsWithout<
 > {}
 
 const SelectGroup = React.forwardRef<SelectGroupElement, SelectGroupProps>(
-  ({ className, ...props }, forwardedRef) => (
+  (props, forwardedRef) => (
     <SelectPrimitive.Group
-      {...props}
+      {...mergeProps(
+        prop(() => props as Record<string, unknown>),
+        { className: undefined },
+      )}
       ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLDivElement>)}
-      class={classNames('rt-SelectGroup', className)}
+      class={prop(() => classNames('rt-SelectGroup', props.className)) as unknown as string}
     />
   ),
 )
@@ -205,11 +217,14 @@ interface SelectLabelProps extends ComponentPropsWithout<
 > {}
 
 const SelectLabel = React.forwardRef<SelectLabelElement, SelectLabelProps>(
-  ({ className, ...props }, forwardedRef) => (
+  (props, forwardedRef) => (
     <SelectPrimitive.Label
-      {...props}
+      {...mergeProps(
+        prop(() => props as Record<string, unknown>),
+        { className: undefined },
+      )}
       ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLDivElement>)}
-      class={classNames('rt-SelectLabel', className)}
+      class={prop(() => classNames('rt-SelectLabel', props.className)) as unknown as string}
     />
   ),
 )
@@ -223,11 +238,14 @@ interface SelectSeparatorProps extends ComponentPropsWithout<
 > {}
 
 const SelectSeparator = React.forwardRef<SelectSeparatorElement, SelectSeparatorProps>(
-  ({ className, ...props }, forwardedRef) => (
+  (props, forwardedRef) => (
     <SelectPrimitive.Separator
-      {...props}
+      {...mergeProps(
+        prop(() => props as Record<string, unknown>),
+        { className: undefined },
+      )}
       ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLDivElement>)}
-      class={classNames('rt-SelectSeparator', className)}
+      class={prop(() => classNames('rt-SelectSeparator', props.className)) as unknown as string}
     />
   ),
 )

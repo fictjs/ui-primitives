@@ -143,20 +143,20 @@ function getState(open?: boolean): 'open' | 'closed' {
 }
 
 function Accordion(props: ScopedProps<AccordionSingleProps | AccordionMultipleProps>): FictNode {
-  const { type, ...accordionProps } = props
+  const accordionProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      type: undefined,
+      onValueChange: prop(() => props.onValueChange),
+    },
+  )
 
   return (
     <Collection.Provider scope={props.__scopeAccordion}>
-      {type === 'multiple' ? (
-        <AccordionImplMultiple
-          {...(accordionProps as ScopedProps<AccordionImplMultipleProps>)}
-          onValueChange={prop(() => props.onValueChange)}
-        />
+      {props.type === 'multiple' ? (
+        <AccordionImplMultiple {...(accordionProps as ScopedProps<AccordionImplMultipleProps>)} />
       ) : (
-        <AccordionImplSingle
-          {...(accordionProps as ScopedProps<AccordionImplSingleProps>)}
-          onValueChange={prop(() => props.onValueChange)}
-        />
+        <AccordionImplSingle {...(accordionProps as ScopedProps<AccordionImplSingleProps>)} />
       )}
     </Collection.Provider>
   )
@@ -279,7 +279,7 @@ function AccordionImpl(props: ScopedProps<AccordionImplProps>): FictNode {
       ? inheritedDirection()
       : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? inheritedDirection())
   const handleKeyDown = composeEventHandlers<KeyboardEvent>(
-    props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+    (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
     (event) => {
       if (!ACCORDION_KEYS.includes(event.key as (typeof ACCORDION_KEYS)[number])) {
         return
@@ -379,7 +379,7 @@ function AccordionImpl(props: ScopedProps<AccordionImplProps>): FictNode {
 }
 
 function AccordionItem(props: ScopedProps<AccordionItemProps>): FictNode {
-  const { __scopeAccordion, value, ...accordionItemProps } = props
+  const { __scopeAccordion } = props
   const accordionContext = useAccordionContext(
     ITEM_NAME,
     __scopeAccordion as Scope<AccordionImplContextValue | undefined>,
@@ -390,7 +390,8 @@ function AccordionItem(props: ScopedProps<AccordionItemProps>): FictNode {
   )
   const collapsibleScope = useCollapsibleScope(__scopeAccordion)
   const triggerId = useId()
-  const open = () => valueContext.value().includes(value)
+  const value = () => props.value
+  const open = () => valueContext.value().includes(value())
   const disabled = () =>
     accordionContext.disabled() ||
     Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
@@ -400,15 +401,17 @@ function AccordionItem(props: ScopedProps<AccordionItemProps>): FictNode {
       'data-state': prop(() => getState(open())),
     },
     collapsibleScope,
-    prop(() => accordionItemProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeAccordion: undefined,
+      value: undefined,
       disabled: prop(disabled),
       open,
       onOpenChange: (nextOpen: boolean) => {
         if (nextOpen) {
-          valueContext.onItemOpen(value)
+          valueContext.onItemOpen(value())
         } else {
-          valueContext.onItemClose(value)
+          valueContext.onItemClose(value())
         }
       },
     },
@@ -429,7 +432,7 @@ function AccordionItem(props: ScopedProps<AccordionItemProps>): FictNode {
 AccordionItem.displayName = ITEM_NAME
 
 function AccordionHeader(props: ScopedProps<AccordionHeaderProps>): FictNode {
-  const { __scopeAccordion, ...headerProps } = props
+  const { __scopeAccordion } = props
   const accordionContext = useAccordionContext(
     HEADER_NAME,
     __scopeAccordion as Scope<AccordionImplContextValue | undefined>,
@@ -444,7 +447,10 @@ function AccordionHeader(props: ScopedProps<AccordionHeaderProps>): FictNode {
       'data-state': prop(() => getState(itemContext.open())),
       'data-disabled': prop(() => (itemContext.disabled() ? '' : undefined)),
     },
-    prop(() => headerProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAccordion: undefined,
+    },
   )
 
   return <Primitive.h3 {...primitiveProps} />
@@ -453,7 +459,7 @@ function AccordionHeader(props: ScopedProps<AccordionHeaderProps>): FictNode {
 AccordionHeader.displayName = HEADER_NAME
 
 function AccordionTrigger(props: ScopedProps<AccordionTriggerProps>): FictNode {
-  const { __scopeAccordion, ...triggerProps } = props
+  const { __scopeAccordion } = props
   const accordionContext = useAccordionContext(
     TRIGGER_NAME,
     __scopeAccordion as Scope<AccordionImplContextValue | undefined>,
@@ -476,7 +482,10 @@ function AccordionTrigger(props: ScopedProps<AccordionTriggerProps>): FictNode {
       id: prop(itemContext.triggerId),
     },
     collapsibleScope,
-    prop(() => triggerProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeAccordion: undefined,
+    },
   )
 
   return (
@@ -492,7 +501,7 @@ function AccordionTrigger(props: ScopedProps<AccordionTriggerProps>): FictNode {
 AccordionTrigger.displayName = TRIGGER_NAME
 
 function AccordionContent(props: ScopedProps<AccordionContentProps>): FictNode {
-  const { __scopeAccordion, ...contentProps } = props
+  const { __scopeAccordion } = props
   const accordionContext = useAccordionContext(
     CONTENT_NAME,
     __scopeAccordion as Scope<AccordionImplContextValue | undefined>,
@@ -509,12 +518,13 @@ function AccordionContent(props: ScopedProps<AccordionContentProps>): FictNode {
       'data-orientation': prop(accordionContext.orientation),
     },
     collapsibleScope,
-    prop(() => contentProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeAccordion: undefined,
       style: prop(() => ({
         '--radix-accordion-content-height': 'var(--radix-collapsible-content-height)',
         '--radix-accordion-content-width': 'var(--radix-collapsible-content-width)',
-        ...readStyle(contentProps.style as MaybeAccessor<unknown> | undefined),
+        ...readStyle(props.style as MaybeAccessor<unknown> | undefined),
       })),
     },
   )

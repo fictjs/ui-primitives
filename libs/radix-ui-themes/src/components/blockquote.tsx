@@ -1,6 +1,7 @@
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
 import { Slot } from '@fictjs/radix-ui'
+import { mergeProps, prop } from 'fict'
 
 import { Text } from './text.js'
 
@@ -14,16 +15,23 @@ type BlockQuoteOwnProps = GetPropDefTypes<typeof blockquotePropDefs>
 interface BlockquoteProps
   extends ComponentPropsWithout<'blockquote', RemovedProps>, MarginProps, BlockQuoteOwnProps {}
 const Blockquote = React.forwardRef<BlockquoteElement, BlockquoteProps>((props, forwardedRef) => {
-  const { asChild, children, className, ...blockquoteProps } = props
-  const Comp = asChild ? Slot.Root : 'blockquote'
+  const blockquoteProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      asChild: undefined,
+      children: undefined,
+      className: undefined,
+    },
+  )
+  const Comp = props.asChild ? Slot.Root : 'blockquote'
   return (
     <Text
       asChild
       {...blockquoteProps}
       ref={React.coerceRef(forwardedRef)}
-      className={classNames('rt-Blockquote', className)}
+      className={prop(() => classNames('rt-Blockquote', props.className)) as unknown as string}
     >
-      <Comp>{children}</Comp>
+      <Comp>{props.children}</Comp>
     </Text>
   )
 })

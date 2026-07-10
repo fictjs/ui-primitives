@@ -62,8 +62,12 @@ function copyPropsPreservingGetters(source: PropsRecord): Record<string, unknown
     }
 
     const value = source[key]
+    const isEventHandler = typeof key === 'string' && /^on[A-Z]/.test(key)
     const isLocallyConsumedValue =
-      key === 'children' || key === 'layout' || key === 'ref' || typeof value === 'function'
+      key === 'children' ||
+      key === 'layout' ||
+      key === 'ref' ||
+      (typeof value === 'function' && !isEventHandler)
 
     Object.defineProperty(target, key, {
       configurable: true,

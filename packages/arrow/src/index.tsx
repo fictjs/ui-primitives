@@ -1,4 +1,4 @@
-import type { FictNode, JSX } from '@fictjs/runtime'
+import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { Primitive } from '@fictjs/primitive'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
@@ -18,23 +18,25 @@ function readClassValue(value: unknown): string {
 }
 
 function Arrow(props: ArrowProps): FictNode {
-  const {
-    asChild,
-    children,
-    width = 10,
-    height = 5,
-    class: svgClass,
-    className,
-    ref: forwardedRef,
-    ...arrowProps
-  } = props
   const ref = { current: null as SVGSVGElement | null }
+  const arrowProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      asChild: undefined,
+      children: undefined,
+      width: undefined,
+      height: undefined,
+      class: undefined,
+      className: undefined,
+      ref: undefined,
+    },
+  )
 
   useLayoutEffect(() => {
     const currentNode = ref.current
     if (!currentNode) return
 
-    const nextClassName = [readClassValue(svgClass), readClassValue(className)]
+    const nextClassName = [readClassValue(props.class), readClassValue(props.className)]
       .filter(Boolean)
       .join(' ')
 
@@ -49,14 +51,15 @@ function Arrow(props: ArrowProps): FictNode {
   return (
     <Primitive.svg
       {...(arrowProps as Record<string, unknown>)}
-      asChild={Boolean(asChild)}
-      width={width}
-      height={height}
+      asChild={prop(() => Boolean(props.asChild)) as unknown as boolean}
+      width={prop(() => props.width ?? 10) as unknown as number}
+      height={prop(() => props.height ?? 5) as unknown as number}
       viewBox="0 0 30 10"
       preserveAspectRatio="none"
       ref={(node: Element | null) => {
         ref.current = node as SVGSVGElement | null
 
+        const forwardedRef = props.ref
         if (!forwardedRef) return
         if (typeof forwardedRef === 'function') {
           forwardedRef(node as SVGSVGElement | null)
@@ -66,7 +69,7 @@ function Arrow(props: ArrowProps): FictNode {
         forwardedRef.current = node as SVGSVGElement | null
       }}
     >
-      {asChild ? children : <polygon points="0,0 30,0 15,10" />}
+      {props.asChild ? props.children : <polygon points="0,0 30,0 15,10" />}
     </Primitive.svg>
   )
 }

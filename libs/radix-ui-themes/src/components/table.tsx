@@ -1,4 +1,5 @@
 import * as React from '../helpers/element.js'
+import { mergeProps, prop } from 'fict'
 import classNames from 'classnames'
 
 import { tableRootPropDefs, tableRowPropDefs, tableCellPropDefs } from './table.props.js'
@@ -44,11 +45,14 @@ TableRoot.displayName = 'Table.Root'
 type TableHeaderElement = React.ElementRef<'thead'>
 interface TableHeaderProps extends ComponentPropsWithout<'thead', RemovedProps> {}
 const TableHeader = React.forwardRef<TableHeaderElement, TableHeaderProps>(
-  ({ className, ...props }, forwardedRef) => (
+  (props, forwardedRef) => (
     <thead
-      {...props}
+      {...mergeProps(
+        prop(() => props as Record<string, unknown>),
+        { className: undefined },
+      )}
       ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-TableHeader', className)}
+      class={prop(() => classNames('rt-TableHeader', props.className)) as unknown as string}
     />
   ),
 )
@@ -56,15 +60,16 @@ TableHeader.displayName = 'Table.Header'
 
 type TableBodyElement = React.ElementRef<'tbody'>
 interface TableBodyProps extends ComponentPropsWithout<'tbody', RemovedProps> {}
-const TableBody = React.forwardRef<TableBodyElement, TableBodyProps>(
-  ({ className, ...props }, forwardedRef) => (
-    <tbody
-      {...props}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-TableBody', className)}
-    />
-  ),
-)
+const TableBody = React.forwardRef<TableBodyElement, TableBodyProps>((props, forwardedRef) => (
+  <tbody
+    {...mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { className: undefined },
+    )}
+    ref={React.coerceRef(forwardedRef)}
+    class={prop(() => classNames('rt-TableBody', props.className)) as unknown as string}
+  />
+))
 TableBody.displayName = 'Table.Body'
 
 type TableRowElement = React.ElementRef<'tr'>

@@ -34,11 +34,17 @@ interface DialogTriggerProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const DialogTrigger = React.forwardRef<DialogTriggerElement, DialogTriggerProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <DialogPrimitive.Trigger {...props} ref={React.coerceRef(forwardedRef)} asChild>
-      {requireReactElement(children)}
-    </DialogPrimitive.Trigger>
-  ),
+  (props, forwardedRef) => {
+    const triggerProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { children: undefined },
+    )
+    return (
+      <DialogPrimitive.Trigger {...triggerProps} ref={React.coerceRef(forwardedRef)} asChild>
+        {requireReactElement(props.children)}
+      </DialogPrimitive.Trigger>
+    )
+  },
 )
 DialogTrigger.displayName = 'Dialog.Trigger'
 
@@ -50,12 +56,28 @@ interface DialogContentProps
   container?: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Portal>['container']
 }
 const DialogContent = React.forwardRef<DialogContentElement, DialogContentProps>(
-  ({ align, ...props }, forwardedRef) => {
+  (props, forwardedRef) => {
     const { align: alignPropDef, ...propDefs } = dialogContentPropDefs
-    const { className: alignClassName } = extractProps({ align }, { align: alignPropDef })
-    const { className, forceMount, container, ...contentProps } = extractProps(props, propDefs)
+    const { className: alignClassName } = extractProps(
+      { align: props.align },
+      { align: alignPropDef },
+    )
+    const extractedProps = extractProps(
+      mergeProps(
+        prop(() => props as Record<string, unknown>),
+        { align: undefined },
+      ) as unknown as DialogContentProps,
+      propDefs,
+    )
+    const contentProps = mergeProps(
+      prop(() => extractedProps as unknown as Record<string, unknown>),
+      { className: undefined, container: undefined, forceMount: undefined },
+    )
     return (
-      <DialogPrimitive.Portal container={container} forceMount={forceMount}>
+      <DialogPrimitive.Portal
+        container={extractedProps.container}
+        forceMount={extractedProps.forceMount}
+      >
         <Theme asChild>
           <DialogPrimitive.Overlay class="rt-BaseDialogOverlay rt-DialogOverlay">
             <div class="rt-BaseDialogScroll rt-DialogScroll">
@@ -63,7 +85,11 @@ const DialogContent = React.forwardRef<DialogContentElement, DialogContentProps>
                 <DialogPrimitive.Content
                   {...contentProps}
                   ref={React.coerceRef(forwardedRef)}
-                  class={classNames('rt-BaseDialogContent', 'rt-DialogContent', className)}
+                  class={classNames(
+                    'rt-BaseDialogContent',
+                    'rt-DialogContent',
+                    extractedProps.className,
+                  )}
                 />
               </div>
             </div>
@@ -80,7 +106,13 @@ type DialogTitleProps = ComponentPropsWithout<typeof Heading, 'asChild'>
 const DialogTitle = React.forwardRef<DialogTitleElement, DialogTitleProps>(
   (props, forwardedRef) => (
     <DialogPrimitive.Title asChild>
-      <Heading size="5" mb="3" trim="start" {...props} ref={React.coerceRef(forwardedRef)} />
+      <Heading
+        size="5"
+        mb="3"
+        trim="start"
+        {...mergeProps(prop(() => props as Record<string, unknown>))}
+        ref={React.coerceRef(forwardedRef)}
+      />
     </DialogPrimitive.Title>
   ),
 )
@@ -91,7 +123,12 @@ type DialogDescriptionProps = ComponentPropsAs<typeof Text, 'p'>
 const DialogDescription = React.forwardRef<DialogDescriptionElement, DialogDescriptionProps>(
   (props, forwardedRef) => (
     <DialogPrimitive.Description asChild>
-      <Text as="p" size="3" {...props} ref={React.coerceRef(forwardedRef)} />
+      <Text
+        as="p"
+        size="3"
+        {...mergeProps(prop(() => props as Record<string, unknown>))}
+        ref={React.coerceRef(forwardedRef)}
+      />
     </DialogPrimitive.Description>
   ),
 )
@@ -103,11 +140,17 @@ interface DialogCloseProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const DialogClose = React.forwardRef<DialogCloseElement, DialogCloseProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <DialogPrimitive.Close {...props} ref={React.coerceRef(forwardedRef)} asChild>
-      {requireReactElement(children)}
-    </DialogPrimitive.Close>
-  ),
+  (props, forwardedRef) => {
+    const closeProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { children: undefined },
+    )
+    return (
+      <DialogPrimitive.Close {...closeProps} ref={React.coerceRef(forwardedRef)} asChild>
+        {requireReactElement(props.children)}
+      </DialogPrimitive.Close>
+    )
+  },
 )
 DialogClose.displayName = 'Dialog.Close'
 

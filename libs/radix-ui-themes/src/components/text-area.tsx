@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
+import { mergeProps, prop } from 'fict'
 
 import { textAreaPropDefs } from './text-area.props.js'
 import { extractProps } from '../helpers/extract-props.js'
@@ -21,20 +22,31 @@ interface TextAreaProps
     MarginProps,
     TextAreaOwnProps {}
 const TextArea = React.forwardRef<TextAreaElement, TextAreaProps>((props, forwardedRef) => {
-  const { readOnly, readonly, ...restProps } = props as TextAreaProps & {
-    readonly?: boolean
-  }
-  const { className, color, radius, style, ...textAreaProps } = extractProps(
-    { ...restProps, readonly: readOnly ?? readonly },
-    textAreaPropDefs,
-    marginPropDefs,
+  const normalizedProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      readOnly: undefined,
+      readonly: prop(
+        () => props.readOnly ?? (props as TextAreaProps & { readonly?: boolean }).readonly,
+      ),
+    },
+  ) as unknown as TextAreaProps & { readonly?: boolean }
+  const extractedProps = extractProps(normalizedProps, textAreaPropDefs, marginPropDefs)
+  const textAreaProps = mergeProps(
+    prop(() => extractedProps as unknown as Record<string, unknown>),
+    {
+      className: undefined,
+      color: undefined,
+      radius: undefined,
+      style: undefined,
+    },
   )
   return (
     <div
-      data-accent-color={color}
-      data-radius={radius}
-      class={classNames('rt-TextAreaRoot', className)}
-      style={style}
+      data-accent-color={extractedProps.color}
+      data-radius={extractedProps.radius}
+      class={classNames('rt-TextAreaRoot', extractedProps.className)}
+      style={extractedProps.style}
     >
       <textarea
         class="rt-reset rt-TextAreaInput"

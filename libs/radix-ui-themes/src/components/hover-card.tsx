@@ -30,16 +30,22 @@ interface HoverCardTriggerProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const HoverCardTrigger = React.forwardRef<HoverCardTriggerElement, HoverCardTriggerProps>(
-  ({ children, className, ...props }, forwardedRef) => (
-    <HoverCardPrimitive.Trigger
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-HoverCardTrigger', className)}
-      {...props}
-      asChild
-    >
-      {requireReactElement(children)}
-    </HoverCardPrimitive.Trigger>
-  ),
+  (props, forwardedRef) => {
+    const triggerProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { children: undefined, className: undefined },
+    )
+    return (
+      <HoverCardPrimitive.Trigger
+        ref={React.coerceRef(forwardedRef)}
+        class={prop(() => classNames('rt-HoverCardTrigger', props.className)) as unknown as string}
+        {...triggerProps}
+        asChild
+      >
+        {requireReactElement(props.children)}
+      </HoverCardPrimitive.Trigger>
+    )
+  },
 )
 HoverCardTrigger.displayName = 'HoverCard.Trigger'
 

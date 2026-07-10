@@ -80,38 +80,33 @@ function getState(checked: boolean): 'checked' | 'unchecked' {
 }
 
 function Switch(props: ScopedProps<SwitchProps>): FictNode {
-  const {
-    __scopeSwitch,
-    checked: checkedInput,
-    defaultChecked: defaultCheckedInput,
-    form: formInput,
-    name: nameInput,
-    onCheckedChange: _onCheckedChange,
-    required: requiredInput,
-    ...buttonProps
-  } = props
+  const { __scopeSwitch } = props
   const button = createSignal<HTMLButtonElement | null>(null)
   const bubbleInput = createSignal<HTMLInputElement | null>(null)
   const isFormControl = createSignal(true)
   const checkedProp = () =>
-    checkedInput === undefined
+    props.checked === undefined
       ? undefined
-      : readValue(checkedInput as MaybeAccessor<boolean | undefined>)
+      : readValue(props.checked as MaybeAccessor<boolean | undefined>)
   const defaultChecked = () =>
-    defaultCheckedInput === undefined ? false : (readValue(defaultCheckedInput) ?? false)
+    props.defaultChecked === undefined ? false : (readValue(props.defaultChecked) ?? false)
   const required = () =>
-    requiredInput === undefined
+    props.required === undefined
       ? undefined
-      : readValue(requiredInput as MaybeAccessor<boolean | undefined>)
+      : readValue(props.required as MaybeAccessor<boolean | undefined>)
   const disabled = () => Boolean(readValue(props.disabled as MaybeAccessor<unknown>))
   const name = () =>
-    nameInput === undefined ? undefined : readValue(nameInput as MaybeAccessor<string | undefined>)
+    props.name === undefined
+      ? undefined
+      : readValue(props.name as MaybeAccessor<string | undefined>)
   const value = () =>
     props.value === undefined
       ? 'on'
       : (readValue(props.value as MaybeAccessor<SwitchValue | undefined>) ?? 'on')
   const form = () =>
-    formInput === undefined ? undefined : readValue(formInput as MaybeAccessor<string | undefined>)
+    props.form === undefined
+      ? undefined
+      : readValue(props.form as MaybeAccessor<string | undefined>)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLButtonElement>, (node) =>
     button(node),
   )
@@ -155,7 +150,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
   })
 
   const handleClick = composeEventHandlers<MouseEvent>(
-    props.onClick as ((event: MouseEvent) => void) | undefined,
+    (event) => (props.onClick as ((event: MouseEvent) => void) | undefined)?.(event),
     (event) => {
       if (disabled()) {
         return
@@ -197,10 +192,15 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
       'data-state': prop(() => getState(checked())),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
     },
-    prop(() => buttonProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       __scopeSwitch: undefined,
+      checked: undefined,
+      defaultChecked: undefined,
+      form: undefined,
+      name: undefined,
       onCheckedChange: undefined,
+      required: undefined,
       onClick: handleClick,
       ref: undefined,
       value: prop(value),
@@ -237,11 +237,12 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
 Switch.displayName = SWITCH_NAME
 
 function SwitchThumb(props: ScopedProps<SwitchThumbProps>): FictNode {
-  const { __scopeSwitch, ...thumbProps } = props
+  const { __scopeSwitch } = props
   const context = useSwitchContext(THUMB_NAME, __scopeSwitch)
   const primitiveProps = mergeProps(
-    prop(() => thumbProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeSwitch: undefined,
       'data-state': prop(() => getState(context.checked())),
       'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
     },
@@ -253,11 +254,10 @@ function SwitchThumb(props: ScopedProps<SwitchThumbProps>): FictNode {
 SwitchThumb.displayName = THUMB_NAME
 
 function SwitchBubbleInput(props: SwitchBubbleInputProps): FictNode {
-  const { form: formProp, ...inputRestProps } = props
   const controlSize = useSize(props.control)
 
   const inputProps = mergeProps(
-    prop(() => inputRestProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       'aria-hidden': true,
       checked: prop(props.checked),
@@ -267,10 +267,11 @@ function SwitchBubbleInput(props: SwitchBubbleInputProps): FictNode {
       disabled: prop(() =>
         props.disabled === undefined ? undefined : Boolean(readValue(props.disabled)),
       ),
+      form: undefined,
       'attr:form': prop(() =>
-        formProp === undefined
+        props.form === undefined
           ? undefined
-          : readValue(formProp as MaybeAccessor<string | undefined>),
+          : readValue(props.form as MaybeAccessor<string | undefined>),
       ),
       name: prop(() =>
         props.name === undefined

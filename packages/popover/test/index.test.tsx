@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render, type FictNode } from '@fictjs/runtime'
+import { prop, render, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 const hideOthersMock = vi.hoisted(() => vi.fn(() => () => {}))
@@ -16,6 +16,7 @@ vi.mock('@fictjs/fict-remove-scroll', () => ({
 }))
 
 vi.mock('@fictjs/popper', async () => {
+  const { mergeProps, prop } = await import('@fictjs/runtime')
   const { Primitive } = await import('@fictjs/primitive')
 
   const Popper = (props: { children?: unknown }) => props.children ?? null
@@ -23,7 +24,7 @@ vi.mock('@fictjs/popper', async () => {
     <Primitive.div {...props} data-popper-anchor="" />
   )
   const PopperContent = (props: Record<string, unknown>) => (
-    <Primitive.div {...props} data-popper-content="" />
+    <Primitive.div {...mergeProps(prop(() => props))} data-popper-content="" />
   )
   const PopperArrow = (props: Record<string, unknown>) => (
     <Primitive.svg {...props} data-popper-arrow="" />
@@ -146,6 +147,47 @@ describe('@fictjs/popover', () => {
     expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
     expect(hideOthersMock).not.toHaveBeenCalled()
+  })
+
+  it('preserves latest callbacks and reactive props through modal content wrappers', async () => {
+    const container = document.createElement('div')
+    const calls: string[] = []
+    const label = createSignal('first label')
+    const onEscapeKeyDown = createSignal<(event: KeyboardEvent) => void>(() => {
+      calls.push('first')
+    })
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Popover defaultOpen modal>
+          <PopoverTrigger>Toggle</PopoverTrigger>
+          <PopoverPortal>
+            <PopoverContent
+              data-testid="content"
+              aria-label={prop(() => label()) as unknown as string}
+              onEscapeKeyDown={
+                prop(() => onEscapeKeyDown()) as unknown as (event: KeyboardEvent) => void
+              }
+            />
+          </PopoverPortal>
+        </Popover>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    label('second label')
+    onEscapeKeyDown(() => calls.push('second'))
+    await flushEffects()
+
+    const content = document.body.querySelector('[data-testid="content"]') as HTMLDivElement
+    expect(content.getAttribute('aria-label')).toBe('second label')
+
+    pressEscape(document)
+    await waitForEffects()
+
+    expect(calls).toEqual(['second'])
   })
 
   it('wraps the trigger in a default popper anchor when no custom anchor exists', () => {

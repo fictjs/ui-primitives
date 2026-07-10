@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { createContext, createMemo, render, type FictNode } from '@fictjs/runtime'
+import { createContext, createMemo, prop, render, type FictNode } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createContext as createScopedContext } from '../../context/src/index.js'
@@ -38,6 +38,35 @@ describe('@fictjs/portal', () => {
     expect(portalNode).not.toBeNull()
     expect(portalNode?.textContent).toBe('Inside')
     expect(host.querySelector('#custom-portal')).toBeNull()
+  })
+
+  it('moves existing content when the container prop changes', async () => {
+    const host = document.createElement('div')
+    const firstPortalRoot = document.createElement('div')
+    const secondPortalRoot = document.createElement('div')
+    const portalRoot = createSignal<Element | DocumentFragment | null>(firstPortalRoot)
+    document.body.append(host, firstPortalRoot, secondPortalRoot)
+
+    render(
+      () => (
+        <Portal
+          container={prop(() => portalRoot()) as unknown as Element | DocumentFragment | null}
+          id="moving-portal"
+        >
+          Moving content
+        </Portal>
+      ),
+      host,
+    )
+
+    await flushMicrotasks()
+    expect(firstPortalRoot.querySelector('#moving-portal')).not.toBeNull()
+
+    portalRoot(secondPortalRoot)
+    await flushMicrotasks()
+
+    expect(firstPortalRoot.querySelector('#moving-portal')).toBeNull()
+    expect(secondPortalRoot.querySelector('#moving-portal')?.textContent).toBe('Moving content')
   })
 
   it('defaults to document.body once mounted', async () => {

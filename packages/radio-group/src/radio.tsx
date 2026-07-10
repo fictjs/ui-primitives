@@ -84,30 +84,23 @@ function getState(checked: boolean): 'checked' | 'unchecked' {
 }
 
 function Radio(props: ScopedProps<RadioProps>): FictNode {
-  const {
-    __scopeRadio,
-    checked: checkedProp = false,
-    defaultChecked,
-    form: formInput,
-    name: nameInput,
-    required,
-    onCheck,
-    value: valueInput,
-    ...radioProps
-  } = props
+  const { __scopeRadio } = props
   const button = createSignal<HTMLButtonElement | null>(null)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLButtonElement>, (node) =>
     button(node),
   )
-  const checked = () => Boolean(readValue(checkedProp as MaybeAccessor<boolean | undefined>))
+  const checked = () =>
+    Boolean(readValue((props.checked ?? false) as MaybeAccessor<boolean | undefined>))
   const disabled = () => Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>))
   const form = () =>
-    formInput === undefined ? undefined : readValue(formInput as MaybeAccessor<string | undefined>)
+    props.form === undefined
+      ? undefined
+      : readValue(props.form as MaybeAccessor<string | undefined>)
   const value = () =>
-    valueInput === undefined
+    props.value === undefined
       ? 'on'
       : (readValue(
-          valueInput as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
+          props.value as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
         ) ?? 'on')
   const hasConsumerStoppedPropagationRef = { current: false }
   const isFormControl = createSignal(true)
@@ -137,19 +130,22 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
       'data-state': prop(() => getState(checked())),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
     },
-    prop(() => radioProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       __scopeRadio: undefined,
       checked: undefined,
+      defaultChecked: undefined,
+      form: undefined,
+      name: undefined,
       disabled: prop(() => (disabled() ? true : undefined)),
       onCheck: undefined,
       ref: undefined,
       required: undefined,
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => (props.onClick as ((event: MouseEvent) => void) | undefined)?.(event),
         (event) => {
           if (!checked()) {
-            onCheck?.()
+            props.onCheck?.()
           }
 
           if (isFormControl()) {
@@ -172,16 +168,20 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
         checked={checked}
         control={button}
         defaultChecked={
-          defaultChecked === undefined
+          props.defaultChecked === undefined
             ? checked()
-            : Boolean(readValue(defaultChecked as MaybeAccessor<boolean | undefined>))
+            : Boolean(readValue(props.defaultChecked as MaybeAccessor<boolean | undefined>))
         }
-        disabled={props.disabled}
-        form={formInput}
-        name={nameInput}
-        required={required}
+        disabled={() =>
+          props.disabled === undefined ? undefined : Boolean(readValue(props.disabled))
+        }
+        form={() => (props.form === undefined ? undefined : readValue(props.form))}
+        name={() => (props.name === undefined ? undefined : readValue(props.name))}
+        required={() =>
+          props.required === undefined ? undefined : Boolean(readValue(props.required))
+        }
         style={{ transform: 'translateX(-100%)' }}
-        value={valueInput}
+        value={() => (props.value === undefined ? undefined : readValue(props.value))}
       />
     ) : null,
   ) as unknown as FictNode
@@ -203,14 +203,16 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
 Radio.displayName = RADIO_NAME
 
 function RadioIndicator(props: ScopedProps<RadioIndicatorProps>): FictNode {
-  const { __scopeRadio, forceMount, ...indicatorProps } = props
+  const { __scopeRadio } = props
   const context = useRadioContext(
     INDICATOR_NAME,
     __scopeRadio as Scope<RadioContextValue | undefined>,
   )
   const primitiveProps = mergeProps(
-    prop(() => indicatorProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeRadio: undefined,
+      forceMount: undefined,
       'data-state': prop(() => getState(context.checked())),
       'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
     },
@@ -220,9 +222,10 @@ function RadioIndicator(props: ScopedProps<RadioIndicatorProps>): FictNode {
     <Presence
       present={() =>
         Boolean(
-          (forceMount === undefined
+          (props.forceMount === undefined
             ? false
-            : readValue(forceMount as MaybeAccessor<boolean | undefined>)) || context.checked(),
+            : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)) ||
+          context.checked(),
         )
       }
     >
@@ -234,7 +237,6 @@ function RadioIndicator(props: ScopedProps<RadioIndicatorProps>): FictNode {
 RadioIndicator.displayName = INDICATOR_NAME
 
 function RadioBubbleInput(props: RadioBubbleInputProps): FictNode {
-  const { form: formProp, ...inputRestProps } = props
   const ref = createSignal<HTMLInputElement | null>(null)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLInputElement>, (node) =>
     ref(node),
@@ -264,7 +266,7 @@ function RadioBubbleInput(props: RadioBubbleInputProps): FictNode {
   })
 
   const inputProps = mergeProps(
-    prop(() => inputRestProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       'aria-hidden': true,
       bubbles: undefined,
@@ -275,10 +277,11 @@ function RadioBubbleInput(props: RadioBubbleInputProps): FictNode {
           ? undefined
           : Boolean(readValue(props.disabled as MaybeAccessor<unknown>)),
       ),
+      form: undefined,
       'attr:form': prop(() =>
-        formProp === undefined
+        props.form === undefined
           ? undefined
-          : readValue(formProp as MaybeAccessor<string | undefined>),
+          : readValue(props.form as MaybeAccessor<string | undefined>),
       ),
       name: prop(() =>
         props.name === undefined

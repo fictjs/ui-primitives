@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -74,7 +74,7 @@ type TooltipContextValue = {
 }
 
 type PortalContextValue = {
-  forceMount: boolean | undefined
+  forceMount: () => boolean | undefined
 }
 
 type VisuallyHiddenContentContextValue = {
@@ -86,7 +86,7 @@ const [TooltipProviderContextProvider, useTooltipProviderContext] =
 const [TooltipContextProvider, useTooltipContext] =
   createTooltipContext<TooltipContextValue>(TOOLTIP_NAME)
 const [PortalProvider, usePortalContext] = createTooltipContext<PortalContextValue>(PORTAL_NAME, {
-  forceMount: undefined,
+  forceMount: () => undefined,
 })
 const [VisuallyHiddenContentContextProvider, useVisuallyHiddenContentContext] =
   createTooltipContext<VisuallyHiddenContentContextValue>(TOOLTIP_NAME, { isInside: false })
@@ -332,16 +332,15 @@ function Tooltip(props: ScopedProps<TooltipProps>): FictNode {
 Tooltip.displayName = TOOLTIP_NAME
 
 function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
-  const { __scopeTooltip, ...triggerProps } = props
   const context = useTooltipContext(
     TRIGGER_NAME,
-    __scopeTooltip as Scope<TooltipContextValue | undefined>,
+    props.__scopeTooltip as Scope<TooltipContextValue | undefined>,
   )
   const providerContext = useTooltipProviderContext(
     TRIGGER_NAME,
-    __scopeTooltip as Scope<TooltipProviderContextValue | undefined>,
+    props.__scopeTooltip as Scope<TooltipProviderContextValue | undefined>,
   )
-  const popperScope = usePopperScope(__scopeTooltip)
+  const popperScope = usePopperScope(props.__scopeTooltip)
   const isPointerDownRef = { current: false }
   const hasPointerMoveOpenedRef = { current: false }
   const suppressPointerMoveRef = { current: false }
@@ -364,10 +363,10 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
       'aria-describedby': prop(() => (context.open() ? context.contentId() : undefined)),
       'data-state': prop(context.stateAttribute),
     },
-    prop(() => triggerProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       onPointerMove: composeEventHandlers<PointerEvent>(
-        props.onPointerMove as ((event: PointerEvent) => void) | undefined,
+        (event) => props.onPointerMove?.(event),
         (event) => {
           if (event.pointerType === 'touch') {
             return
@@ -384,7 +383,7 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
         },
       ),
       onPointerLeave: composeEventHandlers<PointerEvent>(
-        props.onPointerLeave as ((event: PointerEvent) => void) | undefined,
+        (event) => props.onPointerLeave?.(event),
         () => {
           hasPointerMoveOpenedRef.current = false
           suppressPointerMoveRef.current = false
@@ -392,7 +391,7 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
         },
       ),
       onPointerDown: composeEventHandlers<PointerEvent>(
-        props.onPointerDown as ((event: PointerEvent) => void) | undefined,
+        (event) => props.onPointerDown?.(event),
         () => {
           if (context.open()) {
             context.onClose()
@@ -405,7 +404,7 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
         },
       ),
       onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => props.onFocus?.(event),
         () => {
           if (!isPointerDownRef.current) {
             context.onOpen()
@@ -413,20 +412,21 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
         },
       ),
       onBlur: composeEventHandlers<FocusEvent>(
-        props.onBlur as ((event: FocusEvent) => void) | undefined,
+        (event) => props.onBlur?.(event),
         () => {
           suppressPointerMoveRef.current = false
           context.onClose()
         },
       ),
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => props.onClick?.(event),
         () => {
           hasPointerMoveOpenedRef.current = true
           suppressPointerMoveRef.current = true
           context.onClose()
         },
       ),
+      __scopeTooltip: undefined,
       ref: undefined,
     },
   )
@@ -442,19 +442,21 @@ function TooltipTrigger(props: ScopedProps<TooltipTriggerProps>): FictNode {
 TooltipTrigger.displayName = TRIGGER_NAME
 
 function TooltipPortal(props: ScopedProps<TooltipPortalProps>): FictNode {
-  const { __scopeTooltip, children, container, forceMount } = props
-  const nextForceMount = forceMount === undefined ? undefined : readValue(forceMount)
-  const portalProps =
-    container === undefined
-      ? { style: { display: 'contents' } }
-      : { container, style: { display: 'contents' } }
+  const forceMount = () =>
+    props.forceMount === undefined
+      ? undefined
+      : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)
+  const portalProps = {
+    container: prop(() => props.container) as unknown as Element | DocumentFragment | null,
+    style: { display: 'contents' },
+  }
 
   return (
     <PortalProvider
-      scope={__scopeTooltip as Scope<PortalContextValue | undefined>}
-      forceMount={nextForceMount}
+      scope={props.__scopeTooltip as Scope<PortalContextValue | undefined>}
+      forceMount={forceMount}
     >
-      <PortalPrimitive {...portalProps}>{children}</PortalPrimitive>
+      <PortalPrimitive {...portalProps}>{props.children}</PortalPrimitive>
     </PortalProvider>
   )
 }
@@ -470,27 +472,33 @@ function TooltipContent(props: ScopedProps<TooltipContentProps>): FictNode {
     CONTENT_NAME,
     props.__scopeTooltip as Scope<TooltipContextValue | undefined>,
   )
-  const { forceMount, ...contentProps } = props
   const present = () =>
     Boolean(
-      (forceMount === undefined
-        ? portalContext.forceMount
-        : readValue(forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
+      (props.forceMount === undefined
+        ? portalContext.forceMount()
+        : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
     )
-  const contentWithDefaultSide =
-    contentProps.side === undefined
-      ? mergeProps(contentProps as Record<string, unknown>, { side: 'top' })
-      : (contentProps as Record<string, unknown>)
+  const contentWithDefaultSide = mergeProps(
+    { side: 'top' },
+    prop(() => props as Record<string, unknown>),
+    { forceMount: undefined },
+  )
 
   return (
     <Presence present={present}>
-      {context.disableHoverableContent() ? (
-        <TooltipContentImpl {...(contentWithDefaultSide as ScopedProps<TooltipContentImplProps>)} />
-      ) : (
-        <TooltipContentHoverable
-          {...(contentWithDefaultSide as ScopedProps<TooltipContentImplProps>)}
-        />
-      )}
+      <>
+        {reactive(() =>
+          context.disableHoverableContent() ? (
+            <TooltipContentImpl
+              {...(contentWithDefaultSide as ScopedProps<TooltipContentImplProps>)}
+            />
+          ) : (
+            <TooltipContentHoverable
+              {...(contentWithDefaultSide as ScopedProps<TooltipContentImplProps>)}
+            />
+          ),
+        )}
+      </>
     </Presence>
   )
 }
@@ -583,30 +591,20 @@ function TooltipContentHoverable(props: ScopedProps<TooltipContentImplProps>): F
     }
   })
 
-  const contentProps =
-    composedRefs === undefined
-      ? props
-      : mergeProps(props as Record<string, unknown>, {
-          ref: composedRefs,
-        })
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    composedRefs === undefined ? {} : { ref: composedRefs },
+  )
 
   return <TooltipContentImpl {...(contentProps as ScopedProps<TooltipContentImplProps>)} />
 }
 
 function TooltipContentImpl(props: ScopedProps<TooltipContentImplProps>): FictNode {
-  const {
-    __scopeTooltip,
-    children,
-    'aria-label': ariaLabel,
-    onEscapeKeyDown,
-    onPointerDownOutside,
-    ...contentProps
-  } = props
   const context = useTooltipContext(
     CONTENT_NAME,
-    __scopeTooltip as Scope<TooltipContextValue | undefined>,
+    props.__scopeTooltip as Scope<TooltipContextValue | undefined>,
   )
-  const popperScope = usePopperScope(__scopeTooltip)
+  const popperScope = usePopperScope(props.__scopeTooltip)
 
   useLayoutEffect(() => {
     document.addEventListener(TOOLTIP_OPEN, context.onClose)
@@ -641,12 +639,8 @@ function TooltipContentImpl(props: ScopedProps<TooltipContentImplProps>): FictNo
       event.preventDefault()
     },
     onDismiss: context.onClose,
-  }
-  if (onEscapeKeyDown !== undefined) {
-    dismissableLayerProps.onEscapeKeyDown = onEscapeKeyDown
-  }
-  if (onPointerDownOutside !== undefined) {
-    dismissableLayerProps.onPointerDownOutside = onPointerDownOutside
+    onEscapeKeyDown: prop(() => props.onEscapeKeyDown),
+    onPointerDownOutside: prop(() => props.onPointerDownOutside),
   }
 
   const popperProps = mergeProps<Record<string, unknown>>(
@@ -654,10 +648,15 @@ function TooltipContentImpl(props: ScopedProps<TooltipContentImplProps>): FictNo
       'data-state': prop(context.stateAttribute),
     },
     popperScope,
-    prop(() => contentProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeTooltip: undefined,
+      children: undefined,
+      'aria-label': undefined,
+      onEscapeKeyDown: undefined,
+      onPointerDownOutside: undefined,
       style: prop(() => ({
-        ...readStyle(contentProps.style as MaybeAccessor<unknown> | undefined),
+        ...readStyle(props.style as MaybeAccessor<unknown> | undefined),
         ['--radix-tooltip-content-transform-origin' as string]:
           'var(--radix-popper-transform-origin)',
         ['--radix-tooltip-content-available-width' as string]:
@@ -679,13 +678,13 @@ function TooltipContentImpl(props: ScopedProps<TooltipContentImplProps>): FictNo
   return (
     <DismissableLayer {...dismissableLayerProps}>
       <PopperContentPrimitive {...(contentPrimitiveProps as Record<string, unknown>)}>
-        <Slottable>{children}</Slottable>
+        <Slottable>{props.children}</Slottable>
         <VisuallyHiddenContentContextProvider
-          scope={__scopeTooltip as Scope<VisuallyHiddenContentContextValue | undefined>}
+          scope={props.__scopeTooltip as Scope<VisuallyHiddenContentContextValue | undefined>}
           isInside={true}
         >
           <VisuallyHidden id={context.contentId()} role="tooltip">
-            {ariaLabel ?? children}
+            {props['aria-label'] ?? props.children}
           </VisuallyHidden>
         </VisuallyHiddenContentContextProvider>
       </PopperContentPrimitive>
@@ -694,16 +693,22 @@ function TooltipContentImpl(props: ScopedProps<TooltipContentImplProps>): FictNo
 }
 
 function TooltipArrow(props: ScopedProps<TooltipArrowProps>): FictNode {
-  const { __scopeTooltip, ...arrowProps } = props
-  const popperScope = usePopperScope(__scopeTooltip)
+  const popperScope = usePopperScope(props.__scopeTooltip)
   const visuallyHiddenContentContext = useVisuallyHiddenContentContext(
     ARROW_NAME,
-    __scopeTooltip as Scope<VisuallyHiddenContentContextValue | undefined>,
+    props.__scopeTooltip as Scope<VisuallyHiddenContentContextValue | undefined>,
   )
 
   if (visuallyHiddenContentContext.isInside) {
     return null
   }
+
+  const arrowProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeTooltip: undefined,
+    },
+  )
 
   return <PopperArrowPrimitive {...popperScope} {...arrowProps} />
 }

@@ -252,18 +252,21 @@ function Toolbar(props: ScopedProps<ToolbarProps>): FictNode {
 Toolbar.displayName = TOOLBAR_NAME
 
 function ToolbarSeparator(props: ScopedProps<ToolbarSeparatorProps>): FictNode {
-  const { __scopeToolbar, ...separatorProps } = props
+  const { __scopeToolbar } = props
   const context = useToolbarContext(
     SEPARATOR_NAME,
     __scopeToolbar as Scope<ToolbarContextValue | undefined>,
   )
 
-  return (
-    <Separator
-      orientation={context.orientation() === 'horizontal' ? 'vertical' : 'horizontal'}
-      {...separatorProps}
-    />
+  const separatorProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeToolbar: undefined,
+      orientation: prop(() => (context.orientation() === 'horizontal' ? 'vertical' : 'horizontal')),
+    },
   )
+
+  return <Separator {...separatorProps} />
 }
 
 ToolbarSeparator.displayName = SEPARATOR_NAME
@@ -274,6 +277,7 @@ function useToolbarItemProps(
   disabled: () => boolean,
   ref: PossibleRef<ToolbarItemElement>,
   props: Record<string, unknown>,
+  eventProps: Record<string, unknown>,
 ) {
   const context = useToolbarContext(name, scope as Scope<ToolbarContextValue | undefined>)
 
@@ -282,7 +286,7 @@ function useToolbarItemProps(
     'data-toolbar-item': '',
     ref,
     onFocus: composeEventHandlers<FocusEvent>(
-      props.onFocus as ((event: FocusEvent) => void) | undefined,
+      (event) => (eventProps.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
       (event) => {
         if (!disabled()) {
           context.setCurrentTabStop(event.currentTarget as ToolbarItemElement)
@@ -290,7 +294,7 @@ function useToolbarItemProps(
       },
     ),
     onMouseDown: composeEventHandlers<MouseEvent>(
-      props.onMouseDown as ((event: MouseEvent) => void) | undefined,
+      (event) => (eventProps.onMouseDown as ((event: MouseEvent) => void) | undefined)?.(event),
       (event) => {
         if (disabled()) {
           event.preventDefault()
@@ -303,7 +307,7 @@ function useToolbarItemProps(
       },
     ),
     onKeyDown: composeEventHandlers<KeyboardEvent>(
-      props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+      (event) => (eventProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
       (event) => {
         if (event.target !== event.currentTarget) return
         if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
@@ -327,9 +331,14 @@ function useToolbarItemProps(
 }
 
 function ToolbarButton(props: ScopedProps<ToolbarButtonProps>): FictNode {
-  const { __scopeToolbar: _scopeToolbar, disabled = false, ...buttonProps } = props
   const isDisabled = () =>
-    Boolean(readValue(disabled as MaybeAccessor<boolean | undefined>) ?? false)
+    Boolean(readValue((props.disabled ?? false) as MaybeAccessor<boolean | undefined>) ?? false)
+  const buttonProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeToolbar: undefined,
+    },
+  )
   const primitiveProps = mergeProps(
     {
       type: 'button',
@@ -340,6 +349,7 @@ function ToolbarButton(props: ScopedProps<ToolbarButtonProps>): FictNode {
       isDisabled,
       props.ref as PossibleRef<ToolbarItemElement>,
       buttonProps as Record<string, unknown>,
+      props as unknown as Record<string, unknown>,
     ),
     {
       disabled: prop(isDisabled),
@@ -353,13 +363,13 @@ function ToolbarButton(props: ScopedProps<ToolbarButtonProps>): FictNode {
 ToolbarButton.displayName = BUTTON_NAME
 
 function ToolbarLink(props: ScopedProps<ToolbarLinkProps>): FictNode {
-  const { __scopeToolbar: _scopeToolbar, ...linkProps } = props
   const isDisabled = () => false
   const toolbarLinkProps = mergeProps(
-    prop(() => linkProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeToolbar: undefined,
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        linkProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
         (event) => {
           if (event.key === ' ') {
             event.preventDefault()
@@ -378,6 +388,7 @@ function ToolbarLink(props: ScopedProps<ToolbarLinkProps>): FictNode {
       isDisabled,
       props.ref as PossibleRef<ToolbarItemElement>,
       toolbarLinkProps as Record<string, unknown>,
+      toolbarLinkProps as Record<string, unknown>,
     ),
     {
       'aria-disabled': prop(() => (isDisabled() ? 'true' : undefined)),
@@ -393,20 +404,29 @@ ToolbarLink.displayName = LINK_NAME
 function ToolbarToggleGroup(
   props: ScopedProps<ToolbarToggleGroupSingleProps | ToolbarToggleGroupMultipleProps>,
 ): FictNode {
-  const { __scopeToolbar, ...toggleGroupProps } = props
+  const { __scopeToolbar } = props
   const context = useToolbarContext(
     TOGGLE_GROUP_NAME,
     __scopeToolbar as Scope<ToolbarContextValue | undefined>,
   )
 
+  const toggleGroupProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    {
+      __scopeToolbar: undefined,
+      __scopeToggleGroup: __scopeToolbar,
+      'data-orientation': prop(context.orientation),
+      dir: prop(context.dir),
+      orientation: prop(context.orientation),
+      rovingFocus: false,
+    },
+  )
+
   return (
     <ToggleGroupPrimitive
-      {...toggleGroupProps}
-      __scopeToggleGroup={__scopeToolbar}
-      data-orientation={context.orientation()}
-      dir={context.dir()}
-      orientation={context.orientation()}
-      rovingFocus={false}
+      {...(toggleGroupProps as unknown as ScopedProps<
+        ToolbarToggleGroupSingleProps | ToolbarToggleGroupMultipleProps
+      >)}
     />
   )
 }
@@ -414,9 +434,14 @@ function ToolbarToggleGroup(
 ToolbarToggleGroup.displayName = TOGGLE_GROUP_NAME
 
 function ToolbarToggleItem(props: ScopedProps<ToolbarToggleItemProps>): FictNode {
-  const { __scopeToolbar: _scopeToolbar, disabled = false, ...toggleItemProps } = props
   const isDisabled = () =>
-    Boolean(readValue(disabled as MaybeAccessor<boolean | undefined>) ?? false)
+    Boolean(readValue((props.disabled ?? false) as MaybeAccessor<boolean | undefined>) ?? false)
+  const toggleItemProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeToolbar: undefined,
+    },
+  )
   const primitiveProps = mergeProps(
     useToolbarItemProps(
       props.__scopeToolbar,
@@ -424,9 +449,10 @@ function ToolbarToggleItem(props: ScopedProps<ToolbarToggleItemProps>): FictNode
       isDisabled,
       props.ref as PossibleRef<ToolbarItemElement>,
       toggleItemProps as Record<string, unknown>,
+      props as unknown as Record<string, unknown>,
     ),
     {
-      value: props.value,
+      value: prop(() => props.value),
       disabled: prop(isDisabled),
       'data-disabled': prop(() => (isDisabled() ? '' : undefined)),
       __scopeToggleGroup: props.__scopeToolbar,

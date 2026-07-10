@@ -31,11 +31,17 @@ interface AlertDialogTriggerProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const AlertDialogTrigger = React.forwardRef<AlertDialogTriggerElement, AlertDialogTriggerProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <AlertDialogPrimitive.Trigger {...props} ref={React.coerceRef(forwardedRef)} asChild>
-      {requireReactElement(children)}
-    </AlertDialogPrimitive.Trigger>
-  ),
+  (props, forwardedRef) => {
+    const triggerProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { children: undefined },
+    )
+    return (
+      <AlertDialogPrimitive.Trigger {...triggerProps} ref={React.coerceRef(forwardedRef)} asChild>
+        {requireReactElement(props.children)}
+      </AlertDialogPrimitive.Trigger>
+    )
+  },
 )
 AlertDialogTrigger.displayName = 'AlertDialog.Trigger'
 
@@ -47,12 +53,28 @@ interface AlertDialogContentProps
   container?: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Portal>['container']
 }
 const AlertDialogContent = React.forwardRef<AlertDialogContentElement, AlertDialogContentProps>(
-  ({ align, ...props }, forwardedRef) => {
+  (props, forwardedRef) => {
     const { align: alignPropDef, ...propDefs } = alertDialogContentPropDefs
-    const { className: alignClassName } = extractProps({ align }, { align: alignPropDef })
-    const { className, forceMount, container, ...contentProps } = extractProps(props, propDefs)
+    const { className: alignClassName } = extractProps(
+      { align: props.align },
+      { align: alignPropDef },
+    )
+    const extractedProps = extractProps(
+      mergeProps(
+        prop(() => props as Record<string, unknown>),
+        { align: undefined },
+      ) as unknown as AlertDialogContentProps,
+      propDefs,
+    )
+    const contentProps = mergeProps(
+      prop(() => extractedProps as unknown as Record<string, unknown>),
+      { className: undefined, container: undefined, forceMount: undefined },
+    )
     return (
-      <AlertDialogPrimitive.Portal container={container} forceMount={forceMount}>
+      <AlertDialogPrimitive.Portal
+        container={extractedProps.container}
+        forceMount={extractedProps.forceMount}
+      >
         <Theme asChild>
           <AlertDialogPrimitive.Overlay class="rt-BaseDialogOverlay rt-AlertDialogOverlay">
             <div class="rt-BaseDialogScroll rt-AlertDialogScroll">
@@ -62,7 +84,11 @@ const AlertDialogContent = React.forwardRef<AlertDialogContentElement, AlertDial
                 <AlertDialogPrimitive.Content
                   {...contentProps}
                   ref={React.coerceRef(forwardedRef)}
-                  class={classNames('rt-BaseDialogContent', 'rt-AlertDialogContent', className)}
+                  class={classNames(
+                    'rt-BaseDialogContent',
+                    'rt-AlertDialogContent',
+                    extractedProps.className,
+                  )}
                 />
               </div>
             </div>
@@ -79,7 +105,13 @@ type AlertDialogTitleProps = ComponentPropsWithout<typeof Heading, 'asChild'>
 const AlertDialogTitle = React.forwardRef<AlertDialogTitleElement, AlertDialogTitleProps>(
   (props, forwardedRef) => (
     <AlertDialogPrimitive.Title asChild>
-      <Heading size="5" mb="3" trim="start" {...props} ref={React.coerceRef(forwardedRef)} />
+      <Heading
+        size="5"
+        mb="3"
+        trim="start"
+        {...mergeProps(prop(() => props as Record<string, unknown>))}
+        ref={React.coerceRef(forwardedRef)}
+      />
     </AlertDialogPrimitive.Title>
   ),
 )
@@ -92,7 +124,12 @@ const AlertDialogDescription = React.forwardRef<
   AlertDialogDescriptionProps
 >((props, forwardedRef) => (
   <AlertDialogPrimitive.Description asChild>
-    <Text as="p" size="3" {...props} ref={React.coerceRef(forwardedRef)} />
+    <Text
+      as="p"
+      size="3"
+      {...mergeProps(prop(() => props as Record<string, unknown>))}
+      ref={React.coerceRef(forwardedRef)}
+    />
   </AlertDialogPrimitive.Description>
 ))
 AlertDialogDescription.displayName = 'AlertDialog.Description'
@@ -103,11 +140,17 @@ interface AlertDialogActionProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const AlertDialogAction = React.forwardRef<AlertDialogActionElement, AlertDialogActionProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <AlertDialogPrimitive.Action {...props} ref={React.coerceRef(forwardedRef)} asChild>
-      {requireReactElement(children)}
-    </AlertDialogPrimitive.Action>
-  ),
+  (props, forwardedRef) => {
+    const actionProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { children: undefined },
+    )
+    return (
+      <AlertDialogPrimitive.Action {...actionProps} ref={React.coerceRef(forwardedRef)} asChild>
+        {requireReactElement(props.children)}
+      </AlertDialogPrimitive.Action>
+    )
+  },
 )
 AlertDialogAction.displayName = 'AlertDialog.Action'
 
@@ -117,11 +160,17 @@ interface AlertDialogCancelProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const AlertDialogCancel = React.forwardRef<AlertDialogCancelElement, AlertDialogCancelProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <AlertDialogPrimitive.Cancel {...props} ref={React.coerceRef(forwardedRef)} asChild>
-      {requireReactElement(children)}
-    </AlertDialogPrimitive.Cancel>
-  ),
+  (props, forwardedRef) => {
+    const cancelProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { children: undefined },
+    )
+    return (
+      <AlertDialogPrimitive.Cancel {...cancelProps} ref={React.coerceRef(forwardedRef)} asChild>
+        {requireReactElement(props.children)}
+      </AlertDialogPrimitive.Cancel>
+    )
+  },
 )
 AlertDialogCancel.displayName = 'AlertDialog.Cancel'
 

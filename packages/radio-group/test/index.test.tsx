@@ -1,11 +1,12 @@
 /** @jsxImportSource @fictjs/runtime */
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { RadioGroup, RadioGroupIndicator, RadioGroupItem } from '../src/index.js'
+import { Radio } from '../src/radio.js'
 
 function click(target: Element): void {
   target.dispatchEvent(
@@ -99,6 +100,27 @@ describe('@fictjs/radio-group', () => {
 
     expect(one.getAttribute('aria-checked')).toBe('true')
     expect(two.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('invokes the latest reactive radio check handler', async () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn()
+    const onCheck = createSignal<() => void>(firstHandler)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => <Radio data-testid="radio" onCheck={prop(() => onCheck()) as unknown as () => void} />,
+      container,
+    )
+
+    await waitForUpdates()
+    onCheck(secondHandler)
+    click(container.querySelector('[data-testid="radio"]') as HTMLButtonElement)
+    await waitForUpdates()
+
+    expect(firstHandler).not.toHaveBeenCalled()
+    expect(secondHandler).toHaveBeenCalledOnce()
   })
 
   it('checks the next item when focused via arrow navigation', async () => {

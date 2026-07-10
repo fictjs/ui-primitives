@@ -42,7 +42,7 @@ function Toggle(props: ToggleProps): FictNode {
   const [pressed, setPressed] = useControllableState(controllableStateProps)
 
   const handleClick = composeEventHandlers<MouseEvent>(
-    props.onClick as EventHandler<MouseEvent> | undefined,
+    (event) => (props.onClick as EventHandler<MouseEvent> | undefined)?.(event),
     () => {
       if (!isDisabled()) {
         setPressed((currentPressed) => !currentPressed)

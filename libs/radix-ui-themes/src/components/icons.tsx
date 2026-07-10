@@ -1,4 +1,5 @@
 import * as React from '../helpers/element.js'
+import { mergeProps, prop } from 'fict'
 
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
 
@@ -7,7 +8,10 @@ interface IconProps extends ComponentPropsWithout<'svg', RemovedProps | 'childre
 
 const ThickDividerHorizontalIcon = React.forwardRef<IconElement, IconProps>(
   (props, forwardedRef) => {
-    const { className, ...rest } = props as IconProps & { className?: string }
+    const iconProps = mergeProps(
+      prop(() => props as unknown as Record<string, unknown>),
+      { className: undefined },
+    )
 
     return (
       <svg
@@ -16,8 +20,8 @@ const ThickDividerHorizontalIcon = React.forwardRef<IconElement, IconProps>(
         viewBox="0 0 9 9"
         fill="currentcolor"
         xmlns="http://www.w3.org/2000/svg"
-        {...rest}
-        class={className}
+        {...iconProps}
+        class={prop(() => props.className) as unknown as string}
         ref={React.coerceRef(forwardedRef)}
       >
         <path
@@ -33,7 +37,10 @@ const ThickDividerHorizontalIcon = React.forwardRef<IconElement, IconProps>(
 ThickDividerHorizontalIcon.displayName = 'ThickDividerHorizontalIcon'
 
 const ThickCheckIcon = React.forwardRef<IconElement, IconProps>((props, forwardedRef) => {
-  const { className, ...rest } = props as IconProps & { className?: string }
+  const iconProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    { className: undefined },
+  )
 
   return (
     <svg
@@ -42,8 +49,8 @@ const ThickCheckIcon = React.forwardRef<IconElement, IconProps>((props, forwarde
       viewBox="0 0 9 9"
       fill="currentcolor"
       xmlns="http://www.w3.org/2000/svg"
-      {...rest}
-      class={className}
+      {...iconProps}
+      class={prop(() => props.className) as unknown as string}
       ref={React.coerceRef(forwardedRef)}
     >
       <path
@@ -57,7 +64,10 @@ const ThickCheckIcon = React.forwardRef<IconElement, IconProps>((props, forwarde
 ThickCheckIcon.displayName = 'ThickCheckIcon'
 
 const ChevronDownIcon = React.forwardRef<IconElement, IconProps>((props, forwardedRef) => {
-  const { className, ...rest } = props as IconProps & { className?: string }
+  const iconProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    { className: undefined },
+  )
 
   return (
     <svg
@@ -66,8 +76,8 @@ const ChevronDownIcon = React.forwardRef<IconElement, IconProps>((props, forward
       viewBox="0 0 9 9"
       fill="currentcolor"
       xmlns="http://www.w3.org/2000/svg"
-      {...rest}
-      class={className}
+      {...iconProps}
+      class={prop(() => props.className) as unknown as string}
       ref={React.coerceRef(forwardedRef)}
     >
       <path d="M0.135232 3.15803C0.324102 2.95657 0.640521 2.94637 0.841971 3.13523L4.5 6.56464L8.158 3.13523C8.3595 2.94637 8.6759 2.95657 8.8648 3.15803C9.0536 3.35949 9.0434 3.67591 8.842 3.86477L4.84197 7.6148C4.64964 7.7951 4.35036 7.7951 4.15803 7.6148L0.158031 3.86477C-0.0434285 3.67591 -0.0536285 3.35949 0.135232 3.15803Z" />
@@ -77,7 +87,10 @@ const ChevronDownIcon = React.forwardRef<IconElement, IconProps>((props, forward
 ChevronDownIcon.displayName = 'ChevronDownIcon'
 
 const ThickChevronRightIcon = React.forwardRef<IconElement, IconProps>((props, forwardedRef) => {
-  const { className, ...rest } = props as IconProps & { className?: string }
+  const iconProps = mergeProps(
+    prop(() => props as unknown as Record<string, unknown>),
+    { className: undefined },
+  )
 
   return (
     <svg
@@ -86,8 +99,8 @@ const ThickChevronRightIcon = React.forwardRef<IconElement, IconProps>((props, f
       viewBox="0 0 9 9"
       fill="currentcolor"
       xmlns="http://www.w3.org/2000/svg"
-      {...rest}
-      class={className}
+      {...iconProps}
+      class={prop(() => props.className) as unknown as string}
       ref={React.coerceRef(forwardedRef)}
     >
       <path

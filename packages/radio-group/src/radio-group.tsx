@@ -282,7 +282,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
       dir: prop(dir),
       onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         (event) => {
           if (event.target !== event.currentTarget) return
 
@@ -339,7 +339,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
 RadioGroup.displayName = RADIO_GROUP_NAME
 
 function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
-  const { __scopeRadioGroup, value, ...itemProps } = props
+  const { __scopeRadioGroup } = props
   const context = useRadioGroupContext(
     ITEM_NAME,
     __scopeRadioGroup as Scope<RadioGroupContextValue | undefined>,
@@ -349,7 +349,8 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
   const composedRefs = useComposedRefs(props.ref as PossibleRef<RadioGroupItemElement>, (node) => {
     itemRef.current = node
   })
-  const checked = () => context.value() === value
+  const value = () => props.value
+  const checked = () => context.value() === value()
   const disabled = () =>
     context.disabled() ||
     Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
@@ -368,20 +369,21 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
   }
   const isCurrentTabStop = () => {
     if (disabled()) return false
-    return context.currentTabStop() === value || context.getEntryValue() === value
+    return context.currentTabStop() === value() || context.getEntryValue() === value()
   }
 
-  useLayoutEffect(() =>
-    untrack(() =>
+  useLayoutEffect(() => {
+    const currentValue = value()
+    return untrack(() =>
       context.registerItem({
-        value,
+        value: currentValue,
         ref: itemRef,
         checked,
         disabled,
         form,
       }),
-    ),
-  )
+    )
+  })
 
   useLayoutEffect(() => {
     const item = itemRef.current
@@ -392,33 +394,34 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
 
   const nextProps = mergeProps(
     prop(() => radioScope as Record<string, unknown>),
-    prop(() => itemProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeRadioGroup: undefined,
       checked,
-      defaultChecked: () => context.defaultValue() === value,
+      defaultChecked: () => context.defaultValue() === value(),
       disabled: prop(() => (disabled() ? true : undefined)),
       name: context.name,
       onCheck: () => {
-        context.onValueChange(value)
-        context.setCurrentTabStop(value)
+        context.onValueChange(value())
+        context.setCurrentTabStop(value())
       },
       ref: composedRefs,
       required: context.required,
       tabIndex: prop(() => (isCurrentTabStop() ? 0 : -1)),
       onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         () => {
           if (!disabled()) {
             setTimeout(() => {
               if (!disabled()) {
-                context.setCurrentTabStop(value)
+                context.setCurrentTabStop(value())
               }
             })
           }
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
         (event) => {
           if (event.key === 'Enter') {
             event.preventDefault()
@@ -432,7 +435,7 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
           if (!intent) return
 
           const enabledItems = context.getItems().filter((item) => !item.disabled())
-          const nextItem = getNextItem(enabledItems, value, intent, context.loop())
+          const nextItem = getNextItem(enabledItems, value(), intent, context.loop())
           if (!nextItem) return
 
           event.preventDefault()
@@ -444,14 +447,14 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
         },
       ),
       onMouseDown: composeEventHandlers<MouseEvent>(
-        props.onMouseDown as ((event: MouseEvent) => void) | undefined,
+        (event) => (props.onMouseDown as ((event: MouseEvent) => void) | undefined)?.(event),
         (event) => {
           if (disabled()) {
             event.preventDefault()
           }
         },
       ),
-      value,
+      value: prop(value),
     },
   ) as unknown as ScopedProps<RadioProps>
 
@@ -461,10 +464,15 @@ function RadioGroupItem(props: ScopedProps<RadioGroupItemProps>): FictNode {
 RadioGroupItem.displayName = ITEM_NAME
 
 function RadioGroupIndicator(props: ScopedProps<RadioGroupIndicatorProps>): FictNode {
-  const { __scopeRadioGroup, ...indicatorProps } = props
+  const { __scopeRadioGroup } = props
   const radioScope = useRadioScope(__scopeRadioGroup)
+  const indicatorProps = mergeProps(
+    radioScope,
+    prop(() => props as Record<string, unknown>),
+    { __scopeRadioGroup: undefined },
+  )
 
-  return <RadioIndicator {...radioScope} {...indicatorProps} />
+  return <RadioIndicator {...indicatorProps} />
 }
 
 RadioGroupIndicator.displayName = INDICATOR_NAME

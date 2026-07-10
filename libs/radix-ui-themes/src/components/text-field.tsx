@@ -1,5 +1,6 @@
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
+import { mergeProps, prop } from 'fict'
 import { composeRefs } from '@fictjs/radix-ui/internal'
 
 import { textFieldRootPropDefs, textFieldSlotPropDefs } from './text-field.props.js'
@@ -39,20 +40,32 @@ interface TextFieldRootProps extends TextFieldInputProps, MarginProps, TextField
 const TextFieldRoot = React.forwardRef<TextFieldRootElement, TextFieldRootProps>(
   (props, forwardedRef) => {
     const inputRef: React.RefObject<HTMLInputElement> = { current: null }
-    const { readOnly, readonly, ...restProps } = props as TextFieldRootProps & {
-      readonly?: boolean
-    }
-    const { children, className, color, radius, style, ...inputProps } = extractProps(
-      { ...restProps, readonly: readOnly ?? readonly },
-      textFieldRootPropDefs,
-      marginPropDefs,
+    const normalizedProps = mergeProps(
+      prop(() => props as unknown as Record<string, unknown>),
+      {
+        readOnly: undefined,
+        readonly: prop(
+          () => props.readOnly ?? (props as TextFieldRootProps & { readonly?: boolean }).readonly,
+        ),
+      },
+    ) as unknown as TextFieldRootProps & { readonly?: boolean }
+    const extractedProps = extractProps(normalizedProps, textFieldRootPropDefs, marginPropDefs)
+    const inputProps = mergeProps(
+      prop(() => extractedProps as unknown as Record<string, unknown>),
+      {
+        children: undefined,
+        className: undefined,
+        color: undefined,
+        radius: undefined,
+        style: undefined,
+      },
     )
     return (
       <div
-        data-accent-color={color}
-        data-radius={radius}
-        style={style}
-        class={classNames('rt-TextFieldRoot', className)}
+        data-accent-color={extractedProps.color}
+        data-radius={extractedProps.radius}
+        style={extractedProps.style}
+        class={classNames('rt-TextFieldRoot', extractedProps.className)}
         onPointerDown={(event) => {
           const target = event.target as HTMLElement
           if (target.closest('input, button, a')) return
@@ -86,7 +99,7 @@ const TextFieldRoot = React.forwardRef<TextFieldRootElement, TextFieldRootProps>
           ref={composeRefs(inputRef, forwardedRef)}
           class="rt-reset rt-TextFieldInput"
         />
-        {children}
+        {extractedProps.children}
       </div>
     )
   },

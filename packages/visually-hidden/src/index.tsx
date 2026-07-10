@@ -1,4 +1,4 @@
-import type { FictNode, JSX } from '@fictjs/runtime'
+import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { Primitive } from '@fictjs/primitive'
 
@@ -32,7 +32,14 @@ function mergeStyle(style: unknown): string | Record<string, string | number> {
 }
 
 function VisuallyHidden(props: VisuallyHiddenProps): FictNode {
-  return <Primitive.span {...(props as Record<string, unknown>)} style={mergeStyle(props.style)} />
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      style: prop(() => mergeStyle(props.style)),
+    },
+  )
+
+  return <Primitive.span {...primitiveProps} />
 }
 
 VisuallyHidden.displayName = 'VisuallyHidden'

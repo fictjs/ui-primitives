@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'fict'
+import { createContext, mergeProps, prop, useContext } from 'fict'
 
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
@@ -38,14 +38,17 @@ const CheckboxCardsRoot = React.forwardRef<CheckboxCardsRootElement, CheckboxCar
       checkboxCardsRootPropDefs,
       marginPropDefs,
     )
+    const contextValue: CheckboxCardsContextValue = {
+      get highContrast() {
+        return props.highContrast
+      },
+      get size() {
+        return props.size
+      },
+    }
 
     return (
-      <CheckboxCardsContext.Provider
-        value={{
-          highContrast: props.highContrast,
-          size: props.size,
-        }}
-      >
+      <CheckboxCardsContext.Provider value={contextValue}>
         <Grid asChild>
           <CheckboxGroupPrimitive.Root
             data-accent-color={color}
@@ -65,18 +68,33 @@ interface CheckboxCardsItemProps
   extends ComponentPropsWithout<typeof CheckboxGroupPrimitive.Item, RemovedProps>, MarginProps {}
 
 const CheckboxCardsItem = React.forwardRef<CheckboxCardsItemElement, CheckboxCardsItemProps>(
-  ({ children, className, style, ...props }, forwardedRef) => {
+  (props, forwardedRef) => {
     const context = useContext(CheckboxCardsContext)
+    const itemProps = mergeProps(
+      prop(() => props as unknown as Record<string, unknown>),
+      {
+        children: undefined,
+        className: undefined,
+        style: undefined,
+      },
+    ) as unknown as CheckboxCardsItemProps
     const { className: checkboxClassName } = extractProps(
       { size: context.size, variant: 'surface', highContrast: context.highContrast },
       baseCheckboxPropDefs,
     )
 
     return (
-      <label class={classNames('rt-BaseCard', 'rt-CheckboxCardsItem', className)} style={style}>
-        {children}
+      <label
+        class={
+          prop(() =>
+            classNames('rt-BaseCard', 'rt-CheckboxCardsItem', props.className),
+          ) as unknown as string
+        }
+        style={prop(() => props.style) as unknown as CheckboxCardsItemProps['style']}
+      >
+        {props.children}
         <CheckboxGroupPrimitive.Item
-          {...props}
+          {...itemProps}
           ref={React.coerceRef(forwardedRef)}
           class={classNames(
             'rt-reset',

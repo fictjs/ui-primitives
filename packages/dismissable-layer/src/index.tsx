@@ -280,15 +280,15 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
         }
       }),
       'oncapture:blur': composeEventHandlers<FocusEvent>(
-        props['oncapture:blur'],
+        (event) => props['oncapture:blur']?.(event),
         focusOutside.onBlurCapture,
       ),
       'oncapture:focus': composeEventHandlers<FocusEvent>(
-        props['oncapture:focus'],
+        (event) => props['oncapture:focus']?.(event),
         focusOutside.onFocusCapture,
       ),
       'oncapture:pointerdown': composeEventHandlers<PointerEvent>(
-        props['oncapture:pointerdown'],
+        (event) => props['oncapture:pointerdown']?.(event),
         pointerDownOutside.onPointerDownCapture,
       ),
     },
@@ -335,7 +335,14 @@ function DismissableLayerBranch(props: DismissableLayerBranchProps): FictNode {
     }
   })
 
-  return <Primitive.div {...(props as Record<string, unknown>)} ref={composedRefs} />
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      ref: undefined,
+    },
+  )
+
+  return <Primitive.div {...primitiveProps} ref={composedRefs} />
 }
 
 DismissableLayerBranch.displayName = BRANCH_NAME

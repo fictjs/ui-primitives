@@ -6,7 +6,7 @@ import {
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -34,6 +34,13 @@ type ScopedProps<P> = P & { __scopeDialog?: Scope }
 type StyleRecord = Record<string, string | number>
 type DialogContentElement = HTMLDivElement
 type DialogOverlayElement = HTMLDivElement
+type DialogInteractOutsideEvent = Parameters<
+  NonNullable<DismissableLayerProps['onInteractOutside']>
+>[0]
+type DialogPointerDownOutsideEvent = Parameters<
+  NonNullable<DismissableLayerProps['onPointerDownOutside']>
+>[0]
+type DialogFocusOutsideEvent = Parameters<NonNullable<DismissableLayerProps['onFocusOutside']>>[0]
 
 const DIALOG_NAME = 'Dialog'
 const TRIGGER_NAME = 'DialogTrigger'
@@ -64,12 +71,12 @@ type DialogContextValue = {
 }
 
 type PortalContextValue = {
-  forceMount: boolean | undefined
+  forceMount: () => boolean | undefined
 }
 
 const [DialogProvider, useDialogContext] = createDialogContext<DialogContextValue>(DIALOG_NAME)
 const [PortalProvider, usePortalContext] = createDialogContext<PortalContextValue>(PORTAL_NAME, {
-  forceMount: undefined,
+  forceMount: () => undefined,
 })
 
 type WarningContextValue = {
@@ -221,10 +228,9 @@ function Dialog(props: ScopedProps<DialogProps>): FictNode {
 Dialog.displayName = DIALOG_NAME
 
 function DialogTrigger(props: ScopedProps<DialogTriggerProps>): FictNode {
-  const { __scopeDialog, ...triggerProps } = props
   const context = useDialogContext(
     TRIGGER_NAME,
-    __scopeDialog as Scope<DialogContextValue | undefined>,
+    props.__scopeDialog as Scope<DialogContextValue | undefined>,
   )
   const composedTriggerRef = useComposedRefs(
     props.ref as PossibleRef<HTMLButtonElement>,
@@ -238,12 +244,13 @@ function DialogTrigger(props: ScopedProps<DialogTriggerProps>): FictNode {
       'aria-controls': prop(context.contentId),
       'data-state': prop(() => getState(context.open())),
     },
-    prop(() => triggerProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => props.onClick?.(event),
         context.onOpenToggle,
       ),
+      __scopeDialog: undefined,
       ref: undefined,
     },
   )
@@ -254,21 +261,22 @@ function DialogTrigger(props: ScopedProps<DialogTriggerProps>): FictNode {
 DialogTrigger.displayName = TRIGGER_NAME
 
 function DialogPortal(props: ScopedProps<DialogPortalProps>): FictNode {
-  const { __scopeDialog, children, forceMount } = props
-  const nextForceMount = forceMount === undefined ? undefined : readValue(forceMount)
+  const forceMount = () =>
+    props.forceMount === undefined
+      ? undefined
+      : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)
 
   return (
     <PortalProvider
-      scope={__scopeDialog as Scope<PortalContextValue | undefined>}
-      forceMount={nextForceMount}
+      scope={props.__scopeDialog as Scope<PortalContextValue | undefined>}
+      forceMount={forceMount}
     >
-      {props.container === undefined ? (
-        <PortalPrimitive style={{ display: 'contents' }}>{children}</PortalPrimitive>
-      ) : (
-        <PortalPrimitive container={props.container} style={{ display: 'contents' }}>
-          {children}
-        </PortalPrimitive>
-      )}
+      <PortalPrimitive
+        container={prop(() => props.container) as unknown as Element | DocumentFragment | null}
+        style={{ display: 'contents' }}
+      >
+        {props.children}
+      </PortalPrimitive>
     </PortalProvider>
   )
 }
@@ -284,42 +292,49 @@ function DialogOverlay(props: ScopedProps<DialogOverlayProps>): FictNode {
     OVERLAY_NAME,
     props.__scopeDialog as Scope<DialogContextValue | undefined>,
   )
-  const { forceMount, ...overlayProps } = props
   const present = () =>
     Boolean(
-      (forceMount === undefined
-        ? portalContext.forceMount
-        : readValue(forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
+      (props.forceMount === undefined
+        ? portalContext.forceMount()
+        : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
     )
-
-  if (!context.modal()) {
-    return null
-  }
+  const overlayProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      forceMount: undefined,
+    },
+  )
 
   return (
-    <Presence present={present}>
-      <DialogOverlayImpl {...(overlayProps as ScopedProps<DialogOverlayImplProps>)} />
-    </Presence>
+    <>
+      {reactive(() =>
+        context.modal() ? (
+          <Presence present={present}>
+            <DialogOverlayImpl {...(overlayProps as ScopedProps<DialogOverlayImplProps>)} />
+          </Presence>
+        ) : null,
+      )}
+    </>
   )
 }
 
 DialogOverlay.displayName = OVERLAY_NAME
 
 function DialogOverlayImpl(props: ScopedProps<DialogOverlayImplProps>): FictNode {
-  const { __scopeDialog, ...overlayProps } = props
   const context = useDialogContext(
     OVERLAY_NAME,
-    __scopeDialog as Scope<DialogContextValue | undefined>,
+    props.__scopeDialog as Scope<DialogContextValue | undefined>,
   )
   const primitiveProps = mergeProps(
     {
       'data-state': prop(() => getState(context.open())),
     },
-    prop(() => overlayProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeDialog: undefined,
       style: prop(() => ({
         pointerEvents: 'auto',
-        ...readStyle(overlayProps.style as MaybeAccessor<unknown> | undefined),
+        ...readStyle(props.style as MaybeAccessor<unknown> | undefined),
       })),
     },
   )
@@ -346,21 +361,30 @@ function DialogContent(props: ScopedProps<DialogContentProps>): FictNode {
     CONTENT_NAME,
     props.__scopeDialog as Scope<DialogContextValue | undefined>,
   )
-  const { forceMount, ...contentProps } = props
   const present = () =>
     Boolean(
-      (forceMount === undefined
-        ? portalContext.forceMount
-        : readValue(forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
+      (props.forceMount === undefined
+        ? portalContext.forceMount()
+        : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
     )
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      forceMount: undefined,
+    },
+  )
 
   return (
     <Presence present={present}>
-      {context.modal() ? (
-        <DialogContentModal {...(contentProps as ScopedProps<DialogContentTypeProps>)} />
-      ) : (
-        <DialogContentNonModal {...(contentProps as ScopedProps<DialogContentTypeProps>)} />
-      )}
+      <>
+        {reactive(() =>
+          context.modal() ? (
+            <DialogContentModal {...(contentProps as ScopedProps<DialogContentTypeProps>)} />
+          ) : (
+            <DialogContentNonModal {...(contentProps as ScopedProps<DialogContentTypeProps>)} />
+          ),
+        )}
+      </>
     </Presence>
   )
 }
@@ -391,34 +415,42 @@ function DialogContentModal(props: ScopedProps<DialogContentTypeProps>): FictNod
     }
   })
 
-  return (
-    <DialogContentImpl
-      {...props}
-      ref={composedRefs}
-      trapFocus={() => context.open()}
-      disableOutsidePointerEvents
-      onCloseAutoFocus={composeEventHandlers(props.onCloseAutoFocus, (event) => {
-        event.preventDefault()
-        context.triggerRef.current?.focus()
-      })}
-      onPointerDownOutside={composeEventHandlers(props.onPointerDownOutside, (event) => {
-        const originalEvent = event.detail.originalEvent
-        const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true
-        const isRightClick = originalEvent.button === 2 || ctrlLeftClick
-
-        if (isRightClick) {
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      ref: composedRefs,
+      trapFocus: () => context.open(),
+      disableOutsidePointerEvents: true,
+      onCloseAutoFocus: composeEventHandlers<Event>(
+        (event) => props.onCloseAutoFocus?.(event),
+        (event) => {
           event.preventDefault()
-        }
-      })}
-      onFocusOutside={composeEventHandlers(
-        props.onFocusOutside,
+          context.triggerRef.current?.focus()
+        },
+      ),
+      onPointerDownOutside: composeEventHandlers<DialogPointerDownOutsideEvent>(
+        (event) => props.onPointerDownOutside?.(event),
+        (event) => {
+          const originalEvent = event.detail.originalEvent
+          const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true
+          const isRightClick = originalEvent.button === 2 || ctrlLeftClick
+
+          if (isRightClick) {
+            event.preventDefault()
+          }
+        },
+      ),
+      onFocusOutside: composeEventHandlers<DialogFocusOutsideEvent>(
+        (event) => props.onFocusOutside?.(event),
         (event) => {
           event.preventDefault()
         },
         { checkForDefaultPrevented: false },
-      )}
-    />
+      ),
+    },
   )
+
+  return <DialogContentImpl {...contentProps} />
 }
 
 function DialogContentNonModal(props: ScopedProps<DialogContentTypeProps>): FictNode {
@@ -429,12 +461,12 @@ function DialogContentNonModal(props: ScopedProps<DialogContentTypeProps>): Fict
   const hasInteractedOutsideRef = { current: false }
   const hasPointerDownOutsideRef = { current: false }
 
-  return (
-    <DialogContentImpl
-      {...props}
-      trapFocus={false}
-      disableOutsidePointerEvents={false}
-      onCloseAutoFocus={(event) => {
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      trapFocus: false,
+      disableOutsidePointerEvents: false,
+      onCloseAutoFocus: (event: Event) => {
         props.onCloseAutoFocus?.(event)
 
         if (!event.defaultPrevented) {
@@ -446,8 +478,8 @@ function DialogContentNonModal(props: ScopedProps<DialogContentTypeProps>): Fict
 
         hasInteractedOutsideRef.current = false
         hasPointerDownOutsideRef.current = false
-      }}
-      onInteractOutside={(event) => {
+      },
+      onInteractOutside: (event: DialogInteractOutsideEvent) => {
         props.onInteractOutside?.(event)
 
         if (!event.defaultPrevented) {
@@ -466,27 +498,17 @@ function DialogContentNonModal(props: ScopedProps<DialogContentTypeProps>): Fict
         if (event.detail.originalEvent.type === 'focusin' && hasPointerDownOutsideRef.current) {
           event.preventDefault()
         }
-      }}
-    />
+      },
+    },
   )
+
+  return <DialogContentImpl {...contentProps} />
 }
 
 function DialogContentImpl(props: ScopedProps<DialogContentImplProps>): FictNode {
-  const {
-    __scopeDialog,
-    trapFocus,
-    onOpenAutoFocus,
-    onCloseAutoFocus,
-    disableOutsidePointerEvents,
-    onEscapeKeyDown,
-    onPointerDownOutside,
-    onFocusOutside,
-    onInteractOutside,
-    ...contentProps
-  } = props
   const context = useDialogContext(
     CONTENT_NAME,
-    __scopeDialog as Scope<DialogContextValue | undefined>,
+    props.__scopeDialog as Scope<DialogContextValue | undefined>,
   )
   const guardDocument = createSignal<Document | undefined>(undefined)
   const contentRef = useComposedRefs(
@@ -505,40 +527,35 @@ function DialogContentImpl(props: ScopedProps<DialogContentImplProps>): FictNode
       'aria-labelledby': prop(context.titleId),
       'data-state': prop(() => getState(context.open())),
     },
-    prop(() => contentProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeDialog: undefined,
+      trapFocus: undefined,
+      onOpenAutoFocus: undefined,
+      onCloseAutoFocus: undefined,
+      disableOutsidePointerEvents: undefined,
+      onEscapeKeyDown: undefined,
+      onPointerDownOutside: undefined,
+      onFocusOutside: undefined,
+      onInteractOutside: undefined,
+    },
   )
   const focusScopeProps: Record<string, unknown> = {
     asChild: true,
     loop: true,
-  }
-  if (trapFocus !== undefined) {
-    focusScopeProps.trapped = trapFocus
-  }
-  if (onOpenAutoFocus !== undefined) {
-    focusScopeProps.onMountAutoFocus = onOpenAutoFocus
-  }
-  if (onCloseAutoFocus !== undefined) {
-    focusScopeProps.onUnmountAutoFocus = onCloseAutoFocus
+    trapped: prop(() => props.trapFocus),
+    onMountAutoFocus: prop(() => props.onOpenAutoFocus),
+    onUnmountAutoFocus: prop(() => props.onCloseAutoFocus),
   }
 
   const dismissableLayerProps: Record<string, unknown> = {
     asChild: true,
     onDismiss: () => context.onOpenChange(false),
-  }
-  if (disableOutsidePointerEvents !== undefined) {
-    dismissableLayerProps.disableOutsidePointerEvents = disableOutsidePointerEvents
-  }
-  if (onEscapeKeyDown !== undefined) {
-    dismissableLayerProps.onEscapeKeyDown = onEscapeKeyDown
-  }
-  if (onPointerDownOutside !== undefined) {
-    dismissableLayerProps.onPointerDownOutside = onPointerDownOutside
-  }
-  if (onFocusOutside !== undefined) {
-    dismissableLayerProps.onFocusOutside = onFocusOutside
-  }
-  if (onInteractOutside !== undefined) {
-    dismissableLayerProps.onInteractOutside = onInteractOutside
+    disableOutsidePointerEvents: prop(() => props.disableOutsidePointerEvents),
+    onEscapeKeyDown: prop(() => props.onEscapeKeyDown),
+    onPointerDownOutside: prop(() => props.onPointerDownOutside),
+    onFocusOutside: prop(() => props.onFocusOutside),
+    onInteractOutside: prop(() => props.onInteractOutside),
   }
 
   const contentPrimitiveProps = mergeProps(primitiveProps, {
@@ -566,16 +583,16 @@ function DialogContentImpl(props: ScopedProps<DialogContentImplProps>): FictNode
 }
 
 function DialogTitle(props: ScopedProps<DialogTitleProps>): FictNode {
-  const { __scopeDialog, ...titleProps } = props
   const context = useDialogContext(
     TITLE_NAME,
-    __scopeDialog as Scope<DialogContextValue | undefined>,
+    props.__scopeDialog as Scope<DialogContextValue | undefined>,
   )
   const primitiveProps = mergeProps(
     {
       id: prop(context.titleId),
     },
-    prop(() => titleProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
+    { __scopeDialog: undefined },
   )
 
   return <Primitive.h2 {...primitiveProps} />
@@ -584,16 +601,16 @@ function DialogTitle(props: ScopedProps<DialogTitleProps>): FictNode {
 DialogTitle.displayName = TITLE_NAME
 
 function DialogDescription(props: ScopedProps<DialogDescriptionProps>): FictNode {
-  const { __scopeDialog, ...descriptionProps } = props
   const context = useDialogContext(
     DESCRIPTION_NAME,
-    __scopeDialog as Scope<DialogContextValue | undefined>,
+    props.__scopeDialog as Scope<DialogContextValue | undefined>,
   )
   const primitiveProps = mergeProps(
     {
       id: prop(context.descriptionId),
     },
-    prop(() => descriptionProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
+    { __scopeDialog: undefined },
   )
 
   return <Primitive.p {...primitiveProps} />
@@ -602,23 +619,23 @@ function DialogDescription(props: ScopedProps<DialogDescriptionProps>): FictNode
 DialogDescription.displayName = DESCRIPTION_NAME
 
 function DialogClose(props: ScopedProps<DialogCloseProps>): FictNode {
-  const { __scopeDialog, ...closeProps } = props
   const context = useDialogContext(
     CLOSE_NAME,
-    __scopeDialog as Scope<DialogContextValue | undefined>,
+    props.__scopeDialog as Scope<DialogContextValue | undefined>,
   )
   const primitiveProps = mergeProps(
     {
       type: 'button',
     },
-    prop(() => closeProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => props.onClick?.(event),
         () => {
           context.onOpenChange(false)
         },
       ),
+      __scopeDialog: undefined,
       ref: undefined,
     },
   )

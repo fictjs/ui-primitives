@@ -31,6 +31,13 @@ type PrimitiveButtonProps = JSX.IntrinsicElements['button'] & {
 }
 type ScopedProps<P> = P & { __scopePopover?: Scope }
 type StyleRecord = Record<string, string | number>
+type PopoverInteractOutsideEvent = Parameters<
+  NonNullable<DismissableLayerProps['onInteractOutside']>
+>[0]
+type PopoverPointerDownOutsideEvent = Parameters<
+  NonNullable<DismissableLayerProps['onPointerDownOutside']>
+>[0]
+type PopoverFocusOutsideEvent = Parameters<NonNullable<DismissableLayerProps['onFocusOutside']>>[0]
 
 const POPOVER_NAME = 'Popover'
 const ANCHOR_NAME = 'PopoverAnchor'
@@ -61,12 +68,12 @@ type PopoverContextValue = {
 }
 
 type PortalContextValue = {
-  forceMount: boolean | undefined
+  forceMount: () => boolean | undefined
 }
 
 const [PopoverProvider, usePopoverContext] = createPopoverContext<PopoverContextValue>(POPOVER_NAME)
 const [PortalProvider, usePortalContext] = createPopoverContext<PortalContextValue>(PORTAL_NAME, {
-  forceMount: undefined,
+  forceMount: () => undefined,
 })
 
 type PopoverProps = {
@@ -193,12 +200,17 @@ function Popover(props: ScopedProps<PopoverProps>): FictNode {
 Popover.displayName = POPOVER_NAME
 
 function PopoverAnchor(props: ScopedProps<PopoverAnchorProps>): FictNode {
-  const { __scopePopover, ...anchorProps } = props
   const context = usePopoverContext(
     ANCHOR_NAME,
-    __scopePopover as Scope<PopoverContextValue | undefined>,
+    props.__scopePopover as Scope<PopoverContextValue | undefined>,
   )
-  const popperScope = usePopperScope(__scopePopover)
+  const popperScope = usePopperScope(props.__scopePopover)
+  const anchorProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopePopover: undefined,
+    },
+  )
 
   if (!context.hasCustomAnchor()) {
     context.onCustomAnchorAdd()
@@ -216,12 +228,11 @@ function PopoverAnchor(props: ScopedProps<PopoverAnchorProps>): FictNode {
 PopoverAnchor.displayName = ANCHOR_NAME
 
 function PopoverTrigger(props: ScopedProps<PopoverTriggerProps>): FictNode {
-  const { __scopePopover, ...triggerProps } = props
   const context = usePopoverContext(
     TRIGGER_NAME,
-    __scopePopover as Scope<PopoverContextValue | undefined>,
+    props.__scopePopover as Scope<PopoverContextValue | undefined>,
   )
-  const popperScope = usePopperScope(__scopePopover)
+  const popperScope = usePopperScope(props.__scopePopover)
   const composedTriggerRef = useComposedRefs(
     props.ref as PossibleRef<HTMLButtonElement>,
     context.triggerRef,
@@ -234,12 +245,13 @@ function PopoverTrigger(props: ScopedProps<PopoverTriggerProps>): FictNode {
       'aria-controls': prop(context.contentId),
       'data-state': prop(() => getState(context.open())),
     },
-    prop(() => triggerProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => props.onClick?.(event),
         context.onOpenToggle,
       ),
+      __scopePopover: undefined,
       ref: undefined,
     },
   )
@@ -259,19 +271,21 @@ function PopoverTrigger(props: ScopedProps<PopoverTriggerProps>): FictNode {
 PopoverTrigger.displayName = TRIGGER_NAME
 
 function PopoverPortal(props: ScopedProps<PopoverPortalProps>): FictNode {
-  const { __scopePopover, children, container, forceMount } = props
-  const nextForceMount = forceMount === undefined ? undefined : readValue(forceMount)
-  const portalProps =
-    container === undefined
-      ? { style: { display: 'contents' } }
-      : { container, style: { display: 'contents' } }
+  const forceMount = () =>
+    props.forceMount === undefined
+      ? undefined
+      : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)
+  const portalProps = {
+    container: prop(() => props.container) as unknown as Element | DocumentFragment | null,
+    style: { display: 'contents' },
+  }
 
   return (
     <PortalProvider
-      scope={__scopePopover as Scope<PortalContextValue | undefined>}
-      forceMount={nextForceMount}
+      scope={props.__scopePopover as Scope<PortalContextValue | undefined>}
+      forceMount={forceMount}
     >
-      <PortalPrimitive {...portalProps}>{children}</PortalPrimitive>
+      <PortalPrimitive {...portalProps}>{props.children}</PortalPrimitive>
     </PortalProvider>
   )
 }
@@ -287,13 +301,18 @@ function PopoverContent(props: ScopedProps<PopoverContentProps>): FictNode {
     CONTENT_NAME,
     props.__scopePopover as Scope<PopoverContextValue | undefined>,
   )
-  const { forceMount, ...contentProps } = props
   const present = () =>
     Boolean(
-      (forceMount === undefined
-        ? portalContext.forceMount
-        : readValue(forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
+      (props.forceMount === undefined
+        ? portalContext.forceMount()
+        : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
     )
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      forceMount: undefined,
+    },
+  )
 
   return (
     <>
@@ -337,38 +356,45 @@ function PopoverContentModal(props: ScopedProps<PopoverContentTypeProps>): FictN
     }
   })
 
-  return (
-    <RemoveScroll allowPinchZoom forwardProps>
-      <PopoverContentImpl
-        {...props}
-        ref={composedRefs}
-        trapFocus={() => context.open()}
-        disableOutsidePointerEvents
-        onCloseAutoFocus={composeEventHandlers(props.onCloseAutoFocus, (event) => {
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      ref: composedRefs,
+      trapFocus: () => context.open(),
+      disableOutsidePointerEvents: true,
+      onCloseAutoFocus: composeEventHandlers<Event>(
+        (event) => props.onCloseAutoFocus?.(event),
+        (event) => {
           event.preventDefault()
           if (!isRightClickOutsideRef.current) {
             context.triggerRef.current?.focus()
           }
-        })}
-        onPointerDownOutside={composeEventHandlers(
-          props.onPointerDownOutside,
-          (event) => {
-            const originalEvent = event.detail.originalEvent
-            const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true
-            const isRightClick = originalEvent.button === 2 || ctrlLeftClick
+        },
+      ),
+      onPointerDownOutside: composeEventHandlers<PopoverPointerDownOutsideEvent>(
+        (event) => props.onPointerDownOutside?.(event),
+        (event) => {
+          const originalEvent = event.detail.originalEvent
+          const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true
+          const isRightClick = originalEvent.button === 2 || ctrlLeftClick
 
-            isRightClickOutsideRef.current = isRightClick
-          },
-          { checkForDefaultPrevented: false },
-        )}
-        onFocusOutside={composeEventHandlers(
-          props.onFocusOutside,
-          (event) => {
-            event.preventDefault()
-          },
-          { checkForDefaultPrevented: false },
-        )}
-      />
+          isRightClickOutsideRef.current = isRightClick
+        },
+        { checkForDefaultPrevented: false },
+      ),
+      onFocusOutside: composeEventHandlers<PopoverFocusOutsideEvent>(
+        (event) => props.onFocusOutside?.(event),
+        (event) => {
+          event.preventDefault()
+        },
+        { checkForDefaultPrevented: false },
+      ),
+    },
+  )
+
+  return (
+    <RemoveScroll allowPinchZoom forwardProps>
+      <PopoverContentImpl {...contentProps} />
     </RemoveScroll>
   )
 }
@@ -381,12 +407,12 @@ function PopoverContentNonModal(props: ScopedProps<PopoverContentTypeProps>): Fi
   const hasInteractedOutsideRef = { current: false }
   const hasPointerDownOutsideRef = { current: false }
 
-  return (
-    <PopoverContentImpl
-      {...props}
-      trapFocus={false}
-      disableOutsidePointerEvents={false}
-      onCloseAutoFocus={(event) => {
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      trapFocus: false,
+      disableOutsidePointerEvents: false,
+      onCloseAutoFocus: (event: Event) => {
         props.onCloseAutoFocus?.(event)
 
         if (!event.defaultPrevented) {
@@ -398,8 +424,8 @@ function PopoverContentNonModal(props: ScopedProps<PopoverContentTypeProps>): Fi
 
         hasInteractedOutsideRef.current = false
         hasPointerDownOutsideRef.current = false
-      }}
-      onInteractOutside={(event) => {
+      },
+      onInteractOutside: (event: PopoverInteractOutsideEvent) => {
         props.onInteractOutside?.(event)
 
         if (!event.defaultPrevented) {
@@ -418,29 +444,19 @@ function PopoverContentNonModal(props: ScopedProps<PopoverContentTypeProps>): Fi
         if (event.detail.originalEvent.type === 'focusin' && hasPointerDownOutsideRef.current) {
           event.preventDefault()
         }
-      }}
-    />
+      },
+    },
   )
+
+  return <PopoverContentImpl {...contentProps} />
 }
 
 function PopoverContentImpl(props: ScopedProps<PopoverContentImplProps>): FictNode {
-  const {
-    __scopePopover,
-    trapFocus,
-    onOpenAutoFocus,
-    onCloseAutoFocus,
-    disableOutsidePointerEvents,
-    onEscapeKeyDown,
-    onPointerDownOutside,
-    onFocusOutside,
-    onInteractOutside,
-    ...contentProps
-  } = props
   const context = usePopoverContext(
     CONTENT_NAME,
-    __scopePopover as Scope<PopoverContextValue | undefined>,
+    props.__scopePopover as Scope<PopoverContextValue | undefined>,
   )
-  const popperScope = usePopperScope(__scopePopover)
+  const popperScope = usePopperScope(props.__scopePopover)
   const guardDocument = createSignal<Document | undefined>(undefined)
   const contentRef = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, (node) =>
     guardDocument(node?.ownerDocument),
@@ -455,10 +471,19 @@ function PopoverContentImpl(props: ScopedProps<PopoverContentImplProps>): FictNo
       id: prop(context.contentId),
     },
     popperScope,
-    prop(() => contentProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopePopover: undefined,
+      trapFocus: undefined,
+      onOpenAutoFocus: undefined,
+      onCloseAutoFocus: undefined,
+      disableOutsidePointerEvents: undefined,
+      onEscapeKeyDown: undefined,
+      onPointerDownOutside: undefined,
+      onFocusOutside: undefined,
+      onInteractOutside: undefined,
       style: prop(() => ({
-        ...readStyle(contentProps.style as MaybeAccessor<unknown> | undefined),
+        ...readStyle(props.style as MaybeAccessor<unknown> | undefined),
         ['--radix-popover-content-transform-origin' as string]:
           'var(--radix-popper-transform-origin)',
         ['--radix-popover-content-available-width' as string]:
@@ -473,35 +498,19 @@ function PopoverContentImpl(props: ScopedProps<PopoverContentImplProps>): FictNo
   const focusScopeProps: Record<string, unknown> = {
     asChild: true,
     loop: true,
-  }
-  if (trapFocus !== undefined) {
-    focusScopeProps.trapped = trapFocus
-  }
-  if (onOpenAutoFocus !== undefined) {
-    focusScopeProps.onMountAutoFocus = onOpenAutoFocus
-  }
-  if (onCloseAutoFocus !== undefined) {
-    focusScopeProps.onUnmountAutoFocus = onCloseAutoFocus
+    trapped: prop(() => props.trapFocus),
+    onMountAutoFocus: prop(() => props.onOpenAutoFocus),
+    onUnmountAutoFocus: prop(() => props.onCloseAutoFocus),
   }
 
   const dismissableLayerProps: Record<string, unknown> = {
     asChild: true,
     onDismiss: () => context.onOpenChange(false),
-  }
-  if (disableOutsidePointerEvents !== undefined) {
-    dismissableLayerProps.disableOutsidePointerEvents = disableOutsidePointerEvents
-  }
-  if (onEscapeKeyDown !== undefined) {
-    dismissableLayerProps.onEscapeKeyDown = onEscapeKeyDown
-  }
-  if (onPointerDownOutside !== undefined) {
-    dismissableLayerProps.onPointerDownOutside = onPointerDownOutside
-  }
-  if (onFocusOutside !== undefined) {
-    dismissableLayerProps.onFocusOutside = onFocusOutside
-  }
-  if (onInteractOutside !== undefined) {
-    dismissableLayerProps.onInteractOutside = onInteractOutside
+    disableOutsidePointerEvents: prop(() => props.disableOutsidePointerEvents),
+    onEscapeKeyDown: prop(() => props.onEscapeKeyDown),
+    onPointerDownOutside: prop(() => props.onPointerDownOutside),
+    onFocusOutside: prop(() => props.onFocusOutside),
+    onInteractOutside: prop(() => props.onInteractOutside),
   }
   const contentPrimitiveProps = mergeProps(popperProps, {
     ref: contentRef,
@@ -517,23 +526,23 @@ function PopoverContentImpl(props: ScopedProps<PopoverContentImplProps>): FictNo
 }
 
 function PopoverClose(props: ScopedProps<PopoverCloseProps>): FictNode {
-  const { __scopePopover, ...closeProps } = props
   const context = usePopoverContext(
     CLOSE_NAME,
-    __scopePopover as Scope<PopoverContextValue | undefined>,
+    props.__scopePopover as Scope<PopoverContextValue | undefined>,
   )
   const primitiveProps = mergeProps(
     {
       type: 'button',
     },
-    prop(() => closeProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => props.onClick?.(event),
         () => {
           context.onOpenChange(false)
         },
       ),
+      __scopePopover: undefined,
       ref: undefined,
     },
   )
@@ -550,8 +559,13 @@ function PopoverClose(props: ScopedProps<PopoverCloseProps>): FictNode {
 PopoverClose.displayName = CLOSE_NAME
 
 function PopoverArrow(props: ScopedProps<PopoverArrowProps>): FictNode {
-  const { __scopePopover, ...arrowProps } = props
-  const popperScope = usePopperScope(__scopePopover)
+  const popperScope = usePopperScope(props.__scopePopover)
+  const arrowProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopePopover: undefined,
+    },
+  )
 
   return <PopperArrowPrimitive {...popperScope} {...arrowProps} />
 }

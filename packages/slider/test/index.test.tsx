@@ -107,6 +107,54 @@ describe('@fictjs/slider', () => {
     expect(onValueCommit).toHaveBeenCalledWith([50])
   })
 
+  it('invokes the latest commit handler through the orientation wrappers', async () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn()
+    const onValueCommit = createSignal<(value: number[]) => void>(firstHandler)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root
+          defaultValue={[25]}
+          max={100}
+          onValueCommit={prop(() => onValueCommit()) as unknown as (value: number[]) => void}
+        >
+          <Track />
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    onValueCommit(secondHandler)
+
+    const slider = container.querySelector('[data-orientation="horizontal"]') as HTMLSpanElement
+    Object.defineProperty(slider, 'getBoundingClientRect', {
+      value: () =>
+        ({
+          width: 200,
+          height: 20,
+          left: 0,
+          top: 0,
+          right: 200,
+          bottom: 20,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }) satisfies DOMRect,
+    })
+
+    pointer(slider, 'pointerdown', 100)
+    pointer(slider, 'pointerup', 100)
+    await waitForEffects()
+
+    expect(firstHandler).not.toHaveBeenCalled()
+    expect(secondHandler).toHaveBeenCalledWith([50])
+  })
+
   it('renders a bubble input with the current value when the slider participates in a form', async () => {
     const container = document.createElement('div')
     document.body.append(container)

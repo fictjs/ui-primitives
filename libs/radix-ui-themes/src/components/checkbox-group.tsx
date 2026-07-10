@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'fict'
+import { createContext, mergeProps, prop, useContext } from 'fict'
 
 import * as React from '../helpers/element.js'
 import classNames from 'classnames'
@@ -37,13 +37,23 @@ const CheckboxGroupRoot = React.forwardRef<CheckboxGroupRootElement, CheckboxGro
       variant: _variant,
       ...rootProps
     } = extractProps(props, marginPropDefs)
-    const color = props.color ?? checkboxGroupRootPropDefs.color.default
-    const highContrast = props.highContrast ?? checkboxGroupRootPropDefs.highContrast.default
-    const size = props.size ?? checkboxGroupRootPropDefs.size.default
-    const variant = props.variant ?? checkboxGroupRootPropDefs.variant.default
+    const contextValue: CheckboxGroupStyleContextValue = {
+      get color() {
+        return props.color ?? checkboxGroupRootPropDefs.color.default
+      },
+      get highContrast() {
+        return props.highContrast ?? checkboxGroupRootPropDefs.highContrast.default
+      },
+      get size() {
+        return props.size ?? checkboxGroupRootPropDefs.size.default
+      },
+      get variant() {
+        return props.variant ?? checkboxGroupRootPropDefs.variant.default
+      },
+    }
 
     return (
-      <CheckboxGroupStyleContext.Provider value={{ color, highContrast, size, variant }}>
+      <CheckboxGroupStyleContext.Provider value={contextValue}>
         <CheckboxGroupPrimitive.Root
           {...rootProps}
           ref={React.coerceRef(forwardedRef)}
@@ -60,29 +70,39 @@ interface CheckboxGroupItemProps
   extends ComponentPropsWithout<typeof CheckboxGroupPrimitive.Item, RemovedProps>, MarginProps {}
 
 const CheckboxGroupItem = React.forwardRef<CheckboxGroupItemElement, CheckboxGroupItemProps>(
-  ({ children, className, style, ...props }, forwardedRef) => {
-    const { size } = useContext(CheckboxGroupStyleContext)
+  (props, forwardedRef) => {
+    const context = useContext(CheckboxGroupStyleContext)
+    const itemProps = mergeProps(
+      prop(() => props as unknown as Record<string, unknown>),
+      {
+        children: undefined,
+        className: undefined,
+        style: undefined,
+      },
+    ) as unknown as CheckboxGroupItemCheckboxProps
 
-    if (children) {
+    if (props.children) {
       return (
         <Text
           as="label"
-          size={size}
-          className={classNames('rt-CheckboxGroupItem', className)}
-          style={style}
+          size={prop(() => context.size) as unknown as CheckboxGroupRootOwnProps['size']}
+          className={
+            prop(() => classNames('rt-CheckboxGroupItem', props.className)) as unknown as string
+          }
+          style={prop(() => props.style) as unknown as CheckboxGroupItemProps['style']}
         >
-          <CheckboxGroupItemCheckbox {...props} ref={React.coerceRef(forwardedRef)} />
-          <span class="rt-CheckboxGroupItemInner">{children}</span>
+          <CheckboxGroupItemCheckbox {...itemProps} ref={React.coerceRef(forwardedRef)} />
+          <span class="rt-CheckboxGroupItemInner">{props.children}</span>
         </Text>
       )
     }
 
     return (
       <CheckboxGroupItemCheckbox
-        {...props}
+        {...itemProps}
         ref={React.coerceRef(forwardedRef)}
-        className={className}
-        style={style}
+        className={prop(() => props.className) as unknown as string}
+        style={prop(() => props.style) as unknown as CheckboxGroupItemProps['style']}
       />
     )
   },
@@ -98,26 +118,36 @@ interface CheckboxGroupItemCheckboxProps extends ComponentPropsWithout<
 const CheckboxGroupItemCheckbox = React.forwardRef<
   CheckboxGroupItemCheckboxElement,
   CheckboxGroupItemCheckboxProps
->(({ className, ...props }, forwardedRef) => {
+>((props, forwardedRef) => {
   const context = useContext(CheckboxGroupStyleContext)
   const { color, className: extractedClassName } = extractProps(
-    { ...props, ...context },
+    mergeProps(
+      prop(() => props as unknown as Record<string, unknown>),
+      context,
+    ) as unknown as CheckboxGroupItemCheckboxProps & CheckboxGroupStyleContextValue,
     checkboxGroupRootPropDefs,
     marginPropDefs,
   )
 
   return (
     <CheckboxGroupPrimitive.Item
-      {...props}
+      {...(mergeProps(
+        prop(() => props as unknown as Record<string, unknown>),
+        { className: undefined },
+      ) as unknown as CheckboxGroupItemCheckboxProps)}
       data-accent-color={color}
       ref={React.coerceRef(forwardedRef)}
-      class={classNames(
-        'rt-reset',
-        'rt-BaseCheckboxRoot',
-        'rt-CheckboxGroupItemCheckbox',
-        extractedClassName,
-        className,
-      )}
+      class={
+        prop(() =>
+          classNames(
+            'rt-reset',
+            'rt-BaseCheckboxRoot',
+            'rt-CheckboxGroupItemCheckbox',
+            extractedClassName,
+            props.className,
+          ),
+        ) as unknown as string
+      }
     >
       <CheckboxGroupPrimitive.Indicator class="rt-BaseCheckboxIndicator">
         <ThickCheckIcon />

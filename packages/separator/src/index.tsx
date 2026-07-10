@@ -1,4 +1,4 @@
-import { prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { Primitive } from '@fictjs/primitive'
 
@@ -26,24 +26,23 @@ function isValidOrientation(orientation: unknown): orientation is Orientation {
 }
 
 function Separator(props: SeparatorProps): FictNode {
-  const {
-    decorative = false,
-    orientation: orientationProp = DEFAULT_ORIENTATION,
-    ...domProps
-  } = props
-  const orientation = (() => {
-    const candidate = readValue(orientationProp)
+  const orientation = () => {
+    const candidate = readValue(props.orientation ?? DEFAULT_ORIENTATION)
     return isValidOrientation(candidate) ? candidate : DEFAULT_ORIENTATION
-  })()
-  const isDecorative = Boolean(readValue(decorative))
-  const primitiveProps: Record<string, unknown> = {
-    ...domProps,
-    'data-orientation': prop(() => orientation),
-    role: prop(() => (isDecorative ? 'none' : 'separator')),
-    'aria-orientation': prop(() =>
-      !isDecorative && orientation === 'vertical' ? 'vertical' : undefined,
-    ),
   }
+  const isDecorative = () => Boolean(readValue(props.decorative ?? false))
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      decorative: undefined,
+      orientation: undefined,
+      'data-orientation': prop(orientation),
+      role: prop(() => (isDecorative() ? 'none' : 'separator')),
+      'aria-orientation': prop(() =>
+        !isDecorative() && orientation() === 'vertical' ? 'vertical' : undefined,
+      ),
+    },
+  )
 
   return <Primitive.div {...primitiveProps} />
 }

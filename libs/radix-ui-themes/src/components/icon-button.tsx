@@ -1,4 +1,5 @@
 import * as React from '../helpers/element.js'
+import { mergeProps, prop } from 'fict'
 import classNames from 'classnames'
 
 import { BaseButton } from './_internal/base-button.js'
@@ -8,7 +9,7 @@ type IconButtonElement = React.ElementRef<typeof BaseButton>
 interface IconButtonProps extends React.ComponentPropsWithoutRef<typeof BaseButton> {}
 const IconButton = React.forwardRef<IconButtonElement, IconButtonProps>((props, forwardedRef) => (
   <BaseButton
-    {...props}
+    {...mergeProps(prop(() => props as Record<string, unknown>))}
     ref={React.coerceRef(forwardedRef)}
     className={classNames('rt-IconButton', (props as { className?: string }).className)}
   >

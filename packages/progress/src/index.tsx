@@ -1,4 +1,4 @@
-import { createEffect, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { createEffect, mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 
 import { createContextScope, type Scope } from '@fictjs/context'
 import { Primitive } from '@fictjs/primitive'
@@ -74,32 +74,26 @@ Defaulting to \`null\`.`
 }
 
 function Progress(props: ScopedProps<ProgressProps>): FictNode {
-  const {
-    __scopeProgress,
-    value: valueProp = null,
-    max: maxProp,
-    getValueLabel = defaultGetValueLabel,
-    ...progressProps
-  } = props
-
   const max = () => {
-    const candidate = maxProp === undefined ? undefined : readValue(maxProp)
+    const candidate = props.max === undefined ? undefined : readValue(props.max)
     return isValidMaxNumber(candidate) ? candidate : DEFAULT_MAX
   }
 
   const value = () => {
-    const candidate = readValue(valueProp)
+    const candidate = readValue(props.value ?? null)
     return isValidValueNumber(candidate, max()) ? candidate : null
   }
 
   const valueLabel = () => {
     const currentValue = value()
-    return isNumber(currentValue) ? getValueLabel(currentValue, max()) : undefined
+    return isNumber(currentValue)
+      ? (props.getValueLabel ?? defaultGetValueLabel)(currentValue, max())
+      : undefined
   }
 
   createEffect(() => {
-    const candidateMax = maxProp === undefined ? undefined : readValue(maxProp)
-    const candidateValue = readValue(valueProp)
+    const candidateMax = props.max === undefined ? undefined : readValue(props.max)
+    const candidateValue = readValue(props.value ?? null)
 
     if ((candidateMax || candidateMax === 0) && !isValidMaxNumber(candidateMax)) {
       console.error(getInvalidMaxError(String(candidateMax), PROGRESS_NAME))
@@ -114,23 +108,29 @@ function Progress(props: ScopedProps<ProgressProps>): FictNode {
     }
   })
 
-  const primitiveProps: Record<string, unknown> = {
-    ...(progressProps as Record<string, unknown>),
-    'aria-valuemax': prop(max),
-    'aria-valuemin': 0,
-    'aria-valuenow': prop(() => {
-      const currentValue = value()
-      return isNumber(currentValue) ? currentValue : undefined
-    }),
-    'aria-valuetext': prop(valueLabel),
-    role: 'progressbar',
-    'data-state': prop(() => getProgressState(value(), max())),
-    'data-value': prop(() => value() ?? undefined),
-    'data-max': prop(max),
-  }
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeProgress: undefined,
+      value: undefined,
+      max: undefined,
+      getValueLabel: undefined,
+      'aria-valuemax': prop(max),
+      'aria-valuemin': 0,
+      'aria-valuenow': prop(() => {
+        const currentValue = value()
+        return isNumber(currentValue) ? currentValue : undefined
+      }),
+      'aria-valuetext': prop(valueLabel),
+      role: 'progressbar',
+      'data-state': prop(() => getProgressState(value(), max())),
+      'data-value': prop(() => value() ?? undefined),
+      'data-max': prop(max),
+    },
+  )
 
   return (
-    <ProgressProvider scope={__scopeProgress} value={value} max={max}>
+    <ProgressProvider scope={props.__scopeProgress} value={value} max={max}>
       <Primitive.div {...primitiveProps} />
     </ProgressProvider>
   )
@@ -139,14 +139,16 @@ function Progress(props: ScopedProps<ProgressProps>): FictNode {
 Progress.displayName = PROGRESS_NAME
 
 function ProgressIndicator(props: ScopedProps<ProgressIndicatorProps>): FictNode {
-  const { __scopeProgress, ...indicatorProps } = props
-  const context = useProgressContext(INDICATOR_NAME, __scopeProgress)
-  const primitiveProps: Record<string, unknown> = {
-    ...(indicatorProps as Record<string, unknown>),
-    'data-state': prop(() => getProgressState(context.value(), context.max())),
-    'data-value': prop(() => context.value() ?? undefined),
-    'data-max': prop(context.max),
-  }
+  const context = useProgressContext(INDICATOR_NAME, props.__scopeProgress)
+  const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeProgress: undefined,
+      'data-state': prop(() => getProgressState(context.value(), context.max())),
+      'data-value': prop(() => context.value() ?? undefined),
+      'data-max': prop(context.max),
+    },
+  )
 
   return <Primitive.div {...primitiveProps} />
 }

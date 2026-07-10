@@ -56,13 +56,13 @@ type HoverCardContextValue = {
 }
 
 type PortalContextValue = {
-  forceMount: boolean | undefined
+  forceMount: () => boolean | undefined
 }
 
 const [HoverCardProvider, useHoverCardContext] =
   createHoverCardContext<HoverCardContextValue>(HOVERCARD_NAME)
 const [PortalProvider, usePortalContext] = createHoverCardContext<PortalContextValue>(PORTAL_NAME, {
-  forceMount: undefined,
+  forceMount: () => undefined,
 })
 
 type HoverCardProps = {
@@ -191,38 +191,32 @@ function HoverCard(props: ScopedProps<HoverCardProps>): FictNode {
 HoverCard.displayName = HOVERCARD_NAME
 
 function HoverCardTrigger(props: ScopedProps<HoverCardTriggerProps>): FictNode {
-  const { __scopeHoverCard, ...triggerProps } = props
   const context = useHoverCardContext(
     TRIGGER_NAME,
-    __scopeHoverCard as Scope<HoverCardContextValue | undefined>,
+    props.__scopeHoverCard as Scope<HoverCardContextValue | undefined>,
   )
-  const popperScope = usePopperScope(__scopeHoverCard)
+  const popperScope = usePopperScope(props.__scopeHoverCard)
   const primitiveProps = mergeProps(
     {
       'data-state': prop(() => getState(context.open())),
     },
-    prop(() => triggerProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       onPointerEnter: composeEventHandlers<PointerEvent>(
-        props.onPointerEnter as ((event: PointerEvent) => void) | undefined,
+        (event) => props.onPointerEnter?.(event),
         excludeTouch(context.onOpen),
       ),
       onPointerLeave: composeEventHandlers<PointerEvent>(
-        props.onPointerLeave as ((event: PointerEvent) => void) | undefined,
+        (event) => props.onPointerLeave?.(event),
         excludeTouch(context.onClose),
       ),
-      onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
-        context.onOpen,
-      ),
-      onBlur: composeEventHandlers<FocusEvent>(
-        props.onBlur as ((event: FocusEvent) => void) | undefined,
-        context.onClose,
-      ),
+      onFocus: composeEventHandlers<FocusEvent>((event) => props.onFocus?.(event), context.onOpen),
+      onBlur: composeEventHandlers<FocusEvent>((event) => props.onBlur?.(event), context.onClose),
       onTouchStart: composeEventHandlers<TouchEvent>(
-        props.onTouchStart as ((event: TouchEvent) => void) | undefined,
+        (event) => props.onTouchStart?.(event),
         (event) => event.preventDefault(),
       ),
+      __scopeHoverCard: undefined,
     },
   )
 
@@ -236,19 +230,21 @@ function HoverCardTrigger(props: ScopedProps<HoverCardTriggerProps>): FictNode {
 HoverCardTrigger.displayName = TRIGGER_NAME
 
 function HoverCardPortal(props: ScopedProps<HoverCardPortalProps>): FictNode {
-  const { __scopeHoverCard, children, container, forceMount } = props
-  const nextForceMount = forceMount === undefined ? undefined : readValue(forceMount)
-  const portalProps =
-    container === undefined
-      ? { style: { display: 'contents' } }
-      : { container, style: { display: 'contents' } }
+  const forceMount = () =>
+    props.forceMount === undefined
+      ? undefined
+      : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)
+  const portalProps = {
+    container: prop(() => props.container) as unknown as Element | DocumentFragment | null,
+    style: { display: 'contents' },
+  }
 
   return (
     <PortalProvider
       scope={props.__scopeHoverCard as Scope<PortalContextValue | undefined>}
-      forceMount={nextForceMount}
+      forceMount={forceMount}
     >
-      <PortalPrimitive {...portalProps}>{children}</PortalPrimitive>
+      <PortalPrimitive {...portalProps}>{props.children}</PortalPrimitive>
     </PortalProvider>
   )
 }
@@ -264,27 +260,30 @@ function HoverCardContent(props: ScopedProps<HoverCardContentProps>): FictNode {
     CONTENT_NAME,
     props.__scopeHoverCard as Scope<HoverCardContextValue | undefined>,
   )
-  const { forceMount, ...contentProps } = props
   const present = () =>
     Boolean(
-      (forceMount === undefined
-        ? portalContext.forceMount
-        : readValue(forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
+      (props.forceMount === undefined
+        ? portalContext.forceMount()
+        : readValue(props.forceMount as MaybeAccessor<boolean | undefined>)) || context.open(),
     )
+  const contentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      forceMount: undefined,
+      onPointerEnter: composeEventHandlers<PointerEvent>(
+        (event) => props.onPointerEnter?.(event),
+        excludeTouch(context.onOpen),
+      ),
+      onPointerLeave: composeEventHandlers<PointerEvent>(
+        (event) => props.onPointerLeave?.(event),
+        excludeTouch(context.onClose),
+      ),
+    },
+  )
 
   return (
     <Presence present={present}>
-      <HoverCardContentImpl
-        {...(contentProps as ScopedProps<HoverCardContentImplProps>)}
-        onPointerEnter={composeEventHandlers<PointerEvent>(
-          props.onPointerEnter as ((event: PointerEvent) => void) | undefined,
-          excludeTouch(context.onOpen),
-        )}
-        onPointerLeave={composeEventHandlers<PointerEvent>(
-          props.onPointerLeave as ((event: PointerEvent) => void) | undefined,
-          excludeTouch(context.onClose),
-        )}
-      />
+      <HoverCardContentImpl {...(contentProps as ScopedProps<HoverCardContentImplProps>)} />
     </Presence>
   )
 }
@@ -292,19 +291,11 @@ function HoverCardContent(props: ScopedProps<HoverCardContentProps>): FictNode {
 HoverCardContent.displayName = CONTENT_NAME
 
 function HoverCardContentImpl(props: ScopedProps<HoverCardContentImplProps>): FictNode {
-  const {
-    __scopeHoverCard,
-    onEscapeKeyDown,
-    onPointerDownOutside,
-    onFocusOutside,
-    onInteractOutside,
-    ...contentProps
-  } = props
   const context = useHoverCardContext(
     CONTENT_NAME,
-    __scopeHoverCard as Scope<HoverCardContextValue | undefined>,
+    props.__scopeHoverCard as Scope<HoverCardContextValue | undefined>,
   )
-  const popperScope = usePopperScope(__scopeHoverCard)
+  const popperScope = usePopperScope(props.__scopeHoverCard)
   const ref = { current: null as HoverCardContentElement | null }
   const containSelection = createSignal(false)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HoverCardContentElement>, ref)
@@ -363,10 +354,10 @@ function HoverCardContentImpl(props: ScopedProps<HoverCardContentImplProps>): Fi
     {
       'data-state': prop(() => getState(context.open())),
     },
-    prop(() => contentProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
       onPointerDown: composeEventHandlers<PointerEvent>(
-        contentProps.onPointerDown as ((event: PointerEvent) => void) | undefined,
+        (event) => props.onPointerDown?.(event),
         (event) => {
           const currentTarget = event.currentTarget as HTMLElement
           const target = event.target as HTMLElement | null
@@ -377,8 +368,13 @@ function HoverCardContentImpl(props: ScopedProps<HoverCardContentImplProps>): Fi
           context.isPointerDownOnContentRef.current = true
         },
       ),
+      __scopeHoverCard: undefined,
+      onEscapeKeyDown: undefined,
+      onPointerDownOutside: undefined,
+      onFocusOutside: undefined,
+      onInteractOutside: undefined,
       style: prop(() => ({
-        ...readStyle(contentProps.style as MaybeAccessor<unknown>),
+        ...readStyle(props.style as MaybeAccessor<unknown>),
         userSelect: containSelection() ? 'text' : undefined,
         WebkitUserSelect: containSelection() ? 'text' : undefined,
         '--radix-hover-card-content-transform-origin': 'var(--radix-popper-transform-origin)',
@@ -389,19 +385,20 @@ function HoverCardContentImpl(props: ScopedProps<HoverCardContentImplProps>): Fi
       })),
     },
   )
-  const dismissableLayerProps = mergeProps(
-    {
-      asChild: true,
-      disableOutsidePointerEvents: false,
-      onFocusOutside: composeEventHandlers<FocusOutsideEvent>(onFocusOutside, (event) => {
+  const dismissableLayerProps = {
+    asChild: true,
+    disableOutsidePointerEvents: false,
+    onFocusOutside: composeEventHandlers<FocusOutsideEvent>(
+      (event) => props.onFocusOutside?.(event),
+      (event) => {
         event.preventDefault()
-      }),
-      onDismiss: context.onDismiss,
-    } as Record<string, unknown>,
-    onInteractOutside ? { onInteractOutside } : {},
-    onEscapeKeyDown ? { onEscapeKeyDown } : {},
-    onPointerDownOutside ? { onPointerDownOutside } : {},
-  )
+      },
+    ),
+    onDismiss: context.onDismiss,
+    onInteractOutside: prop(() => props.onInteractOutside),
+    onEscapeKeyDown: prop(() => props.onEscapeKeyDown),
+    onPointerDownOutside: prop(() => props.onPointerDownOutside),
+  }
 
   return (
     <DismissableLayer {...dismissableLayerProps}>
@@ -415,10 +412,10 @@ function HoverCardContentImpl(props: ScopedProps<HoverCardContentImplProps>): Fi
 }
 
 function HoverCardArrow(props: ScopedProps<HoverCardArrowProps>): FictNode {
-  const { __scopeHoverCard, ...arrowProps } = props
-  const popperScope = usePopperScope(__scopeHoverCard)
+  const popperScope = usePopperScope(props.__scopeHoverCard)
   const primitiveProps = mergeProps(
-    prop(() => arrowProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
+    { __scopeHoverCard: undefined },
     props.ref ? { ref: props.ref as PossibleRef<HoverCardArrowElement> } : {},
   )
 

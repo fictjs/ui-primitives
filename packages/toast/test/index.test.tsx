@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { DismissableLayer } from '@fictjs/dismissable-layer'
 import { Action, Close, Description, Provider, Root, Title, Viewport } from '../src/index.js'
@@ -96,6 +97,40 @@ describe('@fictjs/toast', () => {
 
     expect(viewport.querySelector('[data-testid="toast"]')).toBeNull()
     expect(viewport.getAttribute('data-state')).toBe('closed')
+  })
+
+  it('updates focus proxy availability with the reactive toast count', async () => {
+    const container = document.createElement('div')
+    const open = createSignal(false)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Provider>
+          <Viewport />
+          <Root open={open}>Notification</Root>
+        </Provider>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    let proxies = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-radix-toast-focus-proxy]'),
+    )
+    expect(proxies.map((proxy) => proxy.tabIndex)).toEqual([-1, -1])
+    expect(proxies.map((proxy) => proxy.getAttribute('aria-hidden'))).toEqual(['true', 'true'])
+
+    open(true)
+    await waitForEffects()
+    proxies = Array.from(container.querySelectorAll<HTMLElement>('[data-radix-toast-focus-proxy]'))
+    expect(proxies.map((proxy) => proxy.tabIndex)).toEqual([0, 0])
+    expect(proxies.map((proxy) => proxy.getAttribute('aria-hidden'))).toEqual([null, null])
+
+    open(false)
+    await waitForEffects()
+    proxies = Array.from(container.querySelectorAll<HTMLElement>('[data-radix-toast-focus-proxy]'))
+    expect(proxies.map((proxy) => proxy.tabIndex)).toEqual([-1, -1])
   })
 
   it('auto closes after the configured duration and remains paused while focus is in the viewport', async () => {
@@ -483,5 +518,37 @@ describe('@fictjs/toast', () => {
 
     expect(container.querySelector('[data-testid="action"]')).toBeNull()
     expect(consoleError).toHaveBeenCalledOnce()
+  })
+
+  it('adds and removes an action when reactive alt text changes validity', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const container = document.createElement('div')
+    const altText = createSignal('')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Provider>
+          <Viewport />
+          <Root defaultOpen>
+            <Action altText={prop(() => altText()) as unknown as string} data-testid="action">
+              Undo
+            </Action>
+          </Root>
+        </Provider>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="action"]')).toBeNull()
+
+    altText('Undo the action')
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="action"]')).not.toBeNull()
+
+    altText('')
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="action"]')).toBeNull()
   })
 })

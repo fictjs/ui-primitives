@@ -69,8 +69,13 @@ type OneTimePasswordFieldContextValue = {
   attemptSubmit(): void
   getInputs(): HTMLInputElement[]
   getIndex(node: HTMLInputElement | null, fallback?: number): number
-  registerInput(node: HTMLInputElement, explicitIndex?: number): void
+  registerInput(node: HTMLInputElement, explicitIndex: () => number | undefined): void
   unregisterInput(node: HTMLInputElement): void
+}
+
+type InputRegistration = {
+  explicitIndex: () => number | undefined
+  implicitIndex: number
 }
 
 const [OneTimePasswordFieldProvider, useOneTimePasswordFieldContext] =
@@ -170,11 +175,11 @@ function focusInput(element: HTMLInputElement | null | undefined) {
 }
 
 function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): FictNode {
-  const direction = useDirection(
+  const inheritedDirection = useDirection()
+  const direction = () =>
     props.dir === undefined
-      ? undefined
-      : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? undefined),
-  )
+      ? inheritedDirection()
+      : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? inheritedDirection())
   const autoComplete = () =>
     props.autoComplete === undefined
       ? 'one-time-code'
@@ -215,7 +220,7 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
   const rootRef = { current: null as HTMLDivElement | null }
   const hiddenInputRef = { current: null as HTMLInputElement | null }
   const isHydrated = useIsHydrated()
-  const inputRegistry = new Map<HTMLInputElement, number>()
+  const inputRegistry = new Map<HTMLInputElement, InputRegistration>()
   const inputsVersion = createSignal(0)
   let inputsVersionScheduled = false
 
@@ -266,8 +271,12 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
         : Array.from(rootRef.current.querySelectorAll<HTMLInputElement>('[data-radix-otp-input]'))
 
     return nodes.sort((a, b) => {
-      const aIndex = inputRegistry.get(a) ?? Number.POSITIVE_INFINITY
-      const bIndex = inputRegistry.get(b) ?? Number.POSITIVE_INFINITY
+      const aRegistration = inputRegistry.get(a)
+      const bRegistration = inputRegistry.get(b)
+      const aIndex =
+        aRegistration?.explicitIndex() ?? aRegistration?.implicitIndex ?? Number.POSITIVE_INFINITY
+      const bIndex =
+        bRegistration?.explicitIndex() ?? bRegistration?.implicitIndex ?? Number.POSITIVE_INFINITY
 
       return aIndex - bIndex
     })
@@ -275,8 +284,10 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
 
   const getIndex = (node: HTMLInputElement | null, fallback = -1) => {
     if (!node) return fallback
-    const explicitIndex = inputRegistry.get(node)
-    if (explicitIndex !== undefined) return explicitIndex
+    const registration = inputRegistry.get(node)
+    if (registration) {
+      return registration.explicitIndex() ?? registration.implicitIndex
+    }
     const dynamicIndex = getInputs().indexOf(node)
     return dynamicIndex === -1 ? fallback : dynamicIndex
   }
@@ -357,14 +368,14 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
       role: 'group',
       dir: direction,
       onPaste: composeEventHandlers<ClipboardEvent>(
-        props.onPaste as ((event: ClipboardEvent) => void) | undefined,
+        (event) => (props.onPaste as ((event: ClipboardEvent) => void) | undefined)?.(event),
         (event) => {
           event.preventDefault()
           pasteValue(event.clipboardData?.getData('text') ?? '')
         },
       ),
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeOneTimePasswordField: undefined,
       autoComplete: undefined,
@@ -470,12 +481,17 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
       getInputs={getInputs}
       getIndex={getIndex}
       registerInput={(node, explicitIndex) => {
-        if (!inputRegistry.has(node)) {
-          const nextIndex =
-            explicitIndex ??
-            (inputRegistry.size === 0 ? 0 : Math.max(...Array.from(inputRegistry.values())) + 1)
-          inputRegistry.set(node, nextIndex)
-        }
+        const currentRegistration = inputRegistry.get(node)
+        const registeredIndices = Array.from(
+          inputRegistry.values(),
+          (registration) => registration.explicitIndex() ?? registration.implicitIndex,
+        )
+        inputRegistry.set(node, {
+          explicitIndex,
+          implicitIndex:
+            currentRegistration?.implicitIndex ??
+            (registeredIndices.length === 0 ? 0 : Math.max(...registeredIndices) + 1),
+        })
         scheduleInputsVersionUpdate()
       }}
       unregisterInput={(node) => {
@@ -517,7 +533,7 @@ function OneTimePasswordFieldHiddenInput(
       spellCheck: false,
       readOnly: true,
     },
-    () => props as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeOneTimePasswordField: undefined,
       'attr:form': prop(() => props.form ?? context.form()),
@@ -540,13 +556,13 @@ function OneTimePasswordFieldHiddenInput(
 }
 
 function OneTimePasswordFieldInput(props: ScopedProps<OneTimePasswordFieldInputProps>): FictNode {
-  const { __scopeOneTimePasswordField, onInvalidChange, index: indexProp, ...inputProps } = props
+  const { __scopeOneTimePasswordField } = props
   const context = useOneTimePasswordFieldContext(
     'OneTimePasswordFieldInput',
     __scopeOneTimePasswordField as Scope<OneTimePasswordFieldContextValue | undefined>,
   )
   const nodeRef = { current: null as HTMLInputElement | null }
-  const index = () => context.getIndex(nodeRef.current, indexProp ?? -1)
+  const index = () => context.getIndex(nodeRef.current, props.index ?? -1)
   const char = () => {
     const currentIndex = index()
     return currentIndex >= 0 ? (context.values()[currentIndex] ?? '') : ''
@@ -565,7 +581,7 @@ function OneTimePasswordFieldInput(props: ScopedProps<OneTimePasswordFieldInputP
 
     nodeRef.current = node
     if (node) {
-      context.registerInput(node, indexProp)
+      context.registerInput(node, () => props.index)
     }
     setRef(props.ref as PossibleRef<HTMLInputElement>, node)
   }
@@ -574,7 +590,7 @@ function OneTimePasswordFieldInput(props: ScopedProps<OneTimePasswordFieldInputP
     if (currentIndex < 0) return
 
     if (!target.validity.valid) {
-      onInvalidChange?.(target.value)
+      props.onInvalidChange?.(target.value)
       requestAnimationFrame(() => {
         if (target.ownerDocument.activeElement === target) {
           target.select()
@@ -601,7 +617,7 @@ function OneTimePasswordFieldInput(props: ScopedProps<OneTimePasswordFieldInputP
       'data-radix-otp-input': '',
       'data-radix-index': prop(() => {
         const currentIndex = index()
-        return currentIndex >= 0 ? currentIndex : indexProp
+        return currentIndex >= 0 ? currentIndex : props.index
       }),
       type: prop(context.type),
       disabled: prop(context.disabled),
@@ -617,16 +633,20 @@ function OneTimePasswordFieldInput(props: ScopedProps<OneTimePasswordFieldInputP
       ),
       ref: registerRef,
     },
-    () => inputProps as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
+      __scopeOneTimePasswordField: undefined,
+      index: undefined,
+      onInvalidChange: undefined,
+      ref: registerRef,
       onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         (event) => {
           ;(event.currentTarget as HTMLInputElement).select()
         },
       ),
       onInput: composeEventHandlers<InputEvent>(
-        props.onInput as ((event: InputEvent) => void) | undefined,
+        (event) => (props.onInput as ((event: InputEvent) => void) | undefined)?.(event),
         (event) => {
           const target = event.currentTarget as HTMLInputElement
           const value = target.value
@@ -640,13 +660,13 @@ function OneTimePasswordFieldInput(props: ScopedProps<OneTimePasswordFieldInputP
         },
       ),
       onChange: composeEventHandlers<Event>(
-        props.onChange as ((event: Event) => void) | undefined,
+        (event) => (props.onChange as ((event: Event) => void) | undefined)?.(event),
         (event) => {
           syncInputValue(event.currentTarget as HTMLInputElement)
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
         (event) => {
           const currentIndex = index()
           const currentTarget = event.currentTarget as HTMLInputElement
@@ -711,7 +731,7 @@ function OneTimePasswordFieldInput(props: ScopedProps<OneTimePasswordFieldInputP
         },
       ),
       onPointerDown: composeEventHandlers<PointerEvent>(
-        props.onPointerDown as ((event: PointerEvent) => void) | undefined,
+        (event) => (props.onPointerDown as ((event: PointerEvent) => void) | undefined)?.(event),
         (event) => {
           event.preventDefault()
           focusInput(

@@ -34,9 +34,9 @@ function Avatar(props: AvatarProps): React.ReactNode {
     color,
     radius,
     fallback,
-    onLoadingStatusChange,
-    onLoad,
-    onError,
+    onLoadingStatusChange: _onLoadingStatusChange,
+    onLoad: _onLoad,
+    onError: _onError,
     ref,
     src,
     ...imageProps
@@ -46,7 +46,7 @@ function Avatar(props: AvatarProps): React.ReactNode {
 
   const handleStatusChange = (nextStatus: AvatarImageStatus) => {
     status(nextStatus)
-    onLoadingStatusChange?.(nextStatus)
+    props.onLoadingStatusChange?.(nextStatus)
   }
 
   const content = (
@@ -69,8 +69,8 @@ function Avatar(props: AvatarProps): React.ReactNode {
         {...imageProps}
         src={src}
         class="rt-AvatarImage"
-        onLoad={onLoad}
-        onError={onError}
+        onLoad={(event: Event) => props.onLoad?.(event)}
+        onError={(event: Event) => props.onError?.(event)}
         onLoadingStatusChange={handleStatusChange}
       />
     </>

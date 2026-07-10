@@ -96,7 +96,7 @@ function readValue<T>(value: MaybeAccessor<T>): T {
 }
 
 function PasswordToggleField(props: ScopedProps<PasswordToggleFieldProps>): FictNode {
-  const baseId = useId(props.id)
+  const baseId = useId(() => props.id)
   const inputIdState = createSignal<string | null>(`${baseId()}-input`)
   const inputId = () => inputIdState() ?? `${baseId()}-input`
   const visibleProp = () =>
@@ -138,14 +138,7 @@ function PasswordToggleField(props: ScopedProps<PasswordToggleFieldProps>): Fict
 PasswordToggleField.displayName = PASSWORD_TOGGLE_FIELD_NAME
 
 function PasswordToggleFieldInput(props: ScopedProps<PasswordToggleFieldInputProps>): FictNode {
-  const {
-    __scopePasswordToggleField,
-    autoComplete = 'current-password',
-    autoCapitalize = 'off',
-    spellCheck = false,
-    id: idProp,
-    ...inputProps
-  } = props
+  const { __scopePasswordToggleField } = props
   const { visible, inputRef, inputId, syncInputId, setVisible, focusState } =
     usePasswordToggleFieldContext(
       PASSWORD_TOGGLE_FIELD_INPUT_NAME,
@@ -157,7 +150,7 @@ function PasswordToggleFieldInput(props: ScopedProps<PasswordToggleFieldInputPro
   })
 
   useLayoutEffect(() => {
-    syncInputId(idProp)
+    syncInputId(props.id)
   })
 
   useLayoutEffect(() => {
@@ -183,18 +176,17 @@ function PasswordToggleFieldInput(props: ScopedProps<PasswordToggleFieldInputPro
   })
 
   const primitiveProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
     {
-      id: prop(() => idProp ?? inputId()),
-      autoCapitalize,
-      autoComplete,
-      spellCheck,
+      __scopePasswordToggleField: undefined,
+      id: prop(() => props.id ?? inputId()),
+      autoCapitalize: prop(() => props.autoCapitalize ?? 'off'),
+      autoComplete: prop(() => props.autoComplete ?? 'current-password'),
+      spellCheck: prop(() => props.spellCheck ?? false),
       type: prop(() => (visible() ? 'text' : 'password')),
-    },
-    prop(() => inputProps as Record<string, unknown>),
-    {
       ref: useComposedRefs(props.ref as PossibleRef<HTMLInputElement>, inputRef, inputNode),
       onBlur: composeEventHandlers<FocusEvent>(
-        props.onBlur as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onBlur as ((event: FocusEvent) => void) | undefined)?.(event),
         (event) => {
           const input = event.currentTarget as HTMLInputElement
           focusState.current.selectionStart = input.selectionStart
@@ -210,16 +202,7 @@ function PasswordToggleFieldInput(props: ScopedProps<PasswordToggleFieldInputPro
 PasswordToggleFieldInput.displayName = PASSWORD_TOGGLE_FIELD_INPUT_NAME
 
 function PasswordToggleFieldToggle(props: ScopedProps<PasswordToggleFieldToggleProps>): FictNode {
-  const {
-    __scopePasswordToggleField,
-    onClick,
-    onPointerDown,
-    onPointerCancel,
-    onPointerUp,
-    onFocus,
-    children,
-    ...toggleProps
-  } = props
+  const { __scopePasswordToggleField } = props
   const { setVisible, visible, inputRef, inputId, focusState } = usePasswordToggleFieldContext(
     PASSWORD_TOGGLE_FIELD_TOGGLE_NAME,
     __scopePasswordToggleField as Scope<PasswordToggleFieldContextValue | undefined>,
@@ -273,27 +256,29 @@ function PasswordToggleFieldToggle(props: ScopedProps<PasswordToggleFieldToggleP
       'aria-label': prop(() => props['aria-label'] ?? internalAriaLabel()),
       tabIndex: prop(() => (isHydrated() ? props.tabIndex : -1)),
     },
-    prop(() => toggleProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopePasswordToggleField: undefined,
+      children: undefined,
       ref: useComposedRefs(props.ref as PossibleRef<HTMLButtonElement>, elementRef),
       onFocus: composeEventHandlers<FocusEvent>(
-        onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         () => {
           focusState.current.clickTriggered = false
         },
       ),
       onPointerDown: composeEventHandlers<PointerEvent>(
-        onPointerDown as ((event: PointerEvent) => void) | undefined,
+        (event) => (props.onPointerDown as ((event: PointerEvent) => void) | undefined)?.(event),
         () => {
           focusState.current.clickTriggered = true
         },
       ),
       onPointerCancel: (event: PointerEvent) => {
-        ;(onPointerCancel as ((event: PointerEvent) => void) | undefined)?.(event)
+        ;(props.onPointerCancel as ((event: PointerEvent) => void) | undefined)?.(event)
         focusState.current = { ...INITIAL_FOCUS_STATE }
       },
       onClick: (event: MouseEvent) => {
-        ;(onClick as ((event: MouseEvent) => void) | undefined)?.(event)
+        ;(props.onClick as ((event: MouseEvent) => void) | undefined)?.(event)
         if (event.defaultPrevented) {
           focusState.current = { ...INITIAL_FOCUS_STATE }
           return
@@ -319,7 +304,7 @@ function PasswordToggleFieldToggle(props: ScopedProps<PasswordToggleFieldToggleP
         focusState.current = { ...INITIAL_FOCUS_STATE }
       },
       onPointerUp: (event: PointerEvent) => {
-        ;(onPointerUp as ((event: PointerEvent) => void) | undefined)?.(event)
+        ;(props.onPointerUp as ((event: PointerEvent) => void) | undefined)?.(event)
         setTimeout(() => {
           focusState.current = { ...INITIAL_FOCUS_STATE }
         }, 50)
@@ -328,7 +313,9 @@ function PasswordToggleFieldToggle(props: ScopedProps<PasswordToggleFieldToggleP
   )
 
   return (
-    <Primitive.button {...(primitiveProps as Record<string, unknown>)}>{children}</Primitive.button>
+    <Primitive.button {...(primitiveProps as Record<string, unknown>)}>
+      {props.children}
+    </Primitive.button>
   )
 }
 
@@ -360,19 +347,21 @@ function PasswordToggleFieldIcon(props: ScopedProps<PasswordToggleFieldIconProps
     PASSWORD_TOGGLE_FIELD_ICON_NAME,
     props.__scopePasswordToggleField as Scope<PasswordToggleFieldContextValue | undefined>,
   )
-  const { hidden, visible: visibleIcon, ...svgProps } = props
+  const svgProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopePasswordToggleField: undefined,
+      hidden: undefined,
+      visible: undefined,
+      'aria-hidden': true,
+    },
+  )
 
   return (
     <>
       {reactive(() => (
-        <Primitive.svg
-          {...(mergeProps(
-            prop(() => svgProps as Record<string, unknown>),
-            { 'aria-hidden': true },
-          ) as Record<string, unknown>)}
-          asChild
-        >
-          {visible() ? visibleIcon : hidden}
+        <Primitive.svg {...svgProps} asChild>
+          {visible() ? props.visible : props.hidden}
         </Primitive.svg>
       ))}
     </>
