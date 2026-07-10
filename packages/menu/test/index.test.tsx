@@ -5,6 +5,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createMemo, onDestroy, render, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
+const hideOthersCleanup = vi.hoisted(() => vi.fn())
+const hideOthersMock = vi.hoisted(() => vi.fn(() => hideOthersCleanup))
+
+vi.mock('aria-hidden', () => ({
+  hideOthers: hideOthersMock,
+}))
+
 import { createContext, createContextScope } from '@fictjs/context'
 import { Portal as DistPortal } from '@fictjs/portal'
 import { Presence as DistPresence } from '@fictjs/presence'
@@ -133,6 +140,35 @@ describe('@fictjs/menu', () => {
 
     expect(onSelect).toHaveBeenCalledTimes(1)
     expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it('hides background content from assistive technology while modal', async () => {
+    const container = document.createElement('div')
+    const background = document.createElement('main')
+    const open = createSignal(true)
+    document.body.append(background, container)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open}>
+          <Content data-testid="content">
+            <Item>Item</Item>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    expect(hideOthersMock).toHaveBeenCalledOnce()
+    expect(hideOthersMock).toHaveBeenCalledWith(content)
+
+    open(false)
+    await waitForEffects()
+
+    expect(hideOthersCleanup).toHaveBeenCalledOnce()
   })
 
   it('supports checkbox and radio menu items with indicators', async () => {

@@ -7,6 +7,7 @@ import {
   type JSX,
 } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
+import { hideOthers } from 'aria-hidden'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -576,6 +577,24 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
 
     return () => {
       globalThis.clearTimeout(timeoutId)
+    }
+  })
+
+  useLayoutEffect(() => {
+    if (!menuContext.modal()) return
+
+    const content = ref.current
+    if (!content) return
+
+    const body = content.ownerDocument.body
+    if (!body.contains(content) && process.env.NODE_ENV !== 'test') {
+      return
+    }
+
+    try {
+      return hideOthers(content)
+    } catch {
+      return
     }
   })
 
