@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createCollection } from '@fictjs/collection'
@@ -223,6 +223,39 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
       props.onValueChange?.(nextValues)
     },
   })
+  const initialValues = untrack(() => [...values()])
+
+  useLayoutEffect(() => {
+    const document = rootRef.current?.ownerDocument ?? globalThis.document
+    if (!document) return
+
+    let disposed = false
+    const getFormOwner = () => {
+      const root = rootRef.current
+      if (!root) return null
+
+      const formId = form()
+      if (!formId) return root.closest('form')
+
+      const formElement = root.ownerDocument.getElementById(formId)
+      return formElement?.tagName === 'FORM' ? (formElement as HTMLFormElement) : null
+    }
+    const handleReset = (event: Event) => {
+      if (event.target !== getFormOwner()) return
+
+      queueMicrotask(() => {
+        if (disposed || event.defaultPrevented || valueProp() !== undefined) return
+        setValues([...initialValues])
+      })
+    }
+
+    document.addEventListener('reset', handleReset)
+    return () => {
+      disposed = true
+      document.removeEventListener('reset', handleReset)
+    }
+  })
+
   const updateValues = (value: number, atIndex: number, { commit } = { commit: false }) => {
     const decimalCount = getDecimalCount(step())
     const snapToStep = roundValue(

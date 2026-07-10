@@ -133,6 +133,46 @@ describe('@fictjs/slider', () => {
     expect(bubbleInput.value).toBe('25')
   })
 
+  it('restores all uncontrolled values on native form reset', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <form data-testid="form">
+          <Root defaultValue={[20, 80]} step={10} name="range">
+            <Track>
+              <Range />
+            </Track>
+            <Thumb />
+            <Thumb />
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const thumbs = Array.from(container.querySelectorAll<HTMLSpanElement>('[role="slider"]'))
+
+    thumbs[0]?.focus()
+    keyDown(thumbs[0] as HTMLSpanElement, 'ArrowRight')
+    thumbs[1]?.focus()
+    keyDown(thumbs[1] as HTMLSpanElement, 'ArrowLeft')
+    await waitForEffects()
+
+    expect(thumbs.map((thumb) => thumb.getAttribute('aria-valuenow'))).toEqual(['30', '70'])
+    expect(new FormData(form).getAll('range[]')).toEqual(['30', '70'])
+
+    form.reset()
+    await waitForEffects()
+
+    expect(thumbs.map((thumb) => thumb.getAttribute('aria-valuenow'))).toEqual(['20', '80'])
+    expect(new FormData(form).getAll('range[]')).toEqual(['20', '80'])
+  })
+
   it('steps the focused thumb with keyboard input', async () => {
     const container = document.createElement('div')
     document.body.append(container)
