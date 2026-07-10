@@ -440,7 +440,9 @@ function MenubarContent(props: ScopedProps<MenubarContentProps>): FictNode {
       }}
       onInteractOutside={(event) => {
         props.onInteractOutside?.(event)
-        rootContext.onValueChange(null)
+        if (!event.defaultPrevented) {
+          rootContext.onValueChange(null)
+        }
       }}
     />
   )

@@ -25,6 +25,16 @@ function keyDown(target: Element, key: string): void {
   )
 }
 
+function pointerDown(target: Element): void {
+  const PointerEventCtor = globalThis.PointerEvent ?? MouseEvent
+  target.dispatchEvent(
+    new PointerEventCtor('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+    }),
+  )
+}
+
 async function waitForEffects(cycles = 6): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0))
   for (let index = 0; index < cycles; index++) {
@@ -117,5 +127,35 @@ describe('@fictjs/menubar', () => {
     keyDown(editTrigger, 'ArrowLeft')
     await waitForEffects()
     expect(document.activeElement).toBe(fileTrigger)
+  })
+
+  it('keeps content open when outside interaction is prevented', async () => {
+    const container = document.createElement('div')
+    const outside = document.createElement('button')
+    document.body.append(container, outside)
+
+    mount(
+      () => (
+        <Menubar>
+          <Menu value="file">
+            <Trigger data-testid="file-trigger">File</Trigger>
+            <Content
+              data-testid="file-content"
+              onInteractOutside={(event) => event.preventDefault()}
+            >
+              <Item>New</Item>
+            </Content>
+          </Menu>
+        </Menubar>
+      ),
+      container,
+    )
+
+    click(container.querySelector('[data-testid="file-trigger"]') as HTMLButtonElement)
+    await waitForEffects()
+    pointerDown(outside)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="file-content"]')).not.toBeNull()
   })
 })
