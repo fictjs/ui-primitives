@@ -107,12 +107,13 @@ function PasswordToggleField(props: ScopedProps<PasswordToggleFieldProps>): Fict
     props.defaultVisible === undefined
       ? false
       : (readValue(props.defaultVisible as MaybeAccessor<boolean | undefined>) ?? false)
-  const onVisibilityChange = props.onVisibilityChange ?? props.onVisiblityChange
+  const onVisibilityChange = (nextVisible: boolean) =>
+    (props.onVisibilityChange ?? props.onVisiblityChange)?.(nextVisible)
   const [visible, setVisible] = useControllableState<boolean>({
     caller: PASSWORD_TOGGLE_FIELD_NAME,
     prop: visibleProp,
     defaultProp: defaultVisible,
-    ...(onVisibilityChange ? { onChange: onVisibilityChange } : {}),
+    onChange: onVisibilityChange,
   })
   const inputRef = { current: null as HTMLInputElement | null }
   const focusState = { current: { ...INITIAL_FOCUS_STATE } }

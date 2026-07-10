@@ -401,7 +401,7 @@ function Menu(props: ScopedProps<MenuProps>): FictNode {
     prop: openProp,
     defaultProp: () => false,
     caller: MENU_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen) => props.onOpenChange?.(nextOpen),
   })
 
   return (
@@ -1034,7 +1034,7 @@ function MenuSub(props: ScopedProps<MenuSubProps>): FictNode {
     prop: openProp,
     defaultProp: defaultOpen,
     caller: SUB_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen) => props.onOpenChange?.(nextOpen),
   })
   const triggerRef = { current: null as HTMLElement | null }
   const openInputTypeRef = { current: null as MenuSubOpenInputType | null }

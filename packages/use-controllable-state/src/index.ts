@@ -37,7 +37,7 @@ type Dispatch<A> = (action: A) => void
 interface UseControllableStateParams<T> {
   prop?: MaybeAccessor<T | undefined>
   defaultProp: MaybeAccessor<T>
-  onChange?: ChangeHandler<T>
+  onChange?: MaybeAccessor<ChangeHandler<T> | undefined>
   caller?: string
 }
 
@@ -50,11 +50,11 @@ const noop = () => {}
 function useControllableState<T>({
   prop,
   defaultProp,
-  onChange = noop as ChangeHandler<T>,
+  onChange,
   caller,
 }: UseControllableStateParams<T>): [() => T, SetStateFn<T>] {
   const uncontrolled = createSignal(readValue(defaultProp))
-  const emitChange = useEffectEvent(onChange)
+  const emitChange = useEffectEvent<ChangeHandler<T>>(onChange ?? (noop as ChangeHandler<T>))
   const controlledState = () => (prop === undefined ? undefined : readValue(prop))
   const value = () => {
     const currentProp = controlledState()
@@ -116,13 +116,13 @@ function useControllableStateReducer<T, S extends object, I extends object, A ex
 ): [() => S & { state: T }, Dispatch<A>]
 function useControllableStateReducer<T, S extends object, I extends object, A extends AnyAction>(
   reducer: (prevState: S & { state: T }, action: A) => S & { state: T },
-  { prop, defaultProp, onChange = noop as ChangeHandler<T>, caller }: UseControllableStateParams<T>,
+  { prop, defaultProp, onChange, caller }: UseControllableStateParams<T>,
   initialArg: Omit<S, 'state'> | I,
   init?: (value: I & { state: T }) => Omit<S, 'state'>,
 ): [() => S & { state: T }, Dispatch<A>] {
   const defaultState = () => readValue(defaultProp)
   const controlledState = () => (prop === undefined ? undefined : readValue(prop))
-  const emitChange = useEffectEvent(onChange)
+  const emitChange = useEffectEvent<ChangeHandler<T>>(onChange ?? (noop as ChangeHandler<T>))
   const createInitialState = (): S & { state: T } => {
     const state = defaultState()
     const baseState = init

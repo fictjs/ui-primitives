@@ -255,11 +255,7 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
     prop: valueProp,
     defaultProp: initialDefaultValue,
     caller: ONE_TIME_PASSWORD_FIELD_NAME,
-    ...(props.onValueChange
-      ? {
-          onChange: (nextValues) => props.onValueChange?.(nextValues.join('')),
-        }
-      : {}),
+    onChange: (nextValues) => props.onValueChange?.(nextValues.join('')),
   })
 
   const getInputs = () => {

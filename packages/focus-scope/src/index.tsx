@@ -42,8 +42,12 @@ function FocusScope(props: FocusScopeProps): FictNode {
   const container = createSignal<HTMLElement | null>(null)
   const loop = () => Boolean(readValue(props.loop as MaybeAccessor<boolean | undefined>))
   const trapped = () => Boolean(readValue(props.trapped as MaybeAccessor<boolean | undefined>))
-  const onMountAutoFocus = useCallbackRef(props.onMountAutoFocus)
-  const onUnmountAutoFocus = useCallbackRef(props.onUnmountAutoFocus)
+  const onMountAutoFocus = useCallbackRef<(event: Event) => void>(
+    prop(() => props.onMountAutoFocus),
+  )
+  const onUnmountAutoFocus = useCallbackRef<(event: Event) => void>(
+    prop(() => props.onUnmountAutoFocus),
+  )
   const lastFocusedElementRef = { current: null as HTMLElement | null }
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, (node) =>
     container(node),

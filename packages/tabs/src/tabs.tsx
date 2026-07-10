@@ -142,7 +142,7 @@ function Tabs(props: ScopedProps<TabsProps>): FictNode {
     prop: valueProp,
     defaultProp: defaultValue,
     caller: TABS_NAME,
-    ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
+    onChange: (nextValue) => props.onValueChange?.(nextValue),
   })
   const currentTabStop = createSignal<string | null>(null)
   const triggers: TabsTriggerRecord[] = []

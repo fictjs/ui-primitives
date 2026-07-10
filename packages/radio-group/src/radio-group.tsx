@@ -193,7 +193,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
     prop: valueProp,
     defaultProp: defaultValue,
     caller: RADIO_GROUP_NAME,
-    ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
+    onChange: (nextValue) => props.onValueChange?.(nextValue),
   })
   const initialValue = untrack(() => value())
   const root = createSignal<HTMLDivElement | null>(null)

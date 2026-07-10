@@ -151,7 +151,7 @@ function HoverCard(props: ScopedProps<HoverCardProps>): FictNode {
     prop: openProp,
     defaultProp: defaultOpen,
     caller: HOVERCARD_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen) => props.onOpenChange?.(nextOpen),
   })
   const handleOpen = () => {
     clearTimeout(closeTimerRef.current)

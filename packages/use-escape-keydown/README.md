@@ -13,16 +13,20 @@ pnpm add @fictjs/use-escape-keydown fict
 ## Usage
 
 ```ts
+import { prop } from 'fict'
 import { useEscapeKeydown } from '@fictjs/use-escape-keydown'
 
 useEscapeKeydown((event) => {
   close()
 })
+
+// For a handler supplied through reactive component props:
+useEscapeKeydown(prop(() => props.onEscapeKeyDown))
 ```
 
 ## API
 
-- **`useEscapeKeydown(onEscapeKeyDown, ownerDocument?)`** — attaches a capture-phase `keydown` listener that calls `onEscapeKeyDown` on Escape, and cleans it up automatically. `ownerDocument` defaults to `document`.
+- **`useEscapeKeydown(onEscapeKeyDown, ownerDocument?)`** — attaches a capture-phase `keydown` listener that calls `onEscapeKeyDown` on Escape, and cleans it up automatically. The callback may be a Fict reactive accessor. `ownerDocument` defaults to `document`.
 
 ## Exports
 

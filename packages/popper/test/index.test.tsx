@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 const floatingUiMocks = vi.hoisted(() => {
   return {
@@ -179,6 +180,39 @@ describe('@fictjs/popper', () => {
     expect(floatingElement.style.getPropertyValue('--radix-popper-anchor-width')).toBe('80px')
     expect(floatingElement.style.getPropertyValue('--radix-popper-anchor-height')).toBe('24px')
     expect(capturedOptions?.elements?.reference?.()).toBeInstanceOf(HTMLDivElement)
+  })
+
+  it('calls the latest onPlaced handler from component props', async () => {
+    useSizeMock.mockImplementation(() => () => ({ width: 0, height: 0 }))
+    const isPositioned = createSignal(false)
+    const calls: string[] = []
+    const onPlaced = createSignal<() => void>(() => calls.push('first'))
+
+    floatingUiMocks.useFloating.mockImplementation(() => ({
+      ...createFloatingResult({ isPositioned: false }),
+      isPositioned,
+    }))
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const dispose = render(
+      () => (
+        <Popper>
+          <PopperAnchor />
+          <PopperContent onPlaced={prop(() => onPlaced())}>content</PopperContent>
+        </Popper>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    onPlaced(() => calls.push('second'))
+    isPositioned(true)
+    await flushEffects()
+
+    expect(calls).toEqual(['second'])
+
+    dispose()
   })
 
   it('supports virtual anchors, arrow positioning, and detached hiding', async () => {

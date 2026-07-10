@@ -86,7 +86,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
     defaultChecked: defaultCheckedInput,
     form: formInput,
     name: nameInput,
-    onCheckedChange,
+    onCheckedChange: _onCheckedChange,
     required: requiredInput,
     ...buttonProps
   } = props
@@ -119,7 +119,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
     prop: checkedProp,
     defaultProp: defaultChecked,
     caller: SWITCH_NAME,
-    ...(onCheckedChange ? { onChange: onCheckedChange } : {}),
+    onChange: (nextChecked: boolean) => props.onCheckedChange?.(nextChecked),
   }
   const [checked, setChecked] = useControllableState<boolean>(controllableStateProps)
   const initialChecked = untrack(() => checked())

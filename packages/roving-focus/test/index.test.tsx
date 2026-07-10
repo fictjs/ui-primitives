@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Item, Root } from '../src/index.js'
@@ -272,6 +272,41 @@ describe('@fictjs/roving-focus', () => {
     await flushEffects()
 
     expect(onEntryFocus).toHaveBeenCalledTimes(1)
+    expect(document.activeElement).toBe(group)
+  })
+
+  it('uses the latest entry-focus handler from component props', async () => {
+    const calls: string[] = []
+    const onEntryFocus = createSignal<(event: Event) => void>(() => calls.push('first'))
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root
+          data-testid="group"
+          defaultCurrentTabStopId="one"
+          onEntryFocus={prop(() => onEntryFocus())}
+        >
+          <Item data-testid="one" tabStopId="one">
+            One
+          </Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    onEntryFocus((event) => {
+      calls.push('second')
+      event.preventDefault()
+    })
+
+    const group = getByTestId<HTMLDivElement>(container, 'group')
+    group.focus()
+    await flushEffects()
+
+    expect(calls).toEqual(['second'])
     expect(document.activeElement).toBe(group)
   })
 

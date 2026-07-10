@@ -195,7 +195,7 @@ function Dialog(props: ScopedProps<DialogProps>): FictNode {
     prop: openProp,
     defaultProp: defaultOpen,
     caller: DIALOG_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen) => props.onOpenChange?.(nextOpen),
   })
 
   return (

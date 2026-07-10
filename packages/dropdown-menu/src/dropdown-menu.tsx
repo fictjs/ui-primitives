@@ -382,7 +382,7 @@ function DropdownMenu(props: ScopedProps<DropdownMenuProps>): FictNode {
     prop: openProp,
     defaultProp: defaultOpen,
     caller: DROPDOWN_MENU_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen) => props.onOpenChange?.(nextOpen),
   })
 
   return (
@@ -726,7 +726,7 @@ DropdownMenuArrow.displayName = ARROW_NAME
 
 function DropdownMenuSub(props: ScopedProps<DropdownMenuSubProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeDropdownMenu)
-  return <MenuSub {...menuScope} {...props} />
+  return <MenuSub {...menuScope} {...props} onOpenChange={prop(() => props.onOpenChange)} />
 }
 
 DropdownMenuSub.displayName = SUB_NAME

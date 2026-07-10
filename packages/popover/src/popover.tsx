@@ -163,7 +163,7 @@ function Popover(props: ScopedProps<PopoverProps>): FictNode {
     prop: openProp,
     defaultProp: defaultOpen,
     caller: POPOVER_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen: boolean) => props.onOpenChange?.(nextOpen),
   }
   const [open, setOpen] = useControllableState<boolean>(controllableStateProps)
   const onOpenToggle = () => {

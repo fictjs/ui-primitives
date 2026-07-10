@@ -91,7 +91,7 @@ function Collapsible(props: ScopedProps<CollapsibleProps>): FictNode {
     prop: openProp,
     defaultProp: defaultOpen,
     caller: COLLAPSIBLE_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen: boolean) => props.onOpenChange?.(nextOpen),
   }
   const [open, setOpen] = useControllableState<boolean>(controllableStateProps)
   const onOpenToggle = () => {

@@ -15,7 +15,6 @@
       "@fictjs/use-controllable-state": ["../use-controllable-state/src/index.ts"],
       "@fictjs/use-escape-keydown": ["../use-escape-keydown/src/index.ts"],
       "@fictjs/use-is-hydrated": ["../use-is-hydrated/src/index.ts"],
-      "@fictjs/use-layout-effect": ["../use-layout-effect/src/index.ts"],
       "@fictjs/use-previous": ["../use-previous/src/index.ts"]
     },
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"

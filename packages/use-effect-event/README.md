@@ -13,15 +13,16 @@ pnpm add @fictjs/use-effect-event fict
 ## Usage
 
 ```ts
+import { prop } from 'fict'
 import { useEffectEvent } from '@fictjs/use-effect-event'
 
-const onChange = useEffectEvent(props.onChange)
+const onChange = useEffectEvent<(value: string) => void>(prop(() => props.onChange))
 // `onChange` never changes identity, but always invokes the current props.onChange
 ```
 
 ## API
 
-- **`useEffectEvent(callback)`** — returns a stable function that forwards to the most recent `callback` (or is a no-op when `callback` is undefined).
+- **`useEffectEvent(callback)`** — returns a stable function that forwards to `callback`. A direct callback is retained as provided; when a parent can replace it, pass a Fict signal, computed value, or `prop(() => callback)` so each invocation reads the current callback. An undefined current callback is a no-op.
 
 ## Exports
 

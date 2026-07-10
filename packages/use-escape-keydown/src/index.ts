@@ -2,11 +2,17 @@ import { createEffect, onCleanup } from '@fictjs/runtime'
 
 import { useCallbackRef } from '@fictjs/use-callback-ref'
 
+type EscapeKeydownHandler = (event: KeyboardEvent) => void
+type EscapeKeydownHandlerSource =
+  | EscapeKeydownHandler
+  | (() => EscapeKeydownHandler | undefined)
+  | undefined
+
 function useEscapeKeydown(
-  onEscapeKeyDownProp: ((event: KeyboardEvent) => void) | undefined,
+  onEscapeKeyDownProp: EscapeKeydownHandlerSource,
   ownerDocument: Document | (() => Document | undefined) = globalThis.document,
 ): void {
-  const onEscapeKeyDown = useCallbackRef(onEscapeKeyDownProp)
+  const onEscapeKeyDown = useCallbackRef<EscapeKeydownHandler>(onEscapeKeyDownProp)
 
   createEffect(() => {
     const currentDocument = typeof ownerDocument === 'function' ? ownerDocument() : ownerDocument

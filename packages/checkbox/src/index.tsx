@@ -164,7 +164,7 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
     prop: checkedProp,
     defaultProp: defaultChecked,
     caller: CHECKBOX_NAME,
-    ...(props.onCheckedChange ? { onChange: props.onCheckedChange } : {}),
+    onChange: (nextChecked: CheckedState) => props.onCheckedChange?.(nextChecked),
   }
   const [checked, setChecked] = useControllableState<CheckedState>(controllableStateProps)
   const updateChecked: SetStateFn<CheckedState> = (nextChecked) => {
@@ -435,7 +435,7 @@ function Checkbox(props: ScopedProps<CheckboxProps>): FictNode {
     disabled,
     form,
     name,
-    onCheckedChange,
+    onCheckedChange: _onCheckedChange,
     required,
     value,
     ...checkboxProps
@@ -449,7 +449,7 @@ function Checkbox(props: ScopedProps<CheckboxProps>): FictNode {
       disabled={disabled}
       form={form}
       name={name}
-      onCheckedChange={onCheckedChange}
+      onCheckedChange={prop(() => props.onCheckedChange)}
       required={required}
       value={value}
     >

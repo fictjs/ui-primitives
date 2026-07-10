@@ -49,9 +49,6 @@
     "test:watch": "vitest --config ./vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
-  "dependencies": {
-    "@fictjs/use-layout-effect": "workspace:*"
-  },
   "peerDependencies": {
     "@fictjs/runtime": ">=0.26.0"
   },

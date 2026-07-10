@@ -163,7 +163,7 @@ function Menubar(props: ScopedProps<MenubarProps>): FictNode {
     prop: valueProp,
     defaultProp: defaultValue,
     caller: MENUBAR_NAME,
-    ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
+    onChange: (nextValue) => props.onValueChange?.(nextValue),
   })
   const primitiveProps = mergeProps(
     {
@@ -515,7 +515,7 @@ MenubarArrow.displayName = ARROW_NAME
 
 function MenubarSub(props: ScopedProps<MenubarSubProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeMenubar)
-  return <MenuSub {...menuScope} {...props} />
+  return <MenuSub {...menuScope} {...props} onOpenChange={prop(() => props.onOpenChange)} />
 }
 
 MenubarSub.displayName = SUB_NAME

@@ -137,7 +137,11 @@ function RovingFocusGroup(props: ScopedProps<RovingFocusGroupProps>): FictNode {
   return (
     <Collection.Provider scope={props.__scopeRovingFocusGroup}>
       <Collection.Slot scope={props.__scopeRovingFocusGroup}>
-        <RovingFocusGroupImpl {...props} />
+        <RovingFocusGroupImpl
+          {...props}
+          onCurrentTabStopIdChange={prop(() => props.onCurrentTabStopIdChange)}
+          onEntryFocus={prop(() => props.onEntryFocus)}
+        />
       </Collection.Slot>
     </Collection.Provider>
   )
@@ -175,10 +179,10 @@ function RovingFocusGroupImpl(props: ScopedProps<RovingFocusGroupImplProps>): Fi
     prop: currentTabStopIdProp,
     defaultProp: defaultCurrentTabStopId,
     caller: GROUP_NAME,
-    ...(props.onCurrentTabStopIdChange ? { onChange: props.onCurrentTabStopIdChange } : {}),
+    onChange: (nextId) => props.onCurrentTabStopIdChange?.(nextId),
   })
   const isTabbingBackOut = createSignal(false)
-  const handleEntryFocus = useCallbackRef(props.onEntryFocus)
+  const handleEntryFocus = useCallbackRef<(event: Event) => void>(prop(() => props.onEntryFocus))
   const getItems = useCollection(props.__scopeRovingFocusGroup)
   const isClickFocusRef = { current: false }
   const focusableItemsCount = createSignal(0)

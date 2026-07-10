@@ -40,10 +40,6 @@ export default defineConfig({
         replacement: path.resolve(packagesRoot, 'use-is-hydrated/src/index.ts'),
       },
       {
-        find: '@fictjs/use-layout-effect',
-        replacement: path.resolve(packagesRoot, 'use-layout-effect/src/index.ts'),
-      },
-      {
         find: '@fictjs/use-previous',
         replacement: path.resolve(packagesRoot, 'use-previous/src/index.ts'),
       },

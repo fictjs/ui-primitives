@@ -105,7 +105,7 @@ function NavigationMenuImpl(props: ScopedProps<NavigationMenuProps>, name: strin
     prop: valueProp,
     defaultProp: defaultValue,
     caller: name,
-    ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
+    onChange: (nextValue) => props.onValueChange?.(nextValue),
   })
   const viewport = createSignal<HTMLDivElement | null>(null)
   const primitiveProps = mergeProps(

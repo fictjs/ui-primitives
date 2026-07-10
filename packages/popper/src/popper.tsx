@@ -248,7 +248,7 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
     sticky: stickyProp = 'partial',
     hideWhenDetached: hideWhenDetachedProp = false,
     updatePositionStrategy: updatePositionStrategyProp = 'optimized',
-    onPlaced,
+    onPlaced: _onPlaced,
     ...contentProps
   } = props
 
@@ -290,7 +290,7 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
   const desiredPlacement = () => (side() + (align() !== 'center' ? `-${align()}` : '')) as Placement
   const placedSide = () => getSideAndAlignFromPlacement(floating.placement())[0]
   const placedAlign = () => getSideAndAlignFromPlacement(floating.placement())[1]
-  const handlePlaced = useCallbackRef(onPlaced)
+  const handlePlaced = useCallbackRef<() => void>(prop(() => props.onPlaced))
 
   const floating = useFloating({
     strategy: 'fixed',

@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { FocusScope } from '../src/index.js'
 
@@ -168,5 +169,29 @@ describe('@fictjs/focus-scope', () => {
     await flushEffects()
 
     expect(frameDocument.activeElement).toBe(first)
+  })
+
+  it('uses the latest unmount autofocus handler from component props', async () => {
+    const container = document.createElement('div')
+    const calls: string[] = []
+    const onUnmountAutoFocus = createSignal<(event: Event) => void>(() => calls.push('first'))
+    document.body.append(container)
+
+    const dispose = render(
+      () => (
+        <FocusScope onUnmountAutoFocus={prop(() => onUnmountAutoFocus())}>
+          <button type="button">Inside</button>
+        </FocusScope>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    onUnmountAutoFocus(() => calls.push('second'))
+    dispose()
+    await new Promise<void>((resolve) => setTimeout(resolve, 0))
+    await flushEffects()
+
+    expect(calls).toEqual(['second'])
   })
 })

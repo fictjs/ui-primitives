@@ -13,10 +13,11 @@ pnpm add @fictjs/use-callback-ref fict
 ## Usage
 
 ```ts
+import { prop } from 'fict'
 import { useCallbackRef, mergeRefs } from '@fictjs/use-callback-ref'
 
 // A stable function identity that always calls the latest callback:
-const stable = useCallbackRef(props.onChange)
+const stable = useCallbackRef<(value: string) => void>(prop(() => props.onChange))
 
 // Merge several refs into one:
 const ref = mergeRefs([localRef, props.ref])
@@ -24,7 +25,7 @@ const ref = mergeRefs([localRef, props.ref])
 
 ## API
 
-- **`useCallbackRef(callback)`** — a stable function whose identity never changes but always invokes the latest `callback`.
+- **`useCallbackRef(callback)`** — a stable function whose identity never changes. A direct callback is retained as provided; when a parent can replace it, pass a Fict signal, computed value, or `prop(() => callback)` so each invocation reads the current callback.
 - **`createCallbackRef(cb)`** / **`assignRef(ref, value)`** — low-level callback-ref creation and assignment.
 - **`mergeRefs(refs)`** / **`useMergeRefs(refs)`** — combine multiple refs into one.
 - **`transformRef(ref, transform)`** / **`useTransformRef(...)`** — derive a ref whose value is a transform of another.

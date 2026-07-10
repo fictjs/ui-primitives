@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { Presence } from '../../presence/src/index.js'
@@ -92,6 +92,37 @@ describe('@fictjs/dismissable-layer', () => {
     await flushEffects()
 
     expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
+
+  it('dismisses through the latest handler supplied by component props', async () => {
+    const calls: string[] = []
+    const onDismiss = createSignal<() => void>(() => calls.push('first'))
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <div>
+          <Root onDismiss={prop(() => onDismiss())}>
+            <button type="button">Inside</button>
+          </Root>
+          <button data-testid="outside" type="button">
+            Outside
+          </button>
+        </div>
+      ),
+      container,
+    )
+
+    await waitForListenerRegistration()
+
+    const outside = container.querySelector('[data-testid="outside"]') as HTMLButtonElement
+    pointerDown(outside)
+    onDismiss(() => calls.push('second'))
+    pointerDown(outside)
+    await flushEffects()
+
+    expect(calls).toEqual(['first', 'second'])
   })
 
   it('does not dismiss when pointerdown happens inside a branch', async () => {

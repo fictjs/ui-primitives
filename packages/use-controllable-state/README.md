@@ -13,12 +13,13 @@ pnpm add @fictjs/use-controllable-state fict
 ## Usage
 
 ```tsx
+import { prop } from 'fict'
 import { useControllableState } from '@fictjs/use-controllable-state'
 
 const [open, setOpen] = useControllableState<boolean>({
   prop: () => props.open, // controlled value (accessor); undefined ⇒ uncontrolled
   defaultProp: () => props.defaultOpen ?? false,
-  onChange: props.onOpenChange,
+  onChange: prop(() => props.onOpenChange),
   caller: 'MyComponent',
 })
 
@@ -28,7 +29,7 @@ setOpen(true) // update: no-op in controlled mode (emits onChange), sets interna
 
 ## API
 
-- **`useControllableState({ prop, defaultProp, onChange, caller })`** — returns `[getter, setter]`. `prop`/`defaultProp` may be values or accessors. In development it warns if a component switches between controlled and uncontrolled.
+- **`useControllableState({ prop, defaultProp, onChange, caller })`** — returns `[getter, setter]`. `prop`, `defaultProp`, and `onChange` may be values or reactive accessors. In development it warns if a component switches between controlled and uncontrolled.
 - **`useControllableStateReducer(reducer, params, initialArg, init?)`** — a reducer-driven variant returning `[stateGetter, dispatch]`.
 
 ## Exports

@@ -1831,10 +1831,6 @@ importers:
         version: 28.1.0
 
   packages/use-callback-ref:
-    dependencies:
-      '@fictjs/use-layout-effect':
-        specifier: workspace:*
-        version: link:../use-layout-effect
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
@@ -1860,10 +1856,6 @@ importers:
         version: 28.1.0
 
   packages/use-effect-event:
-    dependencies:
-      '@fictjs/use-layout-effect':
-        specifier: workspace:*
-        version: link:../use-layout-effect
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'

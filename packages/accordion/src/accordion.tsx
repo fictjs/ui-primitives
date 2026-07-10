@@ -148,9 +148,15 @@ function Accordion(props: ScopedProps<AccordionSingleProps | AccordionMultiplePr
   return (
     <Collection.Provider scope={props.__scopeAccordion}>
       {type === 'multiple' ? (
-        <AccordionImplMultiple {...(accordionProps as ScopedProps<AccordionImplMultipleProps>)} />
+        <AccordionImplMultiple
+          {...(accordionProps as ScopedProps<AccordionImplMultipleProps>)}
+          onValueChange={prop(() => props.onValueChange)}
+        />
       ) : (
-        <AccordionImplSingle {...(accordionProps as ScopedProps<AccordionImplSingleProps>)} />
+        <AccordionImplSingle
+          {...(accordionProps as ScopedProps<AccordionImplSingleProps>)}
+          onValueChange={prop(() => props.onValueChange)}
+        />
       )}
     </Collection.Provider>
   )
@@ -173,7 +179,7 @@ function AccordionImplSingle(props: ScopedProps<AccordionImplSingleProps>): Fict
     prop: valueProp,
     defaultProp: defaultValue,
     caller: ACCORDION_NAME,
-    ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
+    onChange: (nextValue) => props.onValueChange?.(nextValue),
   })
   const primitiveProps = mergeProps(
     prop(() => props as Record<string, unknown>),
@@ -223,7 +229,7 @@ function AccordionImplMultiple(props: ScopedProps<AccordionImplMultipleProps>): 
     prop: valueProp,
     defaultProp: defaultValue,
     caller: ACCORDION_NAME,
-    ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
+    onChange: (nextValue) => props.onValueChange?.(nextValue),
   })
   const primitiveProps = mergeProps(
     prop(() => props as Record<string, unknown>),

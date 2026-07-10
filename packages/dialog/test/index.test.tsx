@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 const hideOthersMock = vi.hoisted(() => vi.fn(() => () => {}))
 
@@ -140,6 +141,39 @@ describe('@fictjs/dialog', () => {
     expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
     expect(portalRoot.querySelector('[data-testid="overlay"]')).toBeNull()
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('notifies the latest open-change handler from component props', async () => {
+    const container = document.createElement('div')
+    const calls: string[] = []
+    const onOpenChange = createSignal<(open: boolean) => void>((open) => {
+      calls.push(`first:${open}`)
+    })
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Dialog onOpenChange={prop(() => onOpenChange())}>
+          <DialogTrigger data-testid="trigger">Open</DialogTrigger>
+          <DialogPortal>
+            <DialogContent>
+              <DialogTitle>Title</DialogTitle>
+              <DialogDescription>Description</DialogDescription>
+              <DialogClose data-testid="close">Close</DialogClose>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ),
+      container,
+    )
+
+    click(container.querySelector('[data-testid="trigger"]') as HTMLButtonElement)
+    await waitForEffects()
+    onOpenChange((open) => calls.push(`second:${open}`))
+    click(document.body.querySelector('[data-testid="close"]') as HTMLButtonElement)
+    await waitForEffects()
+
+    expect(calls).toEqual(['first:true', 'second:false'])
   })
 
   it('locks modal focus flow and restores trigger focus on escape', async () => {

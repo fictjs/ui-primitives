@@ -720,14 +720,14 @@ function Select(props: ScopedProps<SelectProps>): FictNode {
     prop: valueProp,
     defaultProp: defaultValue,
     caller: SELECT_NAME,
-    ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
+    onChange: (nextValue) => props.onValueChange?.(nextValue),
   })
   const initialValue = untrack(() => value())
   const [open, setOpen] = useControllableState<boolean>({
     prop: openProp,
     defaultProp: defaultOpen,
     caller: SELECT_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen) => props.onOpenChange?.(nextOpen),
   })
   const registerItemText = (itemValue: string, text: string) => {
     textByValue.set(itemValue, text)

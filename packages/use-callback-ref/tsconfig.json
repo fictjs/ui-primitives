@@ -4,30 +4,12 @@
     "baseUrl": ".",
     "jsx": "react-jsx",
     "jsxImportSource": "@fictjs/runtime",
-    "lib": [
-      "ES2023",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "paths": {
-      "@fictjs/use-callback-ref": [
-        "./src/index.ts"
-      ],
-      "@fictjs/use-layout-effect": [
-        "../use-layout-effect/src/index.ts"
-      ]
+      "@fictjs/use-callback-ref": ["./src/index.ts"]
     },
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts",
-    "test/**/*.tsx",
-    "tsup.config.ts",
-    "vitest.config.ts"
-  ],
-  "exclude": [
-    "coverage",
-    "dist"
-  ]
+  "include": ["src/**/*.ts", "test/**/*.ts", "test/**/*.tsx", "tsup.config.ts", "vitest.config.ts"],
+  "exclude": ["coverage", "dist"]
 }

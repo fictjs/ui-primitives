@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createRef as createDomRef, render } from '@fictjs/runtime'
+import { createRef as createDomRef, prop, render } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import {
@@ -86,6 +86,22 @@ describe('@fictjs/use-callback-ref', () => {
       expect(events).toEqual(['ready'])
     })
 
+    it('keeps a stable callback that reads the latest reactive accessor', () => {
+      const events: string[] = []
+      const callback = createSignal<((value: string) => void) | undefined>((value) => {
+        events.push(`first:${value}`)
+      })
+      const stable = useCallbackRef<(value: string) => void>(callback)
+
+      stable('one')
+      callback((value) => events.push(`second:${value}`))
+      stable('two')
+      callback(undefined)
+      stable('ignored')
+
+      expect(events).toEqual(['first:one', 'second:two'])
+    })
+
     it('mergeRefs fans values out to all refs and exposes the latest current value', () => {
       const callbackRef = createCallbackRef<number>(() => {})
       const objectRef = { current: null as number | null }
@@ -104,13 +120,11 @@ describe('@fictjs/use-callback-ref', () => {
       const transformedObject = { current: null as string | null }
       const callbackTarget = createCallbackRef<string>(() => {})
 
-      const prefixRef = transformRef<number, string>(
-        transformedObject,
-        (value) => (value == null ? null : `#${value}`),
+      const prefixRef = transformRef<number, string>(transformedObject, (value) =>
+        value == null ? null : `#${value}`,
       )
-      const textRef = useTransformRef<number, string>(
-        callbackTarget,
-        (value) => (value == null ? null : String(value * 2)),
+      const textRef = useTransformRef<number, string>(callbackTarget, (value) =>
+        value == null ? null : String(value * 2),
       )
 
       prefixRef.current = 12
@@ -165,6 +179,32 @@ describe('@fictjs/use-callback-ref', () => {
       ])
     })
 
+    it('reads a replaced handler from real Fict component props', () => {
+      const events: string[] = []
+      const callback = createSignal<(value: string) => void>((value) => {
+        events.push(`first:${value}`)
+      })
+      let stable: ((value: string) => void) | undefined
+      let initialStable: ((value: string) => void) | undefined
+
+      function Consumer(props: { onEvent?: (value: string) => void }) {
+        stable = useCallbackRef(prop(() => props.onEvent))
+        initialStable = stable
+        return <div />
+      }
+
+      const dispose = render(() => <Consumer onEvent={prop(() => callback())} />, container)
+
+      stable?.('one')
+      callback((value) => events.push(`second:${value}`))
+      stable?.('two')
+
+      expect(stable).toBe(initialStable)
+      expect(events).toEqual(['first:one', 'second:two'])
+
+      dispose()
+    })
+
     it('useMergeRefs forwards mount and cleanup to object refs and callback refs', () => {
       const objectRef = createDomRef<HTMLDivElement>()
       const callbackRef = vi.fn<(value: HTMLDivElement | null) => void>()
@@ -189,11 +229,7 @@ describe('@fictjs/use-callback-ref', () => {
       const show = createSignal(true)
 
       const dispose = render(
-        () => (
-          <>
-            {reactive(() => (show() ? <div ref={mergedRef}>Shown</div> : null))}
-          </>
-        ),
+        () => <>{reactive(() => (show() ? <div ref={mergedRef}>Shown</div> : null))}</>,
         container,
       )
 

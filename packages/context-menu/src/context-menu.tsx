@@ -406,7 +406,7 @@ function ContextMenu(props: ScopedProps<ContextMenuProps>): FictNode {
     prop: openProp,
     defaultProp: defaultOpen,
     caller: CONTEXT_MENU_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen) => props.onOpenChange?.(nextOpen),
   })
   const anchorPoint = createSignal<{ x: number; y: number } | null>(null)
   const handleOpenChange = (nextOpen: boolean) => {
@@ -696,7 +696,7 @@ ContextMenuArrow.displayName = ARROW_NAME
 
 function ContextMenuSub(props: ScopedProps<ContextMenuSubProps>): FictNode {
   const menuScope = useMenuScope(props.__scopeContextMenu)
-  return <MenuSub {...menuScope} {...props} />
+  return <MenuSub {...menuScope} {...props} onOpenChange={prop(() => props.onOpenChange)} />
 }
 
 ContextMenuSub.displayName = SUB_NAME

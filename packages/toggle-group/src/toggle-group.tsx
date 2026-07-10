@@ -201,11 +201,21 @@ function ToggleGroup(
   const { type, ...toggleGroupProps } = props
 
   if (type === 'single') {
-    return <ToggleGroupImplSingle {...(toggleGroupProps as Record<string, unknown>)} />
+    return (
+      <ToggleGroupImplSingle
+        {...(toggleGroupProps as Record<string, unknown>)}
+        onValueChange={prop(() => props.onValueChange)}
+      />
+    )
   }
 
   if (type === 'multiple') {
-    return <ToggleGroupImplMultiple {...(toggleGroupProps as Record<string, unknown>)} />
+    return (
+      <ToggleGroupImplMultiple
+        {...(toggleGroupProps as Record<string, unknown>)}
+        onValueChange={prop(() => props.onValueChange)}
+      />
+    )
   }
 
   throw new Error(`Missing prop \`type\` expected on \`${TOGGLE_GROUP_NAME}\``)
@@ -227,7 +237,7 @@ function ToggleGroupImplSingle(props: ScopedProps<ToggleGroupImplSingleProps>): 
     prop: valueProp,
     defaultProp: defaultValue,
     caller: TOGGLE_GROUP_NAME,
-    ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
+    onChange: (nextValue) => props.onValueChange?.(nextValue),
   })
 
   const primitiveProps = mergeProps(
@@ -271,7 +281,7 @@ function ToggleGroupImplMultiple(props: ScopedProps<ToggleGroupImplMultipleProps
     prop: valueProp,
     defaultProp: defaultValue,
     caller: TOGGLE_GROUP_NAME,
-    ...(props.onValueChange ? { onChange: props.onValueChange } : {}),
+    onChange: (nextValue) => props.onValueChange?.(nextValue),
   })
 
   const primitiveProps = mergeProps(

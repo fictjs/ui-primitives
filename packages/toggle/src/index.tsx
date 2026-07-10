@@ -36,7 +36,7 @@ function Toggle(props: ToggleProps): FictNode {
     prop: controlledPressed,
     defaultProp: defaultPressed,
     caller: NAME,
-    ...(props.onPressedChange ? { onChange: props.onPressedChange } : {}),
+    onChange: (nextPressed: boolean) => props.onPressedChange?.(nextPressed),
   }
 
   const [pressed, setPressed] = useControllableState(controllableStateProps)

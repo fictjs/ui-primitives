@@ -117,6 +117,19 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     props.ref as PossibleRef<DismissableLayerElement>,
     (nextNode) => node(nextNode),
   )
+  const handleEscapeKeyDown = useCallbackRef<(event: KeyboardEvent) => void>(
+    prop(() => props.onEscapeKeyDown),
+  )
+  const handlePointerDownOutsideProp = useCallbackRef<(event: PointerDownOutsideEvent) => void>(
+    prop(() => props.onPointerDownOutside),
+  )
+  const handleFocusOutsideProp = useCallbackRef<(event: FocusOutsideEvent) => void>(
+    prop(() => props.onFocusOutside),
+  )
+  const handleInteractOutside = useCallbackRef<
+    (event: PointerDownOutsideEvent | FocusOutsideEvent) => void
+  >(prop(() => props.onInteractOutside))
+  const handleDismiss = useCallbackRef<() => void>(prop(() => props.onDismiss))
 
   const pruneLayerState = () => {
     const state = layerState()
@@ -150,9 +163,9 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
 
     if (!isPointerEventsEnabled() || isPointerDownOnBranch) return
 
-    props.onPointerDownOutside?.(event)
-    props.onInteractOutside?.(event)
-    if (!event.defaultPrevented) props.onDismiss?.()
+    handlePointerDownOutsideProp(event)
+    handleInteractOutside(event)
+    if (!event.defaultPrevented) handleDismiss()
   }, ownerDocument)
 
   const focusOutside = useFocusOutside((event) => {
@@ -163,9 +176,9 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
 
     if (isFocusInBranch) return
 
-    props.onFocusOutside?.(event)
-    props.onInteractOutside?.(event)
-    if (!event.defaultPrevented) props.onDismiss?.()
+    handleFocusOutsideProp(event)
+    handleInteractOutside(event)
+    if (!event.defaultPrevented) handleDismiss()
   }, ownerDocument)
 
   useLayoutEffect(() => {
@@ -236,10 +249,10 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     const isHighestLayer = getIndex() === state.layers.size - 1
     if (!isHighestLayer) return
 
-    props.onEscapeKeyDown?.(event)
+    handleEscapeKeyDown(event)
     if (!event.defaultPrevented && props.onDismiss) {
       event.preventDefault()
-      props.onDismiss()
+      handleDismiss()
     }
   }, ownerDocument)
 

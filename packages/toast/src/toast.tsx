@@ -639,7 +639,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
     prop: openProp,
     defaultProp: defaultOpen,
     caller: TOAST_NAME,
-    ...(props.onOpenChange ? { onChange: props.onOpenChange } : {}),
+    onChange: (nextOpen) => props.onOpenChange?.(nextOpen),
   })
   const present = () =>
     Boolean(

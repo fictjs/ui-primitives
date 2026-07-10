@@ -47,6 +47,30 @@ describe('@fictjs/use-controllable-state', () => {
     expect(onChange).toHaveBeenCalledWith('beta')
   })
 
+  it('emits to the latest handler supplied through real component props', () => {
+    const calls: string[] = []
+    const onChange = createSignal<(value: string) => void>((value) => {
+      calls.push(`first:${value}`)
+    })
+    let setValue: ((next: string) => void) | undefined
+
+    function Consumer(props: { onChange?: (value: string) => void }) {
+      ;[, setValue] = useControllableState({
+        defaultProp: 'alpha',
+        onChange: prop(() => props.onChange),
+      })
+      return <div />
+    }
+
+    render(() => <Consumer onChange={prop(() => onChange())} />, document.createElement('div'))
+
+    setValue?.('beta')
+    onChange((value) => calls.push(`second:${value}`))
+    setValue?.('gamma')
+
+    expect(calls).toEqual(['first:beta', 'second:gamma'])
+  })
+
   it('treats defined prop values as controlled', () => {
     const controlled = createSignal('first')
     let value: (() => string) | undefined
@@ -209,6 +233,40 @@ describe('@fictjs/use-controllable-state', () => {
     dispatch?.({ type: 'select', value: 'second' })
     expect(state?.()).toEqual({ count: 1, state: 'first' })
     expect(onChange).toHaveBeenCalledWith('second')
+  })
+
+  it('emits reducer changes to the latest reactive handler', () => {
+    type ReducerState = { count: number; state: string }
+    type ReducerAction = { type: 'select'; value: string }
+    const calls: string[] = []
+    const onChange = createSignal<(value: string) => void>((value) => {
+      calls.push(`first:${value}`)
+    })
+    let dispatch: ((action: ReducerAction) => void) | undefined
+
+    function Consumer(props: { onChange?: (value: string) => void }) {
+      ;[, dispatch] = useControllableStateReducer<
+        string,
+        Omit<ReducerState, 'state'>,
+        ReducerAction
+      >(
+        (state, action) => ({ ...state, state: action.value }),
+        {
+          defaultProp: 'alpha',
+          onChange: prop(() => props.onChange),
+        },
+        { count: 0 },
+      )
+      return <div />
+    }
+
+    render(() => <Consumer onChange={prop(() => onChange())} />, document.createElement('div'))
+
+    dispatch?.({ type: 'select', value: 'beta' })
+    onChange((value) => calls.push(`second:${value}`))
+    dispatch?.({ type: 'select', value: 'gamma' })
+
+    expect(calls).toEqual(['first:beta', 'second:gamma'])
   })
 
   it('warns when reducer usage changes between controlled and uncontrolled', async () => {
