@@ -209,15 +209,47 @@ describe('@fictjs/menu', () => {
 
     click(container.querySelector('[data-testid="checkbox"]') as HTMLDivElement)
     await waitForEffects()
-    expect(container.querySelector('[data-testid="checkbox-indicator"]')?.textContent).toBe('x')
+    expect(open()).toBe(false)
 
     open(true)
     await waitForEffects()
+    expect(container.querySelector('[data-testid="checkbox-indicator"]')?.textContent).toBe('x')
+
     click(container.querySelector('[data-testid="radio-two"]') as HTMLDivElement)
     await waitForEffects()
 
     expect(radioValue()).toBe('two')
+    expect(open()).toBe(false)
+
+    open(true)
+    await waitForEffects()
     expect(container.querySelector('[data-testid="radio-indicator"]')?.textContent).toBe('dot')
+  })
+
+  it('keeps checkbox items open when selection is prevented', async () => {
+    const container = document.createElement('div')
+    const open = createSignal(true)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Content>
+            <CheckboxItem data-testid="checkbox" onSelect={(event) => event.preventDefault()}>
+              Toggle
+            </CheckboxItem>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    click(container.querySelector('[data-testid="checkbox"]') as HTMLDivElement)
+    await waitForEffects()
+
+    expect(open()).toBe(true)
+    expect(container.querySelector('[data-testid="checkbox"]')).not.toBeNull()
   })
 
   it('marks the focused pointer target as highlighted', async () => {

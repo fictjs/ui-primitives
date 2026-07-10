@@ -865,7 +865,6 @@ function MenuCheckboxItem(props: ScopedProps<MenuCheckboxItemProps>): FictNode {
       {...props}
       role="menuitemcheckbox"
       checked={checked}
-      closeOnSelect={false}
       onSelect={(event) => {
         props.onSelect?.(event)
         if (event.defaultPrevented) return
@@ -921,7 +920,6 @@ function MenuRadioItem(props: ScopedProps<MenuRadioItemProps>): FictNode {
       {...props}
       role="menuitemradio"
       checked={() => checked()}
-      closeOnSelect={false}
       onSelect={(event) => {
         props.onSelect?.(event)
         if (event.defaultPrevented) return
