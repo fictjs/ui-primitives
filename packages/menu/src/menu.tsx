@@ -7,6 +7,7 @@ import {
   type JSX,
 } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
+import { jsx as createVNode } from '@fictjs/runtime/jsx-runtime'
 import { hideOthers } from 'aria-hidden'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -21,6 +22,16 @@ import {
 import { RemoveScroll } from '@fictjs/fict-remove-scroll'
 import { FocusScope, type FocusScopeProps } from '@fictjs/focus-scope'
 import { useId } from '@fictjs/id'
+import {
+  createPopperScope,
+  Popper as PopperRoot,
+  PopperAnchor as PopperAnchorPrimitive,
+  PopperArrow as PopperArrowPrimitive,
+  PopperContent as PopperContentPrimitive,
+  type PopperAnchorProps as PopperAnchorPrimitiveProps,
+  type PopperArrowProps as PopperArrowPrimitiveProps,
+  type PopperContentProps as PopperContentPrimitiveProps,
+} from '@fictjs/popper'
 import { Portal as PortalPrimitive, type PortalProps as PortalPrimitiveProps } from '@fictjs/portal'
 import { Presence } from '@fictjs/presence'
 import { Primitive } from '@fictjs/primitive'
@@ -29,25 +40,16 @@ import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
 type MaybeAccessor<T> = T | (() => T)
 type ScopedProps<P> = P & { __scopeMenu?: Scope }
-type PrimitiveButtonProps = JSX.IntrinsicElements['button'] & {
-  asChild?: boolean
-}
 type PrimitiveDivProps = JSX.IntrinsicElements['div'] & {
   asChild?: boolean
 }
 type PrimitiveSeparatorProps = JSX.IntrinsicElements['div'] & {
   asChild?: boolean
 }
-type PrimitiveSvgProps = JSX.IntrinsicElements['svg'] & {
-  asChild?: boolean
-}
 type CheckedState = boolean | 'indeterminate'
 type MenuItemElement = HTMLElement
 type FocusIntent = 'first' | 'last' | 'prev' | 'next'
 type MenuSubOpenInputType = 'pointer' | 'keyboard'
-type MenuSubSide = 'right' | 'left'
-type MenuAlign = 'start' | 'center' | 'end'
-type ContentSize = { width: number; height: number }
 type PortalContextValue = {
   forceMount: boolean | undefined
 }
@@ -106,9 +108,8 @@ const SUB_OPEN_KEYS: Record<Direction, string[]> = {
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
-const MENU_FALLBACK_COLLISION_SIZE = 160
-
-const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME)
+const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME, [createPopperScope])
+const usePopperScope = createPopperScope()
 const [MenuProvider, useMenuContext] = createMenuContext<MenuContextValue>(MENU_NAME)
 const [MenuContentProvider, useMenuContentContext] =
   createMenuContext<MenuContentContextValue>(CONTENT_NAME)
@@ -131,18 +132,14 @@ type MenuProps = {
   modal?: MaybeAccessor<boolean | undefined>
 }
 
-type MenuAnchorProps = PrimitiveDivProps
+type MenuAnchorProps = PopperAnchorPrimitiveProps
 type MenuPortalProps = {
   children?: FictNode | FictNode[]
   container?: PortalPrimitiveProps['container']
   forceMount?: MaybeAccessor<boolean | undefined>
 }
-type MenuContentProps = PrimitiveDivProps &
+type MenuContentProps = Omit<PopperContentPrimitiveProps, 'dir' | 'onPlaced'> &
   Omit<DismissableLayerProps, 'onDismiss'> & {
-    align?: MaybeAccessor<'start' | 'center' | 'end' | undefined>
-    alignOffset?: MaybeAccessor<number | undefined>
-    side?: MaybeAccessor<'top' | 'right' | 'bottom' | 'left' | undefined>
-    sideOffset?: MaybeAccessor<number | undefined>
     forceMount?: MaybeAccessor<boolean | undefined>
     onOpenAutoFocus?: FocusScopeProps['onMountAutoFocus']
     onCloseAutoFocus?: FocusScopeProps['onUnmountAutoFocus']
@@ -171,7 +168,7 @@ type MenuItemIndicatorProps = PrimitiveDivProps & {
   forceMount?: MaybeAccessor<boolean | undefined>
 }
 type MenuSeparatorProps = PrimitiveSeparatorProps
-type MenuArrowProps = PrimitiveSvgProps
+type MenuArrowProps = PopperArrowPrimitiveProps
 type MenuSubProps = {
   children?: FictNode | FictNode[]
   open?: MaybeAccessor<boolean | undefined>
@@ -217,122 +214,8 @@ function readStyle(value: unknown): StyleRecord {
   return value as StyleRecord
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), Math.max(min, max))
-}
-
-function getViewportWidth(): number {
-  return globalThis.innerWidth || document.documentElement.clientWidth || 0
-}
-
-function getViewportHeight(): number {
-  return globalThis.innerHeight || document.documentElement.clientHeight || 0
-}
-
-function measureMenuContentSize(content: HTMLElement | null): ContentSize {
-  if (!content) {
-    return { width: 0, height: 0 }
-  }
-
-  const rect = content.getBoundingClientRect()
-
-  return {
-    width: Math.max(rect.width, content.scrollWidth),
-    height: Math.max(rect.height, content.scrollHeight),
-  }
-}
-
-function getSubAvailableWidth(
-  rect: DOMRect,
-  side: MenuSubSide,
-  sideOffset: number,
-  viewportWidth: number,
-): number {
-  return side === 'left'
-    ? Math.max(rect.left - sideOffset, 0)
-    : Math.max(viewportWidth - rect.right - sideOffset, 0)
-}
-
-function getSubContentPlacedSide(
-  trigger: HTMLElement | null,
-  contentSize: ContentSize,
-  side: MenuSubSide,
-  sideOffset: number,
-): MenuSubSide {
-  if (!trigger) {
-    return side
-  }
-
-  const rect = trigger.getBoundingClientRect()
-  const viewportWidth = getViewportWidth()
-  const oppositeSide = side === 'left' ? 'right' : 'left'
-  const desiredAvailable = getSubAvailableWidth(rect, side, sideOffset, viewportWidth)
-  const oppositeAvailable = getSubAvailableWidth(rect, oppositeSide, sideOffset, viewportWidth)
-  const requiredWidth = contentSize.width || MENU_FALLBACK_COLLISION_SIZE
-
-  if (desiredAvailable < requiredWidth && oppositeAvailable > desiredAvailable) {
-    return oppositeSide
-  }
-
-  return side
-}
-
-function getSubContentWrapperStyle(
-  trigger: HTMLElement | null,
-  contentSize: ContentSize,
-  side: MenuSubSide,
-  align: MenuAlign,
-  sideOffset: number,
-  alignOffset: number,
-): StyleRecord {
-  if (!trigger) {
-    return { pointerEvents: 'auto' }
-  }
-
-  const rect = trigger.getBoundingClientRect()
-  const viewportWidth = getViewportWidth()
-  const viewportHeight = getViewportHeight()
-  const availableWidth = getSubAvailableWidth(rect, side, sideOffset, viewportWidth)
-  const availableHeight = Math.max(viewportHeight, 0)
-  const collisionHeight = contentSize.height || MENU_FALLBACK_COLLISION_SIZE
-  let contentTop = rect.top
-  const left = side === 'left' ? rect.left - sideOffset : rect.right + sideOffset
-  let translateSuffix = side === 'left' ? ' translate(-100%, 0)' : ''
-
-  if (align === 'center') {
-    contentTop = rect.top + rect.height / 2 - collisionHeight / 2
-    translateSuffix = side === 'left' ? ' translate(-100%, -50%)' : ' translate(0, -50%)'
-  } else if (align === 'end') {
-    contentTop = rect.bottom - collisionHeight
-    translateSuffix = side === 'left' ? ' translate(-100%, -100%)' : ' translate(0, -100%)'
-  }
-
-  contentTop = clamp(contentTop + alignOffset, 0, viewportHeight - collisionHeight)
-
-  const top =
-    align === 'center'
-      ? contentTop + collisionHeight / 2
-      : align === 'end'
-        ? contentTop + collisionHeight
-        : contentTop
-
-  const originX = side === 'left' ? '100%' : '0px'
-  const originY = align === 'center' ? '50%' : align === 'end' ? '100%' : '0%'
-
-  return {
-    position: 'fixed',
-    left: '0px',
-    top: '0px',
-    transform: `translate(${Math.round(left)}px, ${Math.round(top)}px)${translateSuffix}`,
-    pointerEvents: 'auto',
-    minWidth: 'max-content',
-    zIndex: 'auto',
-    '--radix-popper-transform-origin': `${originX} ${originY}`,
-    '--radix-popper-available-width': `${Math.max(availableWidth, 0)}px`,
-    '--radix-popper-available-height': `${Math.max(availableHeight, 0)}px`,
-    '--radix-popper-anchor-width': `${Math.max(rect.width, 0)}px`,
-    '--radix-popper-anchor-height': `${Math.max(rect.height, 0)}px`,
-  }
+function createComponentNode(component: unknown, props: Record<string, unknown>): FictNode {
+  return createVNode(component as (props: Record<string, unknown>) => FictNode, props)
 }
 
 function getState(open: boolean): 'open' | 'closed' {
@@ -384,6 +267,7 @@ function wrapArray<T>(array: T[], startIndex: number): T[] {
 
 function Menu(props: ScopedProps<MenuProps>): FictNode {
   const inheritedDirection = useDirection()
+  const popperScope = usePopperScope(props.__scopeMenu)
   const contentId = useId()
   const modal = () =>
     props.modal === undefined
@@ -405,23 +289,32 @@ function Menu(props: ScopedProps<MenuProps>): FictNode {
   })
 
   return (
-    <MenuProvider
-      scope={props.__scopeMenu as Scope<MenuContextValue | undefined>}
-      open={open}
-      onOpenChange={setOpen}
-      dir={dir}
-      modal={modal}
-      contentId={contentId}
-    >
-      {props.children}
-    </MenuProvider>
+    <PopperRoot {...popperScope}>
+      <MenuProvider
+        scope={props.__scopeMenu as Scope<MenuContextValue | undefined>}
+        open={open}
+        onOpenChange={setOpen}
+        dir={dir}
+        modal={modal}
+        contentId={contentId}
+      >
+        {props.children}
+      </MenuProvider>
+    </PopperRoot>
   )
 }
 
 Menu.displayName = MENU_NAME
 
 function MenuAnchor(props: ScopedProps<MenuAnchorProps>): FictNode {
-  return <Primitive.div {...(props as Record<string, unknown>)} />
+  const popperScope = usePopperScope(props.__scopeMenu)
+  const anchorProps = mergeProps(
+    popperScope as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
+    { __scopeMenu: undefined },
+  )
+
+  return createComponentNode(PopperAnchorPrimitive, anchorProps)
 }
 
 MenuAnchor.displayName = ANCHOR_NAME
@@ -501,18 +394,22 @@ function MenuContent(props: ScopedProps<MenuContentProps>): FictNode {
 
     focusFirst(candidates)
   }
+  const contentImplNode = createComponentNode(
+    MenuContentImpl,
+    mergeProps(prop(() => props as Record<string, unknown>)),
+  )
 
   return (
     <>
       {reactive(() =>
-        Boolean(forceMount || menuContext.open()) ? (
+        forceMount || menuContext.open() ? (
           <MenuContentProvider
             scope={props.__scopeMenu as Scope<MenuContentContextValue | undefined>}
             contentId={menuContext.contentId}
             contentRef={contentRef}
             focusItem={focusItem}
           >
-            <MenuContentImpl {...props} />
+            {contentImplNode}
           </MenuContentProvider>
         ) : null,
       )}
@@ -523,7 +420,7 @@ function MenuContent(props: ScopedProps<MenuContentProps>): FictNode {
 MenuContent.displayName = CONTENT_NAME
 
 function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
-  const { __scopeMenu, forceMount: _forceMount, ...contentProps } = props
+  const __scopeMenu = props.__scopeMenu
   const menuContext = useMenuContext(
     CONTENT_NAME,
     __scopeMenu as Scope<MenuContextValue | undefined>,
@@ -532,6 +429,7 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
     CONTENT_NAME,
     __scopeMenu as Scope<MenuContentContextValue | undefined>,
   )
+  const popperScope = usePopperScope(__scopeMenu)
   const ref = { current: null as HTMLDivElement | null }
   const hasOpened = { current: false }
   const openAutoFocusPreventedRef = { current: false }
@@ -608,52 +506,34 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
     }
   })
 
-  const layerProps = mergeProps(
+  const popperContentProps = mergeProps<Record<string, unknown>>(
     {
       id: prop(menuContext.contentId),
       role: 'menu',
       tabIndex: -1,
       'data-state': prop(() => getState(menuContext.open())),
       'data-orientation': 'vertical',
-    },
-    prop(() => contentProps as Record<string, unknown>),
+    } as Record<string, unknown>,
+    popperScope as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
     {
       __scopeMenu: undefined,
+      disableOutsidePointerEvents: undefined,
+      dir: prop(menuContext.dir),
       forceMount: undefined,
       onCloseAutoFocus: undefined,
+      onEscapeKeyDown: undefined,
+      onFocusOutside: undefined,
+      onInteractOutside: undefined,
       onOpenAutoFocus: undefined,
+      onPointerDownOutside: undefined,
+      'oncapture:blur': undefined,
+      'oncapture:focus': undefined,
+      'oncapture:pointerdown': undefined,
       ref: undefined,
       onDismiss: undefined,
-      onInteractOutside: (event: PointerDownOutsideEvent | FocusOutsideEvent) => {
-        const target = event.detail.originalEvent.target as HTMLElement | null
-        const isFocusInsideContent =
-          event.detail.originalEvent.type === 'focusin' &&
-          !!target &&
-          !!ref.current &&
-          ref.current.contains(target)
-
-        if (isFocusInsideContent) {
-          event.preventDefault()
-          return
-        }
-
-        props.onInteractOutside?.(event)
-      },
-      onFocusOutside: (event: FocusOutsideEvent) => {
-        const target = event.detail.originalEvent.target as HTMLElement | null
-        const isFocusInsideContent = !!target && !!ref.current && ref.current.contains(target)
-
-        if (isFocusInsideContent) {
-          event.preventDefault()
-          return
-        }
-
-        props.onFocusOutside?.(event)
-      },
-      onPointerDownOutside: props.onPointerDownOutside,
-      onEscapeKeyDown: props.onEscapeKeyDown,
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => props.onKeyDown?.(event),
         (event) => {
           if (event.key === 'Tab') {
             event.preventDefault()
@@ -743,19 +623,52 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
       event.preventDefault()
       contentContext.focusItem('first')
     },
-    ...(props.onCloseAutoFocus ? { onUnmountAutoFocus: props.onCloseAutoFocus } : {}),
+    onUnmountAutoFocus: (event: Event) => props.onCloseAutoFocus?.(event),
   }
+  const dismissableLayerProps = mergeProps<Record<string, unknown>>({
+    asChild: true,
+    disableOutsidePointerEvents: menuContext.modal,
+    onDismiss: () => menuContext.onOpenChange(false),
+    onInteractOutside: (event: PointerDownOutsideEvent | FocusOutsideEvent) => {
+      const target = event.detail.originalEvent.target as HTMLElement | null
+      const isFocusInsideContent =
+        event.detail.originalEvent.type === 'focusin' &&
+        !!target &&
+        !!ref.current &&
+        ref.current.contains(target)
+
+      if (isFocusInsideContent) {
+        event.preventDefault()
+        return
+      }
+
+      props.onInteractOutside?.(event)
+    },
+    onFocusOutside: (event: FocusOutsideEvent) => {
+      const target = event.detail.originalEvent.target as HTMLElement | null
+      const isFocusInsideContent = !!target && !!ref.current && ref.current.contains(target)
+
+      if (isFocusInsideContent) {
+        event.preventDefault()
+        return
+      }
+
+      props.onFocusOutside?.(event)
+    },
+    onPointerDownOutside: (event: PointerDownOutsideEvent) => props.onPointerDownOutside?.(event),
+    onEscapeKeyDown: (event: KeyboardEvent) => props.onEscapeKeyDown?.(event),
+    'oncapture:blur': (event: FocusEvent) => props['oncapture:blur']?.(event),
+    'oncapture:focus': (event: FocusEvent) => props['oncapture:focus']?.(event),
+    'oncapture:pointerdown': (event: PointerEvent) => props['oncapture:pointerdown']?.(event),
+  })
+  const popperContentNode = createComponentNode(
+    PopperContentPrimitive,
+    mergeProps(popperContentProps, { ref: composedRefs }),
+  )
 
   const contentNode = (
     <FocusScope {...focusScopeProps} asChild>
-      <DismissableLayer
-        {...(layerProps as Record<string, unknown>)}
-        ref={composedRefs}
-        disableOutsidePointerEvents={menuContext.modal}
-        onDismiss={() => {
-          menuContext.onOpenChange(false)
-        }}
-      />
+      <DismissableLayer {...dismissableLayerProps}>{popperContentNode}</DismissableLayer>
     </FocusScope>
   )
 
@@ -767,13 +680,28 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
 }
 
 function MenuGroup(props: ScopedProps<MenuGroupProps>): FictNode {
-  return <Primitive.div role="group" {...(props as Record<string, unknown>)} />
+  return createComponentNode(
+    Primitive.div,
+    mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        __scopeMenu: undefined,
+        role: 'group',
+      },
+    ),
+  )
 }
 
 MenuGroup.displayName = GROUP_NAME
 
 function MenuLabel(props: ScopedProps<MenuLabelProps>): FictNode {
-  return <Primitive.div {...(props as Record<string, unknown>)} />
+  return createComponentNode(
+    Primitive.div,
+    mergeProps(
+      prop(() => props as Record<string, unknown>),
+      { __scopeMenu: undefined },
+    ),
+  )
 }
 
 MenuLabel.displayName = LABEL_NAME
@@ -835,7 +763,7 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
       ref: undefined,
       textValue: undefined,
       onFocus: composeEventHandlers<FocusEvent>(
-        props.onFocus as ((event: FocusEvent) => void) | undefined,
+        (event) => props.onFocus?.(event),
         () => {
           if (!disabled()) {
             highlighted(true)
@@ -843,13 +771,13 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
         },
       ),
       onBlur: composeEventHandlers<FocusEvent>(
-        props.onBlur as ((event: FocusEvent) => void) | undefined,
+        (event) => props.onBlur?.(event),
         () => {
           highlighted(false)
         },
       ),
       onPointerMove: composeEventHandlers<PointerEvent>(
-        props.onPointerMove as ((event: PointerEvent) => void) | undefined,
+        (event) => props.onPointerMove?.(event),
         () => {
           if (disabled()) return
           highlighted(true)
@@ -858,7 +786,7 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
         },
       ),
       onClick: composeEventHandlers<MouseEvent>(
-        props.onClick as ((event: MouseEvent) => void) | undefined,
+        (event) => props.onClick?.(event),
         (event) => {
           if (disabled()) {
             event.preventDefault()
@@ -872,7 +800,7 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
         },
       ),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => props.onKeyDown?.(event),
         (event) => {
           if (disabled()) return
 
@@ -890,18 +818,23 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
     primitivePropsRef as PossibleRef<HTMLElement>,
   )
 
+  const itemNode = createComponentNode(
+    Primitive.div,
+    mergeProps(primitiveProps, { ref: composedRefs }),
+  )
+
   return (
     <MenuItemIndicatorProvider
       scope={__scopeMenu as Scope<MenuItemIndicatorContextValue | undefined>}
       checked={checked ?? (() => false)}
     >
-      <Primitive.div {...primitiveProps} ref={composedRefs} />
+      {itemNode}
     </MenuItemIndicatorProvider>
   )
 }
 
 function MenuItem(props: ScopedProps<MenuItemProps>): FictNode {
-  return <MenuItemImpl {...props} />
+  return createComponentNode(MenuItemImpl, mergeProps(prop(() => props as Record<string, unknown>)))
 }
 
 MenuItem.displayName = ITEM_NAME
@@ -912,20 +845,23 @@ function MenuCheckboxItem(props: ScopedProps<MenuCheckboxItemProps>): FictNode {
       ? false
       : (readValue(props.checked as MaybeAccessor<CheckedState | undefined>) ?? false)
 
-  return (
-    <MenuItemImpl
-      {...props}
-      role="menuitemcheckbox"
-      checked={checked}
-      onSelect={(event) => {
-        props.onSelect?.(event)
-        if (event.defaultPrevented) return
+  return createComponentNode(
+    MenuItemImpl,
+    mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        role: 'menuitemcheckbox',
+        checked,
+        onSelect: (event: Event) => {
+          props.onSelect?.(event)
+          if (event.defaultPrevented) return
 
-        const current = checked()
-        const next = current === 'indeterminate' ? true : !current
-        props.onCheckedChange?.(next)
-      }}
-    />
+          const current = checked()
+          const next = current === 'indeterminate' ? true : !current
+          props.onCheckedChange?.(next)
+        },
+      },
+    ),
   )
 }
 
@@ -953,7 +889,10 @@ function MenuRadioGroup(props: ScopedProps<MenuRadioGroupProps>): FictNode {
         props.onValueChange?.(nextValue)
       }}
     >
-      <Primitive.div {...primitiveProps}>{props.children}</Primitive.div>
+      {createComponentNode(
+        Primitive.div,
+        mergeProps(primitiveProps, { children: prop(() => props.children) }),
+      )}
     </MenuRadioGroupProvider>
   )
 }
@@ -967,18 +906,21 @@ function MenuRadioItem(props: ScopedProps<MenuRadioItemProps>): FictNode {
   )
   const checked = () => radioGroupContext.value() === props.value
 
-  return (
-    <MenuItemImpl
-      {...props}
-      role="menuitemradio"
-      checked={() => checked()}
-      onSelect={(event) => {
-        props.onSelect?.(event)
-        if (event.defaultPrevented) return
+  return createComponentNode(
+    MenuItemImpl,
+    mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        role: 'menuitemradio',
+        checked: () => checked(),
+        onSelect: (event: Event) => {
+          props.onSelect?.(event)
+          if (event.defaultPrevented) return
 
-        radioGroupContext.onValueChange(props.value)
-      }}
-    />
+          radioGroupContext.onValueChange(props.value)
+        },
+      },
+    ),
   )
 }
 
@@ -997,31 +939,55 @@ function MenuItemIndicator(props: ScopedProps<MenuItemIndicatorProps>): FictNode
     forceMount ||
     indicatorContext.checked() === true ||
     indicatorContext.checked() === 'indeterminate'
-
-  return (
-    <>
-      {reactive(() =>
-        present() ? <Primitive.div {...(props as Record<string, unknown>)} /> : null,
-      )}
-    </>
+  const indicatorNode = createComponentNode(
+    Primitive.div,
+    mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        __scopeMenu: undefined,
+        forceMount: undefined,
+      },
+    ),
   )
+
+  return <>{reactive(() => (present() ? indicatorNode : null))}</>
 }
 
 MenuItemIndicator.displayName = ITEM_INDICATOR_NAME
 
 function MenuSeparator(props: ScopedProps<MenuSeparatorProps>): FictNode {
-  return <Primitive.div role="separator" {...(props as Record<string, unknown>)} />
+  return createComponentNode(
+    Primitive.div,
+    mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        __scopeMenu: undefined,
+        role: 'separator',
+      },
+    ),
+  )
 }
 
 MenuSeparator.displayName = SEPARATOR_NAME
 
 function MenuArrow(props: ScopedProps<MenuArrowProps>): FictNode {
-  return <Primitive.svg {...(props as Record<string, unknown>)} />
+  const popperScope = usePopperScope(props.__scopeMenu)
+  const arrowProps = mergeProps(
+    popperScope as Record<string, unknown>,
+    prop(() => props as Record<string, unknown>),
+    { __scopeMenu: undefined },
+  )
+
+  return createComponentNode(PopperArrowPrimitive, arrowProps)
 }
 
 MenuArrow.displayName = ARROW_NAME
 
 function MenuSub(props: ScopedProps<MenuSubProps>): FictNode {
+  const parentMenuContext = useMenuContext(
+    SUB_NAME,
+    props.__scopeMenu as Scope<MenuContextValue | undefined>,
+  )
   const openProp = () =>
     props.open === undefined
       ? undefined
@@ -1047,7 +1013,13 @@ function MenuSub(props: ScopedProps<MenuSubProps>): FictNode {
   }
 
   return (
-    <Menu open={open} onOpenChange={handleOpenChange} modal={false} __scopeMenu={props.__scopeMenu}>
+    <Menu
+      open={open}
+      onOpenChange={handleOpenChange}
+      dir={parentMenuContext.dir}
+      modal={false}
+      __scopeMenu={props.__scopeMenu}
+    >
       <MenuSubProvider
         scope={props.__scopeMenu as Scope<MenuSubContextValue | undefined>}
         open={open}
@@ -1083,20 +1055,18 @@ function MenuSubTrigger(props: ScopedProps<MenuSubTriggerProps>): FictNode {
     props.disabled === undefined
       ? false
       : Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>) ?? false)
-
-  return (
-    <DismissableLayerBranch asChild>
-      <MenuItemImpl
-        {...props}
-        ref={composedRefs}
-        role="menuitem"
-        closeOnSelect={false}
-        aria-haspopup="menu"
-        aria-expanded={
-          prop(() => (subContext.open() ? 'true' : 'false')) as unknown as 'true' | 'false'
-        }
-        data-state={prop(() => getState(subContext.open()))}
-        onSelect={(event) => {
+  const subTriggerNode = createComponentNode(
+    MenuItemImpl,
+    mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        ref: composedRefs,
+        role: 'menuitem',
+        closeOnSelect: false,
+        'aria-haspopup': 'menu',
+        'aria-expanded': prop(() => (subContext.open() ? 'true' : 'false')),
+        'data-state': prop(() => getState(subContext.open())),
+        onSelect: (event: Event) => {
           props.onSelect?.(event)
           if (!event.defaultPrevented) {
             const nextOpen = !subContext.open()
@@ -1106,18 +1076,18 @@ function MenuSubTrigger(props: ScopedProps<MenuSubTriggerProps>): FictNode {
 
             subContext.onOpenChange(nextOpen)
           }
-        }}
-        onPointerMove={composeEventHandlers<PointerEvent>(
-          props.onPointerMove as ((event: PointerEvent) => void) | undefined,
+        },
+        onPointerMove: composeEventHandlers<PointerEvent>(
+          (event) => props.onPointerMove?.(event),
           () => {
             if (!disabled()) {
               subContext.openInputTypeRef.current = 'pointer'
               subContext.onOpenChange(true)
             }
           },
-        )}
-        onKeyDown={composeEventHandlers<KeyboardEvent>(
-          props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        ),
+        onKeyDown: composeEventHandlers<KeyboardEvent>(
+          (event) => props.onKeyDown?.(event),
           (event) => {
             if (disabled()) return
             if (!openKeys().includes(event.key)) return
@@ -1126,9 +1096,15 @@ function MenuSubTrigger(props: ScopedProps<MenuSubTriggerProps>): FictNode {
             subContext.openInputTypeRef.current = 'keyboard'
             subContext.onOpenChange(true)
           },
-        )}
-      />
-    </DismissableLayerBranch>
+        ),
+      },
+    ),
+  )
+
+  return (
+    <MenuAnchor asChild __scopeMenu={props.__scopeMenu}>
+      <DismissableLayerBranch asChild>{subTriggerNode}</DismissableLayerBranch>
+    </MenuAnchor>
   )
 }
 
@@ -1154,127 +1130,63 @@ function MenuSubContent(props: ScopedProps<MenuSubContentProps>): FictNode {
 
     return value === 'left' ? 'left' : 'right'
   }
-  const align = () =>
-    props.align === undefined
-      ? 'start'
-      : (readValue(props.align as MaybeAccessor<'start' | 'center' | 'end' | undefined>) ?? 'start')
-  const sideOffset = () =>
-    props.sideOffset === undefined
-      ? 4
-      : (readValue(props.sideOffset as MaybeAccessor<number | undefined>) ?? 4)
-  const alignOffset = () =>
-    props.alignOffset === undefined
-      ? 0
-      : (readValue(props.alignOffset as MaybeAccessor<number | undefined>) ?? 0)
-  const forceMount = () =>
-    props.forceMount === undefined
-      ? false
-      : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
-  const measuredContentSizeRef = { current: { width: 0, height: 0 } }
-  const contentElementRef = { current: null as HTMLDivElement | null }
-  const contentSize = createSignal<ContentSize>(measuredContentSizeRef.current)
-  const placedSide = () =>
-    getSubContentPlacedSide(subContext.triggerRef.current, contentSize(), side(), sideOffset())
-  const wrapperStyle = () =>
-    getSubContentWrapperStyle(
-      subContext.triggerRef.current,
-      contentSize(),
-      placedSide(),
-      align(),
-      sideOffset(),
-      alignOffset(),
-    )
-  const updateContentSize = (nextContent: HTMLDivElement | null) => {
-    const nextSize = measureMenuContentSize(nextContent)
-    const previousSize = measuredContentSizeRef.current
+  const subContentProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      side: prop(side),
+      align: prop(() => props.align ?? 'start'),
+      sideOffset: prop(() => props.sideOffset ?? 4),
+      alignOffset: prop(() => props.alignOffset ?? 0),
+      onOpenAutoFocus: (event: Event) => {
+        props.onOpenAutoFocus?.(event)
+        if (event.defaultPrevented) return
+        if (subContext.openInputTypeRef.current === 'keyboard') return
 
-    if (nextSize.width === previousSize.width && nextSize.height === previousSize.height) {
-      return
-    }
+        event.preventDefault()
+      },
+      onCloseAutoFocus: (event: Event) => {
+        props.onCloseAutoFocus?.(event)
+        if (event.defaultPrevented) return
 
-    measuredContentSizeRef.current = nextSize
-    contentSize(nextSize)
-  }
-  const contentRef = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, contentElementRef)
+        event.preventDefault()
+        subContext.triggerRef.current?.focus()
+      },
+      onKeyDown: composeEventHandlers<KeyboardEvent>(
+        (event) => props.onKeyDown?.(event),
+        (event) => {
+          const closeKey = menuContext.dir() === 'rtl' ? 'ArrowRight' : 'ArrowLeft'
+          if (event.key !== closeKey) return
 
-  useLayoutEffect(() => {
-    if (!subContext.open() && !forceMount()) {
-      updateContentSize(null)
-      return
-    }
-
-    updateContentSize(contentElementRef.current)
-  })
-
-  return (
-    <>
-      {reactive(() =>
-        subContext.open() || forceMount() ? (
-          <div data-radix-popper-content-wrapper="" style={wrapperStyle()}>
-            <MenuContent
-              {...props}
-              forceMount={forceMount}
-              data-side={prop(placedSide)}
-              data-align={prop(align)}
-              ref={contentRef}
-              onOpenAutoFocus={(event) => {
-                props.onOpenAutoFocus?.(event)
-                if (event.defaultPrevented) return
-                if (subContext.openInputTypeRef.current === 'keyboard') return
-
-                event.preventDefault()
-              }}
-              onCloseAutoFocus={(event) => {
-                props.onCloseAutoFocus?.(event)
-                if (event.defaultPrevented) return
-
-                event.preventDefault()
-                subContext.triggerRef.current?.focus()
-              }}
-              onKeyDown={composeEventHandlers<KeyboardEvent>(
-                props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-                (event) => {
-                  const closeKey = menuContext.dir() === 'rtl' ? 'ArrowRight' : 'ArrowLeft'
-                  if (event.key !== closeKey) return
-
-                  event.preventDefault()
-                  subContext.onOpenChange(false)
-                  subContext.triggerRef.current?.focus()
-                },
-              )}
-              style={{
-                outline: 'none',
-                width: '100%',
-                pointerEvents: 'auto',
-                '--radix-dropdown-menu-content-transform-origin':
-                  'var(--radix-popper-transform-origin)',
-                '--radix-dropdown-menu-content-available-width':
-                  'var(--radix-popper-available-width)',
-                '--radix-dropdown-menu-content-available-height':
-                  'var(--radix-popper-available-height)',
-                '--radix-dropdown-menu-trigger-width': 'var(--radix-popper-anchor-width)',
-                '--radix-dropdown-menu-trigger-height': 'var(--radix-popper-anchor-height)',
-                '--radix-context-menu-content-transform-origin':
-                  'var(--radix-popper-transform-origin)',
-                '--radix-context-menu-content-available-width':
-                  'var(--radix-popper-available-width)',
-                '--radix-context-menu-content-available-height':
-                  'var(--radix-popper-available-height)',
-                '--radix-context-menu-trigger-width': 'var(--radix-popper-anchor-width)',
-                '--radix-context-menu-trigger-height': 'var(--radix-popper-anchor-height)',
-                '--radix-menubar-content-transform-origin': 'var(--radix-popper-transform-origin)',
-                '--radix-menubar-content-available-width': 'var(--radix-popper-available-width)',
-                '--radix-menubar-content-available-height': 'var(--radix-popper-available-height)',
-                '--radix-menubar-trigger-width': 'var(--radix-popper-anchor-width)',
-                '--radix-menubar-trigger-height': 'var(--radix-popper-anchor-height)',
-                ...readStyle(props.style),
-              }}
-            />
-          </div>
-        ) : null,
-      )}
-    </>
+          event.preventDefault()
+          subContext.onOpenChange(false)
+          subContext.triggerRef.current?.focus()
+        },
+      ),
+      style: prop(() => ({
+        outline: 'none',
+        width: '100%',
+        pointerEvents: 'auto',
+        '--radix-dropdown-menu-content-transform-origin': 'var(--radix-popper-transform-origin)',
+        '--radix-dropdown-menu-content-available-width': 'var(--radix-popper-available-width)',
+        '--radix-dropdown-menu-content-available-height': 'var(--radix-popper-available-height)',
+        '--radix-dropdown-menu-trigger-width': 'var(--radix-popper-anchor-width)',
+        '--radix-dropdown-menu-trigger-height': 'var(--radix-popper-anchor-height)',
+        '--radix-context-menu-content-transform-origin': 'var(--radix-popper-transform-origin)',
+        '--radix-context-menu-content-available-width': 'var(--radix-popper-available-width)',
+        '--radix-context-menu-content-available-height': 'var(--radix-popper-available-height)',
+        '--radix-context-menu-trigger-width': 'var(--radix-popper-anchor-width)',
+        '--radix-context-menu-trigger-height': 'var(--radix-popper-anchor-height)',
+        '--radix-menubar-content-transform-origin': 'var(--radix-popper-transform-origin)',
+        '--radix-menubar-content-available-width': 'var(--radix-popper-available-width)',
+        '--radix-menubar-content-available-height': 'var(--radix-popper-available-height)',
+        '--radix-menubar-trigger-width': 'var(--radix-popper-anchor-width)',
+        '--radix-menubar-trigger-height': 'var(--radix-popper-anchor-height)',
+        ...readStyle(props.style),
+      })),
+    },
   )
+
+  return createComponentNode(MenuContent, subContentProps)
 }
 
 MenuSubContent.displayName = SUB_CONTENT_NAME

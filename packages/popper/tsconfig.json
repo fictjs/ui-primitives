@@ -13,6 +13,7 @@
       "@fictjs/floating-ui-dom": ["../../libs/floating-ui-dom/src/index.ts"],
       "@fictjs/primitive": ["../primitive/src/index.tsx"],
       "@fictjs/rect": ["../rect/src/index.ts"],
+      "@fictjs/slot": ["../slot/src/index.tsx"],
       "@fictjs/use-callback-ref": ["../use-callback-ref/src/index.ts"],
       "@fictjs/use-layout-effect": ["../use-layout-effect/src/index.ts"],
       "@fictjs/use-size": ["../use-size/src/index.ts"]

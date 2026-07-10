@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Content, DropdownMenu, Item, Portal, Trigger } from '../src/index.js'
 
@@ -91,7 +92,7 @@ describe('@fictjs/dropdown-menu', () => {
         <DropdownMenu>
           <Trigger data-testid="trigger">Open</Trigger>
           <Portal container={portalRoot}>
-            <Content data-testid="content">
+            <Content data-testid="content" avoidCollisions={false}>
               <Item data-testid="item">Item</Item>
             </Content>
           </Portal>
@@ -122,7 +123,7 @@ describe('@fictjs/dropdown-menu', () => {
         <DropdownMenu>
           <Trigger data-testid="trigger">Open</Trigger>
           <Portal container={portalRoot}>
-            <Content data-testid="content">
+            <Content data-testid="content" avoidCollisions={false}>
               <Item data-testid="item">Item</Item>
             </Content>
           </Portal>
@@ -132,17 +133,21 @@ describe('@fictjs/dropdown-menu', () => {
     )
 
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
-    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
-      x: 18,
-      y: 12,
-      width: 34,
-      height: 24,
-      top: 12,
-      right: 52,
-      bottom: 36,
-      left: 18,
-      toJSON: () => ({}),
-    } as DOMRect)
+    let triggerX = 18
+    vi.spyOn(trigger, 'getBoundingClientRect').mockImplementation(
+      () =>
+        ({
+          x: triggerX,
+          y: 12,
+          width: 34,
+          height: 24,
+          top: 12,
+          right: triggerX + 34,
+          bottom: 36,
+          left: triggerX,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    )
 
     click(trigger)
     await waitForEffects()
@@ -160,6 +165,11 @@ describe('@fictjs/dropdown-menu', () => {
     expect(wrapper.style.minWidth).toBe('max-content')
     expect(content.style.width).toBe('100%')
     expect(content.getAttribute('data-side')).toBe('bottom')
+
+    triggerX = 48
+    window.dispatchEvent(new Event('scroll'))
+    await waitForEffects()
+    expect(wrapper.style.transform).toBe('translate(48px, 40px)')
   })
 
   it('flips content above the trigger near the viewport bottom', async () => {
@@ -208,8 +218,77 @@ describe('@fictjs/dropdown-menu', () => {
     const content = portalRoot.querySelector('[data-testid="content"]') as HTMLDivElement
 
     expect(content.getAttribute('data-side')).toBe('top')
-    expect(wrapper.style.transform).toBe('translate(18px, 276px) translate(0, -100%)')
-    expect(wrapper.style.getPropertyValue('--radix-popper-available-height')).toBe('276px')
+    expect(wrapper.style.transform).toBe('translate(18px, 276px)')
+    expect(wrapper.style.getPropertyValue('--radix-popper-anchor-height')).toBe('30px')
+  })
+
+  it('uses logical RTL alignment and does not leak collision configuration props', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <DropdownMenu dir="rtl">
+          <Trigger data-testid="trigger">Open</Trigger>
+          <Content
+            data-testid="content"
+            align="start"
+            avoidCollisions={false}
+            collisionPadding={12}
+            sticky="always"
+            hideWhenDetached
+            updatePositionStrategy="always"
+          >
+            <Item>Item</Item>
+          </Content>
+        </DropdownMenu>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      x: 100,
+      y: 20,
+      width: 80,
+      height: 30,
+      top: 20,
+      right: 180,
+      bottom: 50,
+      left: 100,
+      toJSON: () => ({}),
+    } as DOMRect)
+    click(trigger)
+    await waitForEffects()
+
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    Object.defineProperties(content, {
+      offsetWidth: { configurable: true, value: 60 },
+      offsetHeight: { configurable: true, value: 40 },
+    })
+    vi.spyOn(content, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      width: 60,
+      height: 40,
+      top: 0,
+      right: 60,
+      bottom: 40,
+      left: 0,
+      toJSON: () => ({}),
+    } as DOMRect)
+    window.dispatchEvent(new Event('resize'))
+    await waitForEffects()
+
+    const wrapper = content.parentElement as HTMLDivElement
+    expect(wrapper.getAttribute('dir')).toBe('rtl')
+    expect(wrapper.style.transform).toBe('translate(180px, 54px)')
+    expect(content.getAttribute('data-align')).toBe('start')
+    expect(content.hasAttribute('avoidcollisions')).toBe(false)
+    expect(content.hasAttribute('collisionpadding')).toBe(false)
+    expect(content.hasAttribute('sticky')).toBe(false)
+    expect(content.hasAttribute('hidewhendetached')).toBe(false)
+    expect(content.hasAttribute('updatepositionstrategy')).toBe(false)
   })
 
   it('restores body pointer events after closing one menu so another trigger can open', async () => {
@@ -278,11 +357,10 @@ describe('@fictjs/dropdown-menu', () => {
 
     await waitForEffects()
 
-    let trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
     click(container.querySelector('[data-testid="item"]') as HTMLDivElement)
     await waitForEffects()
     await waitForEffects()
-    trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
 
     expect(container.querySelector('[data-testid="content"]')).toBeNull()
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
@@ -414,6 +492,47 @@ describe('@fictjs/dropdown-menu', () => {
     const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
 
     expect(document.querySelector('[data-testid="content"]')).toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('invokes the latest replaced trigger event handler', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const first = vi.fn((event: PointerEvent) => event.preventDefault())
+    const second = vi.fn((event: PointerEvent) => event.preventDefault())
+    const handler = createSignal<(event: PointerEvent) => void>(first)
+
+    function DynamicTrigger() {
+      const callbackProps = {
+        'data-testid': 'trigger',
+        children: 'Open',
+        get onPointerDown() {
+          return handler()
+        },
+      } as Parameters<typeof Trigger>[0]
+
+      return Trigger(callbackProps)
+    }
+
+    mount(
+      () => (
+        <DropdownMenu>
+          <DynamicTrigger />
+        </DropdownMenu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    click(trigger)
+    expect(first).toHaveBeenCalledOnce()
+
+    handler(second)
+    await waitForEffects()
+    click(trigger)
+    expect(first).toHaveBeenCalledOnce()
+    expect(second).toHaveBeenCalledOnce()
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
   })
 })

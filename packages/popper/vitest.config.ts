@@ -35,6 +35,10 @@ export default defineConfig({
         replacement: path.resolve(packagesRoot, 'rect/src/index.ts'),
       },
       {
+        find: '@fictjs/slot',
+        replacement: path.resolve(packagesRoot, 'slot/src/index.tsx'),
+      },
+      {
         find: '@fictjs/use-callback-ref',
         replacement: path.resolve(packagesRoot, 'use-callback-ref/src/index.ts'),
       },

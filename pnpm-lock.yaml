@@ -582,9 +582,6 @@ importers:
       '@fictjs/use-controllable-state':
         specifier: workspace:*
         version: link:../use-controllable-state
-      '@fictjs/use-layout-effect':
-        specifier: workspace:*
-        version: link:../use-layout-effect
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
@@ -711,9 +708,6 @@ importers:
       '@fictjs/use-controllable-state':
         specifier: workspace:*
         version: link:../use-controllable-state
-      '@fictjs/use-layout-effect':
-        specifier: workspace:*
-        version: link:../use-layout-effect
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'

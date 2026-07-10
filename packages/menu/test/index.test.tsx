@@ -19,6 +19,8 @@ import { useControllableState } from '@fictjs/use-controllable-state'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
 import {
+  Anchor,
+  Arrow,
   CheckboxItem,
   Content,
   Item,
@@ -369,7 +371,7 @@ describe('@fictjs/menu', () => {
             <Item data-testid="first">First</Item>
             <Sub>
               <SubTrigger data-testid="sub-trigger">More</SubTrigger>
-              <SubContent data-testid="sub-content">
+              <SubContent data-testid="sub-content" avoidCollisions={false}>
                 <Item data-testid="nested">Nested</Item>
               </SubContent>
             </Sub>
@@ -382,25 +384,29 @@ describe('@fictjs/menu', () => {
     await waitForEffects()
 
     const trigger = container.querySelector('[data-testid="sub-trigger"]') as HTMLDivElement
-    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
-      x: 18,
-      y: 24,
-      width: 96,
-      height: 28,
-      top: 24,
-      right: 114,
-      bottom: 52,
-      left: 18,
-      toJSON: () => ({}),
-    } as DOMRect)
+    let triggerX = 18
+    vi.spyOn(trigger, 'getBoundingClientRect').mockImplementation(
+      () =>
+        ({
+          x: triggerX,
+          y: 24,
+          width: 96,
+          height: 28,
+          top: 24,
+          right: triggerX + 96,
+          bottom: 52,
+          left: triggerX,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    )
 
     expect(container.querySelector('[data-testid="sub-content"]')).toBeNull()
 
     pointerMove(trigger)
     await waitForEffects()
 
-    const wrapper = container.querySelector('[data-radix-popper-content-wrapper]') as HTMLDivElement
     const subContent = container.querySelector('[data-testid="sub-content"]') as HTMLDivElement
+    const wrapper = subContent.parentElement as HTMLDivElement
     const nested = container.querySelector('[data-testid="nested"]') as HTMLDivElement
 
     expect(trigger.getAttribute('data-state')).toBe('open')
@@ -422,6 +428,11 @@ describe('@fictjs/menu', () => {
     expect(subContent.style.getPropertyValue('--radix-context-menu-content-transform-origin')).toBe(
       'var(--radix-popper-transform-origin)',
     )
+
+    triggerX = 38
+    window.dispatchEvent(new Event('scroll'))
+    await waitForEffects()
+    expect(wrapper.style.transform).toBe('translate(138px, 24px)')
 
     pointerMove(trigger)
     await waitForEffects()
@@ -474,12 +485,12 @@ describe('@fictjs/menu', () => {
     await waitForEffects()
     await waitForEffects()
 
-    const wrapper = container.querySelector('[data-radix-popper-content-wrapper]') as HTMLDivElement
     const subContent = container.querySelector('[data-testid="sub-content"]') as HTMLDivElement
+    const wrapper = subContent.parentElement as HTMLDivElement
 
     expect(subContent.getAttribute('data-side')).toBe('left')
-    expect(wrapper.style.transform).toBe('translate(136px, 24px) translate(-100%, 0)')
-    expect(wrapper.style.getPropertyValue('--radix-popper-available-width')).toBe('136px')
+    expect(wrapper.style.transform).toBe('translate(136px, 24px)')
+    expect(wrapper.style.getPropertyValue('--radix-popper-anchor-width')).toBe('30px')
   })
 
   it.each(['ArrowRight', 'Enter', ' '])(
@@ -572,6 +583,102 @@ describe('@fictjs/menu', () => {
 
     expect(container.querySelector('[data-testid="sub-content"]')).toBeNull()
     expect(document.activeElement).toBe(trigger)
+  })
+
+  it('renders a positioned arrow and keeps collision props off the content DOM', async () => {
+    const container = document.createElement('div')
+    const open = createSignal(true)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Anchor asChild>
+            <button data-testid="anchor" type="button">
+              Open
+            </button>
+          </Anchor>
+          <Content
+            data-testid="content"
+            avoidCollisions={false}
+            collisionPadding={8}
+            sticky="always"
+            hideWhenDetached
+            updatePositionStrategy="always"
+          >
+            <Arrow data-testid="arrow" width={10} height={5} />
+            <Item>Item</Item>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const anchor = container.querySelector('[data-testid="anchor"]') as HTMLButtonElement
+    vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue({
+      x: 20,
+      y: 30,
+      width: 80,
+      height: 24,
+      top: 30,
+      right: 100,
+      bottom: 54,
+      left: 20,
+      toJSON: () => ({}),
+    } as DOMRect)
+    window.dispatchEvent(new Event('resize'))
+    await waitForEffects()
+
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    const arrow = container.querySelector('[data-testid="arrow"]') as SVGSVGElement
+    expect(arrow.tagName).toBe('svg')
+    expect(arrow.querySelector('polygon')).not.toBeNull()
+    expect(arrow.parentElement?.style.position).toBe('absolute')
+    expect(content.hasAttribute('avoidcollisions')).toBe(false)
+    expect(content.hasAttribute('collisionpadding')).toBe(false)
+    expect(content.hasAttribute('sticky')).toBe(false)
+    expect(content.hasAttribute('hidewhendetached')).toBe(false)
+    expect(content.hasAttribute('updatepositionstrategy')).toBe(false)
+  })
+
+  it('uses the latest replaced content callback', async () => {
+    const container = document.createElement('div')
+    const open = createSignal(true)
+    const first = vi.fn((event: KeyboardEvent) => event.preventDefault())
+    const second = vi.fn((event: KeyboardEvent) => event.preventDefault())
+    const handler = createSignal<(event: KeyboardEvent) => void>(first)
+    function DynamicContent() {
+      const callbackProps = {
+        children: <Item>Item</Item>,
+        get onEscapeKeyDown() {
+          return handler()
+        },
+      } as Parameters<typeof Content>[0]
+
+      return Content(callbackProps)
+    }
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <DynamicContent />
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    pressEscape(document)
+    expect(first).toHaveBeenCalledOnce()
+
+    handler(second)
+    await waitForEffects()
+    pressEscape(document)
+    expect(first).toHaveBeenCalledOnce()
+    expect(second).toHaveBeenCalledOnce()
+    expect(open()).toBe(true)
   })
 
   it('closes portal content on escape', async () => {
@@ -1417,5 +1524,49 @@ describe('@fictjs/menu', () => {
     await waitForEffects()
 
     expect(document.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it('invokes the latest replaced item event handler', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const open = createSignal(true)
+    const first = vi.fn((event: MouseEvent) => event.preventDefault())
+    const second = vi.fn((event: MouseEvent) => event.preventDefault())
+    const handler = createSignal<(event: MouseEvent) => void>(first)
+
+    function DynamicItem() {
+      const callbackProps = {
+        'data-testid': 'item',
+        children: 'Item',
+        get onClick() {
+          return handler()
+        },
+      } as Parameters<typeof Item>[0]
+
+      return Item(callbackProps)
+    }
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Content>
+            <DynamicItem />
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const item = container.querySelector('[data-testid="item"]') as HTMLDivElement
+    click(item)
+    expect(first).toHaveBeenCalledOnce()
+
+    handler(second)
+    await waitForEffects()
+    click(item)
+    expect(first).toHaveBeenCalledOnce()
+    expect(second).toHaveBeenCalledOnce()
+    expect(open()).toBe(true)
   })
 })

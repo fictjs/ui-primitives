@@ -1,5 +1,6 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
+import { jsx as createVNode } from '@fictjs/runtime/jsx-runtime'
 
 import { Root as ArrowRoot, type ArrowProps as ArrowPrimitiveProps } from '@fictjs/arrow'
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -126,6 +127,10 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
+function createComponentNode(component: unknown, props: Record<string, unknown>): FictNode {
+  return createVNode(component as (props: Record<string, unknown>) => FictNode, props)
+}
+
 function getSideAndAlignFromPlacement(placement: Placement) {
   const [side, align = 'center'] = placement.split('-')
   return [side as Side, align as Align] as const
@@ -186,10 +191,9 @@ function Popper(props: ScopedProps<PopperProps>): FictNode {
 Popper.displayName = POPPER_NAME
 
 function PopperAnchor(props: ScopedProps<PopperAnchorProps>): FictNode {
-  const { __scopePopper, ...anchorProps } = props
   const context = usePopperContext(
     ANCHOR_NAME,
-    __scopePopper as Scope<PopperContextValue | undefined>,
+    props.__scopePopper as Scope<PopperContextValue | undefined>,
   )
   const node = createSignal<PopperAnchorElement | null>(null)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<PopperAnchorElement>, (nextNode) =>
@@ -229,32 +233,25 @@ function PopperAnchor(props: ScopedProps<PopperAnchorProps>): FictNode {
     return null
   }
 
-  return <Primitive.div {...(anchorProps as Record<string, unknown>)} ref={composedRefs} />
+  return createComponentNode(
+    Primitive.div,
+    mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        __scopePopper: undefined,
+        ref: composedRefs,
+        virtualRef: undefined,
+      },
+    ),
+  )
 }
 
 PopperAnchor.displayName = ANCHOR_NAME
 
 function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
-  const {
-    __scopePopper,
-    side: sideProp = 'bottom',
-    sideOffset: sideOffsetProp = 0,
-    align: alignProp = 'center',
-    alignOffset: alignOffsetProp = 0,
-    arrowPadding: arrowPaddingProp = 0,
-    avoidCollisions: avoidCollisionsProp = true,
-    collisionBoundary: collisionBoundaryProp = [],
-    collisionPadding: collisionPaddingProp = 0,
-    sticky: stickyProp = 'partial',
-    hideWhenDetached: hideWhenDetachedProp = false,
-    updatePositionStrategy: updatePositionStrategyProp = 'optimized',
-    onPlaced: _onPlaced,
-    ...contentProps
-  } = props
-
   const context = usePopperContext(
     CONTENT_NAME,
-    __scopePopper as Scope<PopperContextValue | undefined>,
+    props.__scopePopper as Scope<PopperContextValue | undefined>,
   )
   const content = createSignal<PopperContentElement | null>(null)
   const arrow = createSignal<HTMLSpanElement | null>(null)
@@ -267,25 +264,25 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
     content(nextNode),
   )
   const arrowSize = useSize(() => arrow())
-  const side = () => readValue(sideProp as MaybeAccessor<Side | undefined>) ?? 'bottom'
-  const sideOffset = () => readValue(sideOffsetProp as MaybeAccessor<number | undefined>) ?? 0
-  const align = () => readValue(alignProp as MaybeAccessor<Align | undefined>) ?? 'center'
-  const alignOffset = () => readValue(alignOffsetProp as MaybeAccessor<number | undefined>) ?? 0
-  const arrowPadding = () => readValue(arrowPaddingProp as MaybeAccessor<number | undefined>) ?? 0
+  const side = () => readValue(props.side as MaybeAccessor<Side | undefined>) ?? 'bottom'
+  const sideOffset = () => readValue(props.sideOffset as MaybeAccessor<number | undefined>) ?? 0
+  const align = () => readValue(props.align as MaybeAccessor<Align | undefined>) ?? 'center'
+  const alignOffset = () => readValue(props.alignOffset as MaybeAccessor<number | undefined>) ?? 0
+  const arrowPadding = () => readValue(props.arrowPadding as MaybeAccessor<number | undefined>) ?? 0
   const avoidCollisions = () =>
-    readValue(avoidCollisionsProp as MaybeAccessor<boolean | undefined>) ?? true
+    readValue(props.avoidCollisions as MaybeAccessor<boolean | undefined>) ?? true
   const collisionBoundary = () =>
-    readValue(collisionBoundaryProp as MaybeAccessor<Boundary | Boundary[] | undefined>) ?? []
+    readValue(props.collisionBoundary as MaybeAccessor<Boundary | Boundary[] | undefined>) ?? []
   const collisionPadding = () =>
     readValue(
-      collisionPaddingProp as MaybeAccessor<number | Partial<Record<Side, number>> | undefined>,
+      props.collisionPadding as MaybeAccessor<number | Partial<Record<Side, number>> | undefined>,
     ) ?? 0
   const sticky = () =>
-    readValue(stickyProp as MaybeAccessor<'partial' | 'always' | undefined>) ?? 'partial'
+    readValue(props.sticky as MaybeAccessor<'partial' | 'always' | undefined>) ?? 'partial'
   const hideWhenDetached = () =>
-    readValue(hideWhenDetachedProp as MaybeAccessor<boolean | undefined>) ?? false
+    readValue(props.hideWhenDetached as MaybeAccessor<boolean | undefined>) ?? false
   const updatePositionStrategy = () =>
-    readValue(updatePositionStrategyProp as MaybeAccessor<'optimized' | 'always' | undefined>) ??
+    readValue(props.updatePositionStrategy as MaybeAccessor<'optimized' | 'always' | undefined>) ??
     'optimized'
   const desiredPlacement = () => (side() + (align() !== 'center' ? `-${align()}` : '')) as Placement
   const placedSide = () => getSideAndAlignFromPlacement(floating.placement())[0]
@@ -447,7 +444,7 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
 
   const wrapperProps = mergeProps({
     'data-radix-popper-content-wrapper': '',
-    dir: prop(() => readValue(contentProps.dir as MaybeAccessor<string | undefined>) ?? undefined),
+    dir: prop(() => readValue(props.dir as MaybeAccessor<string | undefined>) ?? undefined),
     style: prop(() => {
       floating.x()
       floating.y()
@@ -479,21 +476,39 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
   })
 
   const primitiveProps = mergeProps(
-    prop(() => contentProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopePopper: undefined,
+      align: undefined,
+      alignOffset: undefined,
+      arrowPadding: undefined,
+      avoidCollisions: undefined,
+      collisionBoundary: undefined,
+      collisionPadding: undefined,
+      hideWhenDetached: undefined,
+      onPlaced: undefined,
+      ref: undefined,
+      side: undefined,
+      sideOffset: undefined,
+      sticky: undefined,
+      updatePositionStrategy: undefined,
       'data-side': prop(placedSide),
       'data-align': prop(placedAlign),
       style: prop(() => ({
-        ...readStyle(contentProps.style as MaybeAccessor<unknown> | undefined),
+        ...readStyle(props.style as MaybeAccessor<unknown> | undefined),
         animation: !floating.isPositioned() ? 'none' : undefined,
       })),
     },
+  )
+  const contentNode = createComponentNode(
+    Primitive.div,
+    mergeProps(primitiveProps, { ref: composedRefs }),
   )
 
   return (
     <div {...(wrapperProps as Record<string, unknown>)} ref={floating.refs.setFloating}>
       <PopperContentProvider
-        scope={__scopePopper as Scope<PopperContentContextValue | undefined>}
+        scope={props.__scopePopper as Scope<PopperContentContextValue | undefined>}
         placedSide={placedSide}
         onArrowChange={arrow}
         arrowX={() => arrowOffsets().x}
@@ -503,7 +518,7 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
           return centerOffset !== undefined && centerOffset !== 0
         }}
       >
-        <Primitive.div {...(primitiveProps as Record<string, unknown>)} ref={composedRefs} />
+        {contentNode}
       </PopperContentProvider>
     </div>
   )
@@ -512,10 +527,9 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
 PopperContent.displayName = CONTENT_NAME
 
 function PopperArrow(props: ScopedProps<PopperArrowProps>): FictNode {
-  const { __scopePopper, ref: forwardedRef, ...arrowProps } = props
   const contentContext = useContentContext(
     ARROW_NAME,
-    __scopePopper as Scope<PopperContentContextValue | undefined>,
+    props.__scopePopper as Scope<PopperContentContextValue | undefined>,
   )
   const node = createSignal<HTMLSpanElement | null>(null)
   const composedRefs = useComposedRefs(contentContext.onArrowChange, (nextNode) => node(nextNode))
@@ -568,10 +582,12 @@ function PopperArrow(props: ScopedProps<PopperArrowProps>): FictNode {
   })
 
   const primitiveProps = mergeProps(
-    prop(() => arrowProps as Record<string, unknown>),
+    prop(() => props as Record<string, unknown>),
     {
+      __scopePopper: undefined,
+      ref: undefined,
       style: prop(() => ({
-        ...readStyle(arrowProps.style as MaybeAccessor<unknown> | undefined),
+        ...readStyle(props.style as MaybeAccessor<unknown> | undefined),
         display: 'block',
       })),
     },
@@ -583,12 +599,13 @@ function PopperArrow(props: ScopedProps<PopperArrowProps>): FictNode {
 
   const rootProps = mergeProps(
     prop(() => primitiveProps as Record<string, unknown>),
-    forwardedRef === undefined ? {} : { ref: forwardedRef as PossibleRef<PopperArrowElement> },
+    props.ref === undefined ? {} : { ref: props.ref as PossibleRef<PopperArrowElement> },
   )
+  const arrowNode = createComponentNode(ArrowRoot, rootProps)
 
   return (
     <span {...(wrapperProps as Record<string, unknown>)} ref={composedRefs}>
-      <ArrowRoot {...(rootProps as Record<string, unknown>)} />
+      {arrowNode}
     </span>
   )
 }

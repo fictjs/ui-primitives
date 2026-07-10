@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import {
   Content,
@@ -86,7 +87,14 @@ describe('@fictjs/context-menu', () => {
       () => (
         <ContextMenu>
           <Trigger data-testid="trigger">Area</Trigger>
-          <Content data-testid="content">
+          <Content
+            data-testid="content"
+            avoidCollisions={false}
+            collisionPadding={8}
+            sticky="always"
+            hideWhenDetached
+            updatePositionStrategy="always"
+          >
             <Item data-testid="item">Action</Item>
           </Content>
         </ContextMenu>
@@ -108,6 +116,15 @@ describe('@fictjs/context-menu', () => {
     expect(wrapper.style.transform).toBe('translate(34px, 64px)')
     expect(wrapper.style.minWidth).toBe('max-content')
     expect(content.style.width).toBe('100%')
+    expect(content.hasAttribute('avoidcollisions')).toBe(false)
+    expect(content.hasAttribute('collisionpadding')).toBe(false)
+    expect(content.hasAttribute('sticky')).toBe(false)
+    expect(content.hasAttribute('hidewhendetached')).toBe(false)
+    expect(content.hasAttribute('updatepositionstrategy')).toBe(false)
+
+    contextMenu(container.querySelector('[data-testid="trigger"]') as HTMLDivElement, 80, 90)
+    await waitForEffects()
+    expect(wrapper.style.transform).toBe('translate(82px, 90px)')
   })
 
   it('keeps content inside the viewport when opened near the bottom edge', async () => {
@@ -121,7 +138,7 @@ describe('@fictjs/context-menu', () => {
       () => (
         <ContextMenu>
           <Trigger data-testid="trigger">Area</Trigger>
-          <Content data-testid="content">
+          <Content data-testid="content" side="right" avoidCollisions={false}>
             <Item data-testid="first">First action</Item>
             <Item data-testid="second">Second action</Item>
           </Content>
@@ -138,8 +155,8 @@ describe('@fictjs/context-menu', () => {
     const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
 
     expect(content.getAttribute('data-side')).toBe('right')
-    expect(wrapper.style.transform).toBe('translate(42px, 160px)')
-    expect(wrapper.style.getPropertyValue('--radix-popper-available-height')).toBe('320px')
+    expect(wrapper.style.transform).toBe('translate(42px, 300px)')
+    expect(wrapper.style.getPropertyValue('--radix-popper-anchor-height')).toBe('0px')
   })
 
   it('flips bottom-positioned content above the pointer near the viewport bottom', async () => {
@@ -170,8 +187,8 @@ describe('@fictjs/context-menu', () => {
     const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
 
     expect(content.getAttribute('data-side')).toBe('top')
-    expect(wrapper.style.transform).toBe('translate(40px, 298px) translate(0, -100%)')
-    expect(wrapper.style.getPropertyValue('--radix-popper-available-height')).toBe('298px')
+    expect(wrapper.style.transform).toBe('translate(40px, 298px)')
+    expect(wrapper.style.getPropertyValue('--radix-popper-anchor-height')).toBe('0px')
   })
 
   it('can reopen after closing the first context menu instance', async () => {
@@ -312,5 +329,46 @@ describe('@fictjs/context-menu', () => {
     expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
     expect(portalRoot.querySelector('[data-testid="sub-content"]')).not.toBeNull()
     expect(subTrigger.getAttribute('data-state')).toBe('open')
+  })
+
+  it('invokes the latest replaced trigger event handler', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const first = vi.fn((event: MouseEvent) => event.preventDefault())
+    const second = vi.fn((event: MouseEvent) => event.preventDefault())
+    const handler = createSignal<(event: MouseEvent) => void>(first)
+
+    function DynamicTrigger() {
+      const callbackProps = {
+        'data-testid': 'trigger',
+        children: 'Target',
+        get onContextMenu() {
+          return handler()
+        },
+      } as Parameters<typeof Trigger>[0]
+
+      return Trigger(callbackProps)
+    }
+
+    mount(
+      () => (
+        <ContextMenu>
+          <DynamicTrigger />
+        </ContextMenu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLDivElement
+    contextMenu(trigger)
+    expect(first).toHaveBeenCalledOnce()
+
+    handler(second)
+    await waitForEffects()
+    contextMenu(trigger)
+    expect(first).toHaveBeenCalledOnce()
+    expect(second).toHaveBeenCalledOnce()
+    expect(trigger.getAttribute('data-state')).toBe('closed')
   })
 })

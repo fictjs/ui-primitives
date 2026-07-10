@@ -55,8 +55,7 @@
     "@fictjs/id": "workspace:*",
     "@fictjs/menu": "workspace:*",
     "@fictjs/primitive": "workspace:*",
-    "@fictjs/use-controllable-state": "workspace:*",
-    "@fictjs/use-layout-effect": "workspace:*"
+    "@fictjs/use-controllable-state": "workspace:*"
   },
   "peerDependencies": {
     "@fictjs/runtime": ">=0.26.0"

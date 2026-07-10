@@ -215,6 +215,40 @@ describe('@fictjs/popper', () => {
     dispose()
   })
 
+  it('forwards the latest intrinsic content event handler', async () => {
+    useSizeMock.mockImplementation(() => () => ({ width: 0, height: 0 }))
+    floatingUiMocks.useFloating.mockImplementation(() => createFloatingResult())
+    const first = vi.fn()
+    const second = vi.fn()
+    const handler = createSignal<(event: MouseEvent) => void>(first)
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor />
+          <PopperContent data-testid="content" onClick={prop(() => handler())}>
+            content
+          </PopperContent>
+        </Popper>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    content.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(first).toHaveBeenCalledOnce()
+
+    handler(second)
+    await flushEffects()
+    expect(container.querySelector('[data-testid="content"]')).toBe(content)
+    content.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(first).toHaveBeenCalledOnce()
+    expect(second).toHaveBeenCalledOnce()
+  })
+
   it('supports virtual anchors, arrow positioning, and detached hiding', async () => {
     useSizeMock.mockImplementation(() => () => ({ width: 12, height: 6 }))
 
