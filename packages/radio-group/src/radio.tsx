@@ -113,10 +113,25 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
           valueInput as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
         ) ?? 'on')
   const hasConsumerStoppedPropagationRef = { current: false }
-  const isFormControl = () => {
+  const isFormControl = createSignal(true)
+
+  useLayoutEffect(() => {
     const currentButton = button()
-    return currentButton ? Boolean(form() || currentButton.closest('form')) : true
-  }
+    const formId = form()
+    let cancelled = false
+
+    // Fict assigns refs before the enclosing tree is attached. Defer the DOM lookup
+    // until the complete render has been inserted into its parent.
+    queueMicrotask(() => {
+      if (!cancelled) {
+        isFormControl(currentButton ? Boolean(formId || currentButton.closest('form')) : true)
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
+  })
   const primitiveProps = mergeProps(
     {
       type: 'button',
@@ -151,6 +166,8 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
       value: prop(value),
     },
   )
+  // Defer the form-owner check until layout, after the button has been inserted into
+  // its ancestor form. Evaluating `closest('form')` from the ref assignment is too early.
   const bubbleInputNode = reactive(() =>
     isFormControl() ? (
       <RadioBubbleInput

@@ -184,4 +184,47 @@ describe('@fictjs/radio-group', () => {
     expect(input.hasAttribute('required')).toBe(true)
     expect(input.value).toBe('pro')
   })
+
+  it('submits the checked value when the group is nested in a form', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <form data-testid="form">
+          <RadioGroup name="plan" defaultValue="pro">
+            <RadioGroupItem value="basic">Basic</RadioGroupItem>
+            <RadioGroupItem value="pro">Pro</RadioGroupItem>
+          </RadioGroup>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const inputs = form.querySelectorAll<HTMLInputElement>('input[type="radio"][name="plan"]')
+
+    expect(inputs).toHaveLength(2)
+    expect(new FormData(form).get('plan')).toBe('pro')
+  })
+
+  it('does not render native inputs when the group has no form owner', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <RadioGroup name="plan" defaultValue="pro">
+          <RadioGroupItem value="pro">Pro</RadioGroupItem>
+        </RadioGroup>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+
+    expect(container.querySelector('input[type="radio"]')).toBeNull()
+  })
 })
