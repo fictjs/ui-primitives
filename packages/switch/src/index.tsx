@@ -151,7 +151,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
               return
             }
 
-            currentInput.checked = nextChecked
+            currentInput.checked = checked()
             currentInput.dispatchEvent(
               new Event('click', {
                 bubbles: !hasConsumerStoppedPropagation,

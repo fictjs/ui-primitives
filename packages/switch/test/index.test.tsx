@@ -109,6 +109,36 @@ describe('@fictjs/switch', () => {
     expect(button.getAttribute('aria-checked')).toBe('true')
   })
 
+  it('keeps the hidden input at the controlled value when an update is rejected', async () => {
+    const checked = createSignal(false)
+    const onCheckedChange = vi.fn()
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(
+      () => (
+        <form>
+          <Root name="airplane-mode" checked={checked} onCheckedChange={onCheckedChange} />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const form = container.querySelector('form') as HTMLFormElement
+    const button = container.querySelector('button') as HTMLButtonElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+
+    click(button)
+    await flushEffects()
+
+    expect(onCheckedChange).toHaveBeenCalledWith(true)
+    expect(button.getAttribute('aria-checked')).toBe('false')
+    expect(input.checked).toBe(false)
+    expect(new FormData(form).get('airplane-mode')).toBeNull()
+  })
+
   it('renders a hidden checkbox for forms and bubbles a single click event', async () => {
     const formClicks = vi.fn()
     const container = document.createElement('div')
