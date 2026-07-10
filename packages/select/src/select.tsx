@@ -989,6 +989,9 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
       }}
       onCloseAutoFocus={(event) => {
         props.onCloseAutoFocus?.(event)
+        if (event.defaultPrevented) return
+
+        context.triggerRef.current?.focus({ preventScroll: true })
         event.preventDefault()
       }}
     />

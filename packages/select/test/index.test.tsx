@@ -103,6 +103,38 @@ describe('@fictjs/select', () => {
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
   })
 
+  it('restores focus to the trigger after selecting an item', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root>
+          <Trigger data-testid="trigger">
+            <Value />
+          </Trigger>
+          <Content>
+            <Item value="apple" data-testid="item-apple">
+              <ItemText>Apple</ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    trigger.focus()
+    click(trigger)
+    await waitForEffects()
+    click(container.querySelector('[data-testid="item-apple"]') as HTMLDivElement)
+    await waitForEffects()
+
+    expect(document.activeElement).toBe(trigger)
+  })
+
   it('keeps displayed text synchronized with a controlled value that rejects an update', async () => {
     const container = document.createElement('div')
     document.body.append(container)
