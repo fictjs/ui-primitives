@@ -33,13 +33,13 @@ export function Example() {
 
 ## Anatomy
 
-- **`Toast.Provider`** (`Provider`) — `label`, `duration`, `swipeDirection`, `swipeThreshold`. Wrap your app once.
+- **`Toast.Provider`** (`Provider`) — `label`, `duration`, `swipeDirection`, `swipeThreshold`, `announcerContainer`. Wrap your app once.
 - **`Toast.Viewport`** (`Viewport`) — the fixed region where toasts render.
-- **`Toast.Root`** (`Root`) — `open` / `defaultOpen`, `onOpenChange`, `duration`, `type`, `forceMount`.
+- **`Toast.Root`** (`Root`) — `open` / `defaultOpen`, `onOpenChange`, `duration`, `type`, `forceMount`, escape/pause/resume and swipe event callbacks.
 - **`Toast.Title`** (`Title`), **`Toast.Description`** (`Description`).
 - **`Toast.Action`** (`Action`) — requires `altText`; **`Toast.Close`** (`Close`).
 
-Supports swipe-to-dismiss and exposes `data-state`, `data-swipe`, and `data-swipe-direction`.
+Supports swipe-to-dismiss and exposes `data-state`, `data-swipe`, and `data-swipe-direction`. Foreground toasts are announced assertively and background toasts politely; action `altText` is used only in the announcement while the visible action remains the button's accessible name.
 
 ## Exports
 

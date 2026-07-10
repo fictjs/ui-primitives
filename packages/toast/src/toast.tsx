@@ -6,13 +6,15 @@ import {
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
+import { createCollection } from '@fictjs/collection'
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
 import { composeEventHandlers } from '@fictjs/core-primitive'
+import { DismissableLayerBranch } from '@fictjs/dismissable-layer'
 import { Presence } from '@fictjs/presence'
-import { Primitive } from '@fictjs/primitive'
+import { Primitive, dispatchDiscreteCustomEvent } from '@fictjs/primitive'
 import { useControllableState } from '@fictjs/use-controllable-state'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
 import { VisuallyHidden } from '@fictjs/visually-hidden'
@@ -20,8 +22,14 @@ import { VisuallyHidden } from '@fictjs/visually-hidden'
 type MaybeAccessor<T> = T | (() => T)
 type ScopedProps<P> = P & { __scopeToast?: Scope }
 type SwipeDirection = 'up' | 'down' | 'left' | 'right'
+type ToastType = 'foreground' | 'background'
 type ToastViewportElement = HTMLOListElement
 type ToastElement = HTMLLIElement
+type ToastSwipeDelta = { x: number; y: number }
+type ToastSwipeEvent = CustomEvent<{
+  originalEvent: PointerEvent
+  delta: ToastSwipeDelta
+}>
 type PrimitiveListProps = JSX.IntrinsicElements['ol'] & {
   asChild?: boolean
 }
@@ -50,6 +58,7 @@ type ToastProviderContextValue = {
   toastCount: () => number
   onToastAdd(): void
   onToastRemove(): void
+  announcerContainer: () => Element | DocumentFragment | null
   isClosePausedRef: { current: boolean }
 }
 type ToastContextValue = {
@@ -70,11 +79,16 @@ const CLOSE_NAME = 'ToastClose'
 const VIEWPORT_DEFAULT_HOTKEY = ['F8']
 const VIEWPORT_PAUSE = 'toast.viewportPause'
 const VIEWPORT_RESUME = 'toast.viewportResume'
+const TOAST_SWIPE_START = 'toast.swipeStart'
+const TOAST_SWIPE_MOVE = 'toast.swipeMove'
+const TOAST_SWIPE_CANCEL = 'toast.swipeCancel'
+const TOAST_SWIPE_END = 'toast.swipeEnd'
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
-const [createToastContext, createToastScope] = createContextScope('Toast')
+const [Collection, useCollection, createCollectionScope] = createCollection<ToastElement>('Toast')
+const [createToastContext, createToastScope] = createContextScope('Toast', [createCollectionScope])
 const [ToastProviderProvider, useToastProviderContext] =
   createToastContext<ToastProviderContextValue>(PROVIDER_NAME)
 const [ToastProviderItem, useToastContext] = createToastContext<ToastContextValue>(TOAST_NAME)
@@ -85,6 +99,7 @@ type ToastProviderProps = {
   duration?: MaybeAccessor<number | undefined>
   swipeDirection?: MaybeAccessor<SwipeDirection | undefined>
   swipeThreshold?: MaybeAccessor<number | undefined>
+  announcerContainer?: MaybeAccessor<Element | DocumentFragment | null | undefined>
 }
 
 type ToastViewportProps = PrimitiveListProps & {
@@ -97,7 +112,15 @@ type ToastProps = PrimitiveItemProps & {
   defaultOpen?: MaybeAccessor<boolean | undefined>
   onOpenChange?: (open: boolean) => void
   duration?: MaybeAccessor<number | undefined>
+  type?: MaybeAccessor<ToastType | undefined>
   forceMount?: MaybeAccessor<boolean | undefined>
+  onEscapeKeyDown?: (event: KeyboardEvent) => void
+  onPause?: () => void
+  onResume?: () => void
+  onSwipeStart?: (event: ToastSwipeEvent) => void
+  onSwipeMove?: (event: ToastSwipeEvent) => void
+  onSwipeCancel?: (event: ToastSwipeEvent) => void
+  onSwipeEnd?: (event: ToastSwipeEvent) => void
 }
 
 type ToastTitleProps = PrimitiveHeadingProps
@@ -136,7 +159,7 @@ function getState(open: boolean): 'open' | 'closed' {
 function getSwipeDirectionDelta(
   pointerStart: { x: number; y: number } | null,
   event: PointerEvent,
-): { x: number; y: number } {
+): ToastSwipeDelta {
   if (!pointerStart) {
     return { x: 0, y: 0 }
   }
@@ -147,25 +170,130 @@ function getSwipeDirectionDelta(
   }
 }
 
-function isDeltaInDirection(direction: SwipeDirection, delta: { x: number; y: number }): boolean {
-  if (direction === 'right') return delta.x >= 0 && Math.abs(delta.x) >= Math.abs(delta.y)
-  if (direction === 'left') return delta.x <= 0 && Math.abs(delta.x) >= Math.abs(delta.y)
-  if (direction === 'down') return delta.y >= 0 && Math.abs(delta.y) >= Math.abs(delta.x)
-  return delta.y <= 0 && Math.abs(delta.y) >= Math.abs(delta.x)
+function clampDeltaToDirection(direction: SwipeDirection, delta: ToastSwipeDelta): ToastSwipeDelta {
+  if (direction === 'right') return { x: Math.max(0, delta.x), y: 0 }
+  if (direction === 'left') return { x: Math.min(0, delta.x), y: 0 }
+  if (direction === 'down') return { x: 0, y: Math.max(0, delta.y) }
+  return { x: 0, y: Math.min(0, delta.y) }
 }
 
-function isDeltaPastThreshold(
+function isDeltaInDirection(
   direction: SwipeDirection,
-  delta: { x: number; y: number },
-  threshold: number,
+  delta: ToastSwipeDelta,
+  threshold = 0,
 ): boolean {
-  if (!isDeltaInDirection(direction, delta)) {
-    return false
+  const deltaX = Math.abs(delta.x)
+  const deltaY = Math.abs(delta.y)
+  const isHorizontal = direction === 'left' || direction === 'right'
+  const isPrimaryAxis = isHorizontal ? deltaX > deltaY : deltaY >= deltaX
+  const isCorrectSign =
+    direction === 'right'
+      ? delta.x > 0
+      : direction === 'left'
+        ? delta.x < 0
+        : direction === 'down'
+          ? delta.y > 0
+          : delta.y < 0
+  const distance = isHorizontal ? deltaX : deltaY
+
+  return isPrimaryAxis && isCorrectSign && distance > threshold
+}
+
+function getTabbableCandidates(container: HTMLElement): HTMLElement[] {
+  const candidates: HTMLElement[] = []
+  const ownerDocument = container.ownerDocument
+  const walker = ownerDocument.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
+    acceptNode: (node) => {
+      const element = node as HTMLElement
+      const isHiddenInput = element.tagName === 'INPUT' && element.getAttribute('type') === 'hidden'
+      if (
+        element.hasAttribute('disabled') ||
+        element.hidden ||
+        isHiddenInput ||
+        element.getAttribute('aria-hidden') === 'true'
+      ) {
+        return NodeFilter.FILTER_SKIP
+      }
+
+      return element.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
+    },
+  })
+
+  while (walker.nextNode()) {
+    candidates.push(walker.currentNode as HTMLElement)
   }
 
-  const distance =
-    direction === 'left' || direction === 'right' ? Math.abs(delta.x) : Math.abs(delta.y)
-  return distance >= threshold
+  return candidates
+}
+
+function focusFirst(candidates: HTMLElement[]): boolean {
+  const previousFocusedElement = candidates[0]?.ownerDocument.activeElement
+
+  for (const candidate of candidates) {
+    candidate.focus()
+    if (candidate.ownerDocument.activeElement !== previousFocusedElement) {
+      return true
+    }
+  }
+
+  return false
+}
+
+function getAnnounceTextContent(container: HTMLElement): string[] {
+  const textContent: string[] = []
+
+  for (const node of Array.from(container.childNodes)) {
+    if (node.nodeType === node.TEXT_NODE && node.textContent) {
+      textContent.push(node.textContent)
+      continue
+    }
+
+    if (node.nodeType !== node.ELEMENT_NODE) continue
+
+    const element = node as HTMLElement
+    const isHidden =
+      element.getAttribute('aria-hidden') === 'true' ||
+      element.hidden ||
+      element.style.display === 'none'
+    if (isHidden) continue
+
+    if (element.dataset.radixToastAnnounceExclude === '') {
+      const altText = element.dataset.radixToastAnnounceAlt
+      if (altText) textContent.push(altText)
+      continue
+    }
+
+    textContent.push(...getAnnounceTextContent(element))
+  }
+
+  return textContent
+}
+
+function dispatchSwipeEvent(
+  name: string,
+  handler: ((event: ToastSwipeEvent) => void) | undefined,
+  originalEvent: PointerEvent,
+  delta: ToastSwipeDelta,
+  discrete: boolean,
+): ToastSwipeEvent {
+  const currentTarget = originalEvent.currentTarget
+  const event = new CustomEvent(name, {
+    bubbles: true,
+    cancelable: true,
+    detail: { originalEvent, delta },
+  }) as ToastSwipeEvent
+
+  if (handler && currentTarget) {
+    currentTarget.addEventListener(name, handler as EventListener, { once: true })
+  }
+
+  if (discrete) {
+    dispatchDiscreteCustomEvent(currentTarget, event)
+  } else {
+    currentTarget?.dispatchEvent(event)
+  }
+
+  return event
 }
 
 function ToastProvider(props: ScopedProps<ToastProviderProps>): FictNode {
@@ -188,24 +316,40 @@ function ToastProvider(props: ScopedProps<ToastProviderProps>): FictNode {
       : (readValue(props.swipeThreshold as MaybeAccessor<number | undefined>) ?? 50)
   const viewport = createSignal<ToastViewportElement | null>(null)
   const toastCount = createSignal(0)
+  let toastCountValue = 0
   const isClosePausedRef = { current: false }
+  const announcerContainer = () =>
+    props.announcerContainer === undefined
+      ? null
+      : (readValue(
+          props.announcerContainer as MaybeAccessor<Element | DocumentFragment | null | undefined>,
+        ) ?? null)
 
   return (
-    <ToastProviderProvider
-      scope={props.__scopeToast as Scope<ToastProviderContextValue | undefined>}
-      label={label}
-      duration={duration}
-      swipeDirection={swipeDirection}
-      swipeThreshold={swipeThreshold}
-      viewport={viewport}
-      onViewportChange={(nextViewport: ToastViewportElement | null) => viewport(nextViewport)}
-      toastCount={toastCount}
-      onToastAdd={() => toastCount(toastCount() + 1)}
-      onToastRemove={() => toastCount(Math.max(0, toastCount() - 1))}
-      isClosePausedRef={isClosePausedRef}
-    >
-      {props.children}
-    </ToastProviderProvider>
+    <Collection.Provider scope={props.__scopeToast}>
+      <ToastProviderProvider
+        scope={props.__scopeToast as Scope<ToastProviderContextValue | undefined>}
+        label={label}
+        duration={duration}
+        swipeDirection={swipeDirection}
+        swipeThreshold={swipeThreshold}
+        viewport={viewport}
+        onViewportChange={(nextViewport: ToastViewportElement | null) => viewport(nextViewport)}
+        toastCount={toastCount}
+        onToastAdd={() => {
+          toastCountValue += 1
+          toastCount(toastCountValue)
+        }}
+        onToastRemove={() => {
+          toastCountValue = Math.max(0, toastCountValue - 1)
+          toastCount(toastCountValue)
+        }}
+        announcerContainer={announcerContainer}
+        isClosePausedRef={isClosePausedRef}
+      >
+        {props.children}
+      </ToastProviderProvider>
+    </Collection.Provider>
   )
 }
 
@@ -217,6 +361,10 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
     VIEWPORT_NAME,
     __scopeToast as Scope<ToastProviderContextValue | undefined>,
   )
+  const getItems = useCollection(__scopeToast)
+  const wrapperRef = { current: null as HTMLDivElement | null }
+  const headFocusProxyRef = { current: null as HTMLSpanElement | null }
+  const tailFocusProxyRef = { current: null as HTMLSpanElement | null }
   const ref = { current: null as ToastViewportElement | null }
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<ToastViewportElement>,
@@ -232,8 +380,20 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
     const hotkeyText = hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, '')
     return nextLabel.replace('{hotkey}', hotkeyText)
   }
+  const getSortedTabbableCandidates = (tabbingDirection: 'forwards' | 'backwards') => {
+    const toastCandidates = getItems()
+      .map((item) => item.ref.current)
+      .filter((item): item is ToastElement => Boolean(item))
+      .map((item) => {
+        const candidates = [item, ...getTabbableCandidates(item)]
+        return tabbingDirection === 'forwards' ? candidates : candidates.reverse()
+      })
+
+    return (tabbingDirection === 'forwards' ? toastCandidates.reverse() : toastCandidates).flat()
+  }
 
   useLayoutEffect(() => {
+    const ownerDocument = ref.current?.ownerDocument ?? document
     const handleKeyDown = (event: KeyboardEvent) => {
       if (hotkey.length === 0) return
 
@@ -244,9 +404,59 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
+    ownerDocument.addEventListener('keydown', handleKeyDown)
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
+      ownerDocument.removeEventListener('keydown', handleKeyDown)
+    }
+  })
+
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current
+    const viewport = ref.current
+    if (!wrapper || !viewport) return
+    const ownerDocument = viewport.ownerDocument
+    const ownerWindow = ownerDocument.defaultView ?? window
+
+    const pause = () => {
+      if (context.isClosePausedRef.current) return
+      viewport.dispatchEvent(new CustomEvent(VIEWPORT_PAUSE))
+      context.isClosePausedRef.current = true
+    }
+
+    const resume = () => {
+      if (!context.isClosePausedRef.current) return
+      viewport.dispatchEvent(new CustomEvent(VIEWPORT_RESUME))
+      context.isClosePausedRef.current = false
+    }
+
+    const handleFocusOut = (event: FocusEvent) => {
+      const nextTarget = event.relatedTarget
+      if (nextTarget instanceof Node && wrapper.contains(nextTarget)) {
+        return
+      }
+      resume()
+    }
+
+    const handlePointerLeave = () => {
+      if (!wrapper.contains(ownerDocument.activeElement)) {
+        resume()
+      }
+    }
+
+    wrapper.addEventListener('pointermove', pause)
+    wrapper.addEventListener('pointerleave', handlePointerLeave)
+    wrapper.addEventListener('focusin', pause)
+    wrapper.addEventListener('focusout', handleFocusOut)
+    ownerWindow.addEventListener('blur', pause)
+    ownerWindow.addEventListener('focus', resume)
+
+    return () => {
+      wrapper.removeEventListener('pointermove', pause)
+      wrapper.removeEventListener('pointerleave', handlePointerLeave)
+      wrapper.removeEventListener('focusin', pause)
+      wrapper.removeEventListener('focusout', handleFocusOut)
+      ownerWindow.removeEventListener('blur', pause)
+      ownerWindow.removeEventListener('focus', resume)
     }
   })
 
@@ -254,41 +464,44 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
     const viewport = ref.current
     if (!viewport) return
 
-    const pause = () => {
-      if (context.isClosePausedRef.current) return
-      context.isClosePausedRef.current = true
-      viewport.dispatchEvent(new CustomEvent(VIEWPORT_PAUSE))
-    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const isMetaKey = event.altKey || event.ctrlKey || event.metaKey
+      if (event.key !== 'Tab' || isMetaKey) return
 
-    const resume = () => {
-      if (!context.isClosePausedRef.current) return
-      context.isClosePausedRef.current = false
-      viewport.dispatchEvent(new CustomEvent(VIEWPORT_RESUME))
-    }
+      const focusedElement = viewport.ownerDocument.activeElement
+      const isTabbingBackwards = event.shiftKey
 
-    const handleFocusOut = (event: FocusEvent) => {
-      const nextTarget = event.relatedTarget
-      if (nextTarget instanceof Node && viewport.contains(nextTarget)) {
+      if (event.target === viewport && isTabbingBackwards) {
+        headFocusProxyRef.current?.focus()
         return
       }
-      resume()
+
+      const direction = isTabbingBackwards ? 'backwards' : 'forwards'
+      const candidates = getSortedTabbableCandidates(direction)
+      const currentIndex = candidates.findIndex((candidate) => candidate === focusedElement)
+      if (focusFirst(candidates.slice(currentIndex + 1))) {
+        event.preventDefault()
+        return
+      }
+
+      if (isTabbingBackwards) {
+        headFocusProxyRef.current?.focus()
+      } else {
+        tailFocusProxyRef.current?.focus()
+      }
     }
 
-    viewport.addEventListener('pointermove', pause)
-    viewport.addEventListener('pointerleave', resume)
-    viewport.addEventListener('focusin', pause)
-    viewport.addEventListener('focusout', handleFocusOut)
-    window.addEventListener('blur', pause)
-    window.addEventListener('focus', resume)
-
+    viewport.addEventListener('keydown', handleKeyDown)
     return () => {
-      viewport.removeEventListener('pointermove', pause)
-      viewport.removeEventListener('pointerleave', resume)
-      viewport.removeEventListener('focusin', pause)
-      viewport.removeEventListener('focusout', handleFocusOut)
-      window.removeEventListener('blur', pause)
-      window.removeEventListener('focus', resume)
+      viewport.removeEventListener('keydown', handleKeyDown)
     }
+  })
+
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
+
+    wrapper.style.pointerEvents = context.toastCount() > 0 ? 'auto' : 'none'
   })
 
   useLayoutEffect(() => {
@@ -309,9 +522,7 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
 
   const primitiveProps = mergeProps(
     {
-      role: 'region',
       tabIndex: -1,
-      'aria-label': prop(label),
       'data-state': prop(() => (context.toastCount() > 0 ? 'open' : 'closed')),
     },
     prop(() => viewportProps as Record<string, unknown>),
@@ -323,10 +534,71 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
     },
   )
 
-  return <Primitive.ol {...primitiveProps} ref={composedRefs} />
+  return (
+    <DismissableLayerBranch
+      ref={wrapperRef}
+      role="region"
+      aria-label={prop(label) as unknown as string}
+      tabIndex={-1}
+    >
+      <ToastFocusProxy
+        ref={headFocusProxyRef}
+        __scopeToast={__scopeToast}
+        enabled={() => context.toastCount() > 0}
+        onFocusFromOutsideViewport={() => {
+          focusFirst(getSortedTabbableCandidates('forwards'))
+        }}
+      />
+      <Collection.Slot scope={__scopeToast}>
+        <Primitive.ol {...primitiveProps} ref={composedRefs} />
+      </Collection.Slot>
+      <ToastFocusProxy
+        ref={tailFocusProxyRef}
+        __scopeToast={__scopeToast}
+        enabled={() => context.toastCount() > 0}
+        onFocusFromOutsideViewport={() => {
+          focusFirst(getSortedTabbableCandidates('backwards'))
+        }}
+      />
+    </DismissableLayerBranch>
+  )
 }
 
 ToastViewport.displayName = VIEWPORT_NAME
+
+type ToastFocusProxyProps = JSX.IntrinsicElements['span'] & {
+  __scopeToast?: Scope
+  enabled: () => boolean
+  onFocusFromOutsideViewport(): void
+}
+
+function ToastFocusProxy(props: ToastFocusProxyProps): FictNode {
+  const { __scopeToast, enabled, onFocusFromOutsideViewport, ...proxyProps } = props
+  const context = useToastProviderContext(
+    'ToastFocusProxy',
+    __scopeToast as Scope<ToastProviderContextValue | undefined>,
+  )
+
+  return (
+    <VisuallyHidden
+      {...(proxyProps as Record<string, unknown>)}
+      data-radix-toast-focus-proxy=""
+      style={{ position: 'fixed' }}
+      tabIndex={prop(() => (enabled() ? 0 : -1)) as unknown as number}
+      aria-hidden={prop(() => (enabled() ? undefined : 'true')) as unknown as 'true'}
+      onFocus={(event: FocusEvent) => {
+        const previousFocusedElement = event.relatedTarget
+        const viewport = context.viewport()
+        if (
+          !(previousFocusedElement instanceof Node) ||
+          !viewport?.contains(previousFocusedElement)
+        ) {
+          onFocusFromOutsideViewport()
+        }
+      }}
+    />
+  )
+}
 
 function Toast(props: ScopedProps<ToastProps>): FictNode {
   const { __scopeToast, forceMount, ...toastProps } = props
@@ -335,7 +607,10 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
     __scopeToast as Scope<ToastProviderContextValue | undefined>,
   )
   const ref = { current: null as ToastElement | null }
-  const composedRefs = useComposedRefs(props.ref as PossibleRef<ToastElement>, ref)
+  const node = createSignal<ToastElement | null>(null)
+  const composedRefs = useComposedRefs(props.ref as PossibleRef<ToastElement>, ref, (nextNode) =>
+    node(nextNode),
+  )
   const openProp = () =>
     props.open === undefined
       ? undefined
@@ -349,6 +624,10 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
       ? providerContext.duration()
       : (readValue(props.duration as MaybeAccessor<number | undefined>) ??
         providerContext.duration())
+  const type = () =>
+    props.type === undefined
+      ? 'foreground'
+      : (readValue(props.type as MaybeAccessor<ToastType | undefined>) ?? 'foreground')
   const [open, setOpen] = useControllableState<boolean>({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -364,10 +643,12 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
   const remainingDuration = createSignal(0)
   const closeStartTime = createSignal(0)
   const isRegistered = { current: false }
-  const timeoutRef = { current: 0 as number | undefined }
+  const timeoutRef = { current: undefined as number | undefined }
   const pointerStartRef = { current: null as { x: number; y: number } | null }
+  const swipeDeltaRef = { current: null as ToastSwipeDelta | null }
   const swipeDelta = createSignal({ x: 0, y: 0 })
   const swipeState = createSignal<SwipeState | undefined>(undefined)
+  const announceText = createSignal<string[] | null>(null)
   const viewport = () => providerContext.viewport()
 
   const clearCloseTimer = () => {
@@ -380,16 +661,20 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
 
   const close = () => {
     clearCloseTimer()
+    const currentNode = node()
+    if (currentNode?.contains(currentNode.ownerDocument.activeElement)) {
+      viewport()?.focus()
+    }
     setOpen(false)
   }
 
   const startCloseTimer = (duration: number) => {
     clearCloseTimer()
-    if (duration <= 0 || !open()) {
+    remainingDuration(duration)
+    if (duration <= 0 || duration === Infinity || !open()) {
       return
     }
 
-    remainingDuration(duration)
     closeStartTime(Date.now())
     const ownerWindow = ref.current?.ownerDocument.defaultView ?? window
     timeoutRef.current = ownerWindow.setTimeout(() => {
@@ -398,7 +683,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
   }
 
   const pauseCloseTimer = () => {
-    if (!timeoutRef.current) return
+    if (timeoutRef.current === undefined) return
     clearCloseTimer()
     const elapsed = Date.now() - closeStartTime()
     remainingDuration(Math.max(0, remainingDuration() - elapsed))
@@ -406,7 +691,7 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
 
   const resumeCloseTimer = () => {
     if (!open()) return
-    startCloseTimer(remainingDuration() || resolvedDuration())
+    startCloseTimer(remainingDuration())
   }
 
   useLayoutEffect(() => {
@@ -415,7 +700,11 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
       return
     }
 
-    startCloseTimer(resolvedDuration())
+    const duration = resolvedDuration()
+    remainingDuration(duration)
+    if (!providerContext.isClosePausedRef.current) {
+      startCloseTimer(duration)
+    }
     return () => {
       clearCloseTimer()
     }
@@ -427,9 +716,11 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
 
     const handlePause = () => {
       pauseCloseTimer()
+      props.onPause?.()
     }
     const handleResume = () => {
       resumeCloseTimer()
+      props.onResume?.()
     }
 
     currentViewport.addEventListener(VIEWPORT_PAUSE, handlePause as EventListener)
@@ -441,15 +732,28 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
   })
 
   useLayoutEffect(() => {
-    if (open() && !isRegistered.current) {
+    const currentNode = node()
+
+    if (currentNode && !isRegistered.current) {
       providerContext.onToastAdd()
       isRegistered.current = true
     }
 
-    if (!open() && isRegistered.current) {
+    if (!currentNode && isRegistered.current) {
       providerContext.onToastRemove()
       isRegistered.current = false
     }
+  })
+
+  useLayoutEffect(() => {
+    const currentNode = node()
+    if (!currentNode || !open()) {
+      announceText(null)
+      return
+    }
+
+    const text = getAnnounceTextContent(currentNode)
+    announceText(text.length > 0 ? text : null)
   })
 
   useLayoutEffect(() => {
@@ -475,13 +779,13 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
 
   const primitiveProps = mergeProps(
     {
-      role: 'status',
       tabIndex: 0,
-      'aria-live': 'off',
       'data-state': prop(() => getState(open())),
       'data-swipe-direction': prop(providerContext.swipeDirection),
       'data-swipe': prop(swipeState),
       style: prop(() => ({
+        userSelect: 'none',
+        touchAction: 'none',
         '--radix-toast-swipe-move-x': `${swipeDelta().x}px`,
         '--radix-toast-swipe-move-y': `${swipeDelta().y}px`,
         '--radix-toast-swipe-end-x': `${swipeDelta().x}px`,
@@ -495,24 +799,38 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
       defaultOpen: undefined,
       duration: undefined,
       forceMount: undefined,
+      onEscapeKeyDown: undefined,
       onOpenChange: undefined,
+      onPause: undefined,
+      onResume: undefined,
+      onSwipeCancel: undefined,
+      onSwipeEnd: undefined,
+      onSwipeMove: undefined,
+      onSwipeStart: undefined,
       open: undefined,
       ref: undefined,
+      type: undefined,
       onKeyDown: composeEventHandlers<KeyboardEvent>(
         props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
         (event) => {
-          if (event.key === 'Escape') {
-            event.preventDefault()
-            close()
-          }
+          if (event.key !== 'Escape') return
+
+          props.onEscapeKeyDown?.(event)
+          if (event.defaultPrevented) return
+
+          event.preventDefault()
+          close()
         },
       ),
       onPointerDown: composeEventHandlers<PointerEvent>(
         props.onPointerDown as ((event: PointerEvent) => void) | undefined,
         (event: PointerEvent) => {
+          if (event.button !== 0) return
+
           pointerStartRef.current = { x: event.clientX, y: event.clientY }
-          swipeState('start')
+          swipeDeltaRef.current = null
           swipeDelta({ x: 0, y: 0 })
+          swipeState(undefined)
         },
       ),
       onPointerMove: composeEventHandlers<PointerEvent>(
@@ -520,66 +838,113 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
         (event: PointerEvent) => {
           if (!pointerStartRef.current) return
 
-          const delta = getSwipeDirectionDelta(pointerStartRef.current, event)
-          swipeDelta(delta)
-          swipeState(
-            isDeltaInDirection(providerContext.swipeDirection(), delta) ? 'move' : 'cancel',
-          )
+          const rawDelta = getSwipeDirectionDelta(pointerStartRef.current, event)
+          const direction = providerContext.swipeDirection()
+          const moveStartBuffer = event.pointerType === 'touch' ? 10 : 2
+
+          if (swipeDeltaRef.current) {
+            const delta = clampDeltaToDirection(direction, rawDelta)
+            swipeDeltaRef.current = delta
+            const swipeEvent = dispatchSwipeEvent(
+              TOAST_SWIPE_MOVE,
+              props.onSwipeMove,
+              event,
+              delta,
+              false,
+            )
+            if (!swipeEvent.defaultPrevented) {
+              swipeDelta(delta)
+              swipeState('move')
+            }
+            return
+          }
+
+          if (isDeltaInDirection(direction, rawDelta, moveStartBuffer)) {
+            const delta = clampDeltaToDirection(direction, rawDelta)
+            swipeDeltaRef.current = delta
+            const swipeEvent = dispatchSwipeEvent(
+              TOAST_SWIPE_START,
+              props.onSwipeStart,
+              event,
+              delta,
+              false,
+            )
+            if (!swipeEvent.defaultPrevented) {
+              swipeDelta(delta)
+              swipeState('start')
+            }
+
+            const currentTarget = event.currentTarget as Element | null
+            currentTarget?.setPointerCapture?.(event.pointerId)
+            return
+          }
+
+          if (Math.abs(rawDelta.x) > moveStartBuffer || Math.abs(rawDelta.y) > moveStartBuffer) {
+            pointerStartRef.current = null
+          }
         },
       ),
       onPointerUp: composeEventHandlers<PointerEvent>(
         props.onPointerUp as ((event: PointerEvent) => void) | undefined,
         (event: PointerEvent) => {
-          if (!pointerStartRef.current) return
+          const delta = swipeDeltaRef.current
+          const currentTarget = event.currentTarget as Element | null
+          if (currentTarget?.hasPointerCapture?.(event.pointerId)) {
+            currentTarget.releasePointerCapture(event.pointerId)
+          }
 
-          const delta = getSwipeDirectionDelta(pointerStartRef.current, event)
-          const shouldClose = isDeltaPastThreshold(
+          swipeDeltaRef.current = null
+          pointerStartRef.current = null
+          if (!delta) return
+
+          const shouldClose = isDeltaInDirection(
             providerContext.swipeDirection(),
             delta,
             providerContext.swipeThreshold(),
           )
-          swipeDelta(delta)
-          swipeState(shouldClose ? 'end' : 'cancel')
+          const swipeEvent = dispatchSwipeEvent(
+            shouldClose ? TOAST_SWIPE_END : TOAST_SWIPE_CANCEL,
+            shouldClose ? props.onSwipeEnd : props.onSwipeCancel,
+            event,
+            delta,
+            true,
+          )
+
+          if (!swipeEvent.defaultPrevented) {
+            swipeDelta(delta)
+            swipeState(shouldClose ? 'end' : 'cancel')
+            if (shouldClose) close()
+          }
+
+          currentTarget?.addEventListener('click', (clickEvent) => clickEvent.preventDefault(), {
+            once: true,
+          })
+        },
+      ),
+      onPointerCancel: composeEventHandlers<PointerEvent>(
+        props.onPointerCancel as ((event: PointerEvent) => void) | undefined,
+        (event: PointerEvent) => {
+          const delta = swipeDeltaRef.current
+          const currentTarget = event.currentTarget as Element | null
+          if (currentTarget?.hasPointerCapture?.(event.pointerId)) {
+            currentTarget.releasePointerCapture(event.pointerId)
+          }
+
+          swipeDeltaRef.current = null
           pointerStartRef.current = null
+          if (!delta) return
 
-          if (shouldClose) {
-            close()
-            return
+          const swipeEvent = dispatchSwipeEvent(
+            TOAST_SWIPE_CANCEL,
+            props.onSwipeCancel,
+            event,
+            delta,
+            true,
+          )
+          if (!swipeEvent.defaultPrevented) {
+            swipeDelta(delta)
+            swipeState('cancel')
           }
-
-          setTimeout(() => {
-            swipeState(undefined)
-            swipeDelta({ x: 0, y: 0 })
-          }, 0)
-        },
-      ),
-      onMouseEnter: composeEventHandlers<MouseEvent>(
-        props.onMouseEnter as ((event: MouseEvent) => void) | undefined,
-        (_event: MouseEvent) => {
-          pauseCloseTimer()
-        },
-      ),
-      onMouseLeave: composeEventHandlers<MouseEvent>(
-        props.onMouseLeave as ((event: MouseEvent) => void) | undefined,
-        (_event: MouseEvent) => {
-          resumeCloseTimer()
-        },
-      ),
-      onFocusIn: composeEventHandlers<FocusEvent>(
-        (props as Record<string, unknown>).onFocusIn as ((event: FocusEvent) => void) | undefined,
-        () => {
-          pauseCloseTimer()
-        },
-      ),
-      onFocusOut: composeEventHandlers<FocusEvent>(
-        (props as Record<string, unknown>).onFocusOut as ((event: FocusEvent) => void) | undefined,
-        (event: FocusEvent) => {
-          const relatedTarget = event.relatedTarget
-          if (relatedTarget instanceof Node && ref.current?.contains(relatedTarget)) {
-            return
-          }
-
-          resumeCloseTimer()
         },
       ),
     },
@@ -599,16 +964,34 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
             return null
           }
 
-          return createFictPortal(
+          const interactivePortal = createFictPortal(
             currentViewport,
             () => (
-              <Primitive.li {...primitiveProps} ref={composedRefs}>
-                <VisuallyHidden>{providerContext.label()}</VisuallyHidden>
-                {props.children}
-              </Primitive.li>
+              <Collection.ItemSlot scope={__scopeToast}>
+                <Primitive.li {...primitiveProps} ref={composedRefs}>
+                  {props.children}
+                </Primitive.li>
+              </Collection.ItemSlot>
             ),
             createElement,
           ) as unknown as FictNode
+
+          return (
+            <>
+              {reactive(() => {
+                const text = announceText()
+                return text ? (
+                  <ToastAnnounce
+                    __scopeToast={__scopeToast}
+                    type={type()}
+                    text={text}
+                    {...(node()?.ownerDocument ? { ownerDocument: node()!.ownerDocument } : {})}
+                  />
+                ) : null
+              })}
+              {interactivePortal}
+            </>
+          )
         }}
       </Presence>
     </ToastProviderItem>
@@ -617,14 +1000,58 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
 
 Toast.displayName = TOAST_NAME
 
+type ToastAnnounceProps = {
+  __scopeToast?: Scope
+  ownerDocument?: Document
+  type: ToastType
+  text: string[]
+}
+
+function ToastAnnounce(props: ToastAnnounceProps): FictNode {
+  const context = useToastProviderContext(
+    TOAST_NAME,
+    props.__scopeToast as Scope<ToastProviderContextValue | undefined>,
+  )
+  const renderText = createSignal(false)
+  const ownerDocument = props.ownerDocument ?? globalThis.document
+  const container = context.announcerContainer() ?? ownerDocument?.body ?? null
+
+  useLayoutEffect(() => {
+    const ownerWindow = ownerDocument?.defaultView ?? window
+    const timerId = ownerWindow.setTimeout(() => renderText(true))
+    return () => {
+      ownerWindow.clearTimeout(timerId)
+    }
+  })
+
+  if (!container) return null
+
+  return createFictPortal(
+    container,
+    () => (
+      <VisuallyHidden
+        role="status"
+        aria-live={props.type === 'foreground' ? 'assertive' : 'polite'}
+        aria-atomic="true"
+        data-radix-toast-announcer=""
+      >
+        <>{reactive(() => (renderText() ? `${context.label()} ${props.text.join(' ')}` : null))}</>
+      </VisuallyHidden>
+    ),
+    createElement,
+  ) as unknown as FictNode
+}
+
 function ToastTitle(props: ScopedProps<ToastTitleProps>): FictNode {
-  return <Primitive.h3 {...(props as Record<string, unknown>)} />
+  const { __scopeToast: _scope, ...titleProps } = props
+  return <Primitive.h3 {...(titleProps as Record<string, unknown>)} />
 }
 
 ToastTitle.displayName = TITLE_NAME
 
 function ToastDescription(props: ScopedProps<ToastDescriptionProps>): FictNode {
-  return <Primitive.p {...(props as Record<string, unknown>)} />
+  const { __scopeToast: _scope, ...descriptionProps } = props
+  return <Primitive.p {...(descriptionProps as Record<string, unknown>)} />
 }
 
 ToastDescription.displayName = DESCRIPTION_NAME
@@ -636,9 +1063,16 @@ function ToastAction(props: ScopedProps<ToastActionProps>): FictNode {
     console.error(
       `Invalid prop \`altText\` supplied to \`${ACTION_NAME}\`. Expected non-empty \`string\`.`,
     )
+    return null
   }
 
-  return <Primitive.button {...actionProps} aria-label={altText} />
+  return (
+    <ToastClose
+      {...actionProps}
+      data-radix-toast-announce-exclude=""
+      data-radix-toast-announce-alt={altText}
+    />
+  )
 }
 
 ToastAction.displayName = ACTION_NAME
@@ -655,6 +1089,7 @@ function ToastClose(props: ScopedProps<ToastCloseProps>): FictNode {
     prop(() => props as Record<string, unknown>),
     {
       __scopeToast: undefined,
+      'data-radix-toast-announce-exclude': '',
       onClick: composeEventHandlers<MouseEvent>(
         props.onClick as ((event: MouseEvent) => void) | undefined,
         () => {
@@ -698,6 +1133,9 @@ export {
 }
 
 export type {
+  SwipeDirection,
+  ToastType,
+  ToastSwipeEvent,
   ToastProviderProps,
   ToastViewportProps,
   ToastProps,
