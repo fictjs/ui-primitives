@@ -98,6 +98,41 @@ describe('@fictjs/roving-focus', () => {
     expect(one.tabIndex).toBe(-1)
   })
 
+  it('generates unique tab stop ids when tabStopId is omitted', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root data-testid="group">
+          <Item data-testid="one">One</Item>
+          <Item data-testid="two">Two</Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const group = getByTestId<HTMLDivElement>(container, 'group')
+    const one = getByTestId<HTMLSpanElement>(container, 'one')
+    const two = getByTestId<HTMLSpanElement>(container, 'two')
+
+    group.focus()
+    await flushEffects()
+
+    expect(document.activeElement).toBe(one)
+    expect(one.tabIndex).toBe(0)
+    expect(two.tabIndex).toBe(-1)
+
+    keyDown(one, 'ArrowRight')
+    await waitForDeferredFocus()
+
+    expect(document.activeElement).toBe(two)
+    expect(one.tabIndex).toBe(-1)
+    expect(two.tabIndex).toBe(0)
+  })
+
   it('loops focus when loop is enabled', async () => {
     const container = document.createElement('div')
     document.body.append(container)

@@ -15,13 +15,16 @@ import { useLayoutEffect } from '@fictjs/use-layout-effect'
 let idCounter = 0
 
 function useId(determinedId?: MaybeAccessor<string | undefined>): () => string {
-  const initialId = readValue(determinedId ?? 'fict-' + ++idCounter)
+  let generatedId: string | undefined
+  const getGeneratedId = () => (generatedId ??= 'fict-' + ++idCounter)
+  const getDeterminedId = () => (determinedId === undefined ? undefined : readValue(determinedId))
+  const initialId = getDeterminedId() ?? getGeneratedId()
   const resolved = createSignal(initialId)
 
   useLayoutEffect(() => {
-    const next = readValue(determinedId ?? resolved())
+    const next = getDeterminedId() ?? getGeneratedId()
 
-    if (next !== undefined && next !== resolved()) {
+    if (next !== resolved()) {
       resolved(next)
     }
   })
