@@ -1,5 +1,5 @@
 import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -783,7 +783,7 @@ function FormValidityState(props: ScopedProps<FormValidityStateProps>): FictNode
     __scopeForm as Scope<FormFieldContextValue | undefined>,
   )
   const name = nameProp ?? fieldContext.name()
-  return children(validationContext.getFieldValidity(name))
+  return <>{reactive(() => children(validationContext.getFieldValidity(name)))}</>
 }
 
 FormValidityState.displayName = VALIDITY_STATE_NAME

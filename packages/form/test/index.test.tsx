@@ -257,4 +257,33 @@ describe('@fictjs/form', () => {
     expect(onClearServerErrors).toHaveBeenCalledTimes(1)
     expect(container.querySelector('output')?.textContent).toBe('unset')
   })
+
+  it('updates validity state render props after validation', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Form>
+          <Field name="email">
+            <Control required />
+            <ValidityState>
+              {(validity) => (
+                <output>{validity ? (validity.valid ? 'valid' : 'invalid') : 'unset'}</output>
+              )}
+            </ValidityState>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    expect(container.querySelector('output')?.textContent).toBe('unset')
+
+    invalid(container.querySelector('input') as HTMLInputElement)
+    await waitForEffects()
+
+    expect(container.querySelector('output')?.textContent).toBe('invalid')
+  })
 })
