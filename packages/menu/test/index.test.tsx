@@ -317,6 +317,46 @@ describe('@fictjs/menu', () => {
     expect(document.activeElement).toBe(second)
   })
 
+  it('moves focus with character typeahead and explicit text values', async () => {
+    const container = document.createElement('div')
+    const open = createSignal(true)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Content>
+            <Item data-testid="alpha">Alpha</Item>
+            <Item data-testid="beta">Beta</Item>
+            <Item data-testid="charlie" textValue="Charlie">
+              Display label
+            </Item>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const alpha = container.querySelector('[data-testid="alpha"]') as HTMLDivElement
+    const beta = container.querySelector('[data-testid="beta"]') as HTMLDivElement
+    alpha.focus()
+    keyDown(alpha, 'b')
+    expect(document.activeElement).toBe(beta)
+
+    open(false)
+    await waitForEffects()
+    open(true)
+    await waitForEffects()
+
+    const reopenedAlpha = container.querySelector('[data-testid="alpha"]') as HTMLDivElement
+    const charlie = container.querySelector('[data-testid="charlie"]') as HTMLDivElement
+    reopenedAlpha.focus()
+    keyDown(reopenedAlpha, 'c')
+    expect(document.activeElement).toBe(charlie)
+  })
+
   it('opens submenu content when the sub trigger is hovered', async () => {
     const container = document.createElement('div')
     document.body.append(container)
@@ -495,6 +535,44 @@ describe('@fictjs/menu', () => {
       expect(document.activeElement).toBe(nested)
     },
   )
+
+  it('closes a submenu with the direction-aware return key and restores trigger focus', async () => {
+    const container = document.createElement('div')
+    const open = createSignal(true)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Content>
+            <Sub>
+              <SubTrigger data-testid="sub-trigger">More</SubTrigger>
+              <SubContent data-testid="sub-content">
+                <Item data-testid="nested">Nested</Item>
+              </SubContent>
+            </Sub>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const trigger = container.querySelector('[data-testid="sub-trigger"]') as HTMLDivElement
+    trigger.focus()
+    keyDown(trigger, 'ArrowRight')
+    await waitForEffects()
+
+    const nested = container.querySelector('[data-testid="nested"]') as HTMLDivElement
+    expect(document.activeElement).toBe(nested)
+
+    keyDown(nested, 'ArrowLeft')
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="sub-content"]')).toBeNull()
+    expect(document.activeElement).toBe(trigger)
+  })
 
   it('closes portal content on escape', async () => {
     const container = document.createElement('div')

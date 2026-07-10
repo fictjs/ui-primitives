@@ -535,6 +535,10 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
   const ref = { current: null as HTMLDivElement | null }
   const hasOpened = { current: false }
   const openAutoFocusPreventedRef = { current: false }
+  const typeaheadRef = { current: '' }
+  const typeaheadTimerRef = {
+    current: undefined as ReturnType<typeof globalThis.setTimeout> | undefined,
+  }
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<HTMLDivElement>,
     ref,
@@ -556,6 +560,12 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
 
       contentContext.focusItem('first')
     }, 0)
+  })
+
+  useLayoutEffect(() => () => {
+    if (typeaheadTimerRef.current !== undefined) {
+      globalThis.clearTimeout(typeaheadTimerRef.current)
+    }
   })
 
   useLayoutEffect(() => {
@@ -679,6 +689,43 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
           if (LAST_KEYS.includes(event.key)) {
             event.preventDefault()
             contentContext.focusItem('last')
+            return
+          }
+
+          if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
+            const content = contentContext.contentRef.current
+            if (!content) return
+
+            const nextSearch = typeaheadRef.current + event.key.toLowerCase()
+            const search = nextSearch.split('').every((character) => character === nextSearch[0])
+              ? nextSearch[0]!
+              : nextSearch
+            const items = Array.from(
+              content.querySelectorAll<MenuItemElement>(
+                `[data-menu-item][data-menu-content-id="${contentContext.contentId()}"]`,
+              ),
+            ).filter((item) => item.isConnected && !isMenuItemDisabled(item))
+            const activeElement = content.ownerDocument.activeElement as MenuItemElement | null
+            const activeIndex = items.indexOf(activeElement as MenuItemElement)
+            const candidates =
+              activeIndex === -1 ? items : wrapArray(items, Math.max(0, activeIndex + 1))
+            const match = candidates.find((item) => {
+              const textValue = item.getAttribute('data-text-value') ?? item.textContent ?? ''
+              return textValue.trim().toLowerCase().startsWith(search)
+            })
+
+            typeaheadRef.current = nextSearch
+            if (typeaheadTimerRef.current !== undefined) {
+              globalThis.clearTimeout(typeaheadTimerRef.current)
+            }
+            typeaheadTimerRef.current = globalThis.setTimeout(() => {
+              typeaheadRef.current = ''
+            }, 1000)
+
+            if (match) {
+              event.preventDefault()
+              match.focus()
+            }
           }
         },
       ),
@@ -768,6 +815,11 @@ function MenuItemImpl(props: ScopedProps<MenuItemImplProps>): FictNode {
       'data-highlighted': prop(() => (highlighted() ? '' : undefined)),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
       'data-state': checked ? prop(dataState) : undefined,
+      'data-text-value': prop(() =>
+        props.textValue === undefined
+          ? undefined
+          : readValue(props.textValue as MaybeAccessor<string | undefined>),
+      ),
       'aria-disabled': prop(() => (disabled() ? 'true' : undefined)),
       'aria-checked': checked
         ? prop(() => String(checked() === 'indeterminate' ? 'mixed' : checked() === true))
@@ -1179,6 +1231,17 @@ function MenuSubContent(props: ScopedProps<MenuSubContentProps>): FictNode {
                 event.preventDefault()
                 subContext.triggerRef.current?.focus()
               }}
+              onKeyDown={composeEventHandlers<KeyboardEvent>(
+                props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+                (event) => {
+                  const closeKey = menuContext.dir() === 'rtl' ? 'ArrowRight' : 'ArrowLeft'
+                  if (event.key !== closeKey) return
+
+                  event.preventDefault()
+                  subContext.onOpenChange(false)
+                  subContext.triggerRef.current?.focus()
+                },
+              )}
               style={{
                 outline: 'none',
                 width: '100%',
