@@ -145,6 +145,49 @@ describe('@fictjs/toast', () => {
     expect(viewport.querySelector('[data-testid="toast"]')).toBeNull()
   })
 
+  it('stays paused when focus moves within a viewport owned by an iframe document', async () => {
+    vi.useFakeTimers()
+    const onPause = vi.fn()
+    const onResume = vi.fn()
+    const iframe = document.createElement('iframe')
+    document.body.append(iframe)
+    const frameDocument = iframe.contentDocument as Document
+    const container = frameDocument.createElement('div')
+    frameDocument.body.append(container)
+
+    mount(
+      () => (
+        <Provider duration={50}>
+          <Viewport data-testid="viewport" />
+          <Root defaultOpen data-testid="toast" onPause={onPause} onResume={onResume}>
+            <Action altText="Undo the action" data-testid="action">
+              Undo
+            </Action>
+            <Close data-testid="close">Dismiss</Close>
+          </Root>
+        </Provider>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const viewport = container.querySelector('[data-testid="viewport"]') as HTMLOListElement
+    const action = viewport.querySelector('[data-testid="action"]') as HTMLButtonElement
+    const close = viewport.querySelector('[data-testid="close"]') as HTMLButtonElement
+
+    action.focus()
+    close.focus()
+
+    expect(frameDocument.activeElement).toBe(close)
+    expect(onPause).toHaveBeenCalledOnce()
+    expect(onResume).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(100)
+    await waitForEffects()
+    expect(viewport.querySelector('[data-testid="toast"]')).not.toBeNull()
+  })
+
   it('allows escape dismissal to be prevented', async () => {
     const onEscapeKeyDown = vi.fn((event: KeyboardEvent) => event.preventDefault())
     const container = document.createElement('div')

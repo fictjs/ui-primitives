@@ -202,7 +202,8 @@ function isDeltaInDirection(
 function getTabbableCandidates(container: HTMLElement): HTMLElement[] {
   const candidates: HTMLElement[] = []
   const ownerDocument = container.ownerDocument
-  const walker = ownerDocument.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
+  const nodeFilter = ownerDocument.defaultView?.NodeFilter ?? globalThis.NodeFilter
+  const walker = ownerDocument.createTreeWalker(container, nodeFilter.SHOW_ELEMENT, {
     acceptNode: (node) => {
       const element = node as HTMLElement
       const isHiddenInput = element.tagName === 'INPUT' && element.getAttribute('type') === 'hidden'
@@ -212,10 +213,10 @@ function getTabbableCandidates(container: HTMLElement): HTMLElement[] {
         isHiddenInput ||
         element.getAttribute('aria-hidden') === 'true'
       ) {
-        return NodeFilter.FILTER_SKIP
+        return nodeFilter.FILTER_SKIP
       }
 
-      return element.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
+      return element.tabIndex >= 0 ? nodeFilter.FILTER_ACCEPT : nodeFilter.FILTER_SKIP
     },
   })
 
@@ -224,6 +225,11 @@ function getTabbableCandidates(container: HTMLElement): HTMLElement[] {
   }
 
   return candidates
+}
+
+function isNodeFromDocument(value: EventTarget | null, ownerDocument: Document): value is Node {
+  const NodeCtor = ownerDocument.defaultView?.Node
+  return NodeCtor ? value instanceof NodeCtor : Boolean(value && 'nodeType' in value)
 }
 
 function focusFirst(candidates: HTMLElement[]): boolean {
@@ -431,7 +437,7 @@ function ToastViewport(props: ScopedProps<ToastViewportProps>): FictNode {
 
     const handleFocusOut = (event: FocusEvent) => {
       const nextTarget = event.relatedTarget
-      if (nextTarget instanceof Node && wrapper.contains(nextTarget)) {
+      if (isNodeFromDocument(nextTarget, ownerDocument) && wrapper.contains(nextTarget)) {
         return
       }
       resume()
@@ -590,8 +596,9 @@ function ToastFocusProxy(props: ToastFocusProxyProps): FictNode {
         const previousFocusedElement = event.relatedTarget
         const viewport = context.viewport()
         if (
-          !(previousFocusedElement instanceof Node) ||
-          !viewport?.contains(previousFocusedElement)
+          !viewport ||
+          !isNodeFromDocument(previousFocusedElement, viewport.ownerDocument) ||
+          !viewport.contains(previousFocusedElement)
         ) {
           onFocusFromOutsideViewport()
         }
