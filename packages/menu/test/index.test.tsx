@@ -219,6 +219,36 @@ describe('@fictjs/menu', () => {
     expect(second.hasAttribute('data-highlighted')).toBe(true)
   })
 
+  it('composes content key handlers with internal item navigation', async () => {
+    const container = document.createElement('div')
+    const onKeyDown = vi.fn()
+    const open = createSignal(true)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menu open={open} onOpenChange={open} modal={false}>
+          <Content onKeyDown={onKeyDown}>
+            <Item data-testid="first">First</Item>
+            <Item data-testid="second">Second</Item>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const first = container.querySelector('[data-testid="first"]') as HTMLDivElement
+    const second = container.querySelector('[data-testid="second"]') as HTMLDivElement
+    first.focus()
+    keyDown(first, 'ArrowDown')
+    await waitForEffects()
+
+    expect(onKeyDown).toHaveBeenCalledOnce()
+    expect(document.activeElement).toBe(second)
+  })
+
   it('opens submenu content when the sub trigger is hovered', async () => {
     const container = document.createElement('div')
     document.body.append(container)

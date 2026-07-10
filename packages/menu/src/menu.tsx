@@ -586,38 +586,6 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
       tabIndex: -1,
       'data-state': prop(() => getState(menuContext.open())),
       'data-orientation': 'vertical',
-      onKeyDown: composeEventHandlers<KeyboardEvent>(
-        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-        (event) => {
-          if (event.key === 'Tab') {
-            event.preventDefault()
-            return
-          }
-
-          if (event.key === 'ArrowDown') {
-            event.preventDefault()
-            contentContext.focusItem('next', document.activeElement as HTMLElement | null)
-            return
-          }
-
-          if (event.key === 'ArrowUp') {
-            event.preventDefault()
-            contentContext.focusItem('prev', document.activeElement as HTMLElement | null)
-            return
-          }
-
-          if (FIRST_KEYS.includes(event.key)) {
-            event.preventDefault()
-            contentContext.focusItem('first')
-            return
-          }
-
-          if (LAST_KEYS.includes(event.key)) {
-            event.preventDefault()
-            contentContext.focusItem('last')
-          }
-        },
-      ),
     },
     prop(() => contentProps as Record<string, unknown>),
     {
@@ -655,6 +623,46 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
       },
       onPointerDownOutside: props.onPointerDownOutside,
       onEscapeKeyDown: props.onEscapeKeyDown,
+      onKeyDown: composeEventHandlers<KeyboardEvent>(
+        props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
+        (event) => {
+          if (event.key === 'Tab') {
+            event.preventDefault()
+            return
+          }
+
+          if (event.key === 'ArrowDown') {
+            event.preventDefault()
+            contentContext.focusItem(
+              'next',
+              (event.currentTarget as HTMLElement).ownerDocument
+                .activeElement as HTMLElement | null,
+            )
+            return
+          }
+
+          if (event.key === 'ArrowUp') {
+            event.preventDefault()
+            contentContext.focusItem(
+              'prev',
+              (event.currentTarget as HTMLElement).ownerDocument
+                .activeElement as HTMLElement | null,
+            )
+            return
+          }
+
+          if (FIRST_KEYS.includes(event.key)) {
+            event.preventDefault()
+            contentContext.focusItem('first')
+            return
+          }
+
+          if (LAST_KEYS.includes(event.key)) {
+            event.preventDefault()
+            contentContext.focusItem('last')
+          }
+        },
+      ),
     },
   )
 
