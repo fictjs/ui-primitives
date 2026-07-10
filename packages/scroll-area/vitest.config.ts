@@ -10,12 +10,32 @@ export default defineConfig({
   resolve: {
     alias: [
       {
+        find: '@fictjs/compose-refs',
+        replacement: path.resolve(packagesRoot, 'compose-refs/src/index.ts'),
+      },
+      {
         find: '@fictjs/context',
         replacement: path.resolve(packagesRoot, 'context/src/index.ts'),
       },
       {
+        find: '@fictjs/core-primitive',
+        replacement: path.resolve(packagesRoot, 'core-primitive/src/index.ts'),
+      },
+      {
+        find: '@fictjs/direction',
+        replacement: path.resolve(packagesRoot, 'direction/src/index.ts'),
+      },
+      {
+        find: '@fictjs/presence',
+        replacement: path.resolve(packagesRoot, 'presence/src/index.tsx'),
+      },
+      {
         find: '@fictjs/primitive',
         replacement: path.resolve(packagesRoot, 'primitive/src/index.tsx'),
+      },
+      {
+        find: '@fictjs/slot',
+        replacement: path.resolve(packagesRoot, 'slot/src/index.tsx'),
       },
       {
         find: '@fictjs/use-layout-effect',

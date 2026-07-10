@@ -1463,9 +1463,21 @@ importers:
 
   packages/scroll-area:
     dependencies:
+      '@fictjs/compose-refs':
+        specifier: workspace:*
+        version: link:../compose-refs
       '@fictjs/context':
         specifier: workspace:*
         version: link:../context
+      '@fictjs/core-primitive':
+        specifier: workspace:*
+        version: link:../core-primitive
+      '@fictjs/direction':
+        specifier: workspace:*
+        version: link:../direction
+      '@fictjs/presence':
+        specifier: workspace:*
+        version: link:../presence
       '@fictjs/primitive':
         specifier: workspace:*
         version: link:../primitive

@@ -49,7 +49,11 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@fictjs/compose-refs": "workspace:*",
     "@fictjs/context": "workspace:*",
+    "@fictjs/core-primitive": "workspace:*",
+    "@fictjs/direction": "workspace:*",
+    "@fictjs/presence": "workspace:*",
     "@fictjs/primitive": "workspace:*",
     "@fictjs/use-layout-effect": "workspace:*"
   },

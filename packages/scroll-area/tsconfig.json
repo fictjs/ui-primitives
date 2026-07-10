@@ -7,8 +7,13 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "paths": {
       "@fictjs/scroll-area": ["./src/index.ts"],
+      "@fictjs/compose-refs": ["../compose-refs/src/index.ts"],
       "@fictjs/context": ["../context/src/index.ts"],
+      "@fictjs/core-primitive": ["../core-primitive/src/index.ts"],
+      "@fictjs/direction": ["../direction/src/index.ts"],
+      "@fictjs/presence": ["../presence/src/index.tsx"],
       "@fictjs/primitive": ["../primitive/src/index.tsx"],
+      "@fictjs/slot": ["../slot/src/index.tsx"],
       "@fictjs/use-layout-effect": ["../use-layout-effect/src/index.ts"]
     },
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
