@@ -506,7 +506,6 @@ function OneTimePasswordFieldHiddenInput(
   const primitiveProps = mergeProps(
     {
       type: 'hidden',
-      name: prop(() => props.name ?? context.name()),
       value: prop(() => context.values().join('').trim()),
       autoComplete: 'off',
       autoFocus: false,
@@ -518,6 +517,9 @@ function OneTimePasswordFieldHiddenInput(
     () => props as Record<string, unknown>,
     {
       __scopeOneTimePasswordField: undefined,
+      'attr:form': prop(() => props.form ?? context.form()),
+      disabled: prop(context.disabled),
+      name: prop(() => props.name ?? context.name()),
       ref: undefined,
     },
   )

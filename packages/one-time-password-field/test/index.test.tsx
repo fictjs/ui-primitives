@@ -166,4 +166,58 @@ describe('@fictjs/one-time-password-field', () => {
     expect(inputs.map((input) => input.value).join(',')).toBe('1,2,3')
     expect(hiddenInput.value).toBe('123')
   })
+
+  it('inherits form association and name from the root hidden input contract', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <>
+          <form id="verification-form" />
+          <Root form="verification-form" name="code" defaultValue="12">
+            <Input />
+            <Input />
+            <HiddenInput />
+          </Root>
+        </>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const form = container.querySelector('form') as HTMLFormElement
+    const hiddenInput = container.querySelector('input[type="hidden"]') as HTMLInputElement
+
+    expect(hiddenInput.form).toBe(form)
+    expect(hiddenInput.name).toBe('code')
+    expect(new FormData(form).get('code')).toBe('12')
+  })
+
+  it('excludes the hidden value from submission when the root is disabled', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <form>
+          <Root name="code" defaultValue="12" disabled>
+            <Input />
+            <Input />
+            <HiddenInput />
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const form = container.querySelector('form') as HTMLFormElement
+    const hiddenInput = container.querySelector('input[type="hidden"]') as HTMLInputElement
+
+    expect(hiddenInput.disabled).toBe(true)
+    expect(new FormData(form).has('code')).toBe(false)
+  })
 })
