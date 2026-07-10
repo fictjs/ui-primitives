@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -122,11 +122,36 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
     ...(onCheckedChange ? { onChange: onCheckedChange } : {}),
   }
   const [checked, setChecked] = useControllableState<boolean>(controllableStateProps)
+  const initialChecked = untrack(() => checked())
   let hasConsumerStoppedPropagation = false
 
   useLayoutEffect(() => {
     const currentButton = button()
     isFormControl(currentButton ? Boolean(form() || currentButton.closest('form')) : true)
+  })
+
+  useLayoutEffect(() => {
+    const input = bubbleInput()
+    if (!input) return
+
+    const document = input.ownerDocument
+    let disposed = false
+    const handleReset = (event: Event) => {
+      if (event.target !== input.form) return
+
+      // Run after native reset dispatch so a consumer can cancel it from any listener
+      // in the propagation path and after the browser applies its default reset action.
+      queueMicrotask(() => {
+        if (disposed || event.defaultPrevented || checkedProp() !== undefined) return
+        setChecked(initialChecked)
+      })
+    }
+
+    document.addEventListener('reset', handleReset)
+    return () => {
+      disposed = true
+      document.removeEventListener('reset', handleReset)
+    }
   })
 
   const handleClick = composeEventHandlers<MouseEvent>(
@@ -187,6 +212,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
         bubbles={() => !hasConsumerStoppedPropagation}
         checked={checked}
         control={button}
+        defaultChecked={initialChecked}
         disabled={disabled}
         form={form}
         inputRef={(node) => bubbleInput(node)}

@@ -203,6 +203,74 @@ describe('@fictjs/switch', () => {
     expect(input.hasAttribute('required')).toBe(true)
   })
 
+  it('restores each uncontrolled switch to its initial state on form reset', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(
+      () => (
+        <form data-testid="form">
+          <Root data-testid="enabled" name="enabled" defaultChecked />
+          <Root data-testid="disabled" name="disabled" />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const enabled = container.querySelector('[data-testid="enabled"]') as HTMLButtonElement
+    const disabled = container.querySelector('[data-testid="disabled"]') as HTMLButtonElement
+
+    click(enabled)
+    click(disabled)
+    await flushEffects()
+
+    expect(enabled.getAttribute('aria-checked')).toBe('false')
+    expect(disabled.getAttribute('aria-checked')).toBe('true')
+
+    form.reset()
+    await flushEffects()
+
+    expect(enabled.getAttribute('aria-checked')).toBe('true')
+    expect(disabled.getAttribute('aria-checked')).toBe('false')
+    expect(new FormData(form).get('enabled')).toBe('on')
+    expect(new FormData(form).get('disabled')).toBeNull()
+  })
+
+  it('preserves the current state when form reset is canceled', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(
+      () => (
+        <form
+          data-testid="form"
+          onReset={(event) => {
+            event.preventDefault()
+          }}
+        >
+          <Root data-testid="switch" name="airplane-mode" />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const button = container.querySelector('[data-testid="switch"]') as HTMLButtonElement
+
+    click(button)
+    await flushEffects()
+    form.reset()
+    await flushEffects()
+
+    expect(button.getAttribute('aria-checked')).toBe('true')
+    expect(new FormData(form).get('airplane-mode')).toBe('on')
+  })
+
   it('forwards ref mount and cleanup through the switch root', async () => {
     const calls: Array<string | null> = []
     const container = document.createElement('div')
