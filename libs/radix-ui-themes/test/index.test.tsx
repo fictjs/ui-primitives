@@ -565,7 +565,7 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(kbd?.className).toContain('rt-Kbd')
   })
 
-  it.skip('closes themed popover content when the trigger is pressed again', async () => {
+  it('closes themed popover content when the trigger is pressed again', async () => {
     const container = document.createElement('div')
     document.body.append(container)
 
@@ -602,7 +602,7 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(document.body.querySelector('[data-testid="popover-content"]')).toBeNull()
   })
 
-  it.skip('closes themed popover content with a plain trigger child', async () => {
+  it('closes themed popover content with a plain trigger child', async () => {
     const container = document.createElement('div')
     document.body.append(container)
 
@@ -637,7 +637,7 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(document.body.querySelector('[data-testid="plain-popover-content"]')).toBeNull()
   })
 
-  it.skip('invokes themed popover trigger state changes once per click', async () => {
+  it('invokes themed popover trigger state changes once per click', async () => {
     const container = document.createElement('div')
     document.body.append(container)
     const open = createSignal(false)

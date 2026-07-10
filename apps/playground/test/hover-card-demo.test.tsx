@@ -47,7 +47,7 @@ describe('playground hover card demo', () => {
     document.body.innerHTML = ''
   })
 
-  it.skip('shows content on hover and hides it on pointer leave', async () => {
+  it('shows content on hover and hides it on pointer leave', async () => {
     const container = document.createElement('div')
     document.body.append(container)
 
