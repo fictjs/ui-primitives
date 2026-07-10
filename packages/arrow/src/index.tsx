@@ -1,5 +1,6 @@
 import type { FictNode, JSX } from '@fictjs/runtime'
 
+import { Primitive } from '@fictjs/primitive'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
 type ArrowProps = JSX.IntrinsicElements['svg'] & {
@@ -17,7 +18,16 @@ function readClassValue(value: unknown): string {
 }
 
 function Arrow(props: ArrowProps): FictNode {
-  const { children, width = 10, height = 5, class: svgClass, className, ...arrowProps } = props
+  const {
+    asChild,
+    children,
+    width = 10,
+    height = 5,
+    class: svgClass,
+    className,
+    ref: forwardedRef,
+    ...arrowProps
+  } = props
   const ref = { current: null as SVGSVGElement | null }
 
   useLayoutEffect(() => {
@@ -37,26 +47,27 @@ function Arrow(props: ArrowProps): FictNode {
   })
 
   return (
-    <svg
+    <Primitive.svg
       {...(arrowProps as Record<string, unknown>)}
+      asChild={Boolean(asChild)}
       width={width}
       height={height}
       viewBox="0 0 30 10"
       preserveAspectRatio="none"
-      ref={(node: SVGSVGElement | null) => {
-        ref.current = node
+      ref={(node: Element | null) => {
+        ref.current = node as SVGSVGElement | null
 
-        if (!props.ref) return
-        if (typeof props.ref === 'function') {
-          props.ref(node)
+        if (!forwardedRef) return
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(node as SVGSVGElement | null)
           return
         }
 
-        props.ref.current = node
+        forwardedRef.current = node as SVGSVGElement | null
       }}
     >
-      {props.asChild ? children : <polygon points="0,0 30,0 15,10" />}
-    </svg>
+      {asChild ? children : <polygon points="0,0 30,0 15,10" />}
+    </Primitive.svg>
   )
 }
 

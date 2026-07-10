@@ -42,9 +42,11 @@ describe('@fictjs/arrow', () => {
 
     const svg = container.querySelector('svg') as SVGSVGElement
 
+    expect(container.querySelectorAll('svg')).toHaveLength(1)
     expect(svg.dataset.arrow).toBe('custom')
     expect(svg.getAttribute('width')).toBe('24')
     expect(svg.getAttribute('height')).toBe('12')
+    expect(svg.hasAttribute('asChild')).toBe(false)
     expect(svg.querySelector('rect')).not.toBeNull()
     expect(svg.querySelector('polygon')).toBeNull()
   })
