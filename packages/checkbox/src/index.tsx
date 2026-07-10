@@ -38,6 +38,7 @@ type CheckboxContextValue = {
   value: () => CheckboxValue
   hasConsumerStoppedPropagationRef: { current: boolean }
   hasBubbleInputSyncRef: { current: boolean }
+  onBubbleInputSync: (checked: CheckedState) => void
   required: () => boolean | undefined
   defaultChecked: () => boolean
   isFormControl: () => boolean
@@ -211,6 +212,10 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
       hasConsumerStoppedPropagationRef={hasConsumerStoppedPropagationRef}
       isFormControl={isFormControl}
       name={name}
+      onBubbleInputSync={(current) => {
+        previousBubbleChecked = current
+        hasBubbleInputSyncRef.current = false
+      }}
       required={required}
       setBubbleInput={bubbleInput}
       setChecked={updateChecked}
@@ -282,9 +287,11 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
           }
 
           const bubbles = !context.hasConsumerStoppedPropagationRef.current
-          setNativeInputChecked(input, nextChecked)
+          const currentChecked = context.checked()
+          setNativeInputChecked(input, currentChecked)
           input.dispatchEvent(new Event('input', { bubbles }))
           input.dispatchEvent(new Event('change', { bubbles }))
+          context.onBubbleInputSync(currentChecked)
         })
       }
     },
