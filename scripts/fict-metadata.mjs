@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -186,6 +194,95 @@ function assertEqual(actual, expected, label) {
   }
 }
 
+function getPublishablePackages() {
+  return ['packages', 'libs'].flatMap((workspaceDir) => {
+    const absoluteWorkspaceDir = resolve(repoRoot, workspaceDir)
+
+    return readdirSync(absoluteWorkspaceDir, { withFileTypes: true }).flatMap((entry) => {
+      if (!entry.isDirectory()) return []
+
+      const packageDir = join(absoluteWorkspaceDir, entry.name)
+      const packageJsonPath = join(packageDir, 'package.json')
+      if (!existsSync(packageJsonPath)) return []
+
+      const pkg = readJson(packageJsonPath)
+      if (pkg.private || !pkg.name) return []
+
+      return [{ name: pkg.name, dir: relative(repoRoot, packageDir), pkg }]
+    })
+  })
+}
+
+function collectLocalTargets(value, targets = new Set()) {
+  if (typeof value === 'string') {
+    if (value.startsWith('./')) targets.add(value)
+    return targets
+  }
+
+  if (Array.isArray(value)) {
+    for (const nested of value) collectLocalTargets(nested, targets)
+    return targets
+  }
+
+  if (value && typeof value === 'object') {
+    for (const nested of Object.values(value)) collectLocalTargets(nested, targets)
+  }
+
+  return targets
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[|\\{}()[\]^$+?.]/g, '\\$&')
+}
+
+function packagePathPattern(value) {
+  const normalized = value.replace(/^\.\//, '').replace(/\\/g, '/')
+  const pattern = normalized
+    .split('**')
+    .map((part) => escapeRegExp(part).replace(/\*/g, '[^/]*'))
+    .join('.*')
+
+  return new RegExp(`^package/${pattern}$`)
+}
+
+function packedContentsInclude(contents, value, { allowDirectory = false } = {}) {
+  const normalized = value.replace(/^\.\//, '').replace(/\\/g, '/').replace(/\/$/, '')
+  if (normalized.includes('*')) {
+    const pattern = packagePathPattern(normalized)
+    return contents.some((entry) => pattern.test(entry))
+  }
+
+  const packedPath = `package/${normalized}`
+  return (
+    contents.includes(packedPath) ||
+    (allowDirectory && contents.some((entry) => entry.startsWith(`${packedPath}/`)))
+  )
+}
+
+function verifyPackedManifestTargets(name, packedPackageJson, contents) {
+  const entryTargets = collectLocalTargets([
+    packedPackageJson.main,
+    packedPackageJson.module,
+    packedPackageJson.types,
+    packedPackageJson.typings,
+    packedPackageJson.bin,
+    packedPackageJson.exports,
+  ])
+
+  for (const target of entryTargets) {
+    if (!packedContentsInclude(contents, target)) {
+      throw new Error(`${name} tarball is missing manifest target package/${target.slice(2)}`)
+    }
+  }
+
+  for (const filePattern of packedPackageJson.files ?? []) {
+    if (typeof filePattern !== 'string' || filePattern.startsWith('!')) continue
+    if (!packedContentsInclude(contents, filePattern, { allowDirectory: true })) {
+      throw new Error(`${name} tarball does not include files entry ${filePattern}`)
+    }
+  }
+}
+
 function packageConfigForDir(packageDir) {
   const normalizedPackageDir = resolve(packageDir)
   const entries = Object.entries(metadataPackages).filter(([, config]) => {
@@ -249,8 +346,9 @@ function verifyPackageMetadata(name, config) {
   }
 }
 
-function packAndVerifyPackage(name, config, packDir) {
-  const packageDir = resolve(repoRoot, config.dir)
+function packAndVerifyPackage(packageInfo, config, packDir) {
+  const { name } = packageInfo
+  const packageDir = resolve(repoRoot, packageInfo.dir)
   const output = execFileSync('pnpm', ['--filter', name, 'pack', '--pack-destination', packDir], {
     cwd: repoRoot,
     encoding: 'utf8',
@@ -277,6 +375,10 @@ function packAndVerifyPackage(name, config, packDir) {
       encoding: 'utf8',
     }),
   )
+  verifyPackedManifestTargets(name, packedPackageJson, contents)
+
+  if (!config) return
+
   assertEqual(packedPackageJson.fict, config.fict, `${name} packed package.json#fict`)
 
   for (const metadataPath of Object.keys(config.files)) {
@@ -303,8 +405,8 @@ function runVerify({ pack }) {
   const packDir = mkdtempSync(join(tmpdir(), 'ui-primitives-fict-metadata-pack-'))
 
   try {
-    for (const [name, config] of Object.entries(metadataPackages)) {
-      packAndVerifyPackage(name, config, packDir)
+    for (const packageInfo of getPublishablePackages()) {
+      packAndVerifyPackage(packageInfo, metadataPackages[packageInfo.name], packDir)
     }
   } finally {
     rmSync(packDir, { recursive: true, force: true })
