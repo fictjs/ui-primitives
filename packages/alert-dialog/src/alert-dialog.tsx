@@ -1,4 +1,4 @@
-import { type FictNode, type JSX } from '@fictjs/runtime'
+import { type FictNode } from '@fictjs/runtime'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'

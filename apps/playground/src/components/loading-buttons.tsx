@@ -1,6 +1,6 @@
 import { ArrowRightIcon, StarIcon } from '@radix-ui/react-icons'
 import { Button, Em, Flex, IconButton, Spinner, Text } from '@fictjs/radix-ui-themes'
-import { buttonPropDefs } from '@fictjs/radix-ui-themes/props'
+import type { buttonPropDefs } from '@fictjs/radix-ui-themes/props'
 
 export function LoadingButtons() {
   return (

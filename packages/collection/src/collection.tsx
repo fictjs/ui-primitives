@@ -2,7 +2,7 @@ import { type FictNode } from '@fictjs/runtime'
 import { createSignal, type Signal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
-import { createContextScope } from '@fictjs/context'
+import { createContextScope, type Scope } from '@fictjs/context'
 import { createSlot, type SlotProps } from '@fictjs/slot'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
@@ -11,7 +11,7 @@ import { resolveRecord, shallowEqual } from './utils.js'
 
 type CollectionElement = HTMLElement
 type CollectionProps = SlotProps & {
-  scope: any
+  scope: Scope
 }
 type BaseItemData = {
   id?: string
@@ -32,7 +32,7 @@ type CollectionState<ItemElement extends HTMLElement, ItemData extends BaseItemD
   setItemMap: SetCollectionState<ItemMap<ItemElement, ItemData>>,
 ]
 
-function createCollection<ItemElement extends HTMLElement, ItemData extends object = {}>(
+function createCollection<ItemElement extends HTMLElement, ItemData extends object = object>(
   name: string,
 ) {
   type AllItemData = ItemData & BaseItemData
@@ -61,7 +61,7 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
 
   function CollectionProvider(props: {
     children?: FictNode | FictNode[]
-    scope: any
+    scope: Scope
     state?: CollectionState<ItemElement, AllItemData>
   }): FictNode {
     const state = props.state ?? useInitCollection()
@@ -76,7 +76,7 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
 
   function CollectionProviderImpl(props: {
     children?: FictNode | FictNode[]
-    scope: any
+    scope: Scope
     state: CollectionState<ItemElement, AllItemData>
   }): FictNode {
     const collectionElement = createSignal<CollectionElement | null>(null)
@@ -133,7 +133,7 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
 
   type CollectionItemSlotProps = AllItemData & {
     children?: FictNode | FictNode[]
-    scope: any
+    scope: Scope
     ref?: PossibleRef<ItemElement>
   }
 
@@ -214,7 +214,7 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
     return [itemMap, setItemMap] as CollectionState<ItemElement, AllItemData>
   }
 
-  function useCollection(scope: any) {
+  function useCollection(scope: Scope) {
     const { itemMap } = useCollectionContext(name + 'CollectionConsumer', scope)
     return itemMap
   }

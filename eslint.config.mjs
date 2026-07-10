@@ -7,17 +7,25 @@ const typeCheckedForTs = tseslint.configs.recommendedTypeChecked.map((config) =>
   files: ['**/*.{ts,mts,cts}'],
 }))
 
+// Parsing every workspace TSX file through projectService exceeds the lint job's memory budget.
+// Keep this syntax-aware; package-level `typecheck` tasks remain the type-aware gate.
+const recommendedForTsx = tseslint.configs.recommended.map((config) => ({
+  ...config,
+  files: ['**/*.tsx'],
+}))
+
 const disableTypeCheckedForJs = {
   ...tseslint.configs.disableTypeChecked,
-  files: ['**/*.{js,mjs,cjs}'],
+  files: ['**/*.{js,jsx,mjs,cjs}'],
 }
 
 export default tseslint.config(
   {
-    ignores: ['**/.turbo/**', '**/coverage/**', '**/dist/**', '**/node_modules/**'],
+    ignores: ['**/.turbo/**', '**/coverage/**', '**/dist/**', '**/node_modules/**', 'others/**'],
   },
   eslint.configs.recommended,
   ...typeCheckedForTs,
+  ...recommendedForTsx,
   {
     files: ['**/*.{ts,mts,cts}'],
     languageOptions: {
@@ -48,7 +56,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.{js,mjs,cjs}'],
+    files: ['**/*.tsx'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -56,12 +64,54 @@ export default tseslint.config(
         ...globals.node,
       },
     },
+    rules: {
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          fixStyle: 'inline-type-imports',
+        },
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
+      '@typescript-eslint/no-empty-object-type': [
+        'error',
+        {
+          allowInterfaces: 'with-single-extends',
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.{js,jsx,mjs,cjs}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+      },
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
   },
   disableTypeCheckedForJs,
   {
-    files: ['**/*.test.{ts,mts,cts}'],
+    files: ['**/*.test.{ts,tsx,mts,cts}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    files: ['**/*.test-d.tsx'],
+    rules: {
+      '@typescript-eslint/no-unused-expressions': 'off',
     },
   },
   {

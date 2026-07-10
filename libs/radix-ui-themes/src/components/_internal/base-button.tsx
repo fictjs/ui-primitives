@@ -65,7 +65,7 @@ const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, 
     if (asChild && React.isValidElement(children)) {
       const props = children.props as { children?: React.ReactNode }
       const childNode = props.children
-      child = React.cloneElement<any>(children, {
+      child = React.cloneElement(children, {
         ...props,
         children: renderLoadingButtonContents(childNode, size),
       })

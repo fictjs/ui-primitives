@@ -45,9 +45,6 @@ type PrimitiveHeadingProps = JSX.IntrinsicElements['h3'] & {
 type PrimitiveParagraphProps = JSX.IntrinsicElements['p'] & {
   asChild?: boolean
 }
-type PrimitiveDivProps = JSX.IntrinsicElements['div'] & {
-  asChild?: boolean
-}
 type ToastProviderContextValue = {
   label: () => string
   duration: () => number

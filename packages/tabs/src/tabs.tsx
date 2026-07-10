@@ -270,7 +270,7 @@ function TabsList(props: ScopedProps<TabsListProps>): FictNode {
         return
       }
 
-      let nextIndex = currentIndex
+      let nextIndex: number
       if (key === 'Home') {
         nextIndex = 0
       } else if (key === 'End') {

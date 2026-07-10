@@ -73,7 +73,9 @@ const TextFieldRoot = React.forwardRef<TextFieldRootElement, TextFieldRootProps>
             // See: https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/setSelectionRange#:~:text=Note%20that%20according,not%20support%20selection%22.
             try {
               input.setSelectionRange(cursorPosition, cursorPosition)
-            } catch {}
+            } catch {
+              // Input types such as number and date do not support text selection.
+            }
             input.focus()
           })
         }}

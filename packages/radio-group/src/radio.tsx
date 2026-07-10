@@ -101,14 +101,8 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
   )
   const checked = () => Boolean(readValue(checkedProp as MaybeAccessor<boolean | undefined>))
   const disabled = () => Boolean(readValue(props.disabled as MaybeAccessor<boolean | undefined>))
-  const requiredValue = () =>
-    required === undefined
-      ? undefined
-      : Boolean(readValue(required as MaybeAccessor<boolean | undefined>))
   const form = () =>
     formInput === undefined ? undefined : readValue(formInput as MaybeAccessor<string | undefined>)
-  const name = () =>
-    nameInput === undefined ? undefined : readValue(nameInput as MaybeAccessor<string | undefined>)
   const value = () =>
     valueInput === undefined
       ? 'on'

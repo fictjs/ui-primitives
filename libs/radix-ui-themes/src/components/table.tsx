@@ -24,8 +24,8 @@ const TableRoot = React.forwardRef<TableRootElement, TableRootProps>((props, for
   )
   const tableLayoutClassNames = getResponsiveClassNames({
     value: layout,
-    className: tableRootPropDefs.layout.className,
-    propValues: tableRootPropDefs.layout.values,
+    className: layoutPropDef.className,
+    propValues: layoutPropDef.values,
   })
   return (
     <div

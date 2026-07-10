@@ -219,22 +219,6 @@ function AvatarFallback(props: ScopedProps<AvatarFallbackProps & AvatarStateProp
 
 AvatarFallback.displayName = FALLBACK_NAME
 
-function resolveLoadingStatus(image: HTMLImageElement | null, src?: string): ImageLoadingStatus {
-  if (!image) {
-    return 'idle'
-  }
-
-  if (!src) {
-    return 'error'
-  }
-
-  if (image.src !== src) {
-    image.src = src
-  }
-
-  return image.complete && image.naturalWidth > 0 ? 'loaded' : 'loading'
-}
-
 function useImageLoadingStatus(
   src: () => string | undefined,
   options: {

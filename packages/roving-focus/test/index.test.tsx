@@ -81,7 +81,6 @@ describe('@fictjs/roving-focus', () => {
 
     const group = getByTestId<HTMLDivElement>(container, 'group')
     let one = getByTestId<HTMLSpanElement>(container, 'one')
-    let two = getByTestId<HTMLSpanElement>(container, 'two')
 
     group.focus()
     await flushEffects()
@@ -92,7 +91,7 @@ describe('@fictjs/roving-focus', () => {
     keyDown(one, 'ArrowRight')
     await waitForDeferredFocus()
     one = getByTestId<HTMLSpanElement>(container, 'one')
-    two = getByTestId<HTMLSpanElement>(container, 'two')
+    const two = getByTestId<HTMLSpanElement>(container, 'two')
 
     expect(document.activeElement).toBe(two)
     expect(two.tabIndex).toBe(0)
@@ -158,8 +157,7 @@ describe('@fictjs/roving-focus', () => {
     await flushEffects()
 
     const group = getByTestId<HTMLDivElement>(container, 'group')
-    let one = getByTestId<HTMLSpanElement>(container, 'one')
-    let three = getByTestId<HTMLSpanElement>(container, 'three')
+    const three = getByTestId<HTMLSpanElement>(container, 'three')
 
     group.focus()
     await flushEffects()
@@ -167,7 +165,7 @@ describe('@fictjs/roving-focus', () => {
 
     keyDown(three, 'ArrowRight')
     await waitForDeferredFocus()
-    one = getByTestId<HTMLSpanElement>(container, 'one')
+    const one = getByTestId<HTMLSpanElement>(container, 'one')
 
     expect(document.activeElement).toBe(one)
   })
@@ -196,7 +194,6 @@ describe('@fictjs/roving-focus', () => {
     await flushEffects()
 
     const group = getByTestId<HTMLDivElement>(container, 'group')
-    let three = getByTestId<HTMLSpanElement>(container, 'three')
     const two = getByTestId<HTMLSpanElement>(container, 'two')
 
     group.focus()
@@ -205,7 +202,7 @@ describe('@fictjs/roving-focus', () => {
 
     keyDown(two, 'ArrowLeft')
     await waitForDeferredFocus()
-    three = getByTestId<HTMLSpanElement>(container, 'three')
+    const three = getByTestId<HTMLSpanElement>(container, 'three')
 
     expect(document.activeElement).toBe(three)
   })

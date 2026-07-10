@@ -27,7 +27,6 @@ type PrimitiveLinkProps = JSX.IntrinsicElements['a'] & {
 type ScopedProps<P> = P & { __scopeHoverCard?: Scope }
 type StyleRecord = Record<string, string | number>
 type HoverCardContentElement = HTMLDivElement
-type HoverCardTriggerElement = HTMLAnchorElement
 type HoverCardArrowElement = SVGSVGElement
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>

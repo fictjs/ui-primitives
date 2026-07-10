@@ -6,7 +6,7 @@ import { render } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createCollection, unstable_createCollection } from '../src/index.js'
-import { OrderedDict } from '../src/ordered-dictionary.js'
+import type { OrderedDict } from '../src/ordered-dictionary.js'
 
 type LegacyItem = {
   ref: { current: HTMLDivElement | null }

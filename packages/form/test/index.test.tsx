@@ -74,11 +74,10 @@ describe('@fictjs/form', () => {
 
     await waitForEffects()
 
-    let label = container.querySelector('label') as HTMLLabelElement
     let input = container.querySelector('input') as HTMLInputElement
     invalid(input)
     await waitForEffects()
-    label = container.querySelector('label') as HTMLLabelElement
+    const label = container.querySelector('label') as HTMLLabelElement
     input = container.querySelector('input') as HTMLInputElement
     const message = container.querySelector('span') as HTMLSpanElement
 

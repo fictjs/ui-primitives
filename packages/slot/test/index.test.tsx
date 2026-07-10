@@ -1,6 +1,6 @@
 /** @jsxImportSource @fictjs/runtime */
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { createRef, prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'

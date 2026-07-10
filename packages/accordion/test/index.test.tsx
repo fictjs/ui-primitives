@@ -111,7 +111,7 @@ describe('@fictjs/accordion', () => {
 
     click(twoTrigger)
     await waitForEffects()
-    ;[oneTrigger, twoTrigger] = getTriggers()
+    twoTrigger = getTriggers()[1]
 
     expect(twoTrigger.getAttribute('aria-expanded')).toBe('false')
   })
@@ -147,14 +147,14 @@ describe('@fictjs/accordion', () => {
       const twoTrigger = container.querySelector('[data-testid="two-trigger"]') as HTMLButtonElement
       return [oneTrigger, twoTrigger] as const
     }
-    let [oneTrigger, twoTrigger] = getTriggers()
+    const twoTrigger = getTriggers()[1]
 
     click(twoTrigger)
     await waitForEffects()
-    ;[oneTrigger, twoTrigger] = getTriggers()
+    const [oneTrigger, currentTwoTrigger] = getTriggers()
 
     expect(oneTrigger.getAttribute('aria-expanded')).toBe('true')
-    expect(twoTrigger.getAttribute('aria-expanded')).toBe('true')
+    expect(currentTwoTrigger.getAttribute('aria-expanded')).toBe('true')
   })
 
   it('moves focus between triggers with arrow keys', async () => {

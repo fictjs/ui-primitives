@@ -83,7 +83,8 @@ describe('@fictjs/toggle-group', () => {
       expect(buttons).toHaveLength(2)
       return buttons as [HTMLButtonElement, HTMLButtonElement]
     }
-    let [one, two] = getButtons()
+    let one = getButtons()[0]
+    let two: HTMLButtonElement
 
     expect(one.getAttribute('role')).toBe('radio')
     expect(one.getAttribute('aria-pressed')).toBeNull()
@@ -107,7 +108,7 @@ describe('@fictjs/toggle-group', () => {
 
     click(two)
     await waitForUpdates()
-    ;[one, two] = getButtons()
+    two = getButtons()[1]
 
     expect(onValueChange).toHaveBeenNthCalledWith(3, '')
     expect(two.getAttribute('aria-checked')).toBe('false')
@@ -135,14 +136,15 @@ describe('@fictjs/toggle-group', () => {
       expect(buttons).toHaveLength(2)
       return buttons as [HTMLButtonElement, HTMLButtonElement]
     }
-    let [one, two] = getButtons()
+    let one = getButtons()[0]
+    let two: HTMLButtonElement
 
     click(one)
     await waitForUpdates()
-    ;[one, two] = getButtons()
+    two = getButtons()[1]
     click(two)
     await waitForUpdates()
-    ;[one, two] = getButtons()
+    two = getButtons()[1]
     click(two)
     await waitForUpdates()
     ;[one, two] = getButtons()
@@ -177,11 +179,9 @@ describe('@fictjs/toggle-group', () => {
       expect(buttons).toHaveLength(3)
       return buttons as [HTMLButtonElement, HTMLButtonElement, HTMLButtonElement]
     }
-    let [one, two, three] = getButtons()
-
     getGroup().focus()
     await waitForUpdates()
-    ;[one, two, three] = getButtons()
+    const two = getButtons()[1]
 
     expect(document.activeElement).toBe(two)
   })

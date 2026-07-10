@@ -126,12 +126,11 @@ describe('@fictjs/collapsible', () => {
     await flushEffects()
 
     const trigger = container.querySelector('button') as HTMLButtonElement
-    let content = container.querySelector('[data-testid="content"]') as HTMLDivElement
 
     click(trigger)
     await flushEffects()
 
-    content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
 
     expect(onOpenChange).toHaveBeenCalledWith(false)
     expect(content.hidden).toBe(false)

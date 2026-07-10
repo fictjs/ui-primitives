@@ -124,7 +124,7 @@ describe('@fictjs/radio-group', () => {
       const two = container.querySelector('[data-testid="two"]') as HTMLButtonElement
       return [one, two] as const
     }
-    let [one] = getButtons()
+    const [one] = getButtons()
     one.focus()
     pressKey(one, 'ArrowRight')
     await waitForUpdates()

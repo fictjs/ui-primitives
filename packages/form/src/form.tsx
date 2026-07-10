@@ -14,7 +14,6 @@ type ValidityMap = Record<string, ValidityState | undefined>
 type CustomMatcherEntriesMap = Record<string, CustomMatcherEntry[]>
 type CustomErrorsMap = Record<string, Record<string, boolean>>
 type MessageIdsMap = Record<string, Set<string>>
-type ValidityMatcher = (typeof VALIDITY_MATCHERS)[number]
 type SyncCustomMatcher = (value: string, formData: FormData) => boolean
 type AsyncCustomMatcher = (value: string, formData: FormData) => Promise<boolean>
 type CustomMatcher = SyncCustomMatcher | AsyncCustomMatcher
@@ -29,19 +28,7 @@ const MESSAGE_NAME = 'FormMessage'
 const VALIDITY_STATE_NAME = 'FormValidityState'
 const SUBMIT_NAME = 'FormSubmit'
 const DEFAULT_INVALID_MESSAGE = 'This value is not valid'
-const VALIDITY_MATCHERS = [
-  'badInput',
-  'patternMismatch',
-  'rangeOverflow',
-  'rangeUnderflow',
-  'stepMismatch',
-  'tooLong',
-  'tooShort',
-  'typeMismatch',
-  'valid',
-  'valueMissing',
-] as const
-const DEFAULT_BUILT_IN_MESSAGES: Record<ValidityMatcher, string | undefined> = {
+const DEFAULT_BUILT_IN_MESSAGES = {
   badInput: DEFAULT_INVALID_MESSAGE,
   patternMismatch: 'This value does not match the required pattern',
   rangeOverflow: 'This value is too large',
@@ -52,7 +39,8 @@ const DEFAULT_BUILT_IN_MESSAGES: Record<ValidityMatcher, string | undefined> = {
   typeMismatch: 'This value does not match the required type',
   valid: undefined,
   valueMissing: 'This value is missing',
-}
+} satisfies Record<Exclude<keyof ValidityState, 'customError'>, string | undefined>
+type ValidityMatcher = keyof typeof DEFAULT_BUILT_IN_MESSAGES
 
 const [createFormContext, createFormScope] = createContextScope(FORM_NAME)
 
@@ -125,14 +113,6 @@ function cloneValidityState(validity: ValidityState): ValidityState {
 
 function toDomRef<T>(ref: PossibleRef<T>) {
   return ref as unknown as ((node: T | null) => void) | { current: T | null }
-}
-
-function readStyle(value: unknown): Record<string, string | number> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return {}
-  }
-
-  return value as Record<string, string | number>
 }
 
 function shallowBooleanRecordEqual(

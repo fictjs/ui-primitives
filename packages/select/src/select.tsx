@@ -1080,12 +1080,6 @@ function SelectItem(props: ScopedProps<SelectItemProps>): FictNode {
           context.onValueChange(props.value)
           context.onOpenChange(false)
         }}
-        onKeyDown={composeEventHandlers<KeyboardEvent>(
-          itemProps.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
-          (event) => {
-            if (disabled()) return
-          },
-        )}
       />
     </SelectItemProvider>
   )

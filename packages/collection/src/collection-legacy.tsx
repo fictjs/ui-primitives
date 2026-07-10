@@ -1,7 +1,7 @@
 import { type FictNode } from '@fictjs/runtime'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
-import { createContextScope } from '@fictjs/context'
+import { createContextScope, type Scope } from '@fictjs/context'
 import { createSlot, type SlotProps } from '@fictjs/slot'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
 
@@ -9,11 +9,11 @@ import { resolveRecord } from './utils.js'
 
 type CollectionElement = HTMLElement
 type CollectionProps = SlotProps & {
-  scope: any
+  scope: Scope
 }
 type ItemRefObject<ItemElement extends HTMLElement> = { current: ItemElement | null }
 
-function createCollection<ItemElement extends HTMLElement, ItemData extends object = {}>(
+function createCollection<ItemElement extends HTMLElement, ItemData extends object = object>(
   name: string,
 ) {
   const PROVIDER_NAME = name + 'CollectionProvider'
@@ -29,7 +29,7 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
     { collectionRef: { current: null }, itemMap: new Map() },
   )
 
-  function CollectionProvider(props: { children?: FictNode | FictNode[]; scope: any }): FictNode {
+  function CollectionProvider(props: { children?: FictNode | FictNode[]; scope: Scope }): FictNode {
     const collectionRef = { current: null as CollectionElement | null }
     const itemMap = new Map<
       ItemRefObject<ItemElement>,
@@ -75,7 +75,7 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
 
   type CollectionItemSlotProps = ItemData & {
     children?: FictNode | FictNode[]
-    scope: any
+    scope: Scope
     ref?: PossibleRef<ItemElement>
   }
 
@@ -108,7 +108,7 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
 
   CollectionItemSlot.displayName = ITEM_SLOT_NAME
 
-  function useCollection(scope: any) {
+  function useCollection(scope: Scope) {
     const context = useCollectionContext(name + 'CollectionConsumer', scope)
 
     return () => {
