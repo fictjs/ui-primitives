@@ -4,19 +4,24 @@ import { useCallbackRef } from '@fictjs/use-callback-ref'
 
 function useEscapeKeydown(
   onEscapeKeyDownProp: ((event: KeyboardEvent) => void) | undefined,
-  ownerDocument: Document = globalThis.document,
+  ownerDocument: Document | (() => Document | undefined) = globalThis.document,
 ): void {
   const onEscapeKeyDown = useCallbackRef(onEscapeKeyDownProp)
 
   createEffect(() => {
+    const currentDocument = typeof ownerDocument === 'function' ? ownerDocument() : ownerDocument
+    if (!currentDocument) return
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onEscapeKeyDown(event)
       }
     }
 
-    ownerDocument.addEventListener('keydown', handleKeyDown, { capture: true })
-    onCleanup(() => ownerDocument.removeEventListener('keydown', handleKeyDown, { capture: true }))
+    currentDocument.addEventListener('keydown', handleKeyDown, { capture: true })
+    onCleanup(() =>
+      currentDocument.removeEventListener('keydown', handleKeyDown, { capture: true }),
+    )
   })
 }
 

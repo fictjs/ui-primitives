@@ -6,6 +6,7 @@ import {
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -491,8 +492,12 @@ function DialogContentImpl(props: ScopedProps<DialogContentImplProps>): FictNode
     CONTENT_NAME,
     __scopeDialog as Scope<DialogContextValue | undefined>,
   )
+  const guardDocument = createSignal<Document | undefined>(undefined)
+  const contentRef = useComposedRefs(props.ref as PossibleRef<DialogContentElement>, (node) =>
+    guardDocument(node?.ownerDocument),
+  )
 
-  useFocusGuards()
+  useFocusGuards(guardDocument)
 
   const primitiveProps = mergeProps(
     {
@@ -538,12 +543,9 @@ function DialogContentImpl(props: ScopedProps<DialogContentImplProps>): FictNode
     dismissableLayerProps.onInteractOutside = onInteractOutside
   }
 
-  const contentPrimitiveProps =
-    props.ref === undefined
-      ? primitiveProps
-      : mergeProps(primitiveProps, {
-          ref: props.ref as PossibleRef<DialogContentElement>,
-        })
+  const contentPrimitiveProps = mergeProps(primitiveProps, {
+    ref: contentRef,
+  })
 
   return (
     <>

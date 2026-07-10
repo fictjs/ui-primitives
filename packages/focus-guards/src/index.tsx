@@ -2,35 +2,44 @@ import { createEffect, type FictNode } from '@fictjs/runtime'
 
 interface FocusGuardsProps {
   children?: FictNode | FictNode[]
+  ownerDocument?: Document | (() => Document | undefined)
 }
 
-let count = 0
+const documentCounts = new WeakMap<Document, number>()
 
 function FocusGuards(props: FocusGuardsProps): FictNode | FictNode[] | undefined {
-  useFocusGuards()
+  useFocusGuards(props.ownerDocument)
   return props.children
 }
 
-function useFocusGuards(): void {
+function useFocusGuards(ownerDocument?: Document | (() => Document | undefined)): void {
   createEffect(() => {
-    if (typeof document === 'undefined' || !document.body) return
+    const currentDocument =
+      typeof ownerDocument === 'function' ? ownerDocument() : (ownerDocument ?? globalThis.document)
+    if (!currentDocument?.body) return
 
-    const edgeGuards = document.querySelectorAll('[data-radix-focus-guard]')
-    document.body.insertAdjacentElement(
+    const edgeGuards = currentDocument.querySelectorAll('[data-radix-focus-guard]')
+    currentDocument.body.insertAdjacentElement(
       'afterbegin',
-      (edgeGuards[0] as Element | undefined) ?? createFocusGuard(document),
+      (edgeGuards[0] as Element | undefined) ?? createFocusGuard(currentDocument),
     )
-    document.body.insertAdjacentElement(
+    currentDocument.body.insertAdjacentElement(
       'beforeend',
-      (edgeGuards[1] as Element | undefined) ?? createFocusGuard(document),
+      (edgeGuards[1] as Element | undefined) ?? createFocusGuard(currentDocument),
     )
-    count += 1
+    documentCounts.set(currentDocument, (documentCounts.get(currentDocument) ?? 0) + 1)
 
     return () => {
-      if (count === 1) {
-        document.querySelectorAll('[data-radix-focus-guard]').forEach((node) => node.remove())
+      const count = documentCounts.get(currentDocument) ?? 0
+      if (count <= 1) {
+        documentCounts.delete(currentDocument)
+        currentDocument
+          .querySelectorAll('[data-radix-focus-guard]')
+          .forEach((node) => node.remove())
+        return
       }
-      count -= 1
+
+      documentCounts.set(currentDocument, count - 1)
     }
   })
 }

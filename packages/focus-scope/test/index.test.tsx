@@ -7,7 +7,8 @@ import { render } from '@fictjs/runtime'
 import { FocusScope } from '../src/index.js'
 
 function pressTab(target: Element, options: { shift?: boolean } = {}): boolean {
-  const event = new KeyboardEvent('keydown', {
+  const KeyboardEventCtor = target.ownerDocument.defaultView?.KeyboardEvent ?? KeyboardEvent
+  const event = new KeyboardEventCtor('keydown', {
     bubbles: true,
     cancelable: true,
     key: 'Tab',
@@ -135,5 +136,37 @@ describe('@fictjs/focus-scope', () => {
     await flushEffects()
 
     expect(document.activeElement).toBe(first)
+  })
+
+  it('loops focus using the scope owner document inside an iframe', async () => {
+    const iframe = document.createElement('iframe')
+    document.body.append(iframe)
+    const frameDocument = iframe.contentDocument as Document
+    const container = frameDocument.createElement('div')
+    frameDocument.body.append(container)
+
+    render(
+      () => (
+        <FocusScope loop trapped>
+          <button data-testid="first" type="button">
+            First
+          </button>
+          <button data-testid="last" type="button">
+            Last
+          </button>
+        </FocusScope>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const first = container.querySelector('[data-testid="first"]') as HTMLButtonElement
+    const last = container.querySelector('[data-testid="last"]') as HTMLButtonElement
+    last.focus()
+    pressTab(last)
+    await flushEffects()
+
+    expect(frameDocument.activeElement).toBe(first)
   })
 })

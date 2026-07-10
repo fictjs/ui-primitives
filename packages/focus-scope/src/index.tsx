@@ -119,6 +119,7 @@ function FocusScope(props: FocusScopeProps): FictNode {
       return
     }
 
+    const focusScopesStack = getFocusScopesStack(currentContainer.ownerDocument)
     focusScopesStack.add(focusScope)
     const previouslyFocusedElement = currentContainer.ownerDocument
       .activeElement as HTMLElement | null
@@ -179,10 +180,10 @@ function FocusScope(props: FocusScopeProps): FictNode {
     if ((!loop() && !trapped()) || focusScope.paused) return
 
     const isTabKey = event.key === 'Tab' && !event.altKey && !event.ctrlKey && !event.metaKey
-    const focusedElement = document.activeElement as HTMLElement | null
+    const currentContainer = event.currentTarget as HTMLElement
+    const focusedElement = currentContainer.ownerDocument.activeElement as HTMLElement | null
 
     if (isTabKey && focusedElement) {
-      const currentContainer = event.currentTarget as HTMLElement
       const [first, last] = getTabbableEdges(currentContainer)
       const hasTabbableElementsInside = first && last
 
@@ -223,11 +224,12 @@ function FocusScope(props: FocusScopeProps): FictNode {
 FocusScope.displayName = FOCUS_SCOPE_NAME
 
 function focusFirst(candidates: HTMLElement[], { select = false }: { select?: boolean } = {}) {
-  const previouslyFocusedElement = document.activeElement
+  const ownerDocument = candidates[0]?.ownerDocument
+  const previouslyFocusedElement = ownerDocument?.activeElement
 
   for (const candidate of candidates) {
     focus(candidate, { select })
-    if (document.activeElement !== previouslyFocusedElement) return
+    if (candidate.ownerDocument.activeElement !== previouslyFocusedElement) return
   }
 }
 
@@ -240,16 +242,18 @@ function getTabbableEdges(container: HTMLElement) {
 
 function getTabbableCandidates(container: HTMLElement) {
   const nodes: HTMLElement[] = []
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
+  const ownerWindow = container.ownerDocument.defaultView
+  const nodeFilter = ownerWindow?.NodeFilter ?? NodeFilter
+  const walker = container.ownerDocument.createTreeWalker(container, nodeFilter.SHOW_ELEMENT, {
     acceptNode: (node) => {
       const element = node as HTMLElement & { disabled?: boolean; type?: string }
       const isHiddenInput = element.tagName === 'INPUT' && element.type === 'hidden'
 
       if (element.disabled || element.hidden || isHiddenInput) {
-        return NodeFilter.FILTER_SKIP
+        return nodeFilter.FILTER_SKIP
       }
 
-      return element.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
+      return element.tabIndex >= 0 ? nodeFilter.FILTER_ACCEPT : nodeFilter.FILTER_SKIP
     },
   })
 
@@ -267,12 +271,15 @@ function findVisible(elements: HTMLElement[], container: HTMLElement) {
 }
 
 function isHidden(node: HTMLElement, { upTo }: { upTo?: HTMLElement }) {
-  if (getComputedStyle(node).visibility === 'hidden') return true
+  const getStyle = node.ownerDocument.defaultView?.getComputedStyle.bind(
+    node.ownerDocument.defaultView,
+  )
+  if (getStyle?.(node).visibility === 'hidden') return true
 
   let currentNode: HTMLElement | null = node
   while (currentNode) {
     if (upTo !== undefined && currentNode === upTo) return false
-    if (getComputedStyle(currentNode).display === 'none') return true
+    if (getStyle?.(currentNode).display === 'none') return true
     currentNode = currentNode.parentElement
   }
 
@@ -280,12 +287,19 @@ function isHidden(node: HTMLElement, { upTo }: { upTo?: HTMLElement }) {
 }
 
 function isSelectableInput(element: unknown): element is HTMLInputElement {
-  return element instanceof HTMLInputElement && 'select' in element
+  if (!element || typeof element !== 'object' || !('ownerDocument' in element)) return false
+  const candidate = element as HTMLElement
+  const Input = candidate.ownerDocument.defaultView?.HTMLInputElement
+  return Boolean(Input && candidate instanceof Input && 'select' in candidate)
 }
 
 function focus(element?: FocusableTarget | null, { select = false }: { select?: boolean } = {}) {
   if (element && typeof element.focus === 'function') {
-    const previouslyFocusedElement = document.activeElement
+    const ownerDocument =
+      typeof element === 'object' && 'ownerDocument' in element
+        ? (element as HTMLElement).ownerDocument
+        : globalThis.document
+    const previouslyFocusedElement = ownerDocument.activeElement
     element.focus({ preventScroll: true })
 
     if (element !== previouslyFocusedElement && isSelectableInput(element) && select) {
@@ -296,7 +310,16 @@ function focus(element?: FocusableTarget | null, { select = false }: { select?: 
 
 type FocusScopeAPI = { paused: boolean; pause(): void; resume(): void }
 
-const focusScopesStack = createFocusScopesStack()
+const focusScopesStacks = new WeakMap<Document, ReturnType<typeof createFocusScopesStack>>()
+
+function getFocusScopesStack(ownerDocument: Document) {
+  const existing = focusScopesStacks.get(ownerDocument)
+  if (existing) return existing
+
+  const stack = createFocusScopesStack()
+  focusScopesStacks.set(ownerDocument, stack)
+  return stack
+}
 
 function createFocusScopesStack() {
   let stack: FocusScopeAPI[] = []

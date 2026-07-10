@@ -1,11 +1,4 @@
-import {
-  createContext,
-  mergeProps,
-  prop,
-  useContext,
-  type FictNode,
-  type JSX,
-} from '@fictjs/runtime'
+import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -49,13 +42,28 @@ const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
-let originalBodyPointerEvents = ''
+type DismissableLayerState = {
+  branches: Set<DismissableLayerBranchElement>
+  layers: Set<DismissableLayerElement>
+  layersWithOutsidePointerEventsDisabled: Set<DismissableLayerElement>
+  originalBodyPointerEvents: string
+}
 
-const DismissableLayerContext = createContext({
-  branches: new Set<DismissableLayerBranchElement>(),
-  layers: new Set<DismissableLayerElement>(),
-  layersWithOutsidePointerEventsDisabled: new Set<DismissableLayerElement>(),
-})
+const layerStates = new WeakMap<Document, DismissableLayerState>()
+
+function getLayerState(ownerDocument: Document): DismissableLayerState {
+  const existing = layerStates.get(ownerDocument)
+  if (existing) return existing
+
+  const state: DismissableLayerState = {
+    branches: new Set(),
+    layers: new Set(),
+    layersWithOutsidePointerEventsDisabled: new Set(),
+    originalBodyPointerEvents: '',
+  }
+  layerStates.set(ownerDocument, state)
+  return state
+}
 
 function pruneDisconnectedElements<T extends Element>(elements: Set<T>) {
   for (const element of elements) {
@@ -100,23 +108,24 @@ function readStyle(value: unknown): StyleRecord {
 function DismissableLayer(props: DismissableLayerProps): FictNode {
   const disableOutsidePointerEvents = () =>
     Boolean(readValue(props.disableOutsidePointerEvents as MaybeAccessor<boolean | undefined>))
-  const context = useContext(DismissableLayerContext)
   const node = createSignal<DismissableLayerElement | null>(null)
   const layerVersion = createSignal(0)
   let layerVersionValue = 0
   const ownerDocument = () => node()?.ownerDocument ?? globalThis.document
+  const layerState = () => getLayerState(ownerDocument())
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<DismissableLayerElement>,
     (nextNode) => node(nextNode),
   )
 
   const pruneLayerState = () => {
-    pruneDisconnectedElements(context.layers)
-    pruneDisconnectedElements(context.layersWithOutsidePointerEventsDisabled)
+    const state = layerState()
+    pruneDisconnectedElements(state.layers)
+    pruneDisconnectedElements(state.layersWithOutsidePointerEventsDisabled)
   }
   const getLayers = () => {
     pruneLayerState()
-    return Array.from(context.layers)
+    return Array.from(layerState().layers)
   }
   const getIndex = () => {
     const currentNode = node()
@@ -124,19 +133,20 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
   }
   const getHighestDisabledIndex = () => {
     pruneLayerState()
-    const highestLayer = [...context.layersWithOutsidePointerEventsDisabled].slice(-1)[0]
+    const highestLayer = [...layerState().layersWithOutsidePointerEventsDisabled].slice(-1)[0]
     return highestLayer ? getLayers().indexOf(highestLayer) : -1
   }
   const isBodyPointerEventsDisabled = () => {
     pruneLayerState()
-    return context.layersWithOutsidePointerEventsDisabled.size > 0
+    return layerState().layersWithOutsidePointerEventsDisabled.size > 0
   }
   const isPointerEventsEnabled = () => getIndex() >= getHighestDisabledIndex()
 
   const pointerDownOutside = usePointerDownOutside((event) => {
+    const state = layerState()
     const target = event.target as HTMLElement | null
     const isPointerDownOnBranch =
-      !!target && [...context.branches].some((branch) => branch.contains(target))
+      !!target && [...state.branches].some((branch) => branch.contains(target))
 
     if (!isPointerEventsEnabled() || isPointerDownOnBranch) return
 
@@ -146,9 +156,10 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
   }, ownerDocument)
 
   const focusOutside = useFocusOutside((event) => {
+    const state = layerState()
     const target = event.target as HTMLElement | null
     const isFocusInBranch =
-      !!target && [...context.branches].some((branch) => branch.contains(target))
+      !!target && [...state.branches].some((branch) => branch.contains(target))
 
     if (isFocusInBranch) return
 
@@ -165,32 +176,33 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
     }
 
     pruneLayerState()
+    const state = getLayerState(currentDocument)
 
     const shouldDisableOutsidePointerEvents = disableOutsidePointerEvents()
 
     if (shouldDisableOutsidePointerEvents) {
-      if (context.layersWithOutsidePointerEventsDisabled.size === 0) {
-        originalBodyPointerEvents = currentDocument.body.style.pointerEvents
+      if (state.layersWithOutsidePointerEventsDisabled.size === 0) {
+        state.originalBodyPointerEvents = currentDocument.body.style.pointerEvents
         currentDocument.body.style.pointerEvents = 'none'
       }
 
-      context.layersWithOutsidePointerEventsDisabled.add(currentNode)
+      state.layersWithOutsidePointerEventsDisabled.add(currentNode)
     }
 
-    context.layers.add(currentNode)
+    state.layers.add(currentNode)
     dispatchUpdate(currentDocument)
 
     return () => {
-      context.layers.delete(currentNode)
-      context.layersWithOutsidePointerEventsDisabled.delete(currentNode)
+      state.layers.delete(currentNode)
+      state.layersWithOutsidePointerEventsDisabled.delete(currentNode)
       const restoreBodyPointerEvents = () => {
         pruneLayerState()
 
         if (
           shouldDisableOutsidePointerEvents &&
-          context.layersWithOutsidePointerEventsDisabled.size === 0
+          state.layersWithOutsidePointerEventsDisabled.size === 0
         ) {
-          currentDocument.body.style.pointerEvents = originalBodyPointerEvents
+          currentDocument.body.style.pointerEvents = state.originalBodyPointerEvents
         }
       }
 
@@ -220,7 +232,8 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
   })
 
   useEscapeKeydown((event) => {
-    const isHighestLayer = getIndex() === context.layers.size - 1
+    const state = layerState()
+    const isHighestLayer = getIndex() === state.layers.size - 1
     if (!isHighestLayer) return
 
     props.onEscapeKeyDown?.(event)
@@ -228,7 +241,7 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
       event.preventDefault()
       props.onDismiss()
     }
-  }, globalThis.document)
+  }, ownerDocument)
 
   const primitiveProps = mergeProps(
     prop(() => props as Record<string, unknown>),
@@ -278,7 +291,6 @@ function DismissableLayer(props: DismissableLayerProps): FictNode {
 DismissableLayer.displayName = DISMISSABLE_LAYER_NAME
 
 function DismissableLayerBranch(props: DismissableLayerBranchProps): FictNode {
-  const context = useContext(DismissableLayerContext)
   const node = createSignal<DismissableLayerBranchElement | null>(null)
   const composedRefs = useComposedRefs(
     props.ref as PossibleRef<DismissableLayerBranchElement>,
@@ -289,9 +301,10 @@ function DismissableLayerBranch(props: DismissableLayerBranchProps): FictNode {
     const currentNode = node()
     if (!currentNode) return
 
-    context.branches.add(currentNode)
+    const state = getLayerState(currentNode.ownerDocument)
+    state.branches.add(currentNode)
     return () => {
-      context.branches.delete(currentNode)
+      state.branches.delete(currentNode)
     }
   })
 
@@ -353,12 +366,13 @@ function usePointerDownOutside(
       isPointerInsideReactTreeRef.current = false
     }
 
-    const timerId = window.setTimeout(() => {
+    const ownerWindow = currentDocument.defaultView ?? globalThis.window
+    const timerId = ownerWindow.setTimeout(() => {
       currentDocument.addEventListener('pointerdown', handlePointerDown)
     }, 0)
 
     return () => {
-      window.clearTimeout(timerId)
+      ownerWindow.clearTimeout(timerId)
       currentDocument.removeEventListener('pointerdown', handlePointerDown)
       currentDocument.removeEventListener('click', handleClickRef.current)
     }

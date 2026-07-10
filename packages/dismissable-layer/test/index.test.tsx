@@ -20,8 +20,9 @@ function pointerDown(target: Element): void {
 }
 
 function pressEscape(target: Document): void {
+  const KeyboardEventCtor = target.defaultView?.KeyboardEvent ?? KeyboardEvent
   target.dispatchEvent(
-    new KeyboardEvent('keydown', {
+    new KeyboardEventCtor('keydown', {
       bubbles: true,
       cancelable: true,
       key: 'Escape',
@@ -311,5 +312,36 @@ describe('@fictjs/dismissable-layer', () => {
 
     expect(onInnerDismiss).toHaveBeenCalledTimes(1)
     expect(onOuterDismiss).not.toHaveBeenCalled()
+  })
+
+  it('binds escape handling and pointer locks to the layer owner document', async () => {
+    const iframe = document.createElement('iframe')
+    const onDismiss = vi.fn()
+    document.body.append(iframe)
+    const frameDocument = iframe.contentDocument as Document
+    const frameContainer = frameDocument.createElement('div')
+    frameDocument.body.append(frameContainer)
+
+    mount(
+      () => (
+        <Root disableOutsidePointerEvents onDismiss={onDismiss}>
+          <button type="button">Inside frame</button>
+        </Root>
+      ),
+      frameContainer,
+    )
+
+    await waitForListenerRegistration()
+
+    expect(document.body.style.pointerEvents).toBe('')
+    expect(frameDocument.body.style.pointerEvents).toBe('none')
+
+    pressEscape(document)
+    await flushEffects()
+    expect(onDismiss).not.toHaveBeenCalled()
+
+    pressEscape(frameDocument)
+    await flushEffects()
+    expect(onDismiss).toHaveBeenCalledOnce()
   })
 })

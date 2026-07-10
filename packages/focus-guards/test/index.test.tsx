@@ -65,4 +65,27 @@ describe('@fictjs/focus-guards', () => {
     disposeB()
     expect(document.querySelectorAll('[data-radix-focus-guard]')).toHaveLength(0)
   })
+
+  it('injects guards into the requested owner document', () => {
+    const iframe = document.createElement('iframe')
+    document.body.append(iframe)
+    const frameDocument = iframe.contentDocument as Document
+    const host = frameDocument.createElement('div')
+    frameDocument.body.append(host)
+
+    const dispose = render(
+      () => (
+        <FocusGuards ownerDocument={frameDocument}>
+          <div>Frame</div>
+        </FocusGuards>
+      ),
+      host,
+    )
+
+    expect(document.querySelectorAll('[data-radix-focus-guard]')).toHaveLength(0)
+    expect(frameDocument.querySelectorAll('[data-radix-focus-guard]')).toHaveLength(2)
+
+    dispose()
+    expect(frameDocument.querySelectorAll('[data-radix-focus-guard]')).toHaveLength(0)
+  })
 })

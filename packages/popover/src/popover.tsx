@@ -441,8 +441,12 @@ function PopoverContentImpl(props: ScopedProps<PopoverContentImplProps>): FictNo
     __scopePopover as Scope<PopoverContextValue | undefined>,
   )
   const popperScope = usePopperScope(__scopePopover)
+  const guardDocument = createSignal<Document | undefined>(undefined)
+  const contentRef = useComposedRefs(props.ref as PossibleRef<HTMLDivElement>, (node) =>
+    guardDocument(node?.ownerDocument),
+  )
 
-  useFocusGuards()
+  useFocusGuards(guardDocument)
 
   const popperProps = mergeProps<Record<string, unknown>>(
     {
@@ -499,12 +503,9 @@ function PopoverContentImpl(props: ScopedProps<PopoverContentImplProps>): FictNo
   if (onInteractOutside !== undefined) {
     dismissableLayerProps.onInteractOutside = onInteractOutside
   }
-  const contentPrimitiveProps =
-    props.ref === undefined
-      ? popperProps
-      : mergeProps(popperProps, {
-          ref: props.ref as PossibleRef<HTMLDivElement>,
-        })
+  const contentPrimitiveProps = mergeProps(popperProps, {
+    ref: contentRef,
+  })
 
   return (
     <FocusScope {...(focusScopeProps as Record<string, unknown>)}>
