@@ -40,3 +40,9 @@ jobs:
         run: pnpm metadata:e2e
         env:
           CI: true
+      - name: Install Playwright Chromium
+        run: pnpm --filter @fictjs/radix-ui-themes-playground exec playwright install --with-deps chromium
+      - name: Run browser end-to-end tests
+        run: pnpm --filter @fictjs/radix-ui-themes-playground test:e2e
+        env:
+          CI: true
