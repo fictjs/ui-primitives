@@ -34,6 +34,7 @@ catalog:
 catalogMode: strict
 
 overrides:
+  '@babel/core@7.29.0': 7.29.6
   'brace-expansion@1.1.12': 1.1.14
   'brace-expansion@5.0.4': 5.0.6
   'fast-uri@3.1.0': 3.1.2
