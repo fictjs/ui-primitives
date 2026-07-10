@@ -36,3 +36,7 @@ jobs:
         run: pnpm verify
         env:
           CI: true
+      - name: Verify metadata consumer
+        run: pnpm metadata:e2e
+        env:
+          CI: true
