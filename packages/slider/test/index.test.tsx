@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Range, Root, Thumb, Track } from '../src/index.js'
 
@@ -218,6 +219,57 @@ describe('@fictjs/slider', () => {
 
     expect(thumb.getAttribute('aria-valuenow')).toBe('50')
     expect(wrapper.style.bottom).toBe('calc(50% + 0px)')
+  })
+
+  it('switches root behavior and pointer mapping when orientation changes', async () => {
+    const container = document.createElement('div')
+    const orientation = createSignal<'horizontal' | 'vertical'>('horizontal')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root data-testid="slider" defaultValue={[25]} orientation={prop(() => orientation())}>
+          <Track data-testid="track">
+            <Range />
+          </Track>
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    orientation('vertical')
+    await waitForEffects()
+
+    const slider = container.querySelector('[data-testid="slider"]') as HTMLSpanElement
+    const track = container.querySelector('[data-testid="track"]') as HTMLSpanElement
+    const thumb = container.querySelector('[role="slider"]') as HTMLSpanElement
+
+    expect(slider.getAttribute('data-orientation')).toBe('vertical')
+    expect(track.getAttribute('data-orientation')).toBe('vertical')
+    expect(thumb.getAttribute('aria-orientation')).toBe('vertical')
+
+    Object.defineProperty(slider, 'getBoundingClientRect', {
+      value: () =>
+        ({
+          width: 20,
+          height: 100,
+          left: 0,
+          top: 0,
+          right: 20,
+          bottom: 100,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }) satisfies DOMRect,
+    })
+
+    pointer(slider, 'pointerdown', 10, 25)
+    pointer(slider, 'pointerup', 10, 25)
+    await waitForEffects()
+
+    expect(thumb.getAttribute('aria-valuenow')).toBe('75')
   })
 
   it('respects minStepsBetweenThumbs for multiple thumbs', async () => {

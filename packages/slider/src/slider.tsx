@@ -53,6 +53,9 @@ type SliderContextValue = {
   thumbs: Set<SliderThumbElement>
   rootRef: { current: HTMLSpanElement | null }
   orientation: () => SliderOrientation
+  dir: () => Direction
+  inverted: () => boolean
+  style: () => SliderStyle
   form: () => string | undefined
 }
 
@@ -96,9 +99,6 @@ type SliderThumbProps = JSX.IntrinsicElements['span'] & {
 }
 
 type SliderOrientationPrivateProps = {
-  min: number
-  max: number
-  inverted: boolean
   onSlideStart?(value: number): void
   onSlideMove?(value: number): void
   onSlideEnd?(): void
@@ -107,12 +107,8 @@ type SliderOrientationPrivateProps = {
   onStepKeyDown(step: { event: KeyboardEvent; direction: number }): void
 }
 
-type SliderHorizontalProps = Omit<JSX.IntrinsicElements['span'], 'dir'> &
-  SliderOrientationPrivateProps & {
-    dir: Direction
-  }
-
-type SliderVerticalProps = JSX.IntrinsicElements['span'] & SliderOrientationPrivateProps
+type SliderOrientationProps = Omit<JSX.IntrinsicElements['span'], 'dir'> &
+  SliderOrientationPrivateProps
 
 type SliderImplProps = JSX.IntrinsicElements['span'] & {
   onSlideStart(event: PointerEvent): void
@@ -163,11 +159,11 @@ function sortAndClampValues(values: number[], min: number, max: number): number[
 }
 
 function Slider(props: ScopedProps<SliderProps>): FictNode {
-  const direction = useDirection(
+  const inheritedDirection = useDirection()
+  const direction = () =>
     props.dir === undefined
-      ? undefined
-      : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? undefined),
-  )
+      ? inheritedDirection()
+      : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? inheritedDirection())
   const name = () =>
     props.name === undefined
       ? undefined
@@ -227,8 +223,6 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
       props.onValueChange?.(nextValues)
     },
   })
-  const isHorizontal = () => orientation() === 'horizontal'
-
   const updateValues = (value: number, atIndex: number, { commit } = { commit: false }) => {
     const decimalCount = getDecimalCount(step())
     const snapToStep = roundValue(
@@ -303,14 +297,10 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
       value: undefined,
     },
   )
-  const orientationNode = (isHorizontal() ? (
-    <SliderHorizontal
+  const orientationNode = (
+    <SliderOrientation
       {...(sliderProps as Record<string, unknown>)}
       __scopeSlider={props.__scopeSlider}
-      dir={direction()}
-      min={min()}
-      max={max()}
-      inverted={inverted()}
       onSlideStart={handleSlideStart}
       onSlideMove={handleSlideMove}
       onSlideEnd={handleSlideEnd}
@@ -343,46 +333,7 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
         })
       }}
     />
-  ) : (
-    <SliderVertical
-      {...(sliderProps as Record<string, unknown>)}
-      __scopeSlider={props.__scopeSlider}
-      min={min()}
-      max={max()}
-      inverted={inverted()}
-      onSlideStart={handleSlideStart}
-      onSlideMove={handleSlideMove}
-      onSlideEnd={handleSlideEnd}
-      onHomeKeyDown={() => {
-        if (!disabled()) {
-          updateValues(min(), 0, { commit: true })
-        }
-      }}
-      onEndKeyDown={() => {
-        if (!disabled()) {
-          updateValues(max(), values().length - 1, { commit: true })
-        }
-      }}
-      onStepKeyDown={({
-        event,
-        direction: stepDirection,
-      }: {
-        event: KeyboardEvent
-        direction: number
-      }) => {
-        if (disabled()) return
-
-        const isPageKey = PAGE_KEYS.includes(event.key)
-        const isSkipKey = isPageKey || (event.shiftKey && ARROW_KEYS.includes(event.key))
-        const multiplier = isSkipKey ? 10 : 1
-        const atIndex = valueIndexToChangeRef.current
-        const currentValue = values()[atIndex] ?? min()
-        updateValues(currentValue + step() * multiplier * stepDirection, atIndex, {
-          commit: true,
-        })
-      }}
-    />
-  )) as unknown as FictNode
+  ) as unknown as FictNode
 
   return (
     <SliderProvider
@@ -396,6 +347,9 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
       thumbs={thumbs}
       rootRef={rootRef}
       orientation={orientation}
+      dir={direction}
+      inverted={inverted}
+      style={() => readStyle(props.style)}
       form={form}
     >
       <Collection.Provider scope={props.__scopeSlider}>
@@ -407,13 +361,9 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
 
 Slider.displayName = SLIDER_NAME
 
-function SliderHorizontal(props: ScopedProps<SliderHorizontalProps>): FictNode {
+function SliderOrientation(props: ScopedProps<SliderOrientationProps>): FictNode {
   const {
     __scopeSlider,
-    min,
-    max,
-    dir,
-    inverted,
     onSlideStart,
     onSlideMove,
     onSlideEnd,
@@ -422,115 +372,88 @@ function SliderHorizontal(props: ScopedProps<SliderHorizontalProps>): FictNode {
     onStepKeyDown,
     ...sliderProps
   } = props
-  const slider = createSignal<HTMLSpanElement | null>(null)
-  const rectRef = { current: undefined as DOMRect | undefined }
-  const isDirectionLTR = () => dir === 'ltr'
-  const isSlidingFromLeft = () => (isDirectionLTR() && !inverted) || (!isDirectionLTR() && inverted)
-
-  const getValueFromPointer = (pointerPosition: number) => {
-    const sliderNode = slider()
-    const rect = rectRef.current ?? sliderNode?.getBoundingClientRect()
-    if (!rect) return min
-
-    rectRef.current = rect
-    return linearScale(
-      [0, rect.width],
-      isSlidingFromLeft() ? [min, max] : [max, min],
-    )(pointerPosition - rect.left)
-  }
-
-  return (
-    <SliderOrientationProvider
-      scope={__scopeSlider as Scope<SliderOrientationContextValue | undefined>}
-      startEdge={() => (isSlidingFromLeft() ? 'left' : 'right')}
-      endEdge={() => (isSlidingFromLeft() ? 'right' : 'left')}
-      size={() => 'width'}
-      direction={() => (isSlidingFromLeft() ? 1 : -1)}
-    >
-      <SliderImpl
-        {...(sliderProps as Record<string, unknown>)}
-        __scopeSlider={__scopeSlider}
-        data-orientation="horizontal"
-        dir={dir}
-        ref={useComposedRefs(props.ref as PossibleRef<HTMLSpanElement>, (node) => slider(node))}
-        style={{
-          ...readStyle(props.style),
-          '--radix-slider-thumb-transform': 'translateX(-50%)',
-        }}
-        onSlideStart={(event) => {
-          onSlideStart?.(getValueFromPointer(event.clientX))
-        }}
-        onSlideMove={(event) => {
-          onSlideMove?.(getValueFromPointer(event.clientX))
-        }}
-        onSlideEnd={() => {
-          rectRef.current = undefined
-          onSlideEnd?.()
-        }}
-        onHomeKeyDown={onHomeKeyDown}
-        onEndKeyDown={onEndKeyDown}
-        onStepKeyDown={(event) => {
-          const slideDirection = isSlidingFromLeft() ? 'from-left' : 'from-right'
-          const isBackKey = BACK_KEYS[slideDirection].includes(event.key)
-          onStepKeyDown({ event, direction: isBackKey ? -1 : 1 })
-        }}
-      />
-    </SliderOrientationProvider>
+  const context = useSliderContext(
+    SLIDER_NAME,
+    __scopeSlider as Scope<SliderContextValue | undefined>,
   )
-}
-
-function SliderVertical(props: ScopedProps<SliderVerticalProps>): FictNode {
-  const {
-    __scopeSlider,
-    min,
-    max,
-    inverted,
-    onSlideStart,
-    onSlideMove,
-    onSlideEnd,
-    onHomeKeyDown,
-    onEndKeyDown,
-    onStepKeyDown,
-    ...sliderProps
-  } = props
   const slider = createSignal<HTMLSpanElement | null>(null)
   const rectRef = { current: undefined as DOMRect | undefined }
-  const isSlidingFromBottom = () => !inverted
+  const isHorizontal = () => context.orientation() === 'horizontal'
+  const isDirectionLTR = () => context.dir() === 'ltr'
+  const isSlidingFromLeft = () =>
+    (isDirectionLTR() && !context.inverted()) || (!isDirectionLTR() && context.inverted())
+  const isSlidingFromBottom = () => !context.inverted()
+  const startEdge = () =>
+    isHorizontal()
+      ? isSlidingFromLeft()
+        ? 'left'
+        : 'right'
+      : isSlidingFromBottom()
+        ? 'bottom'
+        : 'top'
+  const endEdge = () =>
+    isHorizontal()
+      ? isSlidingFromLeft()
+        ? 'right'
+        : 'left'
+      : isSlidingFromBottom()
+        ? 'top'
+        : 'bottom'
+  const size = () => (isHorizontal() ? 'width' : 'height')
+  const slideDirection = (): SlideDirection =>
+    isHorizontal()
+      ? isSlidingFromLeft()
+        ? 'from-left'
+        : 'from-right'
+      : isSlidingFromBottom()
+        ? 'from-bottom'
+        : 'from-top'
 
-  const getValueFromPointer = (pointerPosition: number) => {
+  const getValueFromPointer = (event: PointerEvent) => {
     const sliderNode = slider()
     const rect = rectRef.current ?? sliderNode?.getBoundingClientRect()
-    if (!rect) return min
+    if (!rect) return context.min()
 
     rectRef.current = rect
+    if (isHorizontal()) {
+      return linearScale(
+        [0, rect.width],
+        isSlidingFromLeft() ? [context.min(), context.max()] : [context.max(), context.min()],
+      )(event.clientX - rect.left)
+    }
+
     return linearScale(
       [0, rect.height],
-      isSlidingFromBottom() ? [max, min] : [min, max],
-    )(pointerPosition - rect.top)
+      isSlidingFromBottom() ? [context.max(), context.min()] : [context.min(), context.max()],
+    )(event.clientY - rect.top)
   }
+
+  useLayoutEffect(() => {
+    context.orientation()
+    context.dir()
+    context.inverted()
+    rectRef.current = undefined
+  })
 
   return (
     <SliderOrientationProvider
       scope={__scopeSlider as Scope<SliderOrientationContextValue | undefined>}
-      startEdge={() => (isSlidingFromBottom() ? 'bottom' : 'top')}
-      endEdge={() => (isSlidingFromBottom() ? 'top' : 'bottom')}
-      size={() => 'height'}
-      direction={() => (isSlidingFromBottom() ? 1 : -1)}
+      startEdge={startEdge}
+      endEdge={endEdge}
+      size={size}
+      direction={() =>
+        isHorizontal() ? (isSlidingFromLeft() ? 1 : -1) : isSlidingFromBottom() ? 1 : -1
+      }
     >
       <SliderImpl
         {...(sliderProps as Record<string, unknown>)}
         __scopeSlider={__scopeSlider}
-        data-orientation="vertical"
         ref={useComposedRefs(props.ref as PossibleRef<HTMLSpanElement>, (node) => slider(node))}
-        style={{
-          ...readStyle(props.style),
-          '--radix-slider-thumb-transform': 'translateY(50%)',
-        }}
         onSlideStart={(event) => {
-          onSlideStart?.(getValueFromPointer(event.clientY))
+          onSlideStart?.(getValueFromPointer(event))
         }}
         onSlideMove={(event) => {
-          onSlideMove?.(getValueFromPointer(event.clientY))
+          onSlideMove?.(getValueFromPointer(event))
         }}
         onSlideEnd={() => {
           rectRef.current = undefined
@@ -539,8 +462,7 @@ function SliderVertical(props: ScopedProps<SliderVerticalProps>): FictNode {
         onHomeKeyDown={onHomeKeyDown}
         onEndKeyDown={onEndKeyDown}
         onStepKeyDown={(event) => {
-          const slideDirection = isSlidingFromBottom() ? 'from-bottom' : 'from-top'
-          const isBackKey = BACK_KEYS[slideDirection].includes(event.key)
+          const isBackKey = BACK_KEYS[slideDirection()].includes(event.key)
           onStepKeyDown({ event, direction: isBackKey ? -1 : 1 })
         }}
       />
@@ -568,6 +490,13 @@ function SliderImpl(props: ScopedProps<SliderImplProps>): FictNode {
   const primitiveProps = mergeProps(
     prop(() => sliderProps as Record<string, unknown>),
     {
+      'data-orientation': prop(context.orientation),
+      dir: prop(context.dir),
+      style: prop(() => ({
+        ...context.style(),
+        '--radix-slider-thumb-transform':
+          context.orientation() === 'horizontal' ? 'translateX(-50%)' : 'translateY(50%)',
+      })),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
         props.onKeyDown as ((event: KeyboardEvent) => void) | undefined,
         (event) => {
