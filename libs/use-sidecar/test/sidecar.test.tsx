@@ -1,4 +1,5 @@
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
 
 import { createSidecarMedium, env, exportSidecar, setConfig, sidecar } from '../src/index.js'
@@ -74,6 +75,33 @@ describe('sidecar', () => {
 
     expect(container.textContent).toBe('value:42')
     expect(importer).toHaveBeenCalledTimes(1)
+
+    dispose()
+  })
+
+  it('preserves reactive props across imported and exported sidecars', async () => {
+    const value = createSignal('first')
+    const medium = createSidecarMedium<{ value: string }>()
+    const SideEffect = exportSidecar(medium, (props: { value: string }) => (
+      <div data-value={prop(() => props.value)} />
+    ))
+    const importer = vi.fn(async () => ({ default: SideEffect }))
+    const Sidecar = sidecar(importer)
+    const container = document.createElement('div')
+
+    const dispose = render(
+      () => (
+        <Sidecar sideCar={medium} value={prop(() => value()) as unknown as string} />
+      ),
+      container,
+    )
+
+    await tick(5)
+    expect(container.querySelector('[data-value]')?.getAttribute('data-value')).toBe('first')
+
+    value('second')
+    await tick(5)
+    expect(container.querySelector('[data-value]')?.getAttribute('data-value')).toBe('second')
 
     dispose()
   })

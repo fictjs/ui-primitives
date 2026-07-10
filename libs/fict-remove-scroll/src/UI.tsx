@@ -4,10 +4,11 @@ import { createRef, prop } from 'fict'
 import type { FictVNode } from 'fict'
 import { reactive } from 'fict/advanced'
 import { fullWidthClassName, zeroRightClassName } from '@fictjs/fict-remove-scroll-bar/constants'
-import { useMergeRefs } from '@fictjs/use-callback-ref'
+import { useMergeRefs, type MaybeRef } from '@fictjs/use-callback-ref'
 import { effectCar } from './medium.js'
 import type {
   IRemoveScrollUIProps,
+  MaybeAccessor,
   RemoveScrollEffectCallbacks,
   RemoveScrollUIType,
 } from './types.js'
@@ -81,12 +82,16 @@ function cloneVNode(node: FictVNode, props: Record<string, unknown>): FictVNode 
   }
 }
 
-function readEnabled(value: IRemoveScrollUIProps['enabled']): boolean {
+function readAccessor<T>(value: MaybeAccessor<T> | undefined): T | undefined {
   if (typeof value === 'function') {
-    return (value as () => boolean | undefined)() !== false
+    return (value as () => T)()
   }
 
-  return value !== false
+  return value
+}
+
+function readEnabled(value: IRemoveScrollUIProps['enabled']): boolean {
+  return readAccessor(value) !== false
 }
 
 /**
@@ -94,7 +99,10 @@ function readEnabled(value: IRemoveScrollUIProps['enabled']): boolean {
  */
 const RemoveScroll = ((props: IRemoveScrollUIProps) => {
   const lockRef = createRef<HTMLElement>()
-  const containerRef = useMergeRefs<HTMLElement>([lockRef, props.ref as any])
+  const containerRef = useMergeRefs<HTMLElement>([
+    lockRef,
+    props.ref as unknown as MaybeRef<HTMLElement>,
+  ])
   let callbacks = noopCallbacks
 
   const setCallbacks = (nextCallbacks: RemoveScrollEffectCallbacks): void => {
@@ -136,15 +144,15 @@ const RemoveScroll = ((props: IRemoveScrollUIProps) => {
         readEnabled(props.enabled) ? (
           <SideCar
             sideCar={effectCar}
-            allowPinchZoom={prop(() => props.allowPinchZoom ?? false)}
-            gapMode={prop(() => props.gapMode)}
-            inert={prop(() => props.inert ?? false)}
+            allowPinchZoom={prop(() => readAccessor(props.allowPinchZoom) ?? false)}
+            gapMode={prop(() => readAccessor(props.gapMode))}
+            inert={prop(() => readAccessor(props.inert) ?? false)}
             lockRef={lockRef}
-            noIsolation={prop(() => props.noIsolation ?? false)}
-            noRelative={prop(() => props.noRelative ?? false)}
-            removeScrollBar={prop(() => props.removeScrollBar ?? true)}
+            noIsolation={prop(() => readAccessor(props.noIsolation) ?? false)}
+            noRelative={prop(() => readAccessor(props.noRelative) ?? false)}
+            removeScrollBar={prop(() => readAccessor(props.removeScrollBar) ?? true)}
             setCallbacks={setCallbacks}
-            shards={prop(() => props.shards)}
+            shards={prop(() => readAccessor(props.shards))}
           />
         ) : null,
       )}

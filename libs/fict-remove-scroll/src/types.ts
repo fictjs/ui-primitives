@@ -39,9 +39,7 @@ export type IRemoveScrollSelfProps = Record<string, unknown> & {
 export type IRemoveScrollProps = IRemoveScrollSelfProps & (ChildrenForward | ChildrenNode)
 
 export type IRemoveScrollUIProps = IRemoveScrollProps & {
-  // The sidecar component receives runtime accessor-wrapped props, so its concrete props stay opaque here.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sideCar: SideCarComponent<any>
+  sideCar: SideCarComponent<IRemoveScrollEffectProps>
 }
 
 export type IRemoveScrollEffectProps = Record<string, unknown> & {

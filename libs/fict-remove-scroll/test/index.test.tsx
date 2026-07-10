@@ -245,6 +245,34 @@ describe('@fictjs/fict-remove-scroll', () => {
     dispose()
   })
 
+  it('resolves reactive options before forwarding them to the sidecar', async () => {
+    const inert = createSignal(false)
+    const removeScrollBar = createSignal(false)
+    const container = document.createElement('div')
+
+    const dispose = render(
+      () => (
+        <RemoveScroll inert={prop(() => inert())} removeScrollBar={prop(() => removeScrollBar())}>
+          <div data-testid="lock">content</div>
+        </RemoveScroll>
+      ),
+      container,
+    )
+
+    await tick()
+    expect(document.body.className).toBe('')
+    expect(document.body.getAttribute('data-scroll-locked')).toBeNull()
+
+    inert(true)
+    removeScrollBar(true)
+    await tick()
+
+    expect(document.body.className).toMatch(/block-interactivity-\d+/)
+    expect(document.body.getAttribute('data-scroll-locked')).toBe('1')
+
+    dispose()
+  })
+
   it('adds and removes inert mode interactivity classes', async () => {
     const container = document.createElement('div')
 
