@@ -54,7 +54,8 @@
     "@fictjs/primitive": "workspace:*",
     "@fictjs/roving-focus": "workspace:*",
     "@fictjs/toggle": "workspace:*",
-    "@fictjs/use-controllable-state": "workspace:*"
+    "@fictjs/use-controllable-state": "workspace:*",
+    "@fictjs/use-layout-effect": "workspace:*"
   },
   "peerDependencies": {
     "@fictjs/runtime": ">=0.26.0"

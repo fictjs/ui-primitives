@@ -66,6 +66,7 @@
     "@fictjs/roving-focus": "workspace:*",
     "@fictjs/slot": "workspace:*",
     "@fictjs/use-callback-ref": "workspace:*",
+    "@fictjs/use-controllable-state": "workspace:*",
     "@fictjs/use-layout-effect": "workspace:*",
     "aria-hidden": "^1.2.4"
   },

@@ -903,6 +903,9 @@ importers:
       '@fictjs/use-callback-ref':
         specifier: workspace:*
         version: link:../use-callback-ref
+      '@fictjs/use-controllable-state':
+        specifier: workspace:*
+        version: link:../use-controllable-state
       '@fictjs/use-layout-effect':
         specifier: workspace:*
         version: link:../use-layout-effect
@@ -1491,6 +1494,9 @@ importers:
       '@fictjs/menu':
         specifier: workspace:*
         version: link:../menu
+      '@fictjs/presence':
+        specifier: workspace:*
+        version: link:../presence
       '@fictjs/primitive':
         specifier: workspace:*
         version: link:../primitive
@@ -1730,6 +1736,9 @@ importers:
       '@fictjs/use-controllable-state':
         specifier: workspace:*
         version: link:../use-controllable-state
+      '@fictjs/use-layout-effect':
+        specifier: workspace:*
+        version: link:../use-layout-effect
     devDependencies:
       '@fictjs/runtime':
         specifier: 'catalog:'
