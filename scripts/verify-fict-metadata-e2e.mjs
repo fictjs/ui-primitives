@@ -76,6 +76,9 @@ function readPackageDependency(packageJsonPath, name) {
   if (!version) {
     throw new Error(`Could not find ${name} in ${packageJsonPath}`)
   }
+  if (version === 'catalog:') {
+    return readCatalogVersion(name)
+  }
   return normalizeVersion(version)
 }
 
