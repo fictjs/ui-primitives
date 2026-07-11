@@ -149,4 +149,66 @@ describe('@fictjs/slot', () => {
     expect(link?.getAttribute('data-slot')).toBe('root')
     expect(container.querySelector('div')).toBeNull()
   })
+
+  it.each(['button', 'input', 'ul'] as const)(
+    'applies slot props to %s children from an iframe document',
+    async (tagName) => {
+      const iframe = document.createElement('iframe')
+      document.body.appendChild(iframe)
+
+      const iframeWindow = iframe.contentWindow
+      const iframeDocument = iframe.contentDocument
+      expect(iframeWindow).not.toBeNull()
+      expect(iframeDocument).not.toBeNull()
+      if (!iframeWindow || !iframeDocument) return
+
+      const directContainer = iframeDocument.createElement('div')
+      const slottableContainer = iframeDocument.createElement('div')
+      iframeDocument.body.append(directContainer, slottableContainer)
+
+      const directChild = iframeDocument.createElement(tagName)
+      directChild.className = 'direct-child'
+      const IframeElement = (iframeWindow as unknown as { Element: typeof Element }).Element
+
+      expect(directChild).toBeInstanceOf(IframeElement)
+      expect(directChild).not.toBeInstanceOf(Element)
+      expect('props' in directChild).toBe(false)
+
+      const disposeDirect = render(
+        () => (
+          <Slot class="direct-slot" data-slot="direct">
+            {directChild}
+          </Slot>
+        ),
+        directContainer,
+      )
+
+      await Promise.resolve()
+
+      expect(directContainer.firstElementChild).toBe(directChild)
+      expect(directChild.className).toBe('direct-slot direct-child')
+      expect(directChild.getAttribute('data-slot')).toBe('direct')
+
+      const slottableChild = iframeDocument.createElement(tagName)
+      slottableChild.className = 'slottable-child'
+
+      const disposeSlottable = render(
+        () => (
+          <Slot class="slottable-slot" data-slot="slottable">
+            <Slottable>{slottableChild}</Slottable>
+          </Slot>
+        ),
+        slottableContainer,
+      )
+
+      await Promise.resolve()
+
+      expect(slottableContainer.firstElementChild).toBe(slottableChild)
+      expect(slottableChild.className).toBe('slottable-slot slottable-child')
+      expect(slottableChild.getAttribute('data-slot')).toBe('slottable')
+
+      disposeSlottable()
+      disposeDirect()
+    },
+  )
 })

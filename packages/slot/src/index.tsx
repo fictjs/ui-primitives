@@ -31,10 +31,27 @@ const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
 function isVNode(node: unknown): node is FictVNode {
-  return !!node && typeof node === 'object' && 'type' in (node as FictVNode)
+  if (!node || typeof node !== 'object' || !('type' in node) || !('props' in node)) {
+    return false
+  }
+
+  const { props, type } = node as { props: unknown; type: unknown }
+  const isVNodeType =
+    typeof type === 'string' || typeof type === 'function' || typeof type === 'symbol'
+
+  return isVNodeType && (props === null || (typeof props === 'object' && !Array.isArray(props)))
 }
 
 function isElementNode(node: unknown): node is Element {
+  if (!node || typeof node !== 'object') return false
+
+  const ownerDocument = (node as { ownerDocument?: Document }).ownerDocument
+  const ElementConstructor = ownerDocument?.defaultView?.Element
+
+  if (ElementConstructor) {
+    return node instanceof ElementConstructor
+  }
+
   return typeof Element !== 'undefined' && node instanceof Element
 }
 
