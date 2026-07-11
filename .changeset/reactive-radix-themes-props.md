@@ -2,4 +2,4 @@
 '@fictjs/radix-ui-themes': patch
 ---
 
-Preserve getter-backed props through theme, controlled-root, and DOM forwarding wrappers so signal updates reach rendered components.
+Preserve getter-backed presentation, render, structural, overlay, and DOM props throughout the themed component wrappers.

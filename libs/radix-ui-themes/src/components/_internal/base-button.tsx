@@ -1,4 +1,5 @@
 import { prop } from 'fict'
+import { reactive } from 'fict/advanced'
 import * as React from '../../helpers/element.js'
 import { classNames } from '../../helpers/reactive-class-names.js'
 import { Slot } from '@fictjs/radix-ui'
@@ -41,7 +42,7 @@ const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, 
   const color = extractedProps.color
   const radius = extractedProps.radius
   const disabled = prop(
-    () => readPropValue(extractedProps.disabled) ?? props.loading,
+    () => readPropValue(extractedProps.disabled) ?? readPropValue(props.loading),
   ) as unknown as boolean | undefined
   const baseButtonProps = omitPropsPreservingDescriptors(
     extractedProps as Record<string, unknown>,
@@ -56,30 +57,28 @@ const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, 
         }
       : {}
   const Comp = asChild ? Slot.Root : 'button'
-  let child = children
-  if (props.loading) {
-    // Loading buttons will wrap the contents of the button for hiding them
-    // visually while retaining the button's size. This does not work with the
-    // Radix Slot since the slot root expects the slottable content to be one of
-    // its direct descendants. To get around this we need to clone the child
-    // with its wrapped inner children.
-    if (asChild && React.isValidElement(children)) {
-      const childProps = children.props as { children?: React.ReactNode }
-      const childNode = childProps.children
-      child = React.cloneElement(children, {
-        ...childProps,
-        children: renderLoadingButtonContents(
-          childNode,
-          () => props.size ?? baseButtonPropDefs.size.default,
-        ),
-      })
-    } else {
-      child = renderLoadingButtonContents(
-        children,
-        () => props.size ?? baseButtonPropDefs.size.default,
-      )
-    }
+  const renderContents = () => {
+    const currentChildren = readPropValue(children)
+    const content =
+      asChild && React.isValidElement(currentChildren)
+        ? (currentChildren.props as { children?: React.ReactNode }).children
+        : currentChildren
+
+    if (!readPropValue(props.loading)) return content
+
+    return renderLoadingButtonContents(
+      content,
+      () => readPropValue(props.size) ?? baseButtonPropDefs.size.default,
+    )
   }
+  const currentChildren = readPropValue(children)
+  const child =
+    asChild && React.isValidElement(currentChildren)
+      ? React.cloneElement(currentChildren, {
+          ...(currentChildren.props as Record<string, unknown>),
+          children: reactive(renderContents) as unknown as React.ReactNode,
+        })
+      : (reactive(renderContents) as unknown as React.ReactNode)
 
   return (
     <Comp

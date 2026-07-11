@@ -1,9 +1,11 @@
+import { createElement } from 'fict'
+import { createConditional } from 'fict/internal'
 import * as React from '../helpers/element.js'
 import { classNames } from '../helpers/reactive-class-names.js'
 import { Slot } from '@fictjs/radix-ui'
 
 import { inert } from '../helpers/inert.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { marginPropDefs } from '../props/margin.props.js'
 import { skeletonPropDefs } from './skeleton.props.js'
 
@@ -71,24 +73,35 @@ const Skeleton = React.forwardRef<SkeletonElement, SkeletonProps>((props, forwar
     marginPropDefs,
   )
 
-  if (!loading) return children
+  return createConditional(
+    () => Boolean(readPropValue(loading)),
+    () => {
+      const currentChildren = readPropValue(children)
+      const useWrapper = shouldWrapChild(currentChildren)
+      const Tag = useWrapper ? 'span' : Slot.Root
 
-  const useWrapper = shouldWrapChild(children)
-  const Tag = useWrapper ? 'span' : Slot.Root
-
-  return (
-    <Tag
-      ref={React.coerceRef(forwardedRef)}
-      aria-hidden
-      class={classNames('rt-Skeleton', className)}
-      data-inline-skeleton={useWrapper && !React.isValidElement(children) ? true : undefined}
-      tabIndex={-1}
-      inert={inert}
-      {...skeletonProps}
-    >
-      {children}
-    </Tag>
-  )
+      return (
+        <Tag
+          ref={React.coerceRef(forwardedRef)}
+          aria-hidden
+          class={classNames('rt-Skeleton', className)}
+          data-inline-skeleton={
+            useWrapper && !React.isValidElement(currentChildren) ? true : undefined
+          }
+          tabIndex={-1}
+          inert={inert}
+          {...skeletonProps}
+        >
+          {currentChildren}
+        </Tag>
+      )
+    },
+    createElement,
+    () => readPropValue(children),
+    undefined,
+    undefined,
+    { trackBranchReads: true },
+  ) as unknown as React.ReactNode
 })
 Skeleton.displayName = 'Skeleton'
 

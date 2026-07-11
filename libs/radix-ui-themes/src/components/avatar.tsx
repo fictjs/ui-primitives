@@ -1,3 +1,4 @@
+import { prop } from 'fict'
 import { createSignal, reactive } from 'fict/advanced'
 
 import * as React from '../helpers/element.js'
@@ -5,7 +6,7 @@ import { Avatar as AvatarPrimitive } from '@fictjs/radix-ui'
 import { classNames } from '../helpers/reactive-class-names.js'
 
 import { avatarPropDefs } from './avatar.props.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { getSubtree } from '../helpers/get-subtree.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
@@ -51,20 +52,28 @@ function Avatar(props: AvatarProps): React.ReactNode {
 
   const content = (
     <>
-      {reactive(() =>
-        status() === 'idle' || status() === 'loading' ? (
+      {reactive(() => {
+        return status() === 'idle' || status() === 'loading' ? (
           <span class="rt-AvatarFallback" />
         ) : status() === 'error' ? (
           <span
-            class={classNames('rt-AvatarFallback', {
-              'rt-one-letter': typeof fallback === 'string' && fallback.length === 1,
-              'rt-two-letters': typeof fallback === 'string' && fallback.length === 2,
-            })}
+            class={classNames(
+              'rt-AvatarFallback',
+              prop(() => {
+                const currentFallback = readPropValue(fallback)
+                return {
+                  'rt-one-letter':
+                    typeof currentFallback === 'string' && currentFallback.length === 1,
+                  'rt-two-letters':
+                    typeof currentFallback === 'string' && currentFallback.length === 2,
+                }
+              }),
+            )}
           >
-            {fallback}
+            {prop(() => readPropValue(fallback)) as unknown as React.ReactNode}
           </span>
-        ) : null,
-      )}
+        ) : null
+      })}
       <AvatarPrimitive.Image
         {...imageProps}
         src={src}

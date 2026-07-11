@@ -1,9 +1,10 @@
+import { reactive } from 'fict/advanced'
 import * as React from '../helpers/element.js'
 import { classNames } from '../helpers/reactive-class-names.js'
 import { Tooltip as TooltipPrimitive } from '@fictjs/radix-ui'
 
 import { Text } from './text.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { tooltipPropDefs } from './tooltip.props.js'
 import { Theme } from './theme.js'
 
@@ -35,9 +36,13 @@ const Tooltip = React.forwardRef<TooltipElement, TooltipProps>((props, forwarded
     ...tooltipContentProps
   } = extractProps(props, tooltipPropDefs)
   const rootProps = { open, defaultOpen, onOpenChange, delayDuration, disableHoverableContent }
+  const trigger = reactive(() => (
+    <TooltipPrimitive.Trigger asChild>{readPropValue(children)}</TooltipPrimitive.Trigger>
+  ))
+
   return (
     <TooltipPrimitive.Root {...rootProps}>
-      <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
+      {trigger as unknown as React.ReactNode}
       <TooltipPrimitive.Portal container={container} forceMount={forceMount}>
         <Theme asChild>
           <TooltipPrimitive.Content
@@ -49,7 +54,7 @@ const Tooltip = React.forwardRef<TooltipElement, TooltipProps>((props, forwarded
             class={classNames('rt-TooltipContent', className)}
           >
             <Text as="p" className="rt-TooltipText" size="1">
-              {content}
+              {content as unknown as React.ReactNode}
             </Text>
             <TooltipPrimitive.Arrow class="rt-TooltipArrow" />
           </TooltipPrimitive.Content>

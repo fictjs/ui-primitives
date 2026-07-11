@@ -34,6 +34,12 @@ const LOCAL_VALUE_KEYS = new Set<PropertyKey>([
   'loading',
   'ref',
 ])
+const REACTIVE_LOCAL_VALUE_KEYS = new Set<PropertyKey>([
+  'children',
+  'content',
+  'fallback',
+  'loading',
+])
 const REACTIVE_STRUCTURE_KEYS = new Set<PropertyKey>(['as', 'asChild'])
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 
@@ -91,7 +97,11 @@ function copyPropsPreservingGetters(source: PropsRecord): Record<string, unknown
     const currentValue = REACTIVE_STRUCTURE_KEYS.has(key) ? source[key] : untrack(() => source[key])
     const isLocallyConsumedValue =
       LOCAL_VALUE_KEYS.has(key) || (typeof currentValue === 'function' && !isEventHandlerKey(key))
-    const value = isLocallyConsumedValue ? readPropValue(currentValue) : prop(() => source[key])
+    const value = REACTIVE_LOCAL_VALUE_KEYS.has(key)
+      ? prop(() => readPropValue(source[key]), { unwrap: false })
+      : isLocallyConsumedValue
+        ? readPropValue(currentValue)
+        : prop(() => source[key])
 
     Object.defineProperty(target, key, {
       configurable: true,
@@ -265,9 +275,13 @@ function extractProps<
       continue
     }
 
-    extractedProps[key] = LOCAL_VALUE_KEYS.has(key)
-      ? normalizeValue(readPropValue((props as PropsRecord)[key]), propDef)
-      : prop(() => derivedProps().values[key])
+    extractedProps[key] = REACTIVE_LOCAL_VALUE_KEYS.has(key)
+      ? prop(() => normalizeValue(readPropValue((props as PropsRecord)[key]), propDef), {
+          unwrap: false,
+        })
+      : LOCAL_VALUE_KEYS.has(key)
+        ? normalizeValue(readPropValue((props as PropsRecord)[key]), propDef)
+        : prop(() => derivedProps().values[key])
   }
 
   extractedProps.className = prop(() => derivedProps().className)

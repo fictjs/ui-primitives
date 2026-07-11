@@ -23,14 +23,16 @@ import {
   ScrollArea,
   Select,
   Skeleton,
+  Spinner,
   TabNav,
   Table,
   Text,
   TextField,
   Theme,
   ThemePanel,
+  Tooltip,
 } from '../src/index.js'
-import { classNames, extractProps } from '../src/helpers/index.js'
+import { classNames, extractProps, readPropValue } from '../src/helpers/index.js'
 
 type ResponsiveBoolean =
   | boolean
@@ -647,6 +649,134 @@ describe('@fictjs/radix-ui-themes', () => {
     await flushEffects()
 
     expect(trigger.textContent).toContain('Pick an option')
+  })
+
+  it('keeps local render props lazy and distinguishes ordinary callbacks', () => {
+    const child = createSignal('first')
+    const renderCallback = vi.fn(() => 'rendered')
+    const extractedProps = extractProps({
+      children: prop(() => child()),
+      content: renderCallback,
+    })
+
+    expect(renderCallback).not.toHaveBeenCalled()
+    expect(readPropValue(extractedProps.children)).toBe('first')
+    expect(readPropValue(extractedProps.content)).toBe(renderCallback)
+    expect(renderCallback).not.toHaveBeenCalled()
+
+    child('second')
+    expect(readPropValue(extractedProps.children)).toBe('second')
+    expect(readPropValue(extractedProps.content)).toBe(renderCallback)
+  })
+
+  it('updates local loading and render props in both directions', async () => {
+    const skeletonLoading = createSignal(true)
+    const skeletonChild = createSignal('Skeleton first')
+    const spinnerLoading = createSignal(true)
+    const buttonLoading = createSignal(false)
+    const tooltipContent = createSignal('Tooltip first')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Skeleton loading={prop(() => skeletonLoading()) as unknown as boolean}>
+            {prop(() => skeletonChild()) as unknown as string}
+          </Skeleton>
+          <Spinner loading={prop(() => spinnerLoading()) as unknown as boolean}>
+            Spinner content
+          </Spinner>
+          <Button
+            data-testid="reactive-loading-button"
+            loading={prop(() => buttonLoading()) as unknown as boolean}
+          >
+            Button content
+          </Button>
+          <Tooltip open content={prop(() => tooltipContent()) as unknown as string}>
+            <button data-testid="reactive-tooltip-trigger" type="button">
+              Trigger
+            </button>
+          </Tooltip>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const button = container.querySelector(
+      '[data-testid="reactive-loading-button"]',
+    ) as HTMLButtonElement
+    const tooltipText = document.body.querySelector('.rt-TooltipText') as HTMLElement
+    expect(container.querySelector('.rt-Skeleton')?.textContent).toBe('Skeleton first')
+    expect(container.querySelector('.rt-Spinner')).not.toBeNull()
+    expect(button.querySelector('.rt-Spinner')).toBeNull()
+    expect(tooltipText.textContent).toBe('Tooltip first')
+
+    skeletonLoading(false)
+    skeletonChild('Skeleton second')
+    spinnerLoading(false)
+    buttonLoading(true)
+    tooltipContent('Tooltip second')
+    await flushEffects()
+
+    expect(container.querySelector('.rt-Skeleton')).toBeNull()
+    expect(container.textContent).toContain('Skeleton second')
+    expect(container.querySelector('.rt-Spinner')).not.toBeNull()
+    expect(button.querySelector('.rt-Spinner')).not.toBeNull()
+    expect(container.querySelector('[data-testid="reactive-loading-button"]')).toBe(button)
+    expect(document.body.querySelector('.rt-TooltipText')).toBe(tooltipText)
+    expect(tooltipText.textContent).toBe('Tooltip second')
+
+    skeletonLoading(true)
+    spinnerLoading(true)
+    buttonLoading(false)
+    tooltipContent('Tooltip third')
+    await flushEffects()
+
+    expect(container.querySelector('.rt-Skeleton')?.textContent).toBe('Skeleton second')
+    expect(container.querySelectorAll('.rt-Spinner')).toHaveLength(1)
+    expect(button.querySelector('.rt-Spinner')).toBeNull()
+    expect(container.querySelector('[data-testid="reactive-loading-button"]')).toBe(button)
+    expect(document.body.querySelector('.rt-TooltipText')).toBe(tooltipText)
+    expect(tooltipText.textContent).toBe('Tooltip third')
+  })
+
+  it('updates an errored avatar fallback without replacing its root', async () => {
+    window.Image = MockErrorImage as unknown as typeof window.Image
+    const fallback = createSignal('AB')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Avatar
+            alt="User avatar"
+            fallback={prop(() => fallback()) as unknown as string}
+            src="/api/reactive-missing-avatar"
+          />
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    await flushEffects()
+
+    const root = container.querySelector('.rt-AvatarRoot')
+    const fallbackElement = container.querySelector('.rt-AvatarFallback')
+    expect(fallbackElement?.textContent).toBe('AB')
+    expect(fallbackElement?.classList.contains('rt-two-letters')).toBe(true)
+
+    fallback('C')
+    await flushEffects()
+
+    expect(container.querySelector('.rt-AvatarRoot')).toBe(root)
+    expect(container.querySelector('.rt-AvatarFallback')).toBe(fallbackElement)
+    expect(fallbackElement?.textContent).toBe('C')
+    expect(fallbackElement?.classList.contains('rt-one-letter')).toBe(true)
   })
 
   it('renders avatar fallback content without an image source', async () => {
