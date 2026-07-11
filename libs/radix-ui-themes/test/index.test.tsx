@@ -1280,6 +1280,66 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(button.getAttribute('aria-expanded')).toBe('false')
   })
 
+  it('updates themed button classes and children without replacing controls', async () => {
+    const buttonClassName = createSignal('button-first')
+    const buttonChildren = createSignal('Button first')
+    const iconClassName = createSignal('icon-first')
+    const iconChildren = createSignal('Icon first')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Button
+            data-testid="reactive-button-presentation"
+            className={prop(() => buttonClassName()) as unknown as string}
+          >
+            {prop(() => buttonChildren()) as unknown as string}
+          </Button>
+          <IconButton
+            aria-label="Icon action"
+            data-testid="reactive-icon-presentation"
+            className={prop(() => iconClassName()) as unknown as string}
+          >
+            {prop(() => iconChildren()) as unknown as string}
+          </IconButton>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const button = container.querySelector(
+      '[data-testid="reactive-button-presentation"]',
+    ) as HTMLButtonElement
+    const iconButton = container.querySelector(
+      '[data-testid="reactive-icon-presentation"]',
+    ) as HTMLButtonElement
+    expect(button.classList.contains('button-first')).toBe(true)
+    expect(button.textContent).toBe('Button first')
+    expect(iconButton.classList.contains('icon-first')).toBe(true)
+    expect(iconButton.textContent).toBe('Icon first')
+
+    button.focus()
+    buttonClassName('button-second')
+    buttonChildren('Button second')
+    iconClassName('icon-second')
+    iconChildren('Icon second')
+    await flushEffects()
+
+    expect(container.querySelector('[data-testid="reactive-button-presentation"]')).toBe(button)
+    expect(container.querySelector('[data-testid="reactive-icon-presentation"]')).toBe(iconButton)
+    expect(button.classList.contains('button-first')).toBe(false)
+    expect(button.classList.contains('button-second')).toBe(true)
+    expect(button.textContent).toBe('Button second')
+    expect(iconButton.classList.contains('icon-first')).toBe(false)
+    expect(iconButton.classList.contains('icon-second')).toBe(true)
+    expect(iconButton.textContent).toBe('Icon second')
+    expect(document.activeElement).toBe(button)
+  })
+
   it('renders slotted themed children through asChild wrappers', async () => {
     const container = document.createElement('div')
     document.body.append(container)
