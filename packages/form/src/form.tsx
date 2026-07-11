@@ -446,15 +446,16 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
 
   const updateControlValidity = async (control: HTMLInputElement) => {
     const currentValidationRun = ++validationRun
+    const fieldName = name()
 
     if (hasBuiltInError(control.validity)) {
-      validationContext.onFieldValidityChange(name(), control.validity)
+      validationContext.onFieldValidityChange(fieldName, control.validity)
       return
     }
 
     const formData = control.form ? new FormData(control.form) : new FormData()
     const matcherArgs: CustomMatcherArgs = [control.value, formData]
-    const customMatcherEntries = validationContext.getFieldCustomMatcherEntries(name())
+    const customMatcherEntries = validationContext.getFieldCustomMatcherEntries(fieldName)
     const matcherResults = customMatcherEntries.map(({ id, match }) => ({
       id,
       result: match(...matcherArgs),
@@ -468,21 +469,27 @@ function FormControl(props: ScopedProps<FormControlProps>): FictNode {
     const syncCustomErrorsById = Object.fromEntries(syncCustomErrors)
     const hasSyncCustomErrors = Object.values(syncCustomErrorsById).some(Boolean)
     control.setCustomValidity(hasSyncCustomErrors ? DEFAULT_INVALID_MESSAGE : '')
-    validationContext.onFieldValidityChange(name(), control.validity)
-    validationContext.onFieldCustomErrorsChange(name(), syncCustomErrorsById)
+    validationContext.onFieldValidityChange(fieldName, control.validity)
+    validationContext.onFieldCustomErrorsChange(fieldName, syncCustomErrorsById)
 
     if (!hasSyncCustomErrors && asyncCustomMatcherResults.length > 0) {
       const promisedCustomErrors = asyncCustomMatcherResults.map(({ id: matcherId, result }) =>
         result.then((matches) => [matcherId, matches] as const),
       )
       const asyncCustomErrors = await Promise.all(promisedCustomErrors)
-      if (currentValidationRun !== validationRun || ref.current !== control) return
+      if (
+        currentValidationRun !== validationRun ||
+        ref.current !== control ||
+        name() !== fieldName
+      ) {
+        return
+      }
 
       const asyncCustomErrorsById = Object.fromEntries(asyncCustomErrors)
       const hasAsyncCustomErrors = Object.values(asyncCustomErrorsById).some(Boolean)
       control.setCustomValidity(hasAsyncCustomErrors ? DEFAULT_INVALID_MESSAGE : '')
-      validationContext.onFieldValidityChange(name(), control.validity)
-      validationContext.onFieldCustomErrorsChange(name(), asyncCustomErrorsById)
+      validationContext.onFieldValidityChange(fieldName, control.validity)
+      validationContext.onFieldCustomErrorsChange(fieldName, asyncCustomErrorsById)
     } else {
       for (const { result } of asyncCustomMatcherResults) {
         void result.catch(() => undefined)

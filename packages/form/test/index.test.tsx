@@ -466,6 +466,44 @@ describe('@fictjs/form', () => {
     expect(input.getAttribute('data-invalid')).toBeNull()
   })
 
+  it('ignores pending async validation results after the field name changes', async () => {
+    const container = document.createElement('div')
+    const fieldName = createSignal('username')
+    const result = deferred<boolean>()
+    const match = vi.fn(() => result.promise)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Form>
+          <Field name={prop(() => fieldName()) as unknown as string}>
+            <Control />
+            <Message match={match}>Username is unavailable</Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const input = container.querySelector('input') as HTMLInputElement
+    const message = container.querySelector('span') as HTMLSpanElement
+    changeInput(input, 'ada')
+    expect(match).toHaveBeenCalledOnce()
+
+    fieldName('email')
+    await waitForEffects()
+    expect(input.name).toBe('email')
+
+    result.resolve(true)
+    await waitForEffects()
+
+    expect(input.validity.valid).toBe(true)
+    expect(input.getAttribute('data-invalid')).toBeNull()
+    expect(message.hidden).toBe(true)
+  })
+
   it('clears server errors on submit and exposes validity state render props', async () => {
     const container = document.createElement('div')
     document.body.append(container)
