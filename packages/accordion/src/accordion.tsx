@@ -360,7 +360,11 @@ function AccordionImpl(props: ScopedProps<AccordionImplProps>): FictNode {
       disabled: undefined,
       orientation: undefined,
       'data-orientation': prop(orientation),
-      onKeyDown: disabled() ? undefined : handleKeyDown,
+      onKeyDown: (event: KeyboardEvent) => {
+        if (!disabled()) {
+          handleKeyDown(event)
+        }
+      },
     },
   )
 

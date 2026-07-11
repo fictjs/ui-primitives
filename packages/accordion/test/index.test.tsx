@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import {
   Accordion,
@@ -21,14 +22,14 @@ function click(target: Element): void {
   )
 }
 
-function keyDown(target: Element, key: string): void {
-  target.dispatchEvent(
-    new KeyboardEvent('keydown', {
-      bubbles: true,
-      cancelable: true,
-      key,
-    }),
-  )
+function keyDown(target: Element, key: string): KeyboardEvent {
+  const event = new KeyboardEvent('keydown', {
+    bubbles: true,
+    cancelable: true,
+    key,
+  })
+  target.dispatchEvent(event)
+  return event
 }
 
 async function flushEffects(cycles = 4): Promise<void> {
@@ -203,5 +204,47 @@ describe('@fictjs/accordion', () => {
     keyDown(twoTrigger, 'End')
     await waitForEffects()
     expect(document.activeElement).toBe(threeTrigger)
+  })
+
+  it('reacts to disabled changes when handling keyboard navigation', async () => {
+    const container = document.createElement('div')
+    const disabled = createSignal(true)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Accordion type="single" disabled={prop(() => disabled()) as unknown as boolean}>
+          <AccordionItem value="one">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="one-trigger">One</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>One content</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="two">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="two-trigger">Two</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>Two content</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const oneTrigger = container.querySelector('[data-testid="one-trigger"]') as HTMLButtonElement
+    const twoTrigger = container.querySelector('[data-testid="two-trigger"]') as HTMLButtonElement
+    expect(keyDown(oneTrigger, 'ArrowDown').defaultPrevented).toBe(false)
+
+    disabled(false)
+    await waitForEffects()
+    oneTrigger.focus()
+    expect(keyDown(oneTrigger, 'ArrowDown').defaultPrevented).toBe(true)
+    expect(document.activeElement).toBe(twoTrigger)
+
+    disabled(true)
+    await waitForEffects()
+    expect(keyDown(oneTrigger, 'ArrowDown').defaultPrevented).toBe(false)
   })
 })
