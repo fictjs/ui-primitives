@@ -1,5 +1,4 @@
 import { prop } from 'fict'
-import { reactive } from 'fict/advanced'
 import * as React from '../helpers/element.js'
 import { ScrollArea as ScrollAreaPrimitive } from '@fictjs/radix-ui'
 
@@ -47,14 +46,15 @@ const ScrollArea = React.forwardRef<ScrollAreaElement, ScrollAreaProps>((props, 
     }),
   )
   const currentRadius = prop(() => readPropValue(radius) ?? scrollAreaPropDefs.radius.default)
-  const currentScrollbars = prop(
-    () => readPropValue(scrollbars) ?? scrollAreaPropDefs.scrollbars.default,
-  )
+  const initialScrollbars = readPropValue(scrollbars) ?? scrollAreaPropDefs.scrollbars.default
   const currentScrollHideDelay = prop(() => {
     const explicitDelay = readPropValue(scrollHideDelay) as number | undefined
     if (explicitDelay !== undefined) return explicitDelay
     return (readPropValue(type) as string | undefined) !== 'scroll' ? 0 : undefined
   })
+  const showHorizontalScrollbar = initialScrollbars !== 'vertical'
+  const showVerticalScrollbar = initialScrollbars !== 'horizontal'
+  const showCorner = initialScrollbars === 'both'
 
   const renderContent = (innerChildren: React.ReactNode) => [
     <ScrollAreaPrimitive.Viewport
@@ -65,33 +65,25 @@ const ScrollArea = React.forwardRef<ScrollAreaElement, ScrollAreaProps>((props, 
       {innerChildren}
     </ScrollAreaPrimitive.Viewport>,
     <div class="rt-ScrollAreaViewportFocusRing" />,
-    reactive(() =>
-      currentScrollbars() !== 'vertical' ? (
-        <ScrollAreaPrimitive.Scrollbar
-          data-radius={currentRadius}
-          orientation="horizontal"
-          class={classNames('rt-ScrollAreaScrollbar', sizeClassName)}
-        >
-          <ScrollAreaPrimitive.Thumb class="rt-ScrollAreaThumb" />
-        </ScrollAreaPrimitive.Scrollbar>
-      ) : null,
-    ) as unknown as React.ReactNode,
-    reactive(() =>
-      currentScrollbars() !== 'horizontal' ? (
-        <ScrollAreaPrimitive.Scrollbar
-          data-radius={currentRadius}
-          orientation="vertical"
-          class={classNames('rt-ScrollAreaScrollbar', sizeClassName)}
-        >
-          <ScrollAreaPrimitive.Thumb class="rt-ScrollAreaThumb" />
-        </ScrollAreaPrimitive.Scrollbar>
-      ) : null,
-    ) as unknown as React.ReactNode,
-    reactive(() =>
-      currentScrollbars() === 'both' ? (
-        <ScrollAreaPrimitive.Corner class="rt-ScrollAreaCorner" />
-      ) : null,
-    ) as unknown as React.ReactNode,
+    showHorizontalScrollbar ? (
+      <ScrollAreaPrimitive.Scrollbar
+        data-radius={currentRadius}
+        orientation="horizontal"
+        class={classNames('rt-ScrollAreaScrollbar', sizeClassName)}
+      >
+        <ScrollAreaPrimitive.Thumb class="rt-ScrollAreaThumb" />
+      </ScrollAreaPrimitive.Scrollbar>
+    ) : null,
+    showVerticalScrollbar ? (
+      <ScrollAreaPrimitive.Scrollbar
+        data-radius={currentRadius}
+        orientation="vertical"
+        class={classNames('rt-ScrollAreaScrollbar', sizeClassName)}
+      >
+        <ScrollAreaPrimitive.Thumb class="rt-ScrollAreaThumb" />
+      </ScrollAreaPrimitive.Scrollbar>
+    ) : null,
+    showCorner ? <ScrollAreaPrimitive.Corner class="rt-ScrollAreaCorner" /> : null,
   ]
 
   return renderWithAsChild(props, (asChild) => (

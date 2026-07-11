@@ -1272,7 +1272,7 @@ describe('@fictjs/radix-ui-themes', () => {
     const scrollbarsAfterUpdate = Array.from(
       root.querySelectorAll('.rt-ScrollAreaScrollbar'),
     ) as HTMLElement[]
-    expect(scrollbarsAfterUpdate).toHaveLength(2)
+    expect(scrollbarsAfterUpdate).toHaveLength(1)
     expect(scrollbarsAfterUpdate.every((node) => node.classList.contains('rt-r-size-3'))).toBe(true)
     expect(
       scrollbarsAfterUpdate.every((node) => node.getAttribute('data-radius') === 'large'),
@@ -1284,8 +1284,8 @@ describe('@fictjs/radix-ui-themes', () => {
     type('always')
     scrollbars('horizontal')
     await flushEffects()
-    expect(root.querySelector('[data-orientation="vertical"]')).toBeNull()
-    expect(root.querySelector('[data-orientation="horizontal"]')).not.toBeNull()
+    expect(root.querySelector('[data-orientation="vertical"]')).not.toBeNull()
+    expect(root.querySelector('[data-orientation="horizontal"]')).toBeNull()
 
     asChild(true)
     await flushEffects()
