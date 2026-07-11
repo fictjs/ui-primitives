@@ -83,7 +83,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
   const { __scopeSwitch } = props
   const button = createSignal<HTMLButtonElement | null>(null)
   const bubbleInput = createSignal<HTMLInputElement | null>(null)
-  const isFormControl = createSignal(true)
+  const isFormControl = createSignal(typeof document === 'undefined')
   const checkedProp = () =>
     props.checked === undefined
       ? undefined
@@ -122,7 +122,43 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
 
   useLayoutEffect(() => {
     const currentButton = button()
-    isFormControl(currentButton ? Boolean(form() || currentButton.closest('form')) : true)
+    const formId = form()
+    let cancelled = false
+    let connectionObserver: MutationObserver | null = null
+
+    const updateFormOwnership = (): boolean => {
+      if (cancelled || button() !== currentButton) return true
+      if (!currentButton) {
+        isFormControl(false)
+        return true
+      }
+      if (!currentButton.isConnected) return false
+
+      isFormControl(Boolean(formId || currentButton.closest('form')))
+      return true
+    }
+
+    // Fict assigns refs before the enclosing tree is attached. Defer the DOM lookup
+    // until the complete render has been inserted into its parent.
+    queueMicrotask(() => {
+      if (updateFormOwnership() || !currentButton) return
+
+      const MutationObserverCtor =
+        currentButton.ownerDocument.defaultView?.MutationObserver ?? globalThis.MutationObserver
+      if (!MutationObserverCtor) return
+
+      connectionObserver = new MutationObserverCtor(() => {
+        if (!updateFormOwnership()) return
+        connectionObserver?.disconnect()
+        connectionObserver = null
+      })
+      connectionObserver.observe(currentButton.ownerDocument, { childList: true, subtree: true })
+    })
+
+    return () => {
+      cancelled = true
+      connectionObserver?.disconnect()
+    }
   })
 
   useLayoutEffect(() => {

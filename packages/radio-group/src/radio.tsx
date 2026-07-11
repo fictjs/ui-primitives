@@ -103,23 +103,46 @@ function Radio(props: ScopedProps<RadioProps>): FictNode {
           props.value as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
         ) ?? 'on')
   const hasConsumerStoppedPropagationRef = { current: false }
-  const isFormControl = createSignal(true)
+  const isFormControl = createSignal(typeof document === 'undefined')
 
   useLayoutEffect(() => {
     const currentButton = button()
     const formId = form()
     let cancelled = false
+    let connectionObserver: MutationObserver | null = null
+
+    const updateFormOwnership = (): boolean => {
+      if (cancelled || button() !== currentButton) return true
+      if (!currentButton) {
+        isFormControl(false)
+        return true
+      }
+      if (!currentButton.isConnected) return false
+
+      isFormControl(Boolean(formId || currentButton.closest('form')))
+      return true
+    }
 
     // Fict assigns refs before the enclosing tree is attached. Defer the DOM lookup
     // until the complete render has been inserted into its parent.
     queueMicrotask(() => {
-      if (!cancelled) {
-        isFormControl(currentButton ? Boolean(formId || currentButton.closest('form')) : true)
-      }
+      if (updateFormOwnership() || !currentButton) return
+
+      const MutationObserverCtor =
+        currentButton.ownerDocument.defaultView?.MutationObserver ?? globalThis.MutationObserver
+      if (!MutationObserverCtor) return
+
+      connectionObserver = new MutationObserverCtor(() => {
+        if (!updateFormOwnership()) return
+        connectionObserver?.disconnect()
+        connectionObserver = null
+      })
+      connectionObserver.observe(currentButton.ownerDocument, { childList: true, subtree: true })
     })
 
     return () => {
       cancelled = true
+      connectionObserver?.disconnect()
     }
   })
   const primitiveProps = mergeProps(

@@ -58,6 +58,7 @@ describe('@fictjs/checkbox', () => {
     expect(button.getAttribute('aria-checked')).toBe('false')
     expect(button.getAttribute('data-state')).toBe('unchecked')
     expect(container.querySelector('[data-testid="indicator"]')).toBeNull()
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
 
     click(button)
     await flushEffects()
@@ -174,11 +175,16 @@ describe('@fictjs/checkbox', () => {
       container,
     )
 
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
+
     await flushEffects()
 
     const form = container.querySelector('form') as HTMLFormElement
     const button = container.querySelector('button') as HTMLButtonElement
     const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+
+    expect(input.isConnected).toBe(true)
+    expect(input.form).toBe(form)
 
     click(button)
     await flushEffects()
@@ -193,6 +199,69 @@ describe('@fictjs/checkbox', () => {
 
     expect(input.checked).toBe(true)
     expect(new FormData(form).get('newsletter')).toBe('on')
+  })
+
+  it('waits for connection and syncs the latest controlled state without bubbling', async () => {
+    const checked = createSignal(false)
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    const container = document.createElement('div')
+
+    render(
+      () => (
+        <form onInput={onInput} onChange={onChange}>
+          <Root name="newsletter" checked={checked} />
+        </form>
+      ),
+      container,
+    )
+
+    checked(true)
+    await flushEffects()
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
+
+    document.body.append(container)
+    await flushEffects()
+
+    const form = container.querySelector('form') as HTMLFormElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+    expect(input.isConnected).toBe(true)
+    expect(input.checked).toBe(true)
+    expect(new FormData(form).get('newsletter')).toBe('on')
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('defers an explicitly associated hidden input until its owner can be resolved', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(
+      () => (
+        <>
+          <form id="preferences-form" />
+          <Root form="preferences-form" name="newsletter" required value="weekly" />
+        </>
+      ),
+      container,
+    )
+
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
+
+    await flushEffects()
+
+    const form = container.querySelector('#preferences-form') as HTMLFormElement
+    const button = container.querySelector('button') as HTMLButtonElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+
+    expect(button.hasAttribute('form')).toBe(false)
+    expect(button.hasAttribute('name')).toBe(false)
+    expect(input.isConnected).toBe(true)
+    expect(input.form).toBe(form)
+    expect(input.getAttribute('form')).toBe('preferences-form')
+    expect(input.getAttribute('name')).toBe('newsletter')
+    expect(input.getAttribute('value')).toBe('weekly')
+    expect(input.hasAttribute('required')).toBe(true)
   })
 
   it('bubbles form click events through the hidden checkbox input', async () => {

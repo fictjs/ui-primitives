@@ -272,8 +272,11 @@ describe('@fictjs/radio-group', () => {
       container,
     )
 
+    expect(container.querySelector('input[type="radio"]')).toBeNull()
+
     await waitForUpdates()
 
+    const form = container.querySelector('#billing-form') as HTMLFormElement
     const button = container.querySelector('[data-testid="item"]') as HTMLButtonElement
     const input = container.querySelector('input[type="radio"]') as HTMLInputElement
 
@@ -284,6 +287,8 @@ describe('@fictjs/radio-group', () => {
     expect(input.getAttribute('name')).toBe('plan')
     expect(input.hasAttribute('required')).toBe(true)
     expect(input.value).toBe('pro')
+    expect(input.isConnected).toBe(true)
+    expect(input.form).toBe(form)
   })
 
   it('submits the checked value when the group is nested in a form', async () => {
@@ -302,12 +307,42 @@ describe('@fictjs/radio-group', () => {
       container,
     )
 
+    expect(container.querySelectorAll('input[type="radio"]')).toHaveLength(0)
+
     await waitForUpdates()
 
     const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
     const inputs = form.querySelectorAll<HTMLInputElement>('input[type="radio"][name="plan"]')
 
     expect(inputs).toHaveLength(2)
+    expect(Array.from(inputs).every((input) => input.isConnected && input.form === form)).toBe(true)
+    expect(new FormData(form).get('plan')).toBe('pro')
+  })
+
+  it('waits for a detached radio group to connect before mounting native inputs', async () => {
+    const container = document.createElement('div')
+
+    render(
+      () => (
+        <form data-testid="form">
+          <RadioGroup defaultValue="pro" name="plan">
+            <RadioGroupItem value="pro">Pro</RadioGroupItem>
+          </RadioGroup>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+    expect(container.querySelector('input[type="radio"]')).toBeNull()
+
+    document.body.append(container)
+    await waitForUpdates()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const input = container.querySelector('input[type="radio"]') as HTMLInputElement
+    expect(input.isConnected).toBe(true)
+    expect(input.form).toBe(form)
     expect(new FormData(form).get('plan')).toBe('pro')
   })
 

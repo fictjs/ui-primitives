@@ -196,7 +196,7 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
           'on') as CheckboxValue)
   const control = createSignal<HTMLButtonElement | null>(null)
   const bubbleInput = createSignal<HTMLInputElement | null>(null)
-  const isFormControl = createSignal(Boolean(form()))
+  const isFormControl = createSignal(typeof document === 'undefined')
   const hasConsumerStoppedPropagationRef = { current: false }
   const hasBubbleInputSyncRef = { current: false }
   const controllableStateProps = {
@@ -211,10 +211,47 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
   }
   const initialDefaultChecked = normalizeChecked(untrack(() => checked()))
   let previousBubbleChecked = untrack(() => checked())
+  let previousBubbleInput: HTMLInputElement | null = null
 
   useLayoutEffect(() => {
     const currentControl = control()
-    isFormControl(currentControl ? Boolean(form() || currentControl.closest('form')) : true)
+    const formId = form()
+    let cancelled = false
+    let connectionObserver: MutationObserver | null = null
+
+    const updateFormOwnership = (): boolean => {
+      if (cancelled || control() !== currentControl) return true
+      if (!currentControl) {
+        isFormControl(false)
+        return true
+      }
+      if (!currentControl.isConnected) return false
+
+      isFormControl(Boolean(formId || currentControl.closest('form')))
+      return true
+    }
+
+    // Fict assigns refs before the enclosing tree is attached. Defer the DOM lookup
+    // until the complete render has been inserted into its parent.
+    queueMicrotask(() => {
+      if (updateFormOwnership() || !currentControl) return
+
+      const MutationObserverCtor =
+        currentControl.ownerDocument.defaultView?.MutationObserver ?? globalThis.MutationObserver
+      if (!MutationObserverCtor) return
+
+      connectionObserver = new MutationObserverCtor(() => {
+        if (!updateFormOwnership()) return
+        connectionObserver?.disconnect()
+        connectionObserver = null
+      })
+      connectionObserver.observe(currentControl.ownerDocument, { childList: true, subtree: true })
+    })
+
+    return () => {
+      cancelled = true
+      connectionObserver?.disconnect()
+    }
   })
 
   useLayoutEffect(() => {
@@ -222,6 +259,14 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
     const current = checked()
 
     if (!input) {
+      previousBubbleInput = null
+      hasBubbleInputSyncRef.current = false
+      return
+    }
+
+    if (input !== previousBubbleInput) {
+      setNativeInputChecked(input, current)
+      previousBubbleInput = input
       previousBubbleChecked = current
       hasBubbleInputSyncRef.current = false
       return

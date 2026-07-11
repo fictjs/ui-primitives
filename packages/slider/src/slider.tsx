@@ -697,7 +697,7 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
     const dimension = size()?.[orientation.size()]
     return dimension ? getThumbInBoundsOffset(dimension, percent(), orientation.direction()) : 0
   }
-  const isFormControl = createSignal(false)
+  const isFormControl = createSignal(typeof document === 'undefined')
   const label = () => getLabel(index(), context.values().length)
   const wrapperStyle = () => ({
     transform: 'var(--radix-slider-thumb-transform)',
@@ -738,14 +738,36 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
   useLayoutEffect(() => {
     const thumbNode = thumb()
     if (!thumbNode) return
+    const form = context.form()
+    let cancelled = false
+    let connectionObserver: MutationObserver | null = null
+
+    const updateFormOwnership = (): boolean => {
+      if (cancelled || thumb() !== thumbNode) return true
+      if (!thumbNode.isConnected) return false
+
+      isFormControl(Boolean(form || thumbNode.closest('form')))
+      return true
+    }
 
     queueMicrotask(() => {
-      if (thumb() === thumbNode) {
-        isFormControl(Boolean(context.form() || thumbNode.closest('form')))
-      }
+      if (updateFormOwnership()) return
+
+      const MutationObserverCtor =
+        thumbNode.ownerDocument.defaultView?.MutationObserver ?? globalThis.MutationObserver
+      if (!MutationObserverCtor) return
+
+      connectionObserver = new MutationObserverCtor(() => {
+        if (!updateFormOwnership()) return
+        connectionObserver?.disconnect()
+        connectionObserver = null
+      })
+      connectionObserver.observe(thumbNode.ownerDocument, { childList: true, subtree: true })
     })
     context.thumbs.add(thumbNode)
     return () => {
+      cancelled = true
+      connectionObserver?.disconnect()
       context.thumbs.delete(thumbNode)
     }
   })

@@ -309,6 +309,66 @@ describe('@fictjs/slider', () => {
     expect(bubbleInput.value).toBe('25')
   })
 
+  it('waits for a detached slider to connect before mounting its bubble input', async () => {
+    const container = document.createElement('div')
+
+    mount(
+      () => (
+        <form data-testid="form">
+          <Root defaultValue={[25]} name="volume">
+            <Track>
+              <Range />
+            </Track>
+            <Thumb />
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    expect(container.querySelector('input')).toBeNull()
+
+    document.body.append(container)
+    await waitForEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(input.isConnected).toBe(true)
+    expect(input.form).toBe(form)
+    expect(new FormData(form).get('volume')).toBe('25')
+  })
+
+  it('mounts its bubble input when a connected slider gains explicit form ownership', async () => {
+    const container = document.createElement('div')
+    const form = document.createElement('form')
+    const formId = createSignal<string | undefined>(undefined)
+    form.id = 'volume-form'
+    document.body.append(container, form)
+
+    mount(
+      () => (
+        <Root defaultValue={[25]} form={formId} name="volume">
+          <Track>
+            <Range />
+          </Track>
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    expect(container.querySelector('input')).toBeNull()
+
+    formId(form.id)
+    await waitForEffects()
+
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(input.form).toBe(form)
+    expect(new FormData(form).get('volume')).toBe('25')
+  })
+
   it('restores all uncontrolled values on native form reset', async () => {
     const container = document.createElement('div')
     document.body.append(container)

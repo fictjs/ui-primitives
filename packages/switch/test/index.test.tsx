@@ -155,12 +155,17 @@ describe('@fictjs/switch', () => {
       container,
     )
 
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
+
     await flushEffects()
 
+    const form = container.querySelector('form') as HTMLFormElement
     const button = container.querySelector('button') as HTMLButtonElement
     const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
 
     expect(input).not.toBeNull()
+    expect(input.isConnected).toBe(true)
+    expect(input.form).toBe(form)
     expect(input.getAttribute('name')).toBe('airplane-mode')
     expect(input.getAttribute('value')).toBe('enabled')
     expect(input.hasAttribute('required')).toBe(true)
@@ -171,6 +176,31 @@ describe('@fictjs/switch', () => {
 
     expect(formClicks).toHaveBeenCalledTimes(1)
     expect(input.checked).toBe(true)
+  })
+
+  it('waits for a detached switch to connect before mounting its native input', async () => {
+    const container = document.createElement('div')
+
+    render(
+      () => (
+        <form data-testid="form">
+          <Root defaultChecked name="airplane-mode" />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
+
+    document.body.append(container)
+    await flushEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+    expect(input.isConnected).toBe(true)
+    expect(input.form).toBe(form)
+    expect(new FormData(form).get('airplane-mode')).toBe('on')
   })
 
   it('keeps form association props on the hidden input instead of the button', async () => {
@@ -189,8 +219,11 @@ describe('@fictjs/switch', () => {
       container,
     )
 
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
+
     await flushEffects()
 
+    const form = container.querySelector('#settings-form') as HTMLFormElement
     const button = container.querySelector('button') as HTMLButtonElement
     const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
 
@@ -201,6 +234,8 @@ describe('@fictjs/switch', () => {
     expect(input.getAttribute('name')).toBe('airplane-mode')
     expect(input.getAttribute('value')).toBe('enabled')
     expect(input.hasAttribute('required')).toBe(true)
+    expect(input.isConnected).toBe(true)
+    expect(input.form).toBe(form)
   })
 
   it('restores each uncontrolled switch to its initial state on form reset', async () => {
