@@ -375,6 +375,7 @@ describe('@fictjs/select', () => {
 
     expect(wrapper).not.toBeNull()
     expect(content).not.toBeNull()
+    expect(document.querySelectorAll('[data-radix-popper-content-wrapper]')).toHaveLength(1)
     expect(wrapper?.style.position).toBe('fixed')
     expect(wrapper?.style.transform).not.toBe('')
   })
@@ -837,8 +838,7 @@ describe('@fictjs/select', () => {
     expect(wrapper).not.toBeNull()
     expect(content).not.toBeNull()
     expect(content?.getAttribute('data-side')).toBe('top')
-    expect(wrapper?.style.transform).toBe('translate(18px, 276px) translate(0, -100%)')
-    expect(wrapper?.style.getPropertyValue('--radix-popper-available-height')).toBe('276px')
+    expect(wrapper?.style.transform).toBe('translate(18px, 276px)')
   })
 
   it('locks document scroll while open and highlights hovered items', async () => {

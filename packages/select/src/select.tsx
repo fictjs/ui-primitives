@@ -45,8 +45,6 @@ type PrimitiveSpanProps = JSX.IntrinsicElements['span'] & {
   asChild?: boolean
 }
 type PossibleRef<T> = ((node: T | null) => void) | { current: T | null } | undefined
-type SelectSide = 'top' | 'right' | 'bottom' | 'left'
-type SelectAlign = 'start' | 'center' | 'end'
 type SelectContextValue = {
   value: () => string
   onValueChange(value: string): void
@@ -90,7 +88,6 @@ const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
 const READ_VALUE_DEPTH_LIMIT = 10
 const STATIC_COMPONENT_DEPTH_LIMIT = 32
-const SELECT_FALLBACK_COLLISION_SIZE = 160
 
 const [createSelectContext, createSelectScope] = createContextScope(SELECT_NAME, [createMenuScope])
 const [SelectProvider, useSelectContext] = createSelectContext<SelectContextValue>(SELECT_NAME)
@@ -366,193 +363,6 @@ function registerStaticItemTexts(
   const staticChildren = getStaticComponentChildren(node, depth)
   if (staticChildren !== undefined) {
     registerStaticItemTexts(staticChildren, registerItemText, depth + 1)
-  }
-}
-
-function getOppositeSide(side: SelectSide): SelectSide {
-  if (side === 'top') return 'bottom'
-  if (side === 'bottom') return 'top'
-  if (side === 'left') return 'right'
-  return 'left'
-}
-
-function getAvailableWidth(
-  rect: DOMRect,
-  side: SelectSide,
-  sideOffset: number,
-  viewportWidth: number,
-): number {
-  if (side === 'left') return Math.max(rect.left - sideOffset, 0)
-  if (side === 'right') return Math.max(viewportWidth - rect.right - sideOffset, 0)
-  return Math.max(viewportWidth, 0)
-}
-
-function getAvailableHeight(
-  rect: DOMRect,
-  side: SelectSide,
-  sideOffset: number,
-  viewportHeight: number,
-): number {
-  if (side === 'top') return Math.max(rect.top - sideOffset, 0)
-  if (side === 'bottom') return Math.max(viewportHeight - rect.bottom - sideOffset, 0)
-  return Math.max(viewportHeight, 0)
-}
-
-function getSelectContentSize(content: HTMLElement | null): { width: number; height: number } {
-  if (!content) {
-    return { width: 0, height: 0 }
-  }
-
-  const rect = content.getBoundingClientRect()
-
-  return {
-    width: Math.max(rect.width, content.scrollWidth),
-    height: Math.max(rect.height, content.scrollHeight),
-  }
-}
-
-function getSelectPlacedSide(
-  trigger: HTMLElement | null,
-  content: HTMLElement | null,
-  side: SelectSide,
-  sideOffset: number,
-): SelectSide {
-  if (!trigger) {
-    return side
-  }
-
-  const rect = trigger.getBoundingClientRect()
-  const oppositeSide = getOppositeSide(side)
-  const contentSize = getSelectContentSize(content)
-  const isVerticalSide = side === 'top' || side === 'bottom'
-  const desiredAvailable = isVerticalSide
-    ? getAvailableHeight(rect, side, sideOffset, window.innerHeight)
-    : getAvailableWidth(rect, side, sideOffset, window.innerWidth)
-  const oppositeAvailable = isVerticalSide
-    ? getAvailableHeight(rect, oppositeSide, sideOffset, window.innerHeight)
-    : getAvailableWidth(rect, oppositeSide, sideOffset, window.innerWidth)
-  const requiredSize =
-    (isVerticalSide ? contentSize.height : contentSize.width) || SELECT_FALLBACK_COLLISION_SIZE
-
-  if (desiredAvailable < requiredSize && oppositeAvailable > desiredAvailable) {
-    return oppositeSide
-  }
-
-  return side
-}
-
-function getSelectWrapperStyle(
-  trigger: HTMLElement | null,
-  side: SelectSide,
-  align: SelectAlign,
-  sideOffset: number,
-  alignOffset: number,
-): Record<string, string> {
-  if (!trigger) {
-    return {
-      position: 'fixed',
-      left: '0px',
-      top: '0px',
-      transform: 'translate(0px, 0px)',
-      pointerEvents: 'auto',
-      minWidth: 'max-content',
-      zIndex: 'auto',
-      '--radix-popper-transform-origin': '0% 0px',
-      '--radix-popper-available-width': `${window.innerWidth}px`,
-      '--radix-popper-available-height': `${window.innerHeight}px`,
-      '--radix-popper-anchor-width': '0px',
-      '--radix-popper-anchor-height': '0px',
-    }
-  }
-
-  const rect = trigger.getBoundingClientRect()
-  const availableWidth = getAvailableWidth(rect, side, sideOffset, window.innerWidth)
-  const availableHeight = getAvailableHeight(rect, side, sideOffset, window.innerHeight)
-
-  let left = rect.left
-  let top = rect.top
-  let translateSuffix = ''
-
-  if (side === 'top') {
-    top = rect.top - sideOffset
-  } else if (side === 'bottom') {
-    top = rect.bottom + sideOffset
-  } else if (side === 'left') {
-    left = rect.left - sideOffset
-  } else {
-    left = rect.right + sideOffset
-  }
-
-  if (side === 'top' || side === 'bottom') {
-    if (align === 'center') {
-      left = rect.left + rect.width / 2
-    } else if (align === 'end') {
-      left = rect.right
-    }
-
-    left += alignOffset
-
-    if (align === 'center') {
-      translateSuffix = side === 'top' ? ' translate(-50%, -100%)' : ' translate(-50%, 0)'
-    } else if (align === 'end') {
-      translateSuffix = side === 'top' ? ' translate(-100%, -100%)' : ' translate(-100%, 0)'
-    } else if (side === 'top') {
-      translateSuffix = ' translate(0, -100%)'
-    }
-  } else {
-    if (align === 'center') {
-      top = rect.top + rect.height / 2
-    } else if (align === 'end') {
-      top = rect.bottom
-    }
-
-    top += alignOffset
-
-    if (align === 'center') {
-      translateSuffix = side === 'left' ? ' translate(-100%, -50%)' : ' translate(0, -50%)'
-    } else if (align === 'end') {
-      translateSuffix = side === 'left' ? ' translate(-100%, -100%)' : ' translate(0, -100%)'
-    } else if (side === 'left') {
-      translateSuffix = ' translate(-100%, 0)'
-    }
-  }
-
-  const roundedLeft = Math.round(left)
-  const roundedTop = Math.round(top)
-  const originX =
-    side === 'top' || side === 'bottom'
-      ? align === 'center'
-        ? '50%'
-        : align === 'end'
-          ? '100%'
-          : '0%'
-      : side === 'left'
-        ? '100%'
-        : '0%'
-  const originY =
-    side === 'left' || side === 'right'
-      ? align === 'center'
-        ? '50%'
-        : align === 'end'
-          ? '100%'
-          : '0%'
-      : side === 'top'
-        ? '100%'
-        : '0px'
-
-  return {
-    position: 'fixed',
-    left: '0px',
-    top: '0px',
-    transform: `translate(${roundedLeft}px, ${roundedTop}px)${translateSuffix}`,
-    pointerEvents: 'auto',
-    minWidth: 'max-content',
-    zIndex: 'auto',
-    '--radix-popper-transform-origin': `${originX} ${originY}`,
-    '--radix-popper-available-width': `${Math.max(availableWidth, 0)}px`,
-    '--radix-popper-available-height': `${Math.max(availableHeight, 0)}px`,
-    '--radix-popper-anchor-width': `${Math.max(rect.width, 0)}px`,
-    '--radix-popper-anchor-height': `${Math.max(rect.height, 0)}px`,
   }
 }
 
@@ -937,7 +747,6 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     CONTENT_NAME,
     props.__scopeSelect as Scope<SelectContextValue | undefined>,
   )
-  const content = createSignal<HTMLDivElement | null>(null)
   const forceMount = () =>
     props.forceMount === undefined
       ? portalContext.forceMount()
@@ -963,22 +772,7 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     props.alignOffset === undefined
       ? 0
       : (readValue(props.alignOffset as MaybeAccessor<number | undefined>) ?? 0)
-  const placedSide = () =>
-    getSelectPlacedSide(context.triggerRef.current, content(), side(), sideOffset())
-  const wrapperStyle = () =>
-    getSelectWrapperStyle(
-      context.triggerRef.current,
-      placedSide(),
-      align(),
-      sideOffset(),
-      alignOffset(),
-    )
-  const wrapperProps = mergeProps({
-    style: prop(wrapperStyle),
-  })
   const setContentRef = (node: HTMLDivElement | null) => {
-    content(node)
-
     const forwardedRef = props.ref as PossibleRef<HTMLDivElement>
     if (!forwardedRef) return
     if (typeof forwardedRef === 'function') {
@@ -1001,8 +795,10 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
       role="listbox"
       forceMount={forceMount}
       aria-labelledby={context.triggerId()}
-      data-side={prop(placedSide)}
-      data-align={prop(align)}
+      side={prop(side)}
+      align={prop(align)}
+      sideOffset={prop(sideOffset)}
+      alignOffset={prop(alignOffset)}
       ref={setContentRef}
       style={
         prop(() => ({
@@ -1026,17 +822,7 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     />
   )
 
-  return (
-    <>
-      {reactive(() =>
-        forceMount() || context.open() ? (
-          <div data-radix-popper-content-wrapper="" {...(wrapperProps as Record<string, unknown>)}>
-            {contentNode}
-          </div>
-        ) : null,
-      )}
-    </>
-  )
+  return <>{reactive(() => (forceMount() || context.open() ? contentNode : null))}</>
 }
 
 SelectContent.displayName = CONTENT_NAME
