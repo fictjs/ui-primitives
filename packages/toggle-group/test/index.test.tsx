@@ -324,4 +324,53 @@ describe('@fictjs/toggle-group', () => {
     const three = container.querySelector('[data-testid="three"]') as HTMLButtonElement
     expect(document.activeElement).toBe(three)
   })
+
+  it('keeps the root direction attribute and navigation context in sync', async () => {
+    const direction = createSignal<'ltr' | 'rtl'>('ltr')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root
+          data-testid="root"
+          type="single"
+          defaultValue="two"
+          dir={prop(() => direction())}
+          orientation="horizontal"
+        >
+          <Item data-testid="one" value="one">
+            One
+          </Item>
+          <Item data-testid="two" value="two">
+            Two
+          </Item>
+          <Item data-testid="three" value="three">
+            Three
+          </Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+    const root = container.querySelector('[data-testid="root"]') as HTMLDivElement
+    const one = container.querySelector('[data-testid="one"]') as HTMLButtonElement
+    const two = container.querySelector('[data-testid="two"]') as HTMLButtonElement
+    const three = container.querySelector('[data-testid="three"]') as HTMLButtonElement
+
+    expect(root.getAttribute('dir')).toBe('ltr')
+    two.focus()
+    keyDown(two, 'ArrowRight')
+    await waitForUpdates()
+    expect(document.activeElement).toBe(three)
+
+    direction('rtl')
+    await waitForUpdates()
+    expect(root.getAttribute('dir')).toBe('rtl')
+    two.focus()
+    keyDown(two, 'ArrowRight')
+    await waitForUpdates()
+    expect(document.activeElement).toBe(one)
+  })
 })

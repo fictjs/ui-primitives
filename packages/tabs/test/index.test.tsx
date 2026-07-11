@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../src/index.js'
 
@@ -209,6 +210,56 @@ describe('@fictjs/tabs', () => {
     const twoContent = container.querySelector('[data-testid="two-content"]') as HTMLDivElement
     expect(twoTrigger.getAttribute('aria-selected')).toBe('true')
     expect(twoContent.hidden).toBe(false)
+  })
+
+  it('keeps the root direction attribute and navigation context in sync', async () => {
+    const direction = createSignal<'ltr' | 'rtl'>('ltr')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Tabs
+          data-testid="root"
+          defaultValue="two"
+          dir={prop(() => direction()) as unknown as 'ltr'}
+          activationMode="manual"
+        >
+          <TabsList>
+            <TabsTrigger data-testid="one" value="one">
+              One
+            </TabsTrigger>
+            <TabsTrigger data-testid="two" value="two">
+              Two
+            </TabsTrigger>
+            <TabsTrigger data-testid="three" value="three">
+              Three
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const root = container.querySelector('[data-testid="root"]') as HTMLDivElement
+    const one = container.querySelector('[data-testid="one"]') as HTMLButtonElement
+    const two = container.querySelector('[data-testid="two"]') as HTMLButtonElement
+    const three = container.querySelector('[data-testid="three"]') as HTMLButtonElement
+
+    expect(root.getAttribute('dir')).toBe('ltr')
+    two.focus()
+    keyDown(two, 'ArrowRight')
+    await waitForEffects()
+    expect(document.activeElement).toBe(three)
+
+    direction('rtl')
+    await waitForEffects()
+    expect(root.getAttribute('dir')).toBe('rtl')
+    two.focus()
+    keyDown(two, 'ArrowRight')
+    await waitForEffects()
+    expect(document.activeElement).toBe(one)
   })
 
   it('keeps exactly one enabled trigger in the tab order without a valid selected value', async () => {

@@ -2,7 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Button, Link, Root, Separator, ToggleGroup, ToggleItem } from '../src/index.js'
 
@@ -178,5 +179,40 @@ describe('@fictjs/toolbar', () => {
     keyDown(buttons[0] as HTMLButtonElement, 'ArrowRight')
     expect(onButtonKeyDown).toHaveBeenCalledOnce()
     expect(document.activeElement).toBe(buttons[1])
+  })
+
+  it('keeps the root direction attribute and navigation context in sync', async () => {
+    const direction = createSignal<'ltr' | 'rtl'>('ltr')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root data-testid="root" dir={prop(() => direction())} orientation="horizontal">
+          <Button data-testid="one">One</Button>
+          <Button data-testid="two">Two</Button>
+          <Button data-testid="three">Three</Button>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForDeferredFocus()
+    const root = container.querySelector('[data-testid="root"]') as HTMLDivElement
+    const one = container.querySelector('[data-testid="one"]') as HTMLButtonElement
+    const two = container.querySelector('[data-testid="two"]') as HTMLButtonElement
+    const three = container.querySelector('[data-testid="three"]') as HTMLButtonElement
+
+    expect(root.getAttribute('dir')).toBe('ltr')
+    two.focus()
+    keyDown(two, 'ArrowRight')
+    expect(document.activeElement).toBe(three)
+
+    direction('rtl')
+    await flushEffects()
+    expect(root.getAttribute('dir')).toBe('rtl')
+    two.focus()
+    keyDown(two, 'ArrowRight')
+    expect(document.activeElement).toBe(one)
   })
 })

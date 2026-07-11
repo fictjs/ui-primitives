@@ -87,6 +87,29 @@ describe('@fictjs/one-time-password-field', () => {
     expect(hiddenInput.value).toBe('123')
   })
 
+  it('keeps the computed root direction attribute reactive', async () => {
+    const direction = createSignal<'ltr' | 'rtl'>('ltr')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root data-testid="root" dir={prop(() => direction())}>
+          <Input />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const root = container.querySelector('[data-testid="root"]') as HTMLDivElement
+    expect(root.getAttribute('dir')).toBe('ltr')
+
+    direction('rtl')
+    await waitForEffects()
+    expect(root.getAttribute('dir')).toBe('rtl')
+  })
+
   it('updates a registered input index and restores its implicit index', async () => {
     const container = document.createElement('div')
     const index = createSignal<number | undefined>(2)

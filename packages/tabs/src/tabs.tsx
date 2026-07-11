@@ -216,7 +216,7 @@ function Tabs(props: ScopedProps<TabsProps>): FictNode {
       __scopeTabs: undefined,
       activationMode: undefined,
       defaultValue: undefined,
-      dir: undefined,
+      dir: prop(dir),
       onValueChange: undefined,
       orientation: undefined,
       value: undefined,

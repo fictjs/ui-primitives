@@ -382,7 +382,7 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
     prop(() => props as Record<string, unknown>),
     {
       __scopeToggleGroup: undefined,
-      dir: undefined,
+      dir: prop(dir),
       disabled: undefined,
       loop: undefined,
       orientation: undefined,

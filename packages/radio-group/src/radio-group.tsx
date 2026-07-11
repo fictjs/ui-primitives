@@ -286,7 +286,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
     {
       __scopeRadioGroup: undefined,
       defaultValue: undefined,
-      dir: undefined,
+      dir: prop(dir),
       disabled: undefined,
       loop: undefined,
       name: undefined,

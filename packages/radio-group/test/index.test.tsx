@@ -156,6 +156,49 @@ describe('@fictjs/radio-group', () => {
     expect(two.getAttribute('aria-checked')).toBe('true')
   })
 
+  it('keeps the root direction attribute and navigation context in sync', async () => {
+    const direction = createSignal<'ltr' | 'rtl'>('ltr')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <RadioGroup data-testid="root" defaultValue="two" dir={prop(() => direction())}>
+          <RadioGroupItem data-testid="one" value="one">
+            One
+          </RadioGroupItem>
+          <RadioGroupItem data-testid="two" value="two">
+            Two
+          </RadioGroupItem>
+          <RadioGroupItem data-testid="three" value="three">
+            Three
+          </RadioGroupItem>
+        </RadioGroup>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+    const root = container.querySelector('[data-testid="root"]') as HTMLDivElement
+    const one = container.querySelector('[data-testid="one"]') as HTMLButtonElement
+    const two = container.querySelector('[data-testid="two"]') as HTMLButtonElement
+    const three = container.querySelector('[data-testid="three"]') as HTMLButtonElement
+
+    expect(root.getAttribute('dir')).toBe('ltr')
+    two.focus()
+    pressKey(two, 'ArrowRight')
+    await waitForUpdates()
+    expect(document.activeElement).toBe(three)
+
+    direction('rtl')
+    await waitForUpdates()
+    expect(root.getAttribute('dir')).toBe('rtl')
+    two.focus()
+    pressKey(two, 'ArrowRight')
+    await waitForUpdates()
+    expect(document.activeElement).toBe(one)
+  })
+
   it('preserves root focus entry while invoking the latest focus handler', async () => {
     const firstHandler = vi.fn()
     const secondHandler = vi.fn()

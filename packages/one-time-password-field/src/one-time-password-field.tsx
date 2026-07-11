@@ -375,7 +375,7 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
       autoFocus: undefined,
       autoSubmit: undefined,
       defaultValue: undefined,
-      dir: undefined,
+      dir: prop(direction),
       disabled: undefined,
       form: undefined,
       name: undefined,

@@ -216,7 +216,7 @@ function Toolbar(props: ScopedProps<ToolbarProps>): FictNode {
     prop(() => props as Record<string, unknown>),
     {
       __scopeToolbar: undefined,
-      dir: undefined,
+      dir: prop(dir),
       loop: undefined,
       orientation: undefined,
       ref: undefined,
