@@ -122,6 +122,10 @@ function writeJson(path, value) {
 function writeConsumerProject(tarballs) {
   mkdirSync(join(consumerDir, 'src'), { recursive: true })
 
+  const overrides = Object.entries(tarballs)
+    .map(([name, tarball]) => `  ${JSON.stringify(name)}: ${JSON.stringify(`file:${tarball}`)}`)
+    .join('\n')
+
   writeJson(join(consumerDir, 'package.json'), {
     name: 'ui-primitives-fict-metadata-e2e',
     private: true,
@@ -142,12 +146,13 @@ function writeConsumerProject(tarballs) {
       typescript: versions.typescript,
       vite: versions.vite,
     },
-    pnpm: {
-      overrides: Object.fromEntries(
-        Object.entries(tarballs).map(([name, tarball]) => [name, `file:${tarball}`]),
-      ),
-    },
   })
+
+  writeFileSync(
+    join(consumerDir, 'pnpm-workspace.yaml'),
+    `packages:\n  - .\n\noverrides:\n${overrides}\n`,
+    'utf8',
+  )
 
   writeFileSync(
     join(consumerDir, 'index.html'),
