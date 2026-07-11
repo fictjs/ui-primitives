@@ -45,6 +45,11 @@ async function waitForUpdates(): Promise<void> {
   await flushEffects(6)
 }
 
+async function waitForConnectionPoll(): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 48))
+  await flushEffects(6)
+}
+
 describe('@fictjs/radio-group', () => {
   const cleanups: Array<() => void> = []
 
@@ -344,6 +349,49 @@ describe('@fictjs/radio-group', () => {
     expect(input.isConnected).toBe(true)
     expect(input.form).toBe(form)
     expect(new FormData(form).get('plan')).toBe('pro')
+  })
+
+  it('mounts native radio inputs after adoption into an iframe document', async () => {
+    const iframe = document.createElement('iframe')
+    const container = document.createElement('div')
+    const onClick = vi.fn()
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    document.body.append(iframe)
+
+    mount(
+      () => (
+        <form data-testid="form">
+          <RadioGroup defaultValue="pro" name="plan">
+            <RadioGroupItem value="pro">Pro</RadioGroupItem>
+          </RadioGroup>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+    const detachedForm = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    detachedForm.addEventListener('click', onClick)
+    detachedForm.addEventListener('input', onInput)
+    detachedForm.addEventListener('change', onChange)
+    expect(container.querySelector('input[type="radio"]')).toBeNull()
+
+    const frameDocument = iframe.contentDocument as Document
+    frameDocument.body.append(frameDocument.adoptNode(container))
+    await waitForConnectionPoll()
+
+    const form = frameDocument.querySelector('[data-testid="form"]') as HTMLFormElement
+    const input = form.querySelector('input[type="radio"]') as HTMLInputElement
+    expect(input.ownerDocument).toBe(frameDocument)
+    expect(input.form).toBe(form)
+    expect(input.name).toBe('plan')
+    expect(input.value).toBe('pro')
+    expect(input.checked).toBe(true)
+    expect(new FormData(form).get('plan')).toBe('pro')
+    expect(onClick).not.toHaveBeenCalled()
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
   })
 
   it('does not render native inputs when the group has no form owner', async () => {

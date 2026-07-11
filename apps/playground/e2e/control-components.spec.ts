@@ -41,7 +41,7 @@ test('checkbox toggles from its labeled example', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the checkbox demo')
@@ -60,7 +60,7 @@ test('switch toggles from its labeled example', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the switch demo')
@@ -82,7 +82,7 @@ test('checkbox group can add another selected value', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the checkbox group demo')
@@ -104,7 +104,7 @@ test('radio switches selection in the labeled example', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the radio demo')
@@ -126,7 +126,7 @@ test('radio group switches selection in the labeled example', async ({ page }) =
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the radio group demo')
@@ -151,7 +151,7 @@ test('checkbox cards support toggling an additional card', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the checkbox cards demo')
@@ -178,7 +178,7 @@ test('radio cards move selection to a new card', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the radio cards demo')
@@ -218,7 +218,7 @@ test('slider responds to keyboard input', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the slider demo')
@@ -239,7 +239,7 @@ test('tabs switch their active panel', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('.rt-TabsRoot')).not.toHaveCount(0)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the tabs demo')
@@ -264,7 +264,7 @@ test('tab nav updates the active link when a new tab is selected', async ({ page
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('.rt-TabNavRoot')).not.toHaveCount(0)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the tab nav demo')
@@ -305,7 +305,7 @@ test('text field accepts typed input', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the text field demo')
@@ -327,7 +327,7 @@ test('text area accepts typed input', async ({ page }) => {
   await colorCombinations.locator('summary').click()
   await expect(colorCombinations).toHaveAttribute('open', '')
   await expect(colorCombinations.locator('table')).toHaveCount(4)
-  await expect(section.locator('[style*="display: contents"]')).toHaveCount(0)
+  await expect(section.locator('div[style*="display: contents"]')).toHaveCount(0)
 
   tracker.stop()
   expectTrackedBrowserErrors(tracker, 'testing the text area demo')

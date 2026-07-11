@@ -1,9 +1,9 @@
-import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, render, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
-import { composeEventHandlers } from '@fictjs/core-primitive'
+import { composeEventHandlers, waitForConnected } from '@fictjs/core-primitive'
 import { Primitive } from '@fictjs/primitive'
 import { useControllableState } from '@fictjs/use-controllable-state'
 import { useLayoutEffect } from '@fictjs/use-layout-effect'
@@ -123,42 +123,16 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
   useLayoutEffect(() => {
     const currentButton = button()
     const formId = form()
-    let cancelled = false
-    let connectionObserver: MutationObserver | null = null
+    if (!currentButton) {
+      isFormControl(false)
+      return
+    }
 
-    const updateFormOwnership = (): boolean => {
-      if (cancelled || button() !== currentButton) return true
-      if (!currentButton) {
-        isFormControl(false)
-        return true
-      }
-      if (!currentButton.isConnected) return false
+    return waitForConnected(currentButton, () => {
+      if (button() !== currentButton) return
 
       isFormControl(Boolean(formId || currentButton.closest('form')))
-      return true
-    }
-
-    // Fict assigns refs before the enclosing tree is attached. Defer the DOM lookup
-    // until the complete render has been inserted into its parent.
-    queueMicrotask(() => {
-      if (updateFormOwnership() || !currentButton) return
-
-      const MutationObserverCtor =
-        currentButton.ownerDocument.defaultView?.MutationObserver ?? globalThis.MutationObserver
-      if (!MutationObserverCtor) return
-
-      connectionObserver = new MutationObserverCtor(() => {
-        if (!updateFormOwnership()) return
-        connectionObserver?.disconnect()
-        connectionObserver = null
-      })
-      connectionObserver.observe(currentButton.ownerDocument, { childList: true, subtree: true })
     })
-
-    return () => {
-      cancelled = true
-      connectionObserver?.disconnect()
-    }
   })
 
   useLayoutEffect(() => {
@@ -242,7 +216,7 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
       value: prop(value),
     },
   )
-  const bubbleInputNode = reactive(() =>
+  const renderBubbleInput = reactive(() =>
     isFormControl() ? (
       <SwitchBubbleInput
         bubbles={() => !hasConsumerStoppedPropagation}
@@ -258,13 +232,28 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
         value={value}
       />
     ) : null,
-  ) as unknown as FictNode
+  )
+  const bubbleInputHost = createSignal<HTMLSpanElement | null>(null)
+
+  useLayoutEffect(() => {
+    const host = bubbleInputHost()
+    if (!host || !isFormControl()) return
+
+    return render(() => renderBubbleInput(), host)
+  })
+
+  const renderedBubbleInput =
+    typeof document === 'undefined' ? (
+      renderBubbleInput()
+    ) : (
+      <span ref={(node) => bubbleInputHost(node)} style={{ display: 'contents' }} />
+    )
 
   return (
     <SwitchProvider scope={__scopeSwitch} checked={checked} disabled={disabled}>
       <>
         <Primitive.button {...switchProps} ref={composedRefs} />
-        {bubbleInputNode}
+        {renderedBubbleInput}
       </>
     </SwitchProvider>
   )

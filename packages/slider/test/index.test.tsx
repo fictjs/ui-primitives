@@ -44,6 +44,11 @@ async function waitForEffects(cycles = 6): Promise<void> {
   }
 }
 
+async function waitForConnectionPoll(): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 48))
+  await waitForEffects()
+}
+
 describe('@fictjs/slider', () => {
   const cleanups: Array<() => void> = []
 
@@ -337,6 +342,48 @@ describe('@fictjs/slider', () => {
     expect(input.isConnected).toBe(true)
     expect(input.form).toBe(form)
     expect(new FormData(form).get('volume')).toBe('25')
+  })
+
+  it('mounts its bubble input after adoption into an iframe document', async () => {
+    const iframe = document.createElement('iframe')
+    const container = document.createElement('div')
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    document.body.append(iframe)
+
+    mount(
+      () => (
+        <form data-testid="form">
+          <Root defaultValue={[25]} name="volume">
+            <Track>
+              <Range />
+            </Track>
+            <Thumb />
+          </Root>
+        </form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const detachedForm = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    detachedForm.addEventListener('input', onInput)
+    detachedForm.addEventListener('change', onChange)
+    expect(container.querySelector('input')).toBeNull()
+
+    const frameDocument = iframe.contentDocument as Document
+    frameDocument.body.append(frameDocument.adoptNode(container))
+    await waitForConnectionPoll()
+
+    const form = frameDocument.querySelector('[data-testid="form"]') as HTMLFormElement
+    const input = form.querySelector('input') as HTMLInputElement
+    expect(input.ownerDocument).toBe(frameDocument)
+    expect(input.form).toBe(form)
+    expect(input.name).toBe('volume')
+    expect(input.value).toBe('25')
+    expect(new FormData(form).get('volume')).toBe('25')
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
   })
 
   it('mounts its bubble input when a connected slider gains explicit form ownership', async () => {

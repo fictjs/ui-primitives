@@ -24,6 +24,11 @@ async function flushEffects(cycles = 6): Promise<void> {
   }
 }
 
+async function waitForConnectionPoll(): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 48))
+  await flushEffects()
+}
+
 describe('@fictjs/switch', () => {
   afterEach(() => {
     document.body.innerHTML = ''
@@ -201,6 +206,47 @@ describe('@fictjs/switch', () => {
     expect(input.isConnected).toBe(true)
     expect(input.form).toBe(form)
     expect(new FormData(form).get('airplane-mode')).toBe('on')
+  })
+
+  it('mounts its native input after adoption into an iframe document', async () => {
+    const iframe = document.createElement('iframe')
+    const container = document.createElement('div')
+    const onClick = vi.fn()
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    document.body.append(iframe)
+
+    render(
+      () => (
+        <form data-testid="form">
+          <Root defaultChecked name="airplane-mode" value="enabled" />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    const detachedForm = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    detachedForm.addEventListener('click', onClick)
+    detachedForm.addEventListener('input', onInput)
+    detachedForm.addEventListener('change', onChange)
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
+
+    const frameDocument = iframe.contentDocument as Document
+    frameDocument.body.append(frameDocument.adoptNode(container))
+    await waitForConnectionPoll()
+
+    const form = frameDocument.querySelector('[data-testid="form"]') as HTMLFormElement
+    const input = form.querySelector('input[type="checkbox"]') as HTMLInputElement
+    expect(input.ownerDocument).toBe(frameDocument)
+    expect(input.form).toBe(form)
+    expect(input.name).toBe('airplane-mode')
+    expect(input.value).toBe('enabled')
+    expect(input.checked).toBe(true)
+    expect(new FormData(form).get('airplane-mode')).toBe('enabled')
+    expect(onClick).not.toHaveBeenCalled()
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
   })
 
   it('keeps form association props on the hidden input instead of the button', async () => {

@@ -31,6 +31,11 @@ async function flushEffects(cycles = 6): Promise<void> {
   }
 }
 
+async function waitForConnectionPoll(): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 48))
+  await flushEffects()
+}
+
 describe('@fictjs/checkbox', () => {
   afterEach(() => {
     document.body.innerHTML = ''
@@ -228,6 +233,79 @@ describe('@fictjs/checkbox', () => {
     expect(input.isConnected).toBe(true)
     expect(input.checked).toBe(true)
     expect(new FormData(form).get('newsletter')).toBe('on')
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('mounts its native input after adoption into an iframe document', async () => {
+    const iframe = document.createElement('iframe')
+    const container = document.createElement('div')
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    document.body.append(iframe)
+
+    render(
+      () => (
+        <form data-testid="form">
+          <Root defaultChecked name="newsletter" value="weekly" />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    const detachedForm = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    detachedForm.addEventListener('input', onInput)
+    detachedForm.addEventListener('change', onChange)
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
+
+    const frameDocument = iframe.contentDocument as Document
+    frameDocument.body.append(frameDocument.adoptNode(container))
+    await waitForConnectionPoll()
+
+    const form = frameDocument.querySelector('[data-testid="form"]') as HTMLFormElement
+    const input = form.querySelector('input[type="checkbox"]') as HTMLInputElement
+    expect(input.ownerDocument).toBe(frameDocument)
+    expect(input.form).toBe(form)
+    expect(input.name).toBe('newsletter')
+    expect(input.value).toBe('weekly')
+    expect(input.checked).toBe(true)
+    expect(new FormData(form).get('newsletter')).toBe('weekly')
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('mounts its native input inside a connected shadow tree', async () => {
+    const host = document.createElement('div')
+    const container = document.createElement('div')
+    const shadowRoot = host.attachShadow({ mode: 'open' })
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    document.body.append(host)
+
+    render(
+      () => (
+        <form data-testid="form">
+          <Root defaultChecked name="newsletter" value="daily" />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    form.addEventListener('input', onInput)
+    form.addEventListener('change', onChange)
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull()
+
+    shadowRoot.append(container)
+    await waitForConnectionPoll()
+
+    const input = form.querySelector('input[type="checkbox"]') as HTMLInputElement
+    expect(input.getRootNode()).toBe(shadowRoot)
+    expect(input.form).toBe(form)
+    expect(input.checked).toBe(true)
+    expect(new FormData(form).get('newsletter')).toBe('daily')
     expect(onInput).not.toHaveBeenCalled()
     expect(onChange).not.toHaveBeenCalled()
   })

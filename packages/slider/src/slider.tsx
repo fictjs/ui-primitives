@@ -1,10 +1,10 @@
-import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, render, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createCollection } from '@fictjs/collection'
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
-import { composeEventHandlers } from '@fictjs/core-primitive'
+import { composeEventHandlers, waitForConnected } from '@fictjs/core-primitive'
 import { useDirection, type Direction } from '@fictjs/direction'
 import { Primitive } from '@fictjs/primitive'
 import { useControllableState } from '@fictjs/use-controllable-state'
@@ -744,40 +744,19 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
     const thumbNode = thumb()
     if (!thumbNode) return
     const form = context.form()
-    let cancelled = false
-    let connectionObserver: MutationObserver | null = null
-
-    const updateFormOwnership = (): boolean => {
-      if (cancelled || thumb() !== thumbNode) return true
-      if (!thumbNode.isConnected) return false
+    const disposeConnection = waitForConnected(thumbNode, () => {
+      if (thumb() !== thumbNode) return
 
       isFormControl(Boolean(form || thumbNode.closest('form')))
-      return true
-    }
-
-    queueMicrotask(() => {
-      if (updateFormOwnership()) return
-
-      const MutationObserverCtor =
-        thumbNode.ownerDocument.defaultView?.MutationObserver ?? globalThis.MutationObserver
-      if (!MutationObserverCtor) return
-
-      connectionObserver = new MutationObserverCtor(() => {
-        if (!updateFormOwnership()) return
-        connectionObserver?.disconnect()
-        connectionObserver = null
-      })
-      connectionObserver.observe(thumbNode.ownerDocument, { childList: true, subtree: true })
     })
     context.thumbs.add(thumbNode)
     return () => {
-      cancelled = true
-      connectionObserver?.disconnect()
+      disposeConnection()
       context.thumbs.delete(thumbNode)
     }
   })
 
-  const bubbleInputNode = reactive(() =>
+  const renderBubbleInput = reactive(() =>
     isFormControl() ? (
       <SliderBubbleInput
         __scopeSlider={props.__scopeSlider}
@@ -794,7 +773,22 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
         value={value}
       />
     ) : null,
-  ) as unknown as FictNode
+  )
+  const bubbleInputHost = createSignal<HTMLSpanElement | null>(null)
+
+  useLayoutEffect(() => {
+    const host = bubbleInputHost()
+    if (!host || !isFormControl()) return
+
+    return render(() => renderBubbleInput(), host)
+  })
+
+  const renderedBubbleInput =
+    typeof document === 'undefined' ? (
+      renderBubbleInput()
+    ) : (
+      <span ref={(node) => bubbleInputHost(node)} style={{ display: 'contents' }} />
+    )
   const wrapperProps = mergeProps({
     style: prop(wrapperStyle),
   })
@@ -810,7 +804,7 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
           )}
         />
       </Collection.ItemSlot>
-      {bubbleInputNode}
+      {renderedBubbleInput}
     </span>
   )
 }

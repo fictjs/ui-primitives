@@ -1,10 +1,10 @@
-import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, render, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 import { assign } from '@fictjs/runtime/internal'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
-import { composeEventHandlers } from '@fictjs/core-primitive'
+import { composeEventHandlers, waitForConnected } from '@fictjs/core-primitive'
 import { Presence } from '@fictjs/presence'
 import { Primitive } from '@fictjs/primitive'
 import { useControllableState, type SetStateFn } from '@fictjs/use-controllable-state'
@@ -89,6 +89,10 @@ type CheckboxIndicatorProps = JSX.IntrinsicElements['span'] & {
 
 type CheckboxBubbleInputProps = Omit<JSX.IntrinsicElements['input'], 'checked'> & {
   children?: never
+}
+
+type CheckboxBubbleInputInternalProps = ScopedProps<CheckboxBubbleInputProps> & {
+  __context?: CheckboxContextValue
 }
 
 type CheckboxProps = Omit<JSX.IntrinsicElements['button'], 'checked' | 'defaultChecked'> & {
@@ -216,42 +220,16 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
   useLayoutEffect(() => {
     const currentControl = control()
     const formId = form()
-    let cancelled = false
-    let connectionObserver: MutationObserver | null = null
+    if (!currentControl) {
+      isFormControl(false)
+      return
+    }
 
-    const updateFormOwnership = (): boolean => {
-      if (cancelled || control() !== currentControl) return true
-      if (!currentControl) {
-        isFormControl(false)
-        return true
-      }
-      if (!currentControl.isConnected) return false
+    return waitForConnected(currentControl, () => {
+      if (control() !== currentControl) return
 
       isFormControl(Boolean(formId || currentControl.closest('form')))
-      return true
-    }
-
-    // Fict assigns refs before the enclosing tree is attached. Defer the DOM lookup
-    // until the complete render has been inserted into its parent.
-    queueMicrotask(() => {
-      if (updateFormOwnership() || !currentControl) return
-
-      const MutationObserverCtor =
-        currentControl.ownerDocument.defaultView?.MutationObserver ?? globalThis.MutationObserver
-      if (!MutationObserverCtor) return
-
-      connectionObserver = new MutationObserverCtor(() => {
-        if (!updateFormOwnership()) return
-        connectionObserver?.disconnect()
-        connectionObserver = null
-      })
-      connectionObserver.observe(currentControl.ownerDocument, { childList: true, subtree: true })
     })
-
-    return () => {
-      cancelled = true
-      connectionObserver?.disconnect()
-    }
   })
 
   useLayoutEffect(() => {
@@ -502,9 +480,9 @@ function CheckboxIndicator(props: ScopedProps<CheckboxIndicatorProps>): FictNode
 
 CheckboxIndicator.displayName = INDICATOR_NAME
 
-function CheckboxBubbleInput(props: ScopedProps<CheckboxBubbleInputProps>): FictNode {
+function CheckboxBubbleInput(props: CheckboxBubbleInputInternalProps): FictNode {
   const { __scopeCheckbox } = props
-  const context = useCheckboxContext(BUBBLE_INPUT_NAME, __scopeCheckbox)
+  const context = props.__context ?? useCheckboxContext(BUBBLE_INPUT_NAME, __scopeCheckbox)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLInputElement>, (node) =>
     context.setBubbleInput(node),
   )
@@ -533,6 +511,7 @@ function CheckboxBubbleInput(props: ScopedProps<CheckboxBubbleInputProps>): Fict
     },
     prop(() => props as Record<string, unknown>),
     {
+      __context: undefined,
       __scopeCheckbox: undefined,
       ref: undefined,
       style: prop(() => {
@@ -564,16 +543,25 @@ function CheckboxRootBubbleInput(props: {
   __scopeCheckbox?: Scope<CheckboxContextValue | undefined>
 }): FictNode {
   const context = useCheckboxContext(CHECKBOX_NAME, props.__scopeCheckbox)
-
-  return (
-    <>
-      {reactive(() =>
-        context.isFormControl() ? (
-          <CheckboxBubbleInput __scopeCheckbox={props.__scopeCheckbox} />
-        ) : null,
-      )}
-    </>
+  const renderBubbleInput = reactive(() =>
+    context.isFormControl() ? (
+      <CheckboxBubbleInput __context={context} __scopeCheckbox={props.__scopeCheckbox} />
+    ) : null,
   )
+  const bubbleInputHost = createSignal<HTMLSpanElement | null>(null)
+
+  useLayoutEffect(() => {
+    const host = bubbleInputHost()
+    if (!host || !context.isFormControl()) return
+
+    return render(() => renderBubbleInput(), host)
+  })
+
+  if (typeof document === 'undefined') {
+    return renderBubbleInput()
+  }
+
+  return <span ref={(node) => bubbleInputHost(node)} style={{ display: 'contents' }} />
 }
 
 function Checkbox(props: ScopedProps<CheckboxProps>): FictNode {

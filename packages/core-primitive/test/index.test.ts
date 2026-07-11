@@ -7,7 +7,13 @@ import {
   getOwnerDocument,
   getOwnerWindow,
   isFrame,
+  waitForConnected,
 } from '../src/index.js'
+
+async function waitForConnectionPoll(): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 24))
+  await Promise.resolve()
+}
 
 describe('@fictjs/core-primitive', () => {
   afterEach(() => {
@@ -82,5 +88,80 @@ describe('@fictjs/core-primitive', () => {
   it('detects iframe elements', () => {
     expect(isFrame(document.createElement('iframe'))).toBe(true)
     expect(isFrame(document.createElement('div'))).toBe(false)
+  })
+
+  it('waits until a same-document node is connected', async () => {
+    const node = document.createElement('div')
+    const onConnected = vi.fn()
+
+    waitForConnected(node, onConnected)
+    expect(onConnected).not.toHaveBeenCalled()
+
+    await Promise.resolve()
+    expect(onConnected).not.toHaveBeenCalled()
+
+    document.body.append(node)
+    await Promise.resolve()
+
+    expect(onConnected).toHaveBeenCalledTimes(1)
+  })
+
+  it('follows a detached node adopted into an iframe document', async () => {
+    const iframe = document.createElement('iframe')
+    const node = document.createElement('div')
+    const onConnected = vi.fn()
+    document.body.append(iframe)
+
+    const frameDocument = iframe.contentDocument as Document
+    waitForConnected(node, onConnected)
+    await Promise.resolve()
+
+    frameDocument.body.append(frameDocument.adoptNode(node))
+    await waitForConnectionPoll()
+
+    expect(node.ownerDocument).toBe(frameDocument)
+    expect(onConnected).toHaveBeenCalledTimes(1)
+  })
+
+  it('detects insertion into a connected shadow root', async () => {
+    const host = document.createElement('div')
+    const node = document.createElement('div')
+    const onConnected = vi.fn()
+    const shadowRoot = host.attachShadow({ mode: 'open' })
+    document.body.append(host)
+
+    waitForConnected(node, onConnected)
+    await Promise.resolve()
+
+    shadowRoot.append(node)
+    await waitForConnectionPoll()
+
+    expect(node.getRootNode()).toBe(shadowRoot)
+    expect(onConnected).toHaveBeenCalledTimes(1)
+  })
+
+  it('cancels pending observation and polling when disposed', async () => {
+    vi.useFakeTimers()
+    const disconnect = vi.spyOn(window.MutationObserver.prototype, 'disconnect')
+    const node = document.createElement('div')
+    const onConnected = vi.fn()
+
+    try {
+      const dispose = waitForConnected(node, onConnected)
+      await Promise.resolve()
+
+      expect(vi.getTimerCount()).toBe(1)
+      dispose()
+      expect(disconnect).toHaveBeenCalled()
+      expect(vi.getTimerCount()).toBe(0)
+
+      document.body.append(node)
+      await vi.runAllTimersAsync()
+      await Promise.resolve()
+
+      expect(onConnected).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
