@@ -89,6 +89,171 @@ describe('@fictjs/form', () => {
     expect(input.getAttribute('aria-describedby')).toBe(message.id)
   })
 
+  it('keeps the initial matcher while reactive message inputs continue to update', async () => {
+    const container = document.createElement('div')
+    const customMatcher = vi.fn(() => true)
+    const match = createSignal<'valueMissing' | typeof customMatcher>('valueMissing')
+    const name = createSignal('primary')
+    const forceMatch = createSignal(true)
+    const text = createSignal('Initial message')
+    const state = createSignal('initial')
+    const calls: string[] = []
+    const onClick = createSignal<() => void>(() => calls.push('initial'))
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Form>
+          <Field name="primary">
+            <Control required />
+            <Message
+              data-testid="message"
+              data-state={prop(() => state()) as unknown as string}
+              forceMatch={prop(() => forceMatch()) as unknown as boolean}
+              match={prop(() => match()) as unknown as 'valueMissing'}
+              name={prop(() => name()) as unknown as string}
+              onClick={prop(() => onClick()) as unknown as () => void}
+            >
+              {prop(() => text()) as unknown as string}
+            </Message>
+          </Field>
+          <Field name="secondary">
+            <Control required />
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const inputs = Array.from(container.querySelectorAll('input')) as HTMLInputElement[]
+    const message = container.querySelector('[data-testid="message"]') as HTMLSpanElement
+    expect(message.textContent).toBe('Initial message')
+    expect(message.dataset.state).toBe('initial')
+    expect(inputs[0]?.getAttribute('aria-describedby')).toBe(message.id)
+
+    match(customMatcher)
+    name('secondary')
+    forceMatch(false)
+    text('Updated message')
+    state('updated')
+    onClick(() => calls.push('updated'))
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="message"]')).toBe(message)
+    expect(message.hidden).toBe(true)
+    expect(message.dataset.state).toBe('updated')
+    expect(inputs[0]?.getAttribute('aria-describedby')).toBeNull()
+
+    invalid(inputs[1] as HTMLInputElement)
+    await waitForEffects()
+
+    expect(message.hidden).toBe(false)
+    expect(message.textContent).toBe('Updated message')
+    expect(customMatcher).not.toHaveBeenCalled()
+    expect(inputs[0]?.getAttribute('aria-describedby')).toBeNull()
+    expect(inputs[1]?.getAttribute('aria-describedby')).toBe(message.id)
+
+    message.click()
+    expect(calls).toEqual(['updated'])
+  })
+
+  it('updates default message text without switching its initial implementation', async () => {
+    const container = document.createElement('div')
+    const match = createSignal<'valueMissing' | undefined>(undefined)
+    const text = createSignal('Initial default')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Form>
+          <Field name="email">
+            <Control required />
+            <Message data-testid="message" match={prop(() => match()) as unknown as 'valueMissing'}>
+              {prop(() => text()) as unknown as string}
+            </Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const message = container.querySelector('[data-testid="message"]') as HTMLSpanElement
+    expect(message.textContent).toBe('Initial default')
+
+    match('valueMissing')
+    text('Updated default')
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="message"]')).toBe(message)
+    expect(message.hidden).toBe(false)
+    expect(message.textContent).toBe('Updated default')
+  })
+
+  it('preserves caller visibility styles while default message text updates', async () => {
+    const container = document.createElement('div')
+    const text = createSignal('Initial hidden message')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Form>
+          <Field name="email">
+            <Message data-testid="message" hidden style={{ display: 'none' }}>
+              {prop(() => text()) as unknown as string}
+            </Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const message = container.querySelector('[data-testid="message"]') as HTMLSpanElement
+    expect(message.hidden).toBe(true)
+    expect(message.style.display).toBe('none')
+
+    text('Updated hidden message')
+    await waitForEffects()
+
+    expect(message.textContent).toBe('Updated hidden message')
+    expect(message.hidden).toBe(true)
+    expect(message.style.display).toBe('none')
+  })
+
+  it('keeps the initial default message VNode structure', async () => {
+    const container = document.createElement('div')
+    const children = createSignal<unknown>(<strong data-testid="initial-child">Initial</strong>)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Form>
+          <Field name="email">
+            <Message data-testid="message">{prop(() => children()) as unknown as string}</Message>
+          </Field>
+        </Form>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const message = container.querySelector('[data-testid="message"]') as HTMLSpanElement
+    const initialChild = container.querySelector('[data-testid="initial-child"]')
+    expect(initialChild?.textContent).toBe('Initial')
+
+    children(<em data-testid="next-child">Next</em>)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="message"]')).toBe(message)
+    expect(container.querySelector('[data-testid="initial-child"]')).toBe(initialChild)
+    expect(container.querySelector('[data-testid="next-child"]')).toBeNull()
+  })
+
   it('invokes the latest form and control handlers from getter-backed props', async () => {
     const container = document.createElement('div')
     const calls: string[] = []

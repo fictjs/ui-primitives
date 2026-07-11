@@ -1,5 +1,5 @@
 import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal, reactive } from '@fictjs/runtime/advanced'
+import { createSignal, isReactive, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -113,6 +113,28 @@ function cloneValidityState(validity: ValidityState): ValidityState {
 
 function toDomRef<T>(ref: PossibleRef<T>) {
   return ref as unknown as ((node: T | null) => void) | { current: T | null }
+}
+
+function readReactiveValue(value: unknown): unknown {
+  let currentValue = value
+
+  for (let depth = 0; depth < 10 && isReactive(currentValue); depth += 1) {
+    const nextValue = currentValue()
+    if (nextValue === currentValue) break
+    currentValue = nextValue
+  }
+
+  return currentValue
+}
+
+function isTextContent(value: unknown): boolean {
+  return (
+    value === null ||
+    value === undefined ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  )
 }
 
 function shallowBooleanRecordEqual(
@@ -582,39 +604,58 @@ function FormMessage(props: ScopedProps<FormMessageProps>): FictNode {
     MESSAGE_NAME,
     props.__scopeForm as Scope<FormFieldContextValue | undefined>,
   )
+  // Fict 0.26 flushes lifecycle hooks inside reactive VNode roots before their parent is
+  // connected. Keep the message implementation and initial VNode child shape synchronous;
+  // accessors below still carry names, text, validity, and forwarded props through updates.
+  const rawProps = mergeProps({}, props as unknown as Record<string, unknown>)
+  const match = readReactiveValue(rawProps.match) as FormMessageProps['match']
+  const initialChildren = readReactiveValue(rawProps.children) ?? DEFAULT_INVALID_MESSAGE
+  const forwardedRef = readReactiveValue(rawProps.ref) as PossibleRef<HTMLSpanElement>
+  const name = () => (readReactiveValue(rawProps.name) as string | undefined) ?? fieldContext.name()
   const messageProps = mergeProps(
     prop(() => props as Record<string, unknown>),
     {
       match: undefined,
       name: undefined,
+      ref: undefined,
     },
   )
+  const refProps = forwardedRef ? { ref: toDomRef(forwardedRef) } : {}
+  const reactiveName = prop(name) as unknown as string
 
-  return (
-    <>
-      {reactive(() => {
-        const match = props.match
-        const name = props.name ?? fieldContext.name()
-        const refProps = props.ref
-          ? { ref: toDomRef(props.ref as PossibleRef<HTMLSpanElement>) }
-          : {}
+  if (match === undefined) {
+    const defaultMessageProps = mergeProps(messageProps, { children: undefined })
 
-        if (match === undefined) {
-          return (
-            <FormMessageImpl {...messageProps} {...refProps} name={name}>
-              {props.children ?? DEFAULT_INVALID_MESSAGE}
-            </FormMessageImpl>
-          )
-        }
+    if (isTextContent(initialChildren)) {
+      const messageText = () => {
+        const children = readReactiveValue(rawProps.children) ?? DEFAULT_INVALID_MESSAGE
+        return typeof children === 'boolean' ? '' : String(children)
+      }
 
-        if (typeof match === 'function') {
-          return <FormCustomMessage {...messageProps} {...refProps} match={match} name={name} />
-        }
+      return (
+        <FormMessageImpl
+          {...defaultMessageProps}
+          {...refProps}
+          name={reactiveName}
+          textContent={messageText}
+        >
+          {initialChildren as FictNode}
+        </FormMessageImpl>
+      )
+    }
 
-        return <FormBuiltInMessage {...messageProps} {...refProps} match={match} name={name} />
-      })}
-    </>
-  )
+    return (
+      <FormMessageImpl {...defaultMessageProps} {...refProps} name={reactiveName}>
+        {initialChildren as FictNode}
+      </FormMessageImpl>
+    )
+  }
+
+  if (typeof match === 'function') {
+    return <FormCustomMessage {...messageProps} {...refProps} match={match} name={reactiveName} />
+  }
+
+  return <FormBuiltInMessage {...messageProps} {...refProps} match={match} name={reactiveName} />
 }
 
 FormMessage.displayName = MESSAGE_NAME
@@ -641,6 +682,7 @@ function FormBuiltInMessage(props: ScopedProps<FormBuiltInMessageProps>): FictNo
     },
   )
   const messageText = () => String(props.children ?? DEFAULT_BUILT_IN_MESSAGES[props.match] ?? '')
+  const name = prop(() => props.name) as unknown as string
 
   if (props.ref) {
     return (
@@ -648,7 +690,7 @@ function FormBuiltInMessage(props: ScopedProps<FormBuiltInMessageProps>): FictNo
         {...(builtInMessageProps as Record<string, unknown>)}
         present={matches}
         ref={toDomRef(props.ref as PossibleRef<HTMLSpanElement>)}
-        name={props.name}
+        name={name}
         textContent={messageText}
       />
     )
@@ -657,7 +699,7 @@ function FormBuiltInMessage(props: ScopedProps<FormBuiltInMessageProps>): FictNo
   return (
     <FormMessageImpl
       {...(builtInMessageProps as Record<string, unknown>)}
-      name={props.name}
+      name={name}
       present={matches}
       textContent={messageText}
     />
@@ -703,6 +745,7 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
     },
   )
   const messageText = () => String(props.children ?? DEFAULT_INVALID_MESSAGE)
+  const name = prop(() => props.name) as unknown as string
 
   if (props.ref) {
     return (
@@ -711,7 +754,7 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
         id={id()}
         present={matches}
         ref={toDomRef(props.ref as PossibleRef<HTMLSpanElement>)}
-        name={props.name}
+        name={name}
         textContent={messageText}
       />
     )
@@ -721,7 +764,7 @@ function FormCustomMessage(props: ScopedProps<FormCustomMessageProps>): FictNode
     <FormMessageImpl
       {...(customMessageProps as Record<string, unknown>)}
       id={id()}
-      name={props.name}
+      name={name}
       present={matches}
       textContent={messageText}
     />
@@ -751,9 +794,14 @@ function FormMessageImpl(props: ScopedProps<FormMessageImplProps>): FictNode {
 
   useLayoutEffect(() => {
     const message = ref.current
-    if (!message || !props.present || !props.textContent) return
+    if (!message || !props.textContent) return
 
-    const visible = props.present()
+    const visible = props.present?.()
+    if (visible === undefined) {
+      message.textContent = props.textContent()
+      return
+    }
+
     message.hidden = !visible
     message.style.display = visible ? '' : 'none'
     message.textContent = visible ? props.textContent() : ''
