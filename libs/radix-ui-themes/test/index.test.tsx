@@ -760,6 +760,35 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(tooltipText.textContent).toBe('Tooltip third')
   })
 
+  it('mounts the themed tooltip trigger synchronously while its DOM props stay reactive', async () => {
+    const label = createSignal('First trigger')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Tooltip open content="Tooltip content">
+            <button data-label={prop(() => label()) as unknown as string} type="button">
+              Trigger
+            </button>
+          </Tooltip>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    const trigger = container.querySelector('button')
+    expect(trigger?.getAttribute('data-label')).toBe('First trigger')
+
+    label('Second trigger')
+    await flushEffects()
+
+    expect(container.querySelector('button')).toBe(trigger)
+    expect(trigger?.getAttribute('data-label')).toBe('Second trigger')
+  })
+
   it('mounts synchronous loading branches only after their DOM is connected', () => {
     const mountedWhileConnected: boolean[] = []
     const container = document.createElement('div')

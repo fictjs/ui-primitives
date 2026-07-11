@@ -1,10 +1,10 @@
-import { reactive } from 'fict/advanced'
 import * as React from '../helpers/element.js'
 import { classNames } from '../helpers/reactive-class-names.js'
 import { Tooltip as TooltipPrimitive } from '@fictjs/radix-ui'
 
 import { Text } from './text.js'
-import { extractProps, readPropValue } from '../helpers/extract-props.js'
+import { extractProps } from '../helpers/extract-props.js'
+import { renderChildren } from '../helpers/render-children.js'
 import { tooltipPropDefs } from './tooltip.props.js'
 import { Theme } from './theme.js'
 
@@ -36,9 +36,9 @@ const Tooltip = React.forwardRef<TooltipElement, TooltipProps>((props, forwarded
     ...tooltipContentProps
   } = extractProps(props, tooltipPropDefs)
   const rootProps = { open, defaultOpen, onOpenChange, delayDuration, disableHoverableContent }
-  const trigger = reactive(() => (
-    <TooltipPrimitive.Trigger asChild>{readPropValue(children)}</TooltipPrimitive.Trigger>
-  ))
+  const trigger = (
+    <TooltipPrimitive.Trigger asChild>{renderChildren(children)}</TooltipPrimitive.Trigger>
+  )
 
   return (
     <TooltipPrimitive.Root {...rootProps}>
