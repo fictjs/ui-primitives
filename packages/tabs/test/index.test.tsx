@@ -106,6 +106,7 @@ describe('@fictjs/tabs', () => {
 
     expect(nodes.accountTrigger.getAttribute('aria-selected')).toBe('true')
     expect(nodes.accountContent.hidden).toBe(false)
+    expect(nodes.accountContent.textContent).toBe('Account content')
 
     click(nodes.passwordTrigger)
     await waitForEffects()
@@ -113,6 +114,7 @@ describe('@fictjs/tabs', () => {
 
     expect(nodes.passwordTrigger.getAttribute('aria-selected')).toBe('true')
     expect(nodes.passwordContent.hidden).toBe(false)
+    expect(nodes.passwordContent.textContent).toBe('Password content')
     expect(nodes.accountContent.hidden).toBe(true)
   })
 
