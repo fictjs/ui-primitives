@@ -25,6 +25,16 @@ function paste(target: Element, value: string): void {
   target.dispatchEvent(event)
 }
 
+function keyDown(target: Element, key: string): void {
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      key,
+    }),
+  )
+}
+
 async function waitForEffects(cycles = 6): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0))
   for (let index = 0; index < cycles; index++) {
@@ -108,6 +118,41 @@ describe('@fictjs/one-time-password-field', () => {
     direction('rtl')
     await waitForEffects()
     expect(root.getAttribute('dir')).toBe('rtl')
+  })
+
+  it('uses a reactive input orientation without forwarding it to the DOM', async () => {
+    const orientation = createSignal<'horizontal' | 'vertical'>('horizontal')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root>
+          <Input data-testid="one" />
+          <Input
+            data-testid="two"
+            orientation={prop(() => orientation()) as unknown as 'horizontal'}
+          />
+          <Input data-testid="three" />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const two = container.querySelector('[data-testid="two"]') as HTMLInputElement
+    const three = container.querySelector('[data-testid="three"]') as HTMLInputElement
+    expect(two.hasAttribute('orientation')).toBe(false)
+
+    two.focus()
+    keyDown(two, 'ArrowDown')
+    expect(document.activeElement).toBe(two)
+
+    orientation('vertical')
+    await waitForEffects()
+    expect(two.hasAttribute('orientation')).toBe(false)
+    keyDown(two, 'ArrowDown')
+    expect(document.activeElement).toBe(three)
   })
 
   it('updates a registered input index and restores its implicit index', async () => {

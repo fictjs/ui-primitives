@@ -638,6 +638,7 @@ function OneTimePasswordFieldInput(props: ScopedProps<OneTimePasswordFieldInputP
       __scopeOneTimePasswordField: undefined,
       index: undefined,
       onInvalidChange: undefined,
+      orientation: undefined,
       ref: registerRef,
       onFocus: composeEventHandlers<FocusEvent>(
         (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
