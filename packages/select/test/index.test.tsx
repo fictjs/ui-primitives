@@ -243,12 +243,16 @@ describe('@fictjs/select', () => {
     expect(onValueChange).toHaveBeenCalledWith('orange')
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Apple')
     expect((container.querySelector('select') as HTMLSelectElement).value).toBe('apple')
+    const nativeOption = container.querySelector('select option')
 
     value('orange')
     await waitForEffects()
 
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
     expect((container.querySelector('select') as HTMLSelectElement).value).toBe('orange')
+    expect(container.querySelector('select option')).toBe(nativeOption)
+    expect(nativeOption?.getAttribute('value')).toBe('orange')
+    expect(nativeOption?.textContent).toBe('orange')
   })
 
   it('renders the selected item text for defaultValue while content is closed', async () => {

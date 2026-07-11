@@ -477,11 +477,11 @@ function SelectBubbleSelect(props: SelectBubbleSelectProps): FictNode {
       width: '1px',
     },
   })
-  const option = reactive(() => (
-    <option value={props.value()} selected>
-      {props.value()}
+  const option = (
+    <option value={prop(props.value) as unknown as string} selected>
+      {prop(props.value) as unknown as FictNode}
     </option>
-  )) as unknown as FictNode
+  )
 
   return (
     <Primitive.select {...selectProps} ref={(node: HTMLSelectElement | null) => select(node)}>
