@@ -88,10 +88,10 @@ const DropdownMenuContent = React.forwardRef<DropdownMenuContentElement, Dropdow
           ref={React.coerceRef(forwardedRef)}
           class={classNames(
             'radix-themes',
-            {
+            prop(() => ({
               light: themeContext.appearance === 'light',
               dark: themeContext.appearance === 'dark',
-            },
+            })),
             'rt-PopperContent',
             'rt-BaseMenuContent',
             'rt-DropdownMenuContent',
@@ -346,10 +346,10 @@ const DropdownMenuSubContent = React.forwardRef<
         ref={React.coerceRef(forwardedRef)}
         class={classNames(
           'radix-themes',
-          {
+          prop(() => ({
             light: themeContext.appearance === 'light',
             dark: themeContext.appearance === 'dark',
-          },
+          })),
           'rt-PopperContent',
           'rt-BaseMenuContent',
           'rt-BaseMenuSubContent',

@@ -1550,4 +1550,70 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(contextGroup?.className).toContain('rt-BaseMenuRadioGroup')
     expect(contextGroup?.className).toContain('custom-radio-group')
   })
+
+  it('updates open overlay appearance classes without remounting content', async () => {
+    const appearance = createSignal<'light' | 'dark'>('light')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme appearance={prop(() => appearance()) as unknown as 'light'}>
+          <DropdownMenu.Root defaultOpen modal={false}>
+            <DropdownMenu.Trigger>
+              <button type="button">Dropdown trigger</button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Item>Dropdown item</DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+
+          <ContextMenu.Root defaultOpen modal={false}>
+            <ContextMenu.Trigger>
+              <div>Context trigger</div>
+            </ContextMenu.Trigger>
+            <ContextMenu.Content>
+              <ContextMenu.Item>Context item</ContextMenu.Item>
+            </ContextMenu.Content>
+          </ContextMenu.Root>
+
+          <Select.Root defaultOpen defaultValue="one">
+            <Select.Trigger />
+            <Select.Content forceMount>
+              <Select.Item value="one">One</Select.Item>
+            </Select.Content>
+          </Select.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const contents = [
+      document.body.querySelector('.rt-DropdownMenuContent'),
+      document.body.querySelector('.rt-ContextMenuContent'),
+      document.body.querySelector('.rt-SelectContent'),
+    ]
+    expect(contents).not.toContain(null)
+    expect(contents.every((content) => content?.classList.contains('light'))).toBe(true)
+    expect(contents.every((content) => !content?.classList.contains('dark'))).toBe(true)
+
+    appearance('dark')
+    await flushEffects()
+
+    const updatedContents = [
+      document.body.querySelector('.rt-DropdownMenuContent'),
+      document.body.querySelector('.rt-ContextMenuContent'),
+      document.body.querySelector('.rt-SelectContent'),
+    ]
+    expect(updatedContents).toEqual(contents)
+    expect(contents.every((content) => content?.classList.contains('dark'))).toBe(true)
+    expect(contents.every((content) => !content?.classList.contains('light'))).toBe(true)
+
+    appearance('light')
+    await flushEffects()
+    expect(contents.every((content) => content?.classList.contains('light'))).toBe(true)
+    expect(contents.every((content) => !content?.classList.contains('dark'))).toBe(true)
+  })
 })

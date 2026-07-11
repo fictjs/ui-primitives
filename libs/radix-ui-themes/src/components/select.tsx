@@ -133,10 +133,10 @@ const SelectContent = React.forwardRef<SelectContentElement, SelectContentProps>
           ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLDivElement>)}
           class={classNames(
             'radix-themes',
-            {
+            prop(() => ({
               light: themeContext.appearance === 'light',
               dark: themeContext.appearance === 'dark',
-            },
+            })),
             'rt-SelectContent',
             'rt-PopperContent',
             className,

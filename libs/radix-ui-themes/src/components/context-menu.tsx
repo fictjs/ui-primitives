@@ -89,10 +89,10 @@ const ContextMenuContent = React.forwardRef<ContextMenuContentElement, ContextMe
           ref={React.coerceRef(forwardedRef)}
           class={classNames(
             'radix-themes',
-            {
+            prop(() => ({
               light: themeContext.appearance === 'light',
               dark: themeContext.appearance === 'dark',
-            },
+            })),
             'rt-PopperContent',
             'rt-BaseMenuContent',
             'rt-ContextMenuContent',
@@ -350,10 +350,10 @@ const ContextMenuSubContent = React.forwardRef<
         ref={React.coerceRef(forwardedRef)}
         class={classNames(
           'radix-themes',
-          {
+          prop(() => ({
             light: themeContext.appearance === 'light',
             dark: themeContext.appearance === 'dark',
-          },
+          })),
           'rt-PopperContent',
           'rt-BaseMenuContent',
           'rt-BaseMenuSubContent',
