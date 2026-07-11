@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 vi.mock('@fictjs/popper', async () => {
   const { Primitive } = await import('@fictjs/primitive')
@@ -40,21 +41,25 @@ import {
   TooltipTrigger,
 } from '../src/index.js'
 
-function pointerMove(target: Element): void {
+function pointerMove(target: Element, clientX = 0, clientY = 0): void {
   target.dispatchEvent(
     new PointerEvent('pointermove', {
       bubbles: true,
       cancelable: true,
+      clientX,
+      clientY,
       pointerType: 'mouse',
     }),
   )
 }
 
-function pointerLeave(target: Element): void {
+function pointerLeave(target: Element, clientX = 0, clientY = 0): void {
   target.dispatchEvent(
     new PointerEvent('pointerleave', {
       bubbles: true,
       cancelable: true,
+      clientX,
+      clientY,
       pointerType: 'mouse',
     }),
   )
@@ -279,6 +284,150 @@ describe('@fictjs/tooltip', () => {
     pressEscape(document)
     await waitForEffects()
     expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it('snapshots hoverability for each mounted content instance', async () => {
+    const container = document.createElement('div')
+    const disableHoverableContent = createSignal(false)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <TooltipProvider disableHoverableContent={disableHoverableContent}>
+          <Tooltip>
+            <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
+            <TooltipContent data-testid="content">Tooltip</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    const addEventListener = vi.spyOn(trigger, 'addEventListener')
+    trigger.focus()
+    await waitForEffects()
+
+    const content = document.body.querySelector('[data-testid="content"]') as HTMLDivElement
+    expect(
+      addEventListener.mock.calls.filter(([eventName]) => eventName === 'pointerleave'),
+    ).toHaveLength(1)
+
+    disableHoverableContent(true)
+    await waitForEffects()
+
+    expect(document.body.querySelector('[data-testid="content"]')).toBe(content)
+
+    pressEscape(document)
+    await waitForEffects()
+    expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+
+    trigger.blur()
+    trigger.focus()
+    await waitForEffects()
+
+    expect(document.body.querySelector('[data-testid="content"]')).not.toBe(content)
+    expect(
+      addEventListener.mock.calls.filter(([eventName]) => eventName === 'pointerleave'),
+    ).toHaveLength(1)
+  })
+
+  it('keeps trigger leave behavior aligned with the active content mode', async () => {
+    const container = document.createElement('div')
+    const disableHoverableContent = createSignal(true)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <TooltipProvider disableHoverableContent={disableHoverableContent}>
+          <Tooltip>
+            <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
+            <TooltipContent data-testid="content">Tooltip</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
+
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    trigger.focus()
+    await waitForEffects()
+    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    disableHoverableContent(false)
+    await waitForEffects()
+    pointerLeave(trigger)
+    await waitForEffects()
+
+    expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+
+    trigger.blur()
+    trigger.focus()
+    await waitForEffects()
+    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    pointerLeave(trigger)
+    await waitForEffects()
+    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+  })
+
+  it('refreshes force-mounted hover behavior while closed for the next open cycle', async () => {
+    const container = document.createElement('div')
+    const disableHoverableContent = createSignal(true)
+    const open = createSignal(false)
+    const onOpenChange = vi.fn()
+    document.body.append(container)
+
+    mount(
+      () => (
+        <TooltipProvider disableHoverableContent={disableHoverableContent}>
+          <Tooltip
+            open={open}
+            onOpenChange={(nextOpen) => {
+              onOpenChange(nextOpen)
+              open(nextOpen)
+            }}
+          >
+            <TooltipTrigger data-testid="trigger">Trigger</TooltipTrigger>
+            <TooltipContent forceMount data-testid="content">
+              Tooltip
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const trigger = container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+    const content = document.body.querySelector('[data-testid="content"]') as HTMLDivElement
+
+    expect(content.getAttribute('data-state')).toBe('closed')
+
+    disableHoverableContent(false)
+    await waitForEffects()
+
+    open(true)
+    await waitForEffects()
+    expect(open()).toBe(true)
+
+    Object.defineProperty(trigger, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, right: 100, bottom: 20, width: 100, height: 20 }) as DOMRect,
+    })
+    Object.defineProperty(content, 'getBoundingClientRect', {
+      value: () =>
+        ({ left: 0, top: 30, right: 100, bottom: 50, width: 100, height: 20 }) as DOMRect,
+    })
+
+    pointerLeave(trigger, 50, 20)
+    await waitForEffects()
+    expect(onOpenChange).not.toHaveBeenCalled()
+
+    pointerMove(document.body, 500, 500)
+    await waitForEffects()
+    expect(open()).toBe(false)
+    expect(content.getAttribute('data-state')).toBe('closed')
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('renders in a custom portal and exposes accessible hidden tooltip content', async () => {

@@ -1,5 +1,5 @@
 import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
-import { createSignal, reactive } from '@fictjs/runtime/advanced'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -125,6 +125,11 @@ type TooltipContentProps = TooltipContentImplProps & {
   forceMount?: MaybeAccessor<boolean | undefined>
 }
 
+type TooltipContentMountProps = {
+  contentProps: ScopedProps<TooltipContentImplProps>
+  ref?: PossibleRef<HTMLDivElement>
+}
+
 type TooltipArrowProps = PopperArrowPrimitiveProps
 
 const Slottable = createSlottable('TooltipContent')
@@ -222,6 +227,7 @@ function Tooltip(props: ScopedProps<TooltipProps>): FictNode {
     props.disableHoverableContent === undefined
       ? providerContext.disableHoverableContent()
       : Boolean(readValue(props.disableHoverableContent as MaybeAccessor<boolean | undefined>))
+  const activeDisableHoverableContent = createSignal(disableHoverableContent())
   const openProp = () =>
     props.open === undefined
       ? undefined
@@ -244,6 +250,14 @@ function Tooltip(props: ScopedProps<TooltipProps>): FictNode {
 
       props.onOpenChange?.(nextOpen)
     },
+  })
+
+  // Keep trigger behavior and the mounted content implementation on one mode for the entire
+  // open cycle. While closed, track the latest configured mode for the next cycle.
+  useLayoutEffect(() => {
+    if (!open()) {
+      activeDisableHoverableContent(disableHoverableContent())
+    }
   })
   const stateAttribute = () => {
     if (!open()) {
@@ -312,7 +326,7 @@ function Tooltip(props: ScopedProps<TooltipProps>): FictNode {
           }
         }}
         onTriggerLeave={() => {
-          if (disableHoverableContent()) {
+          if (activeDisableHoverableContent()) {
             handleClose()
           } else {
             window.clearTimeout(openTimerRef.current)
@@ -321,7 +335,7 @@ function Tooltip(props: ScopedProps<TooltipProps>): FictNode {
         }}
         onOpen={handleOpen}
         onClose={handleClose}
-        disableHoverableContent={disableHoverableContent}
+        disableHoverableContent={activeDisableHoverableContent}
       >
         {props.children}
       </TooltipContextProvider>
@@ -486,24 +500,24 @@ function TooltipContent(props: ScopedProps<TooltipContentProps>): FictNode {
 
   return (
     <Presence present={present}>
-      <>
-        {reactive(() =>
-          context.disableHoverableContent() ? (
-            <TooltipContentImpl
-              {...(contentWithDefaultSide as ScopedProps<TooltipContentImplProps>)}
-            />
-          ) : (
-            <TooltipContentHoverable
-              {...(contentWithDefaultSide as ScopedProps<TooltipContentImplProps>)}
-            />
-          ),
-        )}
-      </>
+      <TooltipContentMount
+        contentProps={contentWithDefaultSide as ScopedProps<TooltipContentImplProps>}
+      />
     </Presence>
   )
 }
 
 TooltipContent.displayName = CONTENT_NAME
+
+function TooltipContentMount(props: TooltipContentMountProps): FictNode {
+  const contentProps = props.contentProps
+  const composedRefs = useComposedRefs(contentProps.ref as PossibleRef<HTMLDivElement>, props.ref)
+  const forwardedProps = mergeProps(contentProps as Record<string, unknown>, {
+    ref: composedRefs,
+  })
+
+  return <TooltipContentHoverable {...(forwardedProps as ScopedProps<TooltipContentImplProps>)} />
+}
 
 function TooltipContentHoverable(props: ScopedProps<TooltipContentImplProps>): FictNode {
   const context = useTooltipContext(
@@ -538,6 +552,11 @@ function TooltipContentHoverable(props: ScopedProps<TooltipContentImplProps>): F
   })
 
   useLayoutEffect(() => {
+    if (context.disableHoverableContent()) {
+      handleRemoveGraceArea()
+      return
+    }
+
     const trigger = context.trigger.current
     const currentContent = contentRef.current
 
