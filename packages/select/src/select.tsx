@@ -965,11 +965,23 @@ function SelectItemText(props: ScopedProps<SelectItemTextProps>): FictNode {
   )
 
   useLayoutEffect(() => {
-    const text = ref.current?.textContent ?? ''
-    rootContext.registerItemText(itemContext.value(), text)
-    if (itemContext.selected()) {
-      rootContext.setSelectedText(text)
+    const itemText = ref.current
+    if (!itemText) return
+
+    const syncText = () => {
+      const text = itemText.textContent ?? ''
+      rootContext.registerItemText(itemContext.value(), text)
+      if (itemContext.selected()) {
+        rootContext.setSelectedText(text)
+      }
     }
+
+    syncText()
+
+    const observer = new MutationObserver(syncText)
+    observer.observe(itemText, { characterData: true, childList: true, subtree: true })
+
+    return () => observer.disconnect()
   })
 
   return (

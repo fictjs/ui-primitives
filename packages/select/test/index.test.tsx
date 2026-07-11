@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createElement, Fragment, onMount, prop, render, type FictNode } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import {
   Content,
@@ -101,6 +101,39 @@ describe('@fictjs/select', () => {
 
     expect(container.querySelector('[data-testid="content"]')).toBeNull()
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
+  })
+
+  it('updates the selected value when mounted item text changes', async () => {
+    const container = document.createElement('div')
+    const itemText = createSignal('Apple')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root defaultOpen defaultValue="apple">
+          <Trigger data-testid="trigger">
+            <Value data-testid="value" />
+          </Trigger>
+          <Content data-testid="content">
+            <Item value="apple">
+              <ItemText data-testid="item-text">
+                {reactive(() => itemText()) as unknown as FictNode}
+              </ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Apple')
+
+    itemText('Green Apple')
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="item-text"]')?.textContent).toBe('Green Apple')
+    expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Green Apple')
   })
 
   it('restores focus to the trigger after selecting an item', async () => {
