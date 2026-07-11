@@ -54,11 +54,11 @@ test('container renders nested size examples', async ({ page }) => {
     await expect(section.getByText('This should be size 1')).toBeVisible()
     await expect(containerInners).toHaveCount(2)
 
-    const widths = await containerInners.evaluateAll((elements) =>
-      elements.map((element) => Math.round((element as HTMLElement).getBoundingClientRect().width)),
+    const maxWidths = await containerInners.evaluateAll((elements) =>
+      elements.map((element) => getComputedStyle(element).maxWidth),
     )
 
-    expect(widths[0]).toBeGreaterThan(widths[1])
+    expect(maxWidths).toEqual(['1136px', '448px'])
   })
 })
 
