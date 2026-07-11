@@ -2,8 +2,10 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { prop, render } from '@fictjs/runtime'
+import { mergeProps, prop, render, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
+
+import { Primitive } from '@fictjs/primitive'
 
 const floatingUiMocks = vi.hoisted(() => {
   return {
@@ -323,6 +325,178 @@ describe('@fictjs/popper', () => {
       padding: 0,
       strategy: 'referenceHidden',
     })
+  })
+
+  it('updates the active reference without remounting the initial anchor structure', async () => {
+    useSizeMock.mockImplementation(() => () => ({ width: 0, height: 0 }))
+    let capturedOptions: { elements?: { reference?: () => unknown } } | undefined
+    const virtualAnchor = {
+      current: {
+        getBoundingClientRect() {
+          return new DOMRect(20, 30, 40, 10)
+        },
+      },
+    }
+    const virtualRef = createSignal<typeof virtualAnchor | undefined>(undefined)
+
+    floatingUiMocks.useFloating.mockImplementation((options) => {
+      capturedOptions = options
+      return createFloatingResult()
+    })
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor data-testid="anchor" virtualRef={virtualRef} />
+          <PopperContent>content</PopperContent>
+        </Popper>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    expect(container.querySelector('[data-testid="anchor"]')).not.toBeNull()
+    expect(capturedOptions?.elements?.reference?.()).toBeInstanceOf(HTMLDivElement)
+
+    virtualRef(virtualAnchor)
+    await flushEffects()
+    const anchor = container.querySelector('[data-testid="anchor"]')
+    expect(anchor).not.toBeNull()
+    expect(capturedOptions?.elements?.reference?.()).toBe(virtualAnchor.current)
+
+    virtualRef(undefined)
+    await flushEffects()
+    expect(container.querySelector('[data-testid="anchor"]')).toBe(anchor)
+    expect(capturedOptions?.elements?.reference?.()).toBeInstanceOf(HTMLDivElement)
+  })
+
+  it('keeps an initially virtual anchor structurally virtual when its reference clears', async () => {
+    useSizeMock.mockImplementation(() => () => ({ width: 0, height: 0 }))
+    let capturedOptions: { elements?: { reference?: () => unknown } } | undefined
+    const virtualAnchor = {
+      current: {
+        getBoundingClientRect() {
+          return new DOMRect(20, 30, 40, 10)
+        },
+      },
+    }
+    const virtualRef = createSignal<typeof virtualAnchor | undefined>(virtualAnchor)
+
+    floatingUiMocks.useFloating.mockImplementation((options) => {
+      capturedOptions = options
+      return createFloatingResult()
+    })
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor data-testid="anchor" virtualRef={virtualRef} />
+          <PopperContent>content</PopperContent>
+        </Popper>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    expect(container.querySelector('[data-testid="anchor"]')).toBeNull()
+    expect(capturedOptions?.elements?.reference?.()).toBe(virtualAnchor.current)
+
+    virtualRef(undefined)
+    await flushEffects()
+
+    expect(container.querySelector('[data-testid="anchor"]')).toBeNull()
+    expect(capturedOptions?.elements?.reference?.()).toBeNull()
+  })
+
+  it('reads direct signal accessors for content positioning options', async () => {
+    useSizeMock.mockImplementation(() => () => ({ width: 0, height: 0 }))
+    const side = createSignal<'bottom' | 'right'>('bottom')
+    const align = createSignal<'start' | 'end'>('start')
+    const sideOffset = createSignal(4)
+    let capturedOptions:
+      | {
+          placement?: () => string
+          middleware?: () => Array<{ name: string; options?: Record<string, unknown> }>
+        }
+      | undefined
+
+    floatingUiMocks.useFloating.mockImplementation((options) => {
+      capturedOptions = options
+      return createFloatingResult()
+    })
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor />
+          <PopperContent align={align} side={side} sideOffset={sideOffset}>
+            content
+          </PopperContent>
+        </Popper>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    expect(capturedOptions?.placement?.()).toBe('bottom-start')
+    capturedOptions?.middleware?.()
+    expect(floatingUiMocks.offset).toHaveBeenLastCalledWith({
+      alignmentAxis: 0,
+      mainAxis: 4,
+    })
+
+    side('right')
+    align('end')
+    sideOffset(8)
+    await flushEffects()
+
+    expect(capturedOptions?.placement?.()).toBe('right-end')
+    capturedOptions?.middleware?.()
+    expect(floatingUiMocks.offset).toHaveBeenLastCalledWith({
+      alignmentAxis: 0,
+      mainAxis: 8,
+    })
+  })
+
+  it('preserves reactive props through a nested slotted anchor', async () => {
+    const state = createSignal<'closed' | 'open'>('closed')
+    const container = document.createElement('div')
+
+    function ForwardedButton(props: JSX.IntrinsicElements['button']) {
+      return <button {...mergeProps(prop(() => props as Record<string, unknown>))}>Trigger</button>
+    }
+
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor asChild>
+            <Primitive.button asChild data-state={prop(() => state())}>
+              <ForwardedButton data-testid="trigger" type="button" />
+            </Primitive.button>
+          </PopperAnchor>
+        </Popper>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    const trigger = container.querySelector('[data-testid="trigger"]')
+    expect(trigger?.getAttribute('data-state')).toBe('closed')
+
+    state('open')
+    await flushEffects()
+
+    expect(container.querySelector('[data-testid="trigger"]')).toBe(trigger)
+    expect(trigger?.getAttribute('data-state')).toBe('open')
   })
 
   it('keeps the arrow visible until middleware reports that centering failed', async () => {

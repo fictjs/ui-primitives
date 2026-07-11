@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { createElement, mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 import { jsx as createVNode } from '@fictjs/runtime/jsx-runtime'
 
@@ -46,6 +46,10 @@ const POPPER_NAME = 'Popper'
 const ANCHOR_NAME = 'PopperAnchor'
 const CONTENT_NAME = 'PopperContent'
 const ARROW_NAME = 'PopperArrow'
+const SIGNAL_MARKER = Symbol.for('fict:signal')
+const COMPUTED_MARKER = Symbol.for('fict:computed')
+const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+const REACTIVE_FN_MARKER = Symbol.for('fict:reactive-fn')
 
 const [createPopperContext, createPopperScope] = createContextScope(POPPER_NAME)
 
@@ -98,12 +102,29 @@ const OPPOSITE_SIDE: Record<Side, Side> = {
   left: 'right',
 }
 
-function readValue<T>(value: MaybeAccessor<T>): T {
-  if (typeof value === 'function' && value.length === 0) {
-    return (value as () => T)()
+function isReadableAccessor(value: unknown): value is () => unknown {
+  if (typeof value !== 'function') {
+    return false
   }
 
-  return value as T
+  const taggedValue = value as unknown as Record<symbol, unknown>
+  return (
+    value.length === 0 ||
+    taggedValue[SIGNAL_MARKER] === true ||
+    taggedValue[COMPUTED_MARKER] === true ||
+    taggedValue[PROP_GETTER_MARKER] === true ||
+    taggedValue[REACTIVE_FN_MARKER] === true
+  )
+}
+
+function readValue<T>(value: MaybeAccessor<T>): T {
+  let currentValue: unknown = value
+
+  for (let depth = 0; depth < 10 && isReadableAccessor(currentValue); depth += 1) {
+    currentValue = currentValue()
+  }
+
+  return currentValue as T
 }
 
 function readStyle(value: MaybeAccessor<unknown> | undefined): StyleRecord {
@@ -191,6 +212,8 @@ function Popper(props: ScopedProps<PopperProps>): FictNode {
 Popper.displayName = POPPER_NAME
 
 function PopperAnchor(props: ScopedProps<PopperAnchorProps>): FictNode {
+  const rawProps = mergeProps({}, props as unknown as Record<string, unknown>)
+  const virtualRefProp = rawProps.virtualRef
   const context = usePopperContext(
     ANCHOR_NAME,
     props.__scopePopper as Scope<PopperContextValue | undefined>,
@@ -229,11 +252,7 @@ function PopperAnchor(props: ScopedProps<PopperAnchorProps>): FictNode {
     }
   })
 
-  if (virtualRef()) {
-    return null
-  }
-
-  return createComponentNode(
+  const anchorNode = createComponentNode(
     Primitive.div,
     mergeProps(
       prop(() => props as Record<string, unknown>),
@@ -244,6 +263,13 @@ function PopperAnchor(props: ScopedProps<PopperAnchorProps>): FictNode {
       },
     ),
   )
+
+  // Keep the anchor's DOM shape synchronous. The active measurement reference can still change
+  // reactively, but remounting this branch through Fict 0.26 would flush child lifecycle hooks in
+  // a detached fragment.
+  return readValue(virtualRefProp as MaybeAccessor<RefObjectLike<Measurable> | undefined>)
+    ? null
+    : createElement(anchorNode)
 }
 
 PopperAnchor.displayName = ANCHOR_NAME
