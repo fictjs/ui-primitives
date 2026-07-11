@@ -1,5 +1,6 @@
 import {
   createContext as createRuntimeContext,
+  createMemo,
   mergeProps,
   prop,
   useContext as useRuntimeContext,
@@ -51,7 +52,7 @@ type MenuItemElement = HTMLElement
 type FocusIntent = 'first' | 'last' | 'prev' | 'next'
 type MenuSubOpenInputType = 'pointer' | 'keyboard'
 type PortalContextValue = {
-  forceMount: boolean | undefined
+  forceMount: () => boolean | undefined
 }
 type MenuContextValue = {
   open: () => boolean
@@ -121,7 +122,7 @@ const [MenuItemIndicatorProvider, useMenuItemIndicatorContext] =
   })
 const [MenuSubProvider, useMenuSubContext] = createMenuContext<MenuSubContextValue>(SUB_NAME)
 const MenuPortalContext = createRuntimeContext<PortalContextValue>({
-  forceMount: undefined,
+  forceMount: () => undefined,
 })
 
 type MenuProps = {
@@ -324,27 +325,24 @@ function MenuPortal(props: ScopedProps<MenuPortalProps>): FictNode {
     PORTAL_NAME,
     props.__scopeMenu as Scope<MenuContextValue | undefined>,
   )
-  const forceMount =
+  const forceMount = () =>
     props.forceMount === undefined
       ? undefined
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
-  const portalProps =
-    props.container === undefined
-      ? {
-          style: {
-            display: 'contents',
-          },
-        }
-      : {
-          container: props.container,
-          style: {
-            display: 'contents',
-          },
-        }
+  const portalProps = mergeProps(
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeMenu: undefined,
+      forceMount: undefined,
+      style: {
+        display: 'contents',
+      },
+    },
+  )
 
   return (
     <MenuPortalContext.Provider value={{ forceMount }}>
-      <Presence present={() => Boolean(forceMount || context.open())}>
+      <Presence present={() => Boolean(forceMount() || context.open())}>
         <PortalPrimitive {...portalProps}>{props.children}</PortalPrimitive>
       </Presence>
     </MenuPortalContext.Provider>
@@ -359,10 +357,11 @@ function MenuContent(props: ScopedProps<MenuContentProps>): FictNode {
     CONTENT_NAME,
     props.__scopeMenu as Scope<MenuContextValue | undefined>,
   )
-  const forceMount =
+  const forceMount = () =>
     props.forceMount === undefined
-      ? portalContext.forceMount
+      ? portalContext.forceMount()
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
+  const present = createMemo(() => Boolean(forceMount() || menuContext.open()))
   const contentRef = { current: null as HTMLDivElement | null }
 
   const getItems = () =>
@@ -402,7 +401,7 @@ function MenuContent(props: ScopedProps<MenuContentProps>): FictNode {
   return (
     <>
       {reactive(() =>
-        forceMount || menuContext.open() ? (
+        present() ? (
           <MenuContentProvider
             scope={props.__scopeMenu as Scope<MenuContentContextValue | undefined>}
             contentId={menuContext.contentId}
@@ -931,14 +930,16 @@ function MenuItemIndicator(props: ScopedProps<MenuItemIndicatorProps>): FictNode
     ITEM_INDICATOR_NAME,
     props.__scopeMenu as Scope<MenuItemIndicatorContextValue | undefined>,
   )
-  const forceMount =
+  const forceMount = () =>
     props.forceMount === undefined
       ? false
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
-  const present = () =>
-    forceMount ||
-    indicatorContext.checked() === true ||
-    indicatorContext.checked() === 'indeterminate'
+  const present = createMemo(
+    () =>
+      forceMount() ||
+      indicatorContext.checked() === true ||
+      indicatorContext.checked() === 'indeterminate',
+  )
   const indicatorNode = createComponentNode(
     Primitive.div,
     mergeProps(

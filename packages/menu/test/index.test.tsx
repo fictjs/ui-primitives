@@ -710,6 +710,125 @@ describe('@fictjs/menu', () => {
     expect(portalRoot.querySelector('[data-testid="content"]')).toBeNull()
   })
 
+  it('reacts to portal forceMount updates', async () => {
+    const container = document.createElement('div')
+    const portalRoot = document.createElement('div')
+    const forceMount = createSignal(false)
+    document.body.append(container, portalRoot)
+
+    mount(
+      () => (
+        <Menu open={false} modal={false}>
+          <Portal container={portalRoot} forceMount={forceMount}>
+            <Content data-testid="content">
+              <Item>Item</Item>
+            </Content>
+          </Portal>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    expect(document.querySelector('[data-testid="content"]')).toBeNull()
+
+    forceMount(true)
+    await waitForEffects()
+    expect(portalRoot.querySelector('[data-testid="content"]')).not.toBeNull()
+
+    forceMount(false)
+    await waitForEffects()
+    expect(document.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it('reacts to explicit content and item indicator forceMount updates', async () => {
+    const container = document.createElement('div')
+    const contentForceMount = createSignal(false)
+    const indicatorForceMount = createSignal(false)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menu open={false} modal={false}>
+          <Content forceMount={contentForceMount} data-testid="content">
+            <ItemIndicator forceMount={indicatorForceMount} data-testid="indicator" />
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="content"]')).toBeNull()
+
+    contentForceMount(true)
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="content"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="indicator"]')).toBeNull()
+
+    indicatorForceMount(true)
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="indicator"]')).not.toBeNull()
+
+    indicatorForceMount(false)
+    contentForceMount(false)
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="content"]')).toBeNull()
+  })
+
+  it('preserves mounted content and indicator identity when forceMount does not change presence', async () => {
+    const container = document.createElement('div')
+    const contentForceMount = createSignal(false)
+    const indicatorForceMount = createSignal(false)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menu open modal={false}>
+          <Content forceMount={contentForceMount} data-testid="content">
+            <CheckboxItem checked data-testid="item">
+              Item
+              <ItemIndicator forceMount={indicatorForceMount} data-testid="indicator" tabIndex={0}>
+                Checked
+              </ItemIndicator>
+            </CheckboxItem>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    const item = container.querySelector('[data-testid="item"]') as HTMLDivElement
+    const indicator = container.querySelector('[data-testid="indicator"]') as HTMLDivElement
+    item.focus()
+    expect(document.activeElement).toBe(item)
+
+    contentForceMount(true)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="content"]')).toBe(content)
+    expect(container.querySelector('[data-testid="item"]')).toBe(item)
+    expect(document.activeElement).toBe(item)
+
+    indicator.focus()
+    expect(document.activeElement).toBe(indicator)
+    indicatorForceMount(true)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="indicator"]')).toBe(indicator)
+    expect(document.activeElement).toBe(indicator)
+
+    contentForceMount(false)
+    indicatorForceMount(false)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="content"]')).toBe(content)
+    expect(container.querySelector('[data-testid="indicator"]')).toBe(indicator)
+    expect(document.activeElement).toBe(indicator)
+  })
+
   it('closes body-ported content on escape', async () => {
     const container = document.createElement('div')
     document.body.append(container)
