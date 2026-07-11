@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { prop, render } from 'fict'
 import { createSignal } from 'fict/advanced'
+import * as PublicHelpers from '@fictjs/radix-ui-themes/helpers'
 
 import {
   Avatar,
@@ -32,7 +33,8 @@ import {
   ThemePanel,
   Tooltip,
 } from '../src/index.js'
-import { classNames, extractProps, readPropValue } from '../src/helpers/index.js'
+import { extractProps, readPropValue } from '../src/helpers/extract-props.js'
+import { classNames } from '../src/helpers/reactive-class-names.js'
 
 type ResponsiveBoolean =
   | boolean
@@ -182,6 +184,12 @@ describe('@fictjs/radix-ui-themes', () => {
   function mount(view: Parameters<typeof render>[0], container: HTMLElement): void {
     cleanups.push(render(view, container))
   }
+
+  it('preserves the established public helper contract', () => {
+    expect(PublicHelpers).not.toHaveProperty('classNames')
+    expect(PublicHelpers.extractProps).toBeTypeOf('function')
+    expect(PublicHelpers.readPropValue).toBeTypeOf('function')
+  })
 
   it('applies root and nested theme data attributes', async () => {
     const container = document.createElement('div')

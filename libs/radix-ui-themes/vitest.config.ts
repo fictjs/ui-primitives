@@ -17,16 +17,16 @@ export default defineConfig({
         replacement: path.resolve(currentDir, '../../packages/radix-ui/src/index.ts'),
       },
       {
-        find: '@fictjs/radix-ui-themes',
-        replacement: path.resolve(currentDir, './src/index.ts'),
-      },
-      {
         find: '@fictjs/radix-ui-themes/helpers',
         replacement: path.resolve(currentDir, './src/helpers/index.ts'),
       },
       {
         find: '@fictjs/radix-ui-themes/props',
         replacement: path.resolve(currentDir, './src/props/index.ts'),
+      },
+      {
+        find: '@fictjs/radix-ui-themes',
+        replacement: path.resolve(currentDir, './src/index.ts'),
       },
     ],
   },
