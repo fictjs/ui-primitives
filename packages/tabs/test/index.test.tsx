@@ -1,6 +1,6 @@
 /** @jsxImportSource @fictjs/runtime */
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
@@ -58,6 +58,7 @@ describe('@fictjs/tabs', () => {
     }
 
     document.body.innerHTML = ''
+    vi.restoreAllMocks()
   })
 
   it('selects triggers and panels on pointer interaction', async () => {
@@ -260,6 +261,38 @@ describe('@fictjs/tabs', () => {
     keyDown(two, 'ArrowRight')
     await waitForEffects()
     expect(document.activeElement).toBe(one)
+  })
+
+  it('merges reactive consumer styles with the initial content animation guard', async () => {
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 1)
+    const style = createSignal({ color: 'red' })
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Tabs defaultValue="one">
+          <TabsContent
+            data-testid="content"
+            value="one"
+            style={prop(() => style()) as unknown as Record<string, string>}
+          >
+            Content
+          </TabsContent>
+        </Tabs>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    expect(content.style.color).toBe('red')
+    expect(content.style.animationDuration).toBe('0s')
+
+    style({ color: 'blue' })
+    await waitForEffects()
+    expect(content.style.color).toBe('blue')
+    expect(content.style.animationDuration).toBe('0s')
   })
 
   it('keeps exactly one enabled trigger in the tab order without a valid selected value', async () => {

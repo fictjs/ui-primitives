@@ -446,16 +446,16 @@ function TabsContent(props: ScopedProps<TabsContentProps>): FictNode {
             hidden: prop(() => !present),
             id: prop(contentId),
             tabIndex: 0,
-            style: prop(() => ({
-              animationDuration: isMountAnimationPrevented() ? '0s' : undefined,
-              ...readStyle(props.style as MaybeAccessor<unknown> | undefined),
-            })),
           },
           prop(() => props as unknown as Record<string, unknown>),
           {
             __scopeTabs: undefined,
             children: prop(() => (present ? props.children : null)),
             forceMount: undefined,
+            style: prop(() => ({
+              animationDuration: isMountAnimationPrevented() ? '0s' : undefined,
+              ...readStyle(props.style as MaybeAccessor<unknown> | undefined),
+            })),
             value: undefined,
           },
         )

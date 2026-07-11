@@ -143,11 +143,13 @@ function readValue<T>(value: MaybeAccessor<T>): T {
 }
 
 function readStyle(value: unknown): SliderStyle {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+  const resolved = value === undefined ? undefined : readValue(value as MaybeAccessor<unknown>)
+
+  if (!resolved || typeof resolved !== 'object' || Array.isArray(resolved)) {
     return {}
   }
 
-  return value as SliderStyle
+  return resolved as SliderStyle
 }
 
 function clamp(value: number, [min, max]: [number, number]) {
@@ -641,15 +643,15 @@ function SliderRange(props: ScopedProps<SliderRangeProps>): FictNode {
     {
       'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
       'data-orientation': prop(context.orientation),
+    },
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeSlider: undefined,
       style: prop(() => ({
         ...readStyle(props.style),
         [orientation.startEdge()]: `${offsetStart()}%`,
         [orientation.endEdge()]: `${offsetEnd()}%`,
       })),
-    },
-    prop(() => props as Record<string, unknown>),
-    {
-      __scopeSlider: undefined,
     },
   )
 
@@ -714,13 +716,16 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
       'data-disabled': prop(() => (context.disabled() ? '' : undefined)),
       'data-orientation': prop(context.orientation),
       tabIndex: prop(() => (context.disabled() ? undefined : 0)),
-      style: prop(() => (value() === undefined ? { display: 'none' } : readStyle(props.style))),
     },
     prop(() => props as Record<string, unknown>),
     {
       __scopeSlider: undefined,
       name: undefined,
       ref: undefined,
+      style: prop(() => ({
+        ...readStyle(props.style),
+        ...(value() === undefined ? { display: 'none' } : {}),
+      })),
       onFocus: composeEventHandlers<FocusEvent>(
         (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         () => {

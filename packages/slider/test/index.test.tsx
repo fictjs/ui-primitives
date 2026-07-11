@@ -107,6 +107,49 @@ describe('@fictjs/slider', () => {
     expect(onValueCommit).toHaveBeenCalledWith([50])
   })
 
+  it('merges reactive consumer styles without dropping range and thumb internals', async () => {
+    const style = createSignal({ backgroundColor: 'red' })
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root defaultValue={[25]} max={100}>
+          <Track>
+            <Range
+              data-testid="range"
+              style={prop(() => style()) as unknown as Record<string, string>}
+            />
+          </Track>
+          <Thumb />
+          <Thumb
+            data-testid="hidden-thumb"
+            style={prop(() => style()) as unknown as Record<string, string>}
+          />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const range = container.querySelector('[data-testid="range"]') as HTMLSpanElement
+    const hiddenThumb = container.querySelector('[data-testid="hidden-thumb"]') as HTMLSpanElement
+
+    expect(range.style.backgroundColor).toBe('red')
+    expect(range.style.left).toBe('0%')
+    expect(range.style.right).toBe('75%')
+    expect(hiddenThumb.style.backgroundColor).toBe('red')
+    expect(hiddenThumb.style.display).toBe('none')
+
+    style({ backgroundColor: 'blue' })
+    await waitForEffects()
+    expect(range.style.backgroundColor).toBe('blue')
+    expect(range.style.left).toBe('0%')
+    expect(range.style.right).toBe('75%')
+    expect(hiddenThumb.style.backgroundColor).toBe('blue')
+    expect(hiddenThumb.style.display).toBe('none')
+  })
+
   it('invokes the latest commit handler through the orientation wrappers', async () => {
     const firstHandler = vi.fn()
     const secondHandler = vi.fn()

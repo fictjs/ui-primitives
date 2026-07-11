@@ -142,11 +142,13 @@ function readValue<T>(value: MaybeAccessor<T>): T {
 }
 
 function readStyle(value: unknown): StyleRecord {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+  const resolved = value === undefined ? undefined : readValue(value as MaybeAccessor<unknown>)
+
+  if (!resolved || typeof resolved !== 'object' || Array.isArray(resolved)) {
     return {}
   }
 
-  return value as StyleRecord
+  return resolved as StyleRecord
 }
 
 function getState(open: boolean): 'open' | 'closed' {
@@ -796,15 +798,6 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
       'data-state': prop(() => getState(open())),
       'data-swipe-direction': prop(providerContext.swipeDirection),
       'data-swipe': prop(swipeState),
-      style: prop(() => ({
-        userSelect: 'none',
-        touchAction: 'none',
-        '--radix-toast-swipe-move-x': `${swipeDelta().x}px`,
-        '--radix-toast-swipe-move-y': `${swipeDelta().y}px`,
-        '--radix-toast-swipe-end-x': `${swipeDelta().x}px`,
-        '--radix-toast-swipe-end-y': `${swipeDelta().y}px`,
-        ...readStyle(props.style),
-      })),
     },
     prop(() => props as Record<string, unknown>),
     {
@@ -823,6 +816,15 @@ function Toast(props: ScopedProps<ToastProps>): FictNode {
       open: undefined,
       ref: undefined,
       type: undefined,
+      style: prop(() => ({
+        userSelect: 'none',
+        touchAction: 'none',
+        '--radix-toast-swipe-move-x': `${swipeDelta().x}px`,
+        '--radix-toast-swipe-move-y': `${swipeDelta().y}px`,
+        '--radix-toast-swipe-end-x': `${swipeDelta().x}px`,
+        '--radix-toast-swipe-end-y': `${swipeDelta().y}px`,
+        ...readStyle(props.style),
+      })),
       onKeyDown: composeEventHandlers<KeyboardEvent>(
         (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
         (event) => {

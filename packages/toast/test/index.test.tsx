@@ -99,6 +99,41 @@ describe('@fictjs/toast', () => {
     expect(viewport.getAttribute('data-state')).toBe('closed')
   })
 
+  it('merges reactive consumer styles without dropping toast interaction styles', async () => {
+    const style = createSignal({ backgroundColor: 'red' })
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Provider>
+          <Viewport />
+          <Root
+            data-testid="toast"
+            style={prop(() => style()) as unknown as Record<string, string>}
+          >
+            Notification
+          </Root>
+        </Provider>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const toast = container.querySelector('[data-testid="toast"]') as HTMLLIElement
+    expect(toast.style.backgroundColor).toBe('red')
+    expect(toast.style.userSelect).toBe('none')
+    expect(toast.style.touchAction).toBe('none')
+    expect(toast.style.getPropertyValue('--radix-toast-swipe-move-x')).toBe('0px')
+
+    style({ backgroundColor: 'blue' })
+    await waitForEffects()
+    expect(toast.style.backgroundColor).toBe('blue')
+    expect(toast.style.userSelect).toBe('none')
+    expect(toast.style.touchAction).toBe('none')
+    expect(toast.style.getPropertyValue('--radix-toast-swipe-move-x')).toBe('0px')
+  })
+
   it('updates focus proxy availability with the reactive toast count', async () => {
     const container = document.createElement('div')
     const open = createSignal(false)
