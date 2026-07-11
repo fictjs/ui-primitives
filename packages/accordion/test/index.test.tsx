@@ -247,4 +247,67 @@ describe('@fictjs/accordion', () => {
     await waitForEffects()
     expect(keyDown(oneTrigger, 'ArrowDown').defaultPrevented).toBe(false)
   })
+
+  it('keeps the initial selection type when its accessor changes', async () => {
+    const container = document.createElement('div')
+    const type = createSignal<'single' | 'multiple'>('single')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Accordion type={prop(() => type()) as unknown as 'single'}>
+          <AccordionItem value="one">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="one-trigger">One</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>One content</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="two">
+            <AccordionHeader>
+              <AccordionTrigger data-testid="two-trigger">Two</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>Two content</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const getTriggers = () =>
+      [
+        container.querySelector('[data-testid="one-trigger"]') as HTMLButtonElement,
+        container.querySelector('[data-testid="two-trigger"]') as HTMLButtonElement,
+      ] as const
+
+    let triggers = getTriggers()
+    const initialTriggers = triggers
+    click(triggers[0])
+    await waitForEffects()
+    triggers = getTriggers()
+    click(triggers[1])
+    await waitForEffects()
+    triggers = getTriggers()
+
+    expect(triggers[0].getAttribute('aria-expanded')).toBe('false')
+    expect(triggers[1].getAttribute('aria-expanded')).toBe('true')
+
+    type('multiple')
+    await waitForEffects()
+    triggers = getTriggers()
+
+    expect(triggers[0]).toBe(initialTriggers[0])
+    expect(triggers[1]).toBe(initialTriggers[1])
+
+    click(triggers[0])
+    await waitForEffects()
+    triggers = getTriggers()
+    click(triggers[1])
+    await waitForEffects()
+    triggers = getTriggers()
+
+    expect(triggers[0].getAttribute('aria-expanded')).toBe('false')
+    expect(triggers[1].getAttribute('aria-expanded')).toBe('true')
+  })
 })

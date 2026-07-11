@@ -373,4 +373,70 @@ describe('@fictjs/toggle-group', () => {
     await waitForUpdates()
     expect(document.activeElement).toBe(one)
   })
+
+  it('keeps the initial selection type while other root props remain reactive', async () => {
+    const container = document.createElement('div')
+    const type = createSignal<'single' | 'multiple'>('single')
+    const disabled = createSignal(false)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root
+          type={prop(() => type()) as unknown as 'single'}
+          disabled={prop(() => disabled()) as unknown as boolean}
+        >
+          <Item data-testid="one" value="one">
+            One
+          </Item>
+          <Item data-testid="two" value="two">
+            Two
+          </Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+
+    const getButtons = () =>
+      [
+        container.querySelector('[data-testid="one"]') as HTMLButtonElement,
+        container.querySelector('[data-testid="two"]') as HTMLButtonElement,
+      ] as const
+
+    let buttons = getButtons()
+    const initialButtons = buttons
+    click(buttons[0])
+    await waitForUpdates()
+    buttons = getButtons()
+    click(buttons[1])
+    await waitForUpdates()
+    buttons = getButtons()
+
+    expect(buttons[0].getAttribute('data-state')).toBe('off')
+    expect(buttons[1].getAttribute('data-state')).toBe('on')
+
+    type('multiple')
+    disabled(true)
+    await waitForUpdates()
+    buttons = getButtons()
+
+    expect(buttons[0]).toBe(initialButtons[0])
+    expect(buttons[1]).toBe(initialButtons[1])
+    expect(buttons[0].disabled).toBe(true)
+    expect(buttons[1].disabled).toBe(true)
+
+    disabled(false)
+    await waitForUpdates()
+    click(buttons[0])
+    await waitForUpdates()
+    buttons = getButtons()
+    click(buttons[1])
+    await waitForUpdates()
+    buttons = getButtons()
+
+    expect(buttons[0].getAttribute('data-state')).toBe('off')
+    expect(buttons[1].getAttribute('data-state')).toBe('on')
+  })
 })
