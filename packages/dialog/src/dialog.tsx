@@ -6,7 +6,7 @@ import {
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
-import { createSignal, reactive } from '@fictjs/runtime/advanced'
+import { createSignal } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -194,10 +194,11 @@ function Dialog(props: ScopedProps<DialogProps>): FictNode {
     props.defaultOpen === undefined
       ? false
       : (readValue(props.defaultOpen as MaybeAccessor<boolean | undefined>) ?? false)
-  const modal = () =>
+  const initialModal =
     props.modal === undefined
       ? true
       : Boolean(readValue(props.modal as MaybeAccessor<boolean | undefined>))
+  const modal = () => initialModal
   const [open, setOpen] = useControllableState<boolean>({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -304,17 +305,14 @@ function DialogOverlay(props: ScopedProps<DialogOverlayProps>): FictNode {
       forceMount: undefined,
     },
   )
+  if (!context.modal()) {
+    return null
+  }
 
   return (
-    <>
-      {reactive(() =>
-        context.modal() ? (
-          <Presence present={present}>
-            <DialogOverlayImpl {...(overlayProps as ScopedProps<DialogOverlayImplProps>)} />
-          </Presence>
-        ) : null,
-      )}
-    </>
+    <Presence present={present}>
+      <DialogOverlayImpl {...(overlayProps as ScopedProps<DialogOverlayImplProps>)} />
+    </Presence>
   )
 }
 
@@ -373,18 +371,13 @@ function DialogContent(props: ScopedProps<DialogContentProps>): FictNode {
       forceMount: undefined,
     },
   )
-
   return (
     <Presence present={present}>
-      <>
-        {reactive(() =>
-          context.modal() ? (
-            <DialogContentModal {...(contentProps as ScopedProps<DialogContentTypeProps>)} />
-          ) : (
-            <DialogContentNonModal {...(contentProps as ScopedProps<DialogContentTypeProps>)} />
-          ),
-        )}
-      </>
+      {context.modal() ? (
+        <DialogContentModal {...(contentProps as ScopedProps<DialogContentTypeProps>)} />
+      ) : (
+        <DialogContentNonModal {...(contentProps as ScopedProps<DialogContentTypeProps>)} />
+      )}
     </Presence>
   )
 }

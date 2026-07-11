@@ -226,40 +226,59 @@ describe('@fictjs/dialog', () => {
     },
   )
 
-  it('switches overlay and content implementations when modal changes', async () => {
-    const container = document.createElement('div')
-    const modal = createSignal(true)
-    document.body.append(container)
+  it.each([
+    ['modal', true],
+    ['non-modal', false],
+  ] as const)(
+    'preserves the initial %s implementation across presence remounts',
+    async (_mode, initialModal) => {
+      const container = document.createElement('div')
+      const modal = createSignal(initialModal)
+      const open = createSignal(true)
+      document.body.append(container)
 
-    mount(
-      () => (
-        <Dialog defaultOpen modal={modal}>
-          <DialogPortal>
-            <DialogOverlay data-testid="overlay" />
-            <DialogContent data-testid="content">
-              <DialogTitle>Dialog title</DialogTitle>
-              <DialogDescription>Dialog description</DialogDescription>
-            </DialogContent>
-          </DialogPortal>
-        </Dialog>
-      ),
-      container,
-    )
+      mount(
+        () => (
+          <Dialog open={open} modal={modal}>
+            <DialogPortal>
+              <DialogOverlay data-testid="overlay" />
+              <DialogContent data-testid="content">
+                <DialogTitle>Dialog title</DialogTitle>
+                <DialogDescription>Dialog description</DialogDescription>
+              </DialogContent>
+            </DialogPortal>
+          </Dialog>
+        ),
+        container,
+      )
 
-    await waitForEffects()
-    expect(document.body.querySelector('[data-testid="overlay"]')).not.toBeNull()
-    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+      await waitForEffects()
+      const initialContent = document.body.querySelector('[data-testid="content"]')
+      expect(initialContent).not.toBeNull()
+      expect(document.body.querySelector('[data-testid="overlay"]') !== null).toBe(initialModal)
+      expect(hideOthersMock).toHaveBeenCalledTimes(initialModal ? 1 : 0)
 
-    modal(false)
-    await flushEffects()
-    expect(document.body.querySelector('[data-testid="overlay"]')).toBeNull()
-    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
+      modal(!initialModal)
+      await flushEffects()
 
-    modal(true)
-    await flushEffects()
-    expect(document.body.querySelector('[data-testid="overlay"]')).not.toBeNull()
-    expect(document.body.querySelector('[data-testid="content"]')).not.toBeNull()
-  })
+      expect(document.body.querySelector('[data-testid="content"]')).toBe(initialContent)
+      expect(document.body.querySelector('[data-testid="overlay"]') !== null).toBe(initialModal)
+      expect(hideOthersMock).toHaveBeenCalledTimes(initialModal ? 1 : 0)
+
+      open(false)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).toBeNull()
+      expect(document.body.querySelector('[data-testid="overlay"]')).toBeNull()
+
+      open(true)
+      await waitForEffects()
+
+      expect(document.body.querySelector('[data-testid="content"]')).not.toBe(initialContent)
+      expect(document.body.querySelector('[data-testid="overlay"]') !== null).toBe(initialModal)
+      expect(hideOthersMock).toHaveBeenCalledTimes(initialModal ? 2 : 0)
+    },
+  )
 
   it('locks modal focus flow and restores trigger focus on escape', async () => {
     const container = document.createElement('div')
