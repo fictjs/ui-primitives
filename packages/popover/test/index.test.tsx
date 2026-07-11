@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { prop, render, type FictNode } from '@fictjs/runtime'
-import { createSignal } from '@fictjs/runtime/advanced'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 const hideOthersMock = vi.hoisted(() => vi.fn(() => () => {}))
 
@@ -228,6 +228,59 @@ describe('@fictjs/popover', () => {
       expect(anchor.hasAttribute('data-popper-anchor')).toBe(true)
       expect(trigger.hasAttribute('data-popper-anchor')).toBe(false)
     })
+  })
+
+  it('reacts to custom anchors added after the trigger and keeps counting mounted anchors', async () => {
+    const container = document.createElement('div')
+    const showFirstAnchor = createSignal(false)
+    const showSecondAnchor = createSignal(false)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Popover>
+          <PopoverTrigger data-testid="trigger">Toggle</PopoverTrigger>
+          <>
+            {reactive(() =>
+              showFirstAnchor() ? (
+                <PopoverAnchor data-testid="first-anchor">First anchor</PopoverAnchor>
+              ) : null,
+            )}
+            {reactive(() =>
+              showSecondAnchor() ? (
+                <PopoverAnchor data-testid="second-anchor">Second anchor</PopoverAnchor>
+              ) : null,
+            )}
+          </>
+        </Popover>
+      ),
+      container,
+    )
+
+    const getTrigger = () => container.querySelector('[data-testid="trigger"]') as HTMLButtonElement
+
+    expect(getTrigger().hasAttribute('data-popper-anchor')).toBe(true)
+
+    showFirstAnchor(true)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="first-anchor"]')).not.toBeNull()
+    expect(getTrigger().hasAttribute('data-popper-anchor')).toBe(false)
+
+    showSecondAnchor(true)
+    await waitForEffects()
+    showFirstAnchor(false)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="first-anchor"]')).toBeNull()
+    expect(container.querySelector('[data-testid="second-anchor"]')).not.toBeNull()
+    expect(getTrigger().hasAttribute('data-popper-anchor')).toBe(false)
+
+    showSecondAnchor(false)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="second-anchor"]')).toBeNull()
+    expect(getTrigger().hasAttribute('data-popper-anchor')).toBe(true)
   })
 
   it('locks modal focus flow and restores trigger focus on escape', async () => {

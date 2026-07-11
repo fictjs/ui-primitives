@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
@@ -156,7 +156,7 @@ function Popover(props: ScopedProps<PopoverProps>): FictNode {
   const popperScope = usePopperScope(props.__scopePopover)
   const triggerRef = { current: null as HTMLButtonElement | null }
   const contentId = useId()
-  const hasCustomAnchor = createSignal(false)
+  const customAnchorCount = createSignal(0)
   const openProp = () =>
     props.open === undefined
       ? undefined
@@ -186,9 +186,13 @@ function Popover(props: ScopedProps<PopoverProps>): FictNode {
         open={open}
         onOpenChange={setOpen}
         onOpenToggle={onOpenToggle}
-        hasCustomAnchor={hasCustomAnchor}
-        onCustomAnchorAdd={() => hasCustomAnchor(true)}
-        onCustomAnchorRemove={() => hasCustomAnchor(false)}
+        hasCustomAnchor={() => customAnchorCount() > 0}
+        onCustomAnchorAdd={() => {
+          customAnchorCount(untrack(() => customAnchorCount()) + 1)
+        }}
+        onCustomAnchorRemove={() => {
+          customAnchorCount(Math.max(0, untrack(() => customAnchorCount()) - 1))
+        }}
         modal={modal}
       >
         {props.children}
@@ -212,9 +216,7 @@ function PopoverAnchor(props: ScopedProps<PopoverAnchorProps>): FictNode {
     },
   )
 
-  if (!context.hasCustomAnchor()) {
-    context.onCustomAnchorAdd()
-  }
+  context.onCustomAnchorAdd()
 
   useLayoutEffect(() => {
     return () => {
@@ -255,16 +257,22 @@ function PopoverTrigger(props: ScopedProps<PopoverTriggerProps>): FictNode {
       ref: undefined,
     },
   )
-  const trigger = <Primitive.button {...primitiveProps} ref={composedTriggerRef} />
-
-  if (context.hasCustomAnchor()) {
-    return trigger
-  }
-
   return (
-    <PopperAnchorPrimitive asChild {...popperScope}>
-      {trigger}
-    </PopperAnchorPrimitive>
+    <>
+      {reactive(() => {
+        const trigger = <Primitive.button {...primitiveProps} ref={composedTriggerRef} />
+
+        if (context.hasCustomAnchor()) {
+          return trigger
+        }
+
+        return (
+          <PopperAnchorPrimitive asChild {...popperScope}>
+            {trigger}
+          </PopperAnchorPrimitive>
+        )
+      })}
+    </>
   )
 }
 
