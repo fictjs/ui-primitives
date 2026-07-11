@@ -3,13 +3,12 @@ import { classNames } from '../helpers/reactive-class-names.js'
 import { NavigationMenu, Slot as SlotPrimitive } from '@fictjs/radix-ui'
 import { prop } from 'fict'
 
-import { tabNavRootPropDefs } from './tab-nav.props.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { tabNavLinkPropDefs, tabNavRootPropDefs } from './tab-nav.props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { getSubtree } from '../helpers/get-subtree.js'
 import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
-import type { tabNavLinkPropDefs } from './tab-nav.props.js'
 import type { MarginProps } from '../props/margin.props.js'
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
 import type { GetPropDefTypes } from '../props/prop-def.js'
@@ -49,19 +48,27 @@ TabNavRoot.displayName = 'TabNav.Root'
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+const REACTIVE_FN_MARKER = Symbol.for('fict:reactive-fn')
 
 function readValue<T>(value: MaybeAccessor<T>): T {
-  if (
-    typeof value === 'function' &&
-    (value.length === 0 ||
-      (value as Record<symbol, unknown>)[SIGNAL_MARKER] === true ||
-      (value as Record<symbol, unknown>)[COMPUTED_MARKER] === true ||
-      (value as Record<symbol, unknown>)[PROP_GETTER_MARKER] === true)
-  ) {
-    return (value as () => T)()
+  let currentValue: unknown = value
+
+  for (let depth = 0; depth < 10 && typeof currentValue === 'function'; depth += 1) {
+    const taggedValue = currentValue as unknown as Record<symbol, unknown>
+    if (
+      currentValue.length !== 0 &&
+      taggedValue[SIGNAL_MARKER] !== true &&
+      taggedValue[COMPUTED_MARKER] !== true &&
+      taggedValue[PROP_GETTER_MARKER] !== true &&
+      taggedValue[REACTIVE_FN_MARKER] !== true
+    ) {
+      break
+    }
+
+    currentValue = (currentValue as () => unknown)()
   }
 
-  return value as T
+  return currentValue as T
 }
 
 type TabNavLinkElement = React.ElementRef<typeof NavigationMenu.Link>
@@ -71,17 +78,26 @@ interface TabNavLinkProps
   active?: MaybeAccessor<boolean | undefined>
 }
 const TabNavLink = React.forwardRef<TabNavLinkElement, TabNavLinkProps>((props, forwardedRef) => {
-  const { asChild: _asChild, active = false, children, className, ...linkProps } = props
+  const {
+    asChild: _asChild,
+    active,
+    children,
+    className,
+    ...linkProps
+  } = extractProps(props, tabNavLinkPropDefs)
   const activeValue = () => Boolean(readValue(active) ?? false)
   return renderWithAsChild(props, (asChild) => {
-    const content = getSubtree({ asChild, children }, (innerChildren) => (
-      <>
-        <span class="rt-BaseTabListTriggerInner rt-TabNavLinkInner">{innerChildren}</span>
-        <span class="rt-BaseTabListTriggerInnerHidden rt-TabNavLinkInnerHidden">
-          {innerChildren}
-        </span>
-      </>
-    ))
+    const content = getSubtree(
+      { asChild, children: asChild ? readPropValue(children) : children },
+      (innerChildren) => (
+        <>
+          <span class="rt-BaseTabListTriggerInner rt-TabNavLinkInner">{innerChildren}</span>
+          <span class="rt-BaseTabListTriggerInnerHidden rt-TabNavLinkInnerHidden">
+            {innerChildren}
+          </span>
+        </>
+      ),
+    )
 
     return (
       <NavigationMenu.Item class="rt-TabNavItem">
