@@ -4,7 +4,9 @@ import {
   createEffect,
   createMemo,
   createPortal as createFictPortal,
+  createRoot,
   mergeProps,
+  onCleanup,
   prop,
   untrack,
   useContext as useRuntimeContext,
@@ -717,32 +719,78 @@ function SelectPortal(props: ScopedProps<SelectPortalProps>): FictNode {
   const initialContainer = props.container ?? globalThis.document?.body ?? null
   if (!initialContainer) return null
 
-  const portal = createFictPortal(
-    initialContainer,
-    () => (
-      <div style={{ display: 'contents' }}>
-        <SelectPortalContext.Provider value={{ forceMount }}>
-          {props.children}
-        </SelectPortalContext.Provider>
-      </div>
-    ),
-    createElement,
-  )
+  const documentVersion = createSignal(0)
+  let version = 0
+  let usesDocumentBoundary = false
+  let currentContainer = initialContainer
+  let currentDocument = initialContainer.ownerDocument
+  const createPortalRoot = (container: Element | DocumentFragment) =>
+    createRoot(
+      () =>
+        createFictPortal(
+          container,
+          () => (
+            <div style={{ display: 'contents' }}>
+              <SelectPortalContext.Provider value={{ forceMount }}>
+                {props.children}
+              </SelectPortalContext.Provider>
+            </div>
+          ),
+          createElement,
+        ),
+      { inherit: true },
+    )
+  let portalRoot = createPortalRoot(initialContainer)
+  let portal = portalRoot.value
+
+  onCleanup(() => portalRoot.dispose())
 
   createEffect(() => {
     const container = props.container ?? globalThis.document?.body ?? null
-    if (!container || portal.marker.parentNode === container) return
+    if (!container) return
 
-    // Keep a single wrapper immediately before the runtime marker so retargeting can
-    // move the existing portal lifecycle instead of registering another parent cleanup.
-    const portalNode = portal.marker.previousSibling
-    if (portalNode) {
-      container.appendChild(portalNode)
+    currentContainer = container
+    if (container.ownerDocument === currentDocument) {
+      if (portal.marker.parentNode === container) return
+
+      // Keep a single wrapper immediately before the runtime marker for same-document
+      // retargets so the existing portal lifecycle and node identity are preserved.
+      const portalNode = portal.marker.previousSibling
+      if (portalNode) {
+        container.appendChild(portalNode)
+      }
+      container.appendChild(portal.marker)
+      return
     }
-    container.appendChild(portal.marker)
+
+    currentDocument = container.ownerDocument
+    if (!usesDocumentBoundary) {
+      portalRoot.dispose()
+      usesDocumentBoundary = true
+    }
+    version += 1
+    documentVersion(version)
   })
 
-  return null
+  function PortalInstance(): FictNode {
+    const nextPortalRoot = createPortalRoot(currentContainer)
+    portalRoot = nextPortalRoot
+    portal = nextPortalRoot.value
+    onCleanup(() => nextPortalRoot.dispose())
+
+    return null
+  }
+
+  // After the first owner-document change, the reactive child supplies one inherited root
+  // per document so Select context is retained while document-bound effects are recreated.
+  return (
+    <>
+      {reactive(() => {
+        documentVersion()
+        return usesDocumentBoundary ? <PortalInstance /> : null
+      })}
+    </>
+  )
 }
 
 SelectPortal.displayName = PORTAL_NAME

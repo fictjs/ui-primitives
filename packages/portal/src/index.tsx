@@ -2,11 +2,14 @@ import {
   createElement,
   createEffect,
   createPortal as createFictPortal,
+  createRoot,
   mergeProps,
+  onCleanup,
   prop,
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
+import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { Primitive } from '@fictjs/primitive'
 
@@ -26,26 +29,72 @@ function Portal(props: PortalProps): FictNode {
   const initialContainer = resolveContainer()
   if (!initialContainer) return null
 
-  const portal = createFictPortal(
-    initialContainer,
-    () => <Primitive.div {...(portalProps as Record<string, unknown>)} />,
-    createElement,
-  )
+  const documentVersion = createSignal(0)
+  let version = 0
+  let usesDocumentBoundary = false
+  let currentContainer = initialContainer
+  let currentDocument = initialContainer.ownerDocument
+  const createPortalRoot = (container: Element | DocumentFragment) =>
+    createRoot(
+      () =>
+        createFictPortal(
+          container,
+          () => <Primitive.div {...(portalProps as Record<string, unknown>)} />,
+          createElement,
+        ),
+      { inherit: true },
+    )
+  let portalRoot = createPortalRoot(initialContainer)
+  let portal = portalRoot.value
+
+  onCleanup(() => portalRoot.dispose())
 
   createEffect(() => {
     const container = resolveContainer()
-    if (!container || portal.marker.parentNode === container) return
+    if (!container) return
 
-    // This portal always renders one wrapper immediately before the runtime marker.
-    // Move that pair so retargeting does not register another cleanup on the parent root.
-    const portalNode = portal.marker.previousSibling
-    if (portalNode) {
-      container.appendChild(portalNode)
+    currentContainer = container
+    if (container.ownerDocument === currentDocument) {
+      if (portal.marker.parentNode === container) return
+
+      // This portal always renders one wrapper immediately before the runtime marker.
+      // Move that pair for same-document retargets so node identity is preserved.
+      const portalNode = portal.marker.previousSibling
+      if (portalNode) {
+        container.appendChild(portalNode)
+      }
+      container.appendChild(portal.marker)
+      return
     }
-    container.appendChild(portal.marker)
+
+    currentDocument = container.ownerDocument
+    if (!usesDocumentBoundary) {
+      portalRoot.dispose()
+      usesDocumentBoundary = true
+    }
+    version += 1
+    documentVersion(version)
   })
 
-  return null
+  function PortalInstance(): FictNode {
+    const nextPortalRoot = createPortalRoot(currentContainer)
+    portalRoot = nextPortalRoot
+    portal = nextPortalRoot.value
+    onCleanup(() => nextPortalRoot.dispose())
+
+    return null
+  }
+
+  // After the first owner-document change, the reactive child owns one inherited root at a
+  // time. Same-document container changes continue to move the active handle in place.
+  return (
+    <>
+      {reactive(() => {
+        documentVersion()
+        return usesDocumentBoundary ? <PortalInstance /> : null
+      })}
+    </>
+  )
 }
 
 Portal.displayName = 'Portal'

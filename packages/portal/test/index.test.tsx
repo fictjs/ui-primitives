@@ -1,16 +1,34 @@
 /** @jsxImportSource @fictjs/runtime */
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createContext, createMemo, onMount, prop, render, type FictNode } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createContext as createScopedContext } from '../../context/src/index.js'
+import { Root as DismissableLayer } from '../../dismissable-layer/src/index.js'
 import { Presence } from '../../presence/src/index.js'
 import { Portal } from '../src/index.js'
 
 function flushMicrotasks(): Promise<void> {
   return Promise.resolve()
+}
+
+async function waitForListenerRegistration(): Promise<void> {
+  await flushMicrotasks()
+  await new Promise<void>((resolve) => setTimeout(resolve, 0))
+  await flushMicrotasks()
+}
+
+function pointerDown(target: Element): void {
+  const PointerEventCtor = target.ownerDocument.defaultView?.PointerEvent ?? PointerEvent
+  target.dispatchEvent(
+    new PointerEventCtor('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      pointerType: 'mouse',
+    }),
+  )
 }
 
 describe('@fictjs/portal', () => {
@@ -38,6 +56,32 @@ describe('@fictjs/portal', () => {
     expect(portalNode).not.toBeNull()
     expect(portalNode?.textContent).toBe('Inside')
     expect(host.querySelector('#custom-portal')).toBeNull()
+  })
+
+  it('renders present content into an initial cross-document container', async () => {
+    const iframe = document.createElement('iframe')
+    document.body.append(iframe)
+    const frameDocument = iframe.contentDocument as Document
+    const host = frameDocument.createElement('div')
+    const portalRoot = frameDocument.createElement('div')
+    frameDocument.body.append(host, portalRoot)
+
+    render(
+      () => (
+        <Portal container={portalRoot} id="frame-portal">
+          <Presence present>
+            <div data-testid="frame-presence">Present</div>
+          </Presence>
+        </Portal>
+      ),
+      host,
+    )
+
+    await waitForListenerRegistration()
+
+    const portalNode = portalRoot.querySelector('#frame-portal')
+    expect(portalNode?.ownerDocument).toBe(frameDocument)
+    expect(portalNode?.querySelector('[data-testid="frame-presence"]')?.textContent).toBe('Present')
   })
 
   it('moves existing content when the container prop changes', async () => {
@@ -121,6 +165,108 @@ describe('@fictjs/portal', () => {
     expect(firstPortalRoot.querySelector('#tracked-portal')).toBeNull()
     expect(secondPortalRoot.querySelector('#tracked-portal')).toBeNull()
     expect(cleanups).toBe(1)
+  })
+
+  it('recreates portal content and owner document listeners across documents', async () => {
+    const host = document.createElement('div')
+    const mainPortalRoot = document.createElement('div')
+    const mainOutside = document.createElement('button')
+    const iframe = document.createElement('iframe')
+    const portalRoot = createSignal<Element | DocumentFragment | null>(mainPortalRoot)
+    const onDismiss = vi.fn()
+    const [PortalContextProvider, usePortalContext] = createScopedContext<{ label: string }>(
+      'PortalCrossDocument',
+    )
+    let mounts = 0
+    let cleanups = 0
+    mainOutside.type = 'button'
+    document.body.append(host, mainPortalRoot, mainOutside, iframe)
+
+    const frameDocument = iframe.contentDocument as Document
+    const framePortalRoot = frameDocument.createElement('div')
+    const frameOutside = frameDocument.createElement('button')
+    frameOutside.type = 'button'
+    frameDocument.body.append(framePortalRoot, frameOutside)
+
+    function TrackedLayer() {
+      const context = usePortalContext('TrackedLayer')
+
+      onMount(() => {
+        mounts += 1
+        return () => {
+          cleanups += 1
+        }
+      })
+
+      return (
+        <DismissableLayer
+          data-context={context.label}
+          data-testid="cross-document-layer"
+          onDismiss={onDismiss}
+        >
+          Layer
+        </DismissableLayer>
+      )
+    }
+
+    const dispose = render(
+      () => (
+        <PortalContextProvider label="provided">
+          <Portal
+            container={prop(() => portalRoot()) as unknown as Element | DocumentFragment | null}
+          >
+            <TrackedLayer />
+          </Portal>
+        </PortalContextProvider>
+      ),
+      host,
+    )
+
+    await waitForListenerRegistration()
+    const mainLayer = mainPortalRoot.querySelector('[data-testid="cross-document-layer"]')
+    expect(mainLayer?.ownerDocument).toBe(document)
+    expect(mainLayer?.getAttribute('data-context')).toBe('provided')
+    expect(mounts).toBe(1)
+    expect(cleanups).toBe(0)
+
+    portalRoot(framePortalRoot)
+    await waitForListenerRegistration()
+
+    const frameLayer = framePortalRoot.querySelector('[data-testid="cross-document-layer"]')
+    expect(frameLayer).not.toBe(mainLayer)
+    expect(frameLayer?.ownerDocument).toBe(frameDocument)
+    expect(frameLayer?.getAttribute('data-context')).toBe('provided')
+    expect(mounts).toBe(2)
+    expect(cleanups).toBe(1)
+
+    pointerDown(mainOutside)
+    await flushMicrotasks()
+    expect(onDismiss).not.toHaveBeenCalled()
+
+    pointerDown(frameOutside)
+    await flushMicrotasks()
+    expect(onDismiss).toHaveBeenCalledOnce()
+
+    portalRoot(mainPortalRoot)
+    await waitForListenerRegistration()
+
+    const returnedLayer = mainPortalRoot.querySelector('[data-testid="cross-document-layer"]')
+    expect(returnedLayer).not.toBe(frameLayer)
+    expect(returnedLayer?.ownerDocument).toBe(document)
+    expect(returnedLayer?.getAttribute('data-context')).toBe('provided')
+    expect(mounts).toBe(3)
+    expect(cleanups).toBe(2)
+
+    pointerDown(frameOutside)
+    await flushMicrotasks()
+    expect(onDismiss).toHaveBeenCalledOnce()
+
+    pointerDown(mainOutside)
+    await flushMicrotasks()
+    expect(onDismiss).toHaveBeenCalledTimes(2)
+
+    dispose()
+    expect(cleanups).toBe(3)
   })
 
   it('defaults to document.body once mounted', async () => {

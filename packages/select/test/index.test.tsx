@@ -879,6 +879,109 @@ describe('@fictjs/select', () => {
     expect(lifecycleCleanups).toBe(1)
   })
 
+  it('recreates portal child lifecycles and document listeners across documents', async () => {
+    const container = document.createElement('div')
+    const mainPortalRoot = document.createElement('div')
+    const iframe = document.createElement('iframe')
+    const portalRoot = createSignal<Element | DocumentFragment | null>(mainPortalRoot)
+    const listenerDocuments: Document[] = []
+    let mounts = 0
+    let lifecycleCleanups = 0
+    document.body.append(container, mainPortalRoot, iframe)
+
+    const frameDocument = iframe.contentDocument as Document
+    const framePortalRoot = frameDocument.createElement('div')
+    frameDocument.body.append(framePortalRoot)
+
+    function TrackedDocumentListener() {
+      let node: HTMLDivElement | null = null
+
+      onMount(() => {
+        const ownerDocument = node?.ownerDocument
+        if (!ownerDocument) {
+          return
+        }
+
+        mounts += 1
+        const handlePointerDown = () => listenerDocuments.push(ownerDocument)
+        ownerDocument.addEventListener('pointerdown', handlePointerDown)
+
+        return () => {
+          lifecycleCleanups += 1
+          ownerDocument.removeEventListener('pointerdown', handlePointerDown)
+        }
+      })
+
+      return (
+        <div
+          data-testid="tracked-document-listener"
+          ref={(nextNode) => {
+            node = nextNode
+          }}
+        >
+          Tracked
+        </div>
+      )
+    }
+
+    const dispose = render(
+      () => (
+        <Root>
+          <Portal
+            container={prop(() => portalRoot()) as unknown as Element | DocumentFragment | null}
+          >
+            <TrackedDocumentListener />
+          </Portal>
+        </Root>
+      ),
+      container,
+    )
+    cleanups.push(dispose)
+
+    await waitForEffects()
+    const mainNode = mainPortalRoot.querySelector('[data-testid="tracked-document-listener"]')
+    expect(mainNode?.ownerDocument).toBe(document)
+    expect(mounts).toBe(1)
+    expect(lifecycleCleanups).toBe(0)
+
+    document.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    expect(listenerDocuments).toEqual([document])
+
+    portalRoot(framePortalRoot)
+    await waitForEffects()
+
+    const frameNode = framePortalRoot.querySelector('[data-testid="tracked-document-listener"]')
+    expect(frameNode).not.toBe(mainNode)
+    expect(frameNode?.ownerDocument).toBe(frameDocument)
+    expect(mounts).toBe(2)
+    expect(lifecycleCleanups).toBe(1)
+
+    document.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    expect(listenerDocuments).toEqual([document])
+
+    const FrameEvent = frameDocument.defaultView?.Event ?? Event
+    frameDocument.dispatchEvent(new FrameEvent('pointerdown', { bubbles: true }))
+    expect(listenerDocuments).toEqual([document, frameDocument])
+
+    portalRoot(mainPortalRoot)
+    await waitForEffects()
+
+    const returnedNode = mainPortalRoot.querySelector('[data-testid="tracked-document-listener"]')
+    expect(returnedNode).not.toBe(frameNode)
+    expect(returnedNode?.ownerDocument).toBe(document)
+    expect(mounts).toBe(3)
+    expect(lifecycleCleanups).toBe(2)
+
+    frameDocument.dispatchEvent(new FrameEvent('pointerdown', { bubbles: true }))
+    expect(listenerDocuments).toEqual([document, frameDocument])
+
+    document.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    expect(listenerDocuments).toEqual([document, frameDocument, document])
+
+    dispose()
+    expect(lifecycleCleanups).toBe(3)
+  })
+
   it('wraps popper-positioned content in a popper content wrapper', async () => {
     const container = document.createElement('div')
     document.body.append(container)
