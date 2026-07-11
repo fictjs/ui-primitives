@@ -11,6 +11,8 @@ import {
   Button,
   Card,
   Code,
+  ContextMenu,
+  DropdownMenu,
   Em,
   Flex,
   Grid,
@@ -166,6 +168,97 @@ describe('themed children reactivity', () => {
 
     expect(container.querySelector('[data-testid="compiled-list"]')).toBe(list)
     expect(list.classList.contains('rt-reset')).toBe(true)
+  })
+
+  it('renders lazy menu content and subcontent children inside their providers', async () => {
+    const dropdownSubContentChildren = vi.fn(() => (
+      <DropdownMenu.Item data-testid="lazy-dropdown-sub-item">Dropdown sub item</DropdownMenu.Item>
+    ))
+    const dropdownContentChildren = vi.fn(() => (
+      <>
+        <DropdownMenu.Item data-testid="lazy-dropdown-item">Dropdown item</DropdownMenu.Item>
+        <DropdownMenu.Sub defaultOpen>
+          <DropdownMenu.SubTrigger>Dropdown submenu</DropdownMenu.SubTrigger>
+          <DropdownMenu.SubContent forceMount data-testid="lazy-dropdown-subcontent">
+            {dropdownSubContentChildren as unknown as FictNode}
+          </DropdownMenu.SubContent>
+        </DropdownMenu.Sub>
+      </>
+    ))
+    const contextSubContentChildren = vi.fn(() => (
+      <ContextMenu.Item data-testid="lazy-context-sub-item">Context sub item</ContextMenu.Item>
+    ))
+    const contextContentChildren = vi.fn(() => (
+      <>
+        <ContextMenu.Item data-testid="lazy-context-item">Context item</ContextMenu.Item>
+        <ContextMenu.Sub defaultOpen>
+          <ContextMenu.SubTrigger>Context submenu</ContextMenu.SubTrigger>
+          <ContextMenu.SubContent forceMount data-testid="lazy-context-subcontent">
+            {contextSubContentChildren as unknown as FictNode}
+          </ContextMenu.SubContent>
+        </ContextMenu.Sub>
+      </>
+    ))
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    cleanups.push(
+      render(
+        () => (
+          <Theme>
+            <DropdownMenu.Root defaultOpen modal={false}>
+              <DropdownMenu.Trigger>
+                <button type="button">Dropdown trigger</button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content color="ruby" forceMount highContrast size="1" variant="soft">
+                {dropdownContentChildren as unknown as FictNode}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
+            <ContextMenu.Root defaultOpen modal={false}>
+              <ContextMenu.Trigger>
+                <div>Context trigger</div>
+              </ContextMenu.Trigger>
+              <ContextMenu.Content color="blue" forceMount highContrast size="1" variant="soft">
+                {contextContentChildren as unknown as FictNode}
+              </ContextMenu.Content>
+            </ContextMenu.Root>
+          </Theme>
+        ),
+        container,
+      ),
+    )
+
+    await flushEffects()
+
+    expect(dropdownContentChildren).toHaveBeenCalledTimes(1)
+    expect(dropdownSubContentChildren).toHaveBeenCalledTimes(1)
+    expect(contextContentChildren).toHaveBeenCalledTimes(1)
+    expect(contextSubContentChildren).toHaveBeenCalledTimes(1)
+
+    const dropdownSubContent = document.body.querySelector(
+      '[data-testid="lazy-dropdown-subcontent"]',
+    )
+    const contextSubContent = document.body.querySelector('[data-testid="lazy-context-subcontent"]')
+
+    expect(dropdownSubContent).not.toBeNull()
+    expect(dropdownSubContent?.getAttribute('data-accent-color')).toBe('ruby')
+    expect(dropdownSubContent?.classList.contains('rt-r-size-1')).toBe(true)
+    expect(dropdownSubContent?.classList.contains('rt-variant-soft')).toBe(true)
+    expect(dropdownSubContent?.classList.contains('rt-high-contrast')).toBe(true)
+    expect(
+      dropdownSubContent?.querySelector('[data-testid="lazy-dropdown-sub-item"]'),
+    ).not.toBeNull()
+
+    expect(contextSubContent).not.toBeNull()
+    expect(contextSubContent?.getAttribute('data-accent-color')).toBe('blue')
+    expect(contextSubContent?.classList.contains('rt-r-size-1')).toBe(true)
+    expect(contextSubContent?.classList.contains('rt-variant-soft')).toBe(true)
+    expect(contextSubContent?.classList.contains('rt-high-contrast')).toBe(true)
+    expect(contextSubContent?.querySelector('[data-testid="lazy-context-sub-item"]')).not.toBeNull()
+
+    expect(document.body.querySelector('[data-testid="lazy-dropdown-item"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-testid="lazy-context-item"]')).not.toBeNull()
   })
 
   it('updates getter-backed children inside slotted buttons', async () => {

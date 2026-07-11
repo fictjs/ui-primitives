@@ -1,11 +1,10 @@
-import { createElement } from 'fict'
-import { createConditional } from 'fict/internal'
 import * as React from '../helpers/element.js'
 import { classNames } from '../helpers/reactive-class-names.js'
 import { Slot } from '@fictjs/radix-ui'
 
 import { inert } from '../helpers/inert.js'
 import { extractProps, readPropValue } from '../helpers/extract-props.js'
+import { renderChildren } from '../helpers/render-children.js'
 import { marginPropDefs } from '../props/margin.props.js'
 import { skeletonPropDefs } from './skeleton.props.js'
 
@@ -73,35 +72,25 @@ const Skeleton = React.forwardRef<SkeletonElement, SkeletonProps>((props, forwar
     marginPropDefs,
   )
 
-  return createConditional(
-    () => Boolean(readPropValue(loading)),
-    () => {
-      const currentChildren = readPropValue(children)
-      const useWrapper = shouldWrapChild(currentChildren)
-      const Tag = useWrapper ? 'span' : Slot.Root
+  if (!readPropValue(loading)) return renderChildren(children)
 
-      return (
-        <Tag
-          ref={React.coerceRef(forwardedRef)}
-          aria-hidden
-          class={classNames('rt-Skeleton', className)}
-          data-inline-skeleton={
-            useWrapper && !React.isValidElement(currentChildren) ? true : undefined
-          }
-          tabIndex={-1}
-          inert={inert}
-          {...skeletonProps}
-        >
-          {currentChildren}
-        </Tag>
-      )
-    },
-    createElement,
-    () => readPropValue(children),
-    undefined,
-    undefined,
-    { trackBranchReads: true },
-  ) as unknown as React.ReactNode
+  const currentChildren = readPropValue(children)
+  const useWrapper = shouldWrapChild(currentChildren)
+  const Tag = useWrapper ? 'span' : Slot.Root
+
+  return (
+    <Tag
+      ref={React.coerceRef(forwardedRef)}
+      aria-hidden
+      class={classNames('rt-Skeleton', className)}
+      data-inline-skeleton={useWrapper && !React.isValidElement(currentChildren) ? true : undefined}
+      tabIndex={-1}
+      inert={inert}
+      {...skeletonProps}
+    >
+      {useWrapper ? renderChildren(children) : currentChildren}
+    </Tag>
+  )
 })
 Skeleton.displayName = 'Skeleton'
 

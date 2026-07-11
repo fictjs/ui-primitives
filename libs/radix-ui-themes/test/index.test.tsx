@@ -687,7 +687,7 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(readPropValue(extractedProps.content)).toBe(renderCallback)
   })
 
-  it('updates local loading and render props in both directions', async () => {
+  it('keeps local loading structure synchronous while render props stay reactive', async () => {
     const skeletonLoading = createSignal(true)
     const skeletonChild = createSignal('Skeleton first')
     const spinnerLoading = createSignal(true)
@@ -739,8 +739,7 @@ describe('@fictjs/radix-ui-themes', () => {
     tooltipContent('Tooltip second')
     await flushEffects()
 
-    expect(container.querySelector('.rt-Skeleton')).toBeNull()
-    expect(container.textContent).toContain('Skeleton second')
+    expect(container.querySelector('.rt-Skeleton')?.textContent).toBe('Skeleton second')
     expect(container.querySelector('.rt-Spinner')).not.toBeNull()
     expect(button.querySelector('.rt-Spinner')).not.toBeNull()
     expect(container.querySelector('[data-testid="reactive-loading-button"]')).toBe(button)
@@ -759,6 +758,107 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(container.querySelector('[data-testid="reactive-loading-button"]')).toBe(button)
     expect(document.body.querySelector('.rt-TooltipText')).toBe(tooltipText)
     expect(tooltipText.textContent).toBe('Tooltip third')
+  })
+
+  it('mounts synchronous loading branches only after their DOM is connected', () => {
+    const mountedWhileConnected: boolean[] = []
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    const Probe = (props: { id: string }) => {
+      let node: HTMLButtonElement | null = null
+
+      onMount(() => {
+        mountedWhileConnected.push(node?.isConnected ?? false)
+      })
+
+      return (
+        <button
+          ref={(nextNode) => {
+            node = nextNode
+          }}
+          data-testid={props.id}
+          type="button"
+        >
+          Ready
+        </button>
+      )
+    }
+
+    mount(
+      () => [
+        <Skeleton loading={false}>
+          <Probe id="skeleton-ready" />
+        </Skeleton>,
+        <Spinner loading={false}>
+          <Probe id="spinner-ready" />
+        </Spinner>,
+        <Skeleton loading>
+          <Probe id="skeleton-loading" />
+        </Skeleton>,
+        <Spinner loading>
+          <Probe id="spinner-loading" />
+        </Spinner>,
+      ],
+      container,
+    )
+
+    expect(container.querySelector('[data-testid="skeleton-ready"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="spinner-ready"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="skeleton-loading"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="spinner-loading"]')).not.toBeNull()
+    expect(mountedWhileConnected).toEqual([true, true, true, true])
+  })
+
+  it('mounts synchronous VNode children in the target owner document', () => {
+    const iframe = document.createElement('iframe')
+    document.body.append(iframe)
+    const iframeDocument = iframe.contentDocument!
+    const container = iframeDocument.createElement('div')
+    iframeDocument.body.append(container)
+    const mountedState: Array<{ connected: boolean; ownerDocument: Document | null }> = []
+
+    const Probe = (props: { id: string }) => {
+      let node: HTMLButtonElement | null = null
+
+      onMount(() => {
+        mountedState.push({
+          connected: node?.isConnected ?? false,
+          ownerDocument: node?.ownerDocument ?? null,
+        })
+      })
+
+      return (
+        <button
+          ref={(nextNode) => {
+            node = nextNode
+          }}
+          data-testid={props.id}
+          type="button"
+        >
+          Ready
+        </button>
+      )
+    }
+
+    mount(
+      () => [
+        <Card>
+          <Probe id="iframe-card" />
+        </Card>,
+        <Spinner loading>
+          <Probe id="iframe-spinner" />
+        </Spinner>,
+      ],
+      container,
+    )
+
+    expect(container.querySelector('[data-testid="iframe-card"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="iframe-spinner"]')).not.toBeNull()
+    expect(mountedState).toEqual([
+      { connected: true, ownerDocument: iframeDocument },
+      { connected: true, ownerDocument: iframeDocument },
+    ])
   })
 
   it('updates an errored avatar fallback without replacing its root', async () => {

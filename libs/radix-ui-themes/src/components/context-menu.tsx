@@ -32,11 +32,21 @@ interface ContextMenuTriggerProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const ContextMenuTrigger = React.forwardRef<ContextMenuTriggerElement, ContextMenuTriggerProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <ContextMenuPrimitive.Trigger {...props} ref={React.coerceRef(forwardedRef)} asChild>
-      {requireReactElement(children)}
-    </ContextMenuPrimitive.Trigger>
-  ),
+  (props, forwardedRef) => {
+    const triggerProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        children: undefined,
+      },
+    )
+    const child = requireReactElement(props.children)
+
+    return (
+      <ContextMenuPrimitive.Trigger {...triggerProps} ref={React.coerceRef(forwardedRef)} asChild>
+        {child}
+      </ContextMenuPrimitive.Trigger>
+    )
+  },
 )
 ContextMenuTrigger.displayName = 'ContextMenu.Trigger'
 
@@ -57,6 +67,7 @@ function ContextMenuLazyChildren({ children }: { children: LazyMenuChildren }) {
 const ContextMenuContent = React.forwardRef<ContextMenuContentElement, ContextMenuContentProps>(
   (props, forwardedRef) => {
     const themeContext = useThemeContext()
+    const children = props.children as LazyMenuChildren
     const size = prop(
       () => props.size ?? contextMenuContentPropDefs.size.default,
     ) as unknown as ContextMenuContentContextValue['size']
@@ -66,8 +77,18 @@ const ContextMenuContent = React.forwardRef<ContextMenuContentElement, ContextMe
     const highContrast = prop(
       () => props.highContrast ?? contextMenuContentPropDefs.highContrast.default,
     ) as unknown as ContextMenuContentContextValue['highContrast']
-    const { className, children, color, container, forceMount, ...contentProps } = extractProps(
-      props,
+    const {
+      className,
+      children: _children,
+      color,
+      container,
+      forceMount,
+      ...contentProps
+    } = extractProps(
+      mergeProps(
+        prop(() => props as Record<string, unknown>),
+        { children: undefined },
+      ) as unknown as ContextMenuContentProps,
       contextMenuContentPropDefs,
     )
     const resolvedColor = prop(
@@ -328,10 +349,17 @@ const ContextMenuSubContent = React.forwardRef<
 >((props, forwardedRef) => {
   const themeContext = useThemeContext()
   const { size, variant, color, highContrast } = useContext(ContextMenuContentContext)
-  const { className, container, ...subContentProps } = extractProps(
+  const children = props.children as LazyMenuChildren
+  const {
+    className,
+    children: _children,
+    container,
+    ...subContentProps
+  } = extractProps(
     mergeProps(
       { size, variant, color, highContrast },
       prop(() => props as Record<string, unknown>),
+      { children: undefined },
     ) as unknown as ContextMenuSubContentProps & ContextMenuContentContextValue,
     contextMenuContentPropDefs,
   )
@@ -364,7 +392,7 @@ const ContextMenuSubContent = React.forwardRef<
       >
         <ThemeContext.Provider value={themeContext}>
           <div class={classNames('rt-BaseMenuViewport', 'rt-ContextMenuViewport')}>
-            <ContextMenuLazyChildren children={props.children as LazyMenuChildren} />
+            <ContextMenuLazyChildren children={children} />
           </div>
         </ThemeContext.Provider>
       </ContextMenuPrimitive.SubContent>

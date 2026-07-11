@@ -32,11 +32,21 @@ interface DropdownMenuTriggerProps extends ComponentPropsWithout<
   RemovedProps
 > {}
 const DropdownMenuTrigger = React.forwardRef<DropdownMenuTriggerElement, DropdownMenuTriggerProps>(
-  ({ children, ...props }, forwardedRef) => (
-    <DropdownMenuPrimitive.Trigger {...props} ref={React.coerceRef(forwardedRef)} asChild>
-      {requireReactElement(children)}
-    </DropdownMenuPrimitive.Trigger>
-  ),
+  (props, forwardedRef) => {
+    const triggerProps = mergeProps(
+      prop(() => props as Record<string, unknown>),
+      {
+        children: undefined,
+      },
+    )
+    const child = requireReactElement(props.children)
+
+    return (
+      <DropdownMenuPrimitive.Trigger {...triggerProps} ref={React.coerceRef(forwardedRef)} asChild>
+        {child}
+      </DropdownMenuPrimitive.Trigger>
+    )
+  },
 )
 DropdownMenuTrigger.displayName = 'DropdownMenu.Trigger'
 
@@ -57,6 +67,7 @@ function DropdownMenuLazyChildren({ children }: { children: LazyMenuChildren }) 
 const DropdownMenuContent = React.forwardRef<DropdownMenuContentElement, DropdownMenuContentProps>(
   (props, forwardedRef) => {
     const themeContext = useThemeContext()
+    const children = props.children as LazyMenuChildren
     const size = prop(
       () => props.size ?? dropdownMenuContentPropDefs.size.default,
     ) as unknown as DropdownMenuContentContextValue['size']
@@ -66,8 +77,18 @@ const DropdownMenuContent = React.forwardRef<DropdownMenuContentElement, Dropdow
     const highContrast = prop(
       () => props.highContrast ?? dropdownMenuContentPropDefs.highContrast.default,
     ) as unknown as DropdownMenuContentContextValue['highContrast']
-    const { className, children, color, container, forceMount, ...contentProps } = extractProps(
-      props,
+    const {
+      className,
+      children: _children,
+      color,
+      container,
+      forceMount,
+      ...contentProps
+    } = extractProps(
+      mergeProps(
+        prop(() => props as Record<string, unknown>),
+        { children: undefined },
+      ) as unknown as DropdownMenuContentProps,
       dropdownMenuContentPropDefs,
     )
     const resolvedColor = prop(
@@ -324,10 +345,17 @@ const DropdownMenuSubContent = React.forwardRef<
 >((props, forwardedRef) => {
   const themeContext = useThemeContext()
   const { size, variant, color, highContrast } = useContext(DropdownMenuContentContext)
-  const { className, container, ...subContentProps } = extractProps(
+  const children = props.children as LazyMenuChildren
+  const {
+    className,
+    children: _children,
+    container,
+    ...subContentProps
+  } = extractProps(
     mergeProps(
       { size, variant, color, highContrast },
       prop(() => props as Record<string, unknown>),
+      { children: undefined },
     ) as unknown as DropdownMenuSubContentProps & DropdownMenuContentContextValue,
     dropdownMenuContentPropDefs,
   )
@@ -360,7 +388,7 @@ const DropdownMenuSubContent = React.forwardRef<
       >
         <ThemeContext.Provider value={themeContext}>
           <div class={classNames('rt-BaseMenuViewport', 'rt-DropdownMenuViewport')}>
-            <DropdownMenuLazyChildren children={props.children as LazyMenuChildren} />
+            <DropdownMenuLazyChildren children={children} />
           </div>
         </ThemeContext.Provider>
       </DropdownMenuPrimitive.SubContent>
