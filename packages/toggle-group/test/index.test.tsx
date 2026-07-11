@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Item, Root } from '../src/index.js'
@@ -184,6 +184,38 @@ describe('@fictjs/toggle-group', () => {
     const two = getButtons()[1]
 
     expect(document.activeElement).toBe(two)
+  })
+
+  it('preserves root focus entry while invoking the latest focus handler', async () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn()
+    const onFocus = createSignal<(event: FocusEvent) => void>(firstHandler)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root
+          type="single"
+          defaultValue="two"
+          onFocus={prop(() => onFocus()) as unknown as (event: FocusEvent) => void}
+        >
+          <Item value="one">One</Item>
+          <Item value="two">Two</Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    onFocus(secondHandler)
+    ;(container.querySelector('[role="group"]') as HTMLDivElement).focus()
+    await waitForUpdates()
+
+    const buttons = Array.from(container.querySelectorAll('button'))
+    expect(firstHandler).not.toHaveBeenCalled()
+    expect(secondHandler).toHaveBeenCalled()
+    expect(document.activeElement).toBe(buttons[1])
   })
 
   it('propagates disabled state to items', async () => {

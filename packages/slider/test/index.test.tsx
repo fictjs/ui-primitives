@@ -155,6 +155,91 @@ describe('@fictjs/slider', () => {
     expect(secondHandler).toHaveBeenCalledWith([50])
   })
 
+  it('preserves the slide baseline while invoking the latest root pointer handler', async () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn()
+    const onPointerDown = createSignal<(event: PointerEvent) => void>(firstHandler)
+    const onValueCommit = vi.fn()
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root
+          max={100}
+          onPointerDown={prop(() => onPointerDown()) as unknown as (event: PointerEvent) => void}
+          onValueCommit={onValueCommit}
+          value={[25]}
+        >
+          <Track />
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    onPointerDown(secondHandler)
+
+    const slider = container.querySelector('[data-orientation="horizontal"]') as HTMLSpanElement
+    Object.defineProperty(slider, 'getBoundingClientRect', {
+      value: () =>
+        ({
+          width: 200,
+          height: 20,
+          left: 0,
+          top: 0,
+          right: 200,
+          bottom: 20,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }) satisfies DOMRect,
+    })
+
+    pointer(slider, 'pointerdown', 50)
+    pointer(slider, 'pointerup', 50)
+    await waitForEffects()
+
+    expect(firstHandler).not.toHaveBeenCalled()
+    expect(secondHandler).toHaveBeenCalledOnce()
+    expect(onValueCommit).not.toHaveBeenCalled()
+  })
+
+  it('tracks the focused thumb while invoking its latest focus handler', async () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn()
+    const onFocus = createSignal<(event: FocusEvent) => void>(firstHandler)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root defaultValue={[20, 80]} step={10}>
+          <Track>
+            <Range />
+          </Track>
+          <Thumb />
+          <Thumb onFocus={prop(() => onFocus()) as unknown as (event: FocusEvent) => void} />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    onFocus(secondHandler)
+
+    let thumbs = Array.from(container.querySelectorAll<HTMLSpanElement>('[role="slider"]'))
+    ;(thumbs[1] as HTMLSpanElement).focus()
+    keyDown(thumbs[1] as HTMLSpanElement, 'ArrowRight')
+    await waitForEffects()
+
+    thumbs = Array.from(container.querySelectorAll<HTMLSpanElement>('[role="slider"]'))
+    expect(firstHandler).not.toHaveBeenCalled()
+    expect(secondHandler).toHaveBeenCalledOnce()
+    expect(thumbs.map((thumb) => thumb.getAttribute('aria-valuenow'))).toEqual(['20', '90'])
+  })
+
   it('renders a bubble input with the current value when the slider participates in a form', async () => {
     const container = document.createElement('div')
     document.body.append(container)

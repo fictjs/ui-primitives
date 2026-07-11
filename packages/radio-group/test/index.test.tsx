@@ -156,6 +156,41 @@ describe('@fictjs/radio-group', () => {
     expect(two.getAttribute('aria-checked')).toBe('true')
   })
 
+  it('preserves root focus entry while invoking the latest focus handler', async () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn()
+    const onFocus = createSignal<(event: FocusEvent) => void>(firstHandler)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <RadioGroup
+          defaultValue="two"
+          onFocus={prop(() => onFocus()) as unknown as (event: FocusEvent) => void}
+          tabIndex={0}
+        >
+          <RadioGroupItem data-testid="one" value="one">
+            One
+          </RadioGroupItem>
+          <RadioGroupItem data-testid="two" value="two">
+            Two
+          </RadioGroupItem>
+        </RadioGroup>
+      ),
+      container,
+    )
+
+    await waitForUpdates()
+    onFocus(secondHandler)
+    ;(container.querySelector('[role="radiogroup"]') as HTMLDivElement).focus()
+    await waitForUpdates()
+
+    expect(firstHandler).not.toHaveBeenCalled()
+    expect(secondHandler).toHaveBeenCalled()
+    expect(document.activeElement).toBe(container.querySelector('[data-testid="two"]'))
+  })
+
   it('propagates disabled state from the group', () => {
     const container = document.createElement('div')
     document.body.append(container)

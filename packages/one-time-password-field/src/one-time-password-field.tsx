@@ -367,13 +367,6 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
     {
       role: 'group',
       dir: direction,
-      onPaste: composeEventHandlers<ClipboardEvent>(
-        (event) => (props.onPaste as ((event: ClipboardEvent) => void) | undefined)?.(event),
-        (event) => {
-          event.preventDefault()
-          pasteValue(event.clipboardData?.getData('text') ?? '')
-        },
-      ),
     },
     prop(() => props as Record<string, unknown>),
     {
@@ -397,6 +390,13 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
       value: undefined,
       children: undefined,
       ref: undefined,
+      onPaste: composeEventHandlers<ClipboardEvent>(
+        (event) => (props.onPaste as ((event: ClipboardEvent) => void) | undefined)?.(event),
+        (event) => {
+          event.preventDefault()
+          pasteValue(event.clipboardData?.getData('text') ?? '')
+        },
+      ),
     },
   )
 

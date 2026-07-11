@@ -378,19 +378,6 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
       role: 'group',
       dir: prop(dir),
       tabIndex: prop(() => (rovingFocus() ? 0 : props.tabIndex)),
-      onFocus: (event: FocusEvent) => {
-        if (!rovingFocus()) return
-        if (event.target !== event.currentTarget) return
-
-        const entryValue = getEntryValue()
-        if (!entryValue) return
-
-        const entryItem = getEnabledItems().find((item) => item.value === entryValue)
-        if (!entryItem) return
-
-        currentTabStop(entryValue)
-        focusItem(entryItem)
-      },
     },
     prop(() => props as Record<string, unknown>),
     {
@@ -400,6 +387,22 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
       loop: undefined,
       orientation: undefined,
       rovingFocus: undefined,
+      onFocus: composeEventHandlers<FocusEvent>(
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
+        (event) => {
+          if (!rovingFocus()) return
+          if (event.target !== event.currentTarget) return
+
+          const entryValue = getEntryValue()
+          if (!entryValue) return
+
+          const entryItem = getEnabledItems().find((item) => item.value === entryValue)
+          if (!entryItem) return
+
+          currentTabStop(entryValue)
+          focusItem(entryItem)
+        },
+      ),
     },
   )
 

@@ -281,6 +281,20 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
       'aria-orientation': prop(orientation),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
       dir: prop(dir),
+    },
+    prop(() => props as Record<string, unknown>),
+    {
+      __scopeRadioGroup: undefined,
+      defaultValue: undefined,
+      dir: undefined,
+      disabled: undefined,
+      loop: undefined,
+      name: undefined,
+      onValueChange: undefined,
+      orientation: undefined,
+      required: undefined,
+      ref: undefined,
+      value: undefined,
       onFocus: composeEventHandlers<FocusEvent>(
         (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
         (event) => {
@@ -296,20 +310,6 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
           focusItem(entryItem)
         },
       ),
-    },
-    prop(() => props as Record<string, unknown>),
-    {
-      __scopeRadioGroup: undefined,
-      defaultValue: undefined,
-      dir: undefined,
-      disabled: undefined,
-      loop: undefined,
-      name: undefined,
-      onValueChange: undefined,
-      orientation: undefined,
-      required: undefined,
-      ref: undefined,
-      value: undefined,
     },
   )
 

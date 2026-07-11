@@ -302,14 +302,6 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
     {
       'aria-disabled': prop(() => (disabled() ? 'true' : undefined)),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
-      onPointerDown: composeEventHandlers<PointerEvent>(
-        (event) => (props.onPointerDown as ((event: PointerEvent) => void) | undefined)?.(event),
-        () => {
-          if (!disabled()) {
-            valuesBeforeSlideStartRef.current = values()
-          }
-        },
-      ),
     },
     prop(() => props as Record<string, unknown>),
     {
@@ -328,6 +320,14 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
       orientation: undefined,
       step: undefined,
       value: undefined,
+      onPointerDown: composeEventHandlers<PointerEvent>(
+        (event) => (props.onPointerDown as ((event: PointerEvent) => void) | undefined)?.(event),
+        () => {
+          if (!disabled()) {
+            valuesBeforeSlideStartRef.current = values()
+          }
+        },
+      ),
     },
   )
   const orientationNode = (
@@ -715,18 +715,18 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
       'data-orientation': prop(context.orientation),
       tabIndex: prop(() => (context.disabled() ? undefined : 0)),
       style: prop(() => (value() === undefined ? { display: 'none' } : readStyle(props.style))),
-      onFocus: composeEventHandlers<FocusEvent>(
-        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
-        () => {
-          context.valueIndexToChangeRef.current = Math.max(0, index())
-        },
-      ),
     },
     prop(() => props as Record<string, unknown>),
     {
       __scopeSlider: undefined,
       name: undefined,
       ref: undefined,
+      onFocus: composeEventHandlers<FocusEvent>(
+        (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
+        () => {
+          context.valueIndexToChangeRef.current = Math.max(0, index())
+        },
+      ),
     },
   )
 

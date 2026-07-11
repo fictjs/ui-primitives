@@ -1,6 +1,6 @@
 /** @jsxImportSource @fictjs/runtime */
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
@@ -190,6 +190,42 @@ describe('@fictjs/one-time-password-field', () => {
 
     expect(inputs.map((input) => input.value).join(',')).toBe('1,2,3')
     expect(hiddenInput.value).toBe('123')
+  })
+
+  it('preserves paste distribution while invoking the latest root paste handler', async () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn()
+    const onPaste = createSignal<(event: ClipboardEvent) => void>(firstHandler)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root onPaste={prop(() => onPaste()) as unknown as (event: ClipboardEvent) => void}>
+          <Input />
+          <Input />
+          <Input />
+          <HiddenInput name="code" />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    onPaste(secondHandler)
+
+    paste(container.querySelector('[role="group"]') as HTMLElement, '4 5 6')
+    await waitForEffects()
+
+    const inputs = Array.from(
+      container.querySelectorAll('input:not([type="hidden"])'),
+    ) as HTMLInputElement[]
+    const hiddenInput = container.querySelector('input[type="hidden"]') as HTMLInputElement
+
+    expect(firstHandler).not.toHaveBeenCalled()
+    expect(secondHandler).toHaveBeenCalledOnce()
+    expect(inputs.map((input) => input.value).join('')).toBe('456')
+    expect(hiddenInput.value).toBe('456')
   })
 
   it('inherits form association and name from the root hidden input contract', async () => {
