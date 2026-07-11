@@ -434,7 +434,7 @@ function NavigationMenu(props: ScopedProps<NavigationMenuProps>): FictNode {
       ref: undefined,
       skipDelayDuration: undefined,
       value: undefined,
-      'aria-label': props['aria-label'] ?? 'Main',
+      'aria-label': prop(() => props['aria-label'] ?? 'Main'),
       'data-orientation': prop(context.orientation),
     },
   )

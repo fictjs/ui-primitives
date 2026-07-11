@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Content, Indicator, Item, Link, List, Root, Sub, Trigger, Viewport } from '../src/index.js'
@@ -132,6 +132,27 @@ describe('@fictjs/navigation-menu', () => {
     expect(root.hasAttribute('delayduration')).toBe(false)
     expect(root.hasAttribute('skipdelayduration')).toBe(false)
     expect(root.hasAttribute('orientation')).toBe(false)
+  })
+
+  it('updates the accessible label from a getter-backed prop', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const label = createSignal('Primary navigation')
+
+    mount(
+      () => <Root data-testid="root" aria-label={prop(() => label()) as unknown as string} />,
+      container,
+    )
+
+    await waitForEffects()
+    const root = container.querySelector('[data-testid="root"]') as HTMLElement
+    expect(root.getAttribute('aria-label')).toBe('Primary navigation')
+
+    label('Secondary navigation')
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="root"]')).toBe(root)
+    expect(root.getAttribute('aria-label')).toBe('Secondary navigation')
   })
 
   it('opens matching content from a trigger and shows the indicator', async () => {
