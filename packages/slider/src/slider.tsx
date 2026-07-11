@@ -50,6 +50,7 @@ type SliderContextValue = {
   max: () => number
   values: () => number[]
   valueIndexToChangeRef: { current: number }
+  getNextThumbIndex(): number
   thumbs: Set<SliderThumbElement>
   rootRef: { current: HTMLSpanElement | null }
   orientation: () => SliderOrientation
@@ -212,6 +213,7 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
     return nextValue === undefined ? undefined : sortAndClampValues(nextValue, min(), max())
   }
   const valueIndexToChangeRef = { current: 0 }
+  let nextThumbIndex = 0
   const thumbs = new Set<SliderThumbElement>()
   const rootRef = { current: null as HTMLSpanElement | null }
   const valuesBeforeSlideStartRef = { current: defaultValue() }
@@ -379,6 +381,7 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
       max={max}
       values={values}
       valueIndexToChangeRef={valueIndexToChangeRef}
+      getNextThumbIndex={() => nextThumbIndex++}
       thumbs={thumbs}
       rootRef={rootRef}
       orientation={orientation}
@@ -675,16 +678,18 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
     THUMB_NAME,
     props.__scopeSlider as Scope<SliderOrientationContextValue | undefined>,
   )
+  const initialIndex = context.getNextThumbIndex()
   const index = () => {
     const thumbNode = thumb()
-    if (!thumbNode) return -1
+    const rootNode = context.rootRef.current
+    if (!thumbNode || !rootNode) return initialIndex
 
     const thumbNodes = Array.from(
-      context.rootRef.current?.querySelectorAll<SliderThumbElement>('[data-radix-slider-thumb]') ??
-        [],
+      rootNode.querySelectorAll<SliderThumbElement>('[data-radix-slider-thumb]'),
     )
+    const currentIndex = thumbNodes.indexOf(thumbNode)
 
-    return thumbNodes.indexOf(thumbNode)
+    return currentIndex === -1 ? initialIndex : currentIndex
   }
   const value = () => {
     const currentIndex = index()

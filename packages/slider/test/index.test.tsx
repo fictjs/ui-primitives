@@ -369,6 +369,62 @@ describe('@fictjs/slider', () => {
     expect(new FormData(form).get('volume')).toBe('25')
   })
 
+  it('preserves a single thumb value in server-rendered form markup', () => {
+    const ownerDocument = document
+    const container = ownerDocument.createElement('div')
+
+    vi.stubGlobal('document', undefined)
+    try {
+      mount(
+        () => (
+          <Root defaultValue={[25]} name="volume">
+            <Track>
+              <Range />
+            </Track>
+            <Thumb />
+          </Root>
+        ),
+        container,
+      )
+    } finally {
+      vi.stubGlobal('document', ownerDocument)
+    }
+
+    const thumb = container.querySelector('[role="slider"]') as HTMLSpanElement
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(thumb.getAttribute('aria-valuenow')).toBe('25')
+    expect(input.value).toBe('25')
+  })
+
+  it('preserves multiple thumb values in server-rendered form markup', () => {
+    const ownerDocument = document
+    const container = ownerDocument.createElement('div')
+
+    vi.stubGlobal('document', undefined)
+    try {
+      mount(
+        () => (
+          <Root defaultValue={[20, 80]} name="range">
+            <Track>
+              <Range />
+            </Track>
+            <Thumb />
+            <Thumb />
+          </Root>
+        ),
+        container,
+      )
+    } finally {
+      vi.stubGlobal('document', ownerDocument)
+    }
+
+    const thumbs = Array.from(container.querySelectorAll<HTMLSpanElement>('[role="slider"]'))
+    const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('input'))
+    expect(thumbs.map((thumb) => thumb.getAttribute('aria-valuenow'))).toEqual(['20', '80'])
+    expect(thumbs.map((thumb) => thumb.getAttribute('aria-label'))).toEqual(['Minimum', 'Maximum'])
+    expect(inputs.map((input) => input.value)).toEqual(['20', '80'])
+  })
+
   it('restores all uncontrolled values on native form reset', async () => {
     const container = document.createElement('div')
     document.body.append(container)

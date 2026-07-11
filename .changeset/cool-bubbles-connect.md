@@ -5,4 +5,4 @@
 '@fictjs/slider': patch
 ---
 
-Defer browser form bubble inputs until their controls are connected, react to ancestor and explicit form ownership, and retain server-rendered native input markup.
+Defer browser form bubble inputs until their controls are connected and react to ancestor and explicit form ownership.
