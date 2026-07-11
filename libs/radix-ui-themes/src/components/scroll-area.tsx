@@ -31,6 +31,8 @@ const ScrollArea = React.forwardRef<ScrollAreaElement, ScrollAreaProps>((props, 
     className,
     style,
     dir,
+    type,
+    scrollHideDelay = type !== 'scroll' ? 0 : undefined,
     size = scrollAreaPropDefs.size.default,
     radius = scrollAreaPropDefs.radius.default,
     scrollbars = scrollAreaPropDefs.scrollbars.default,
@@ -43,6 +45,8 @@ const ScrollArea = React.forwardRef<ScrollAreaElement, ScrollAreaProps>((props, 
       style={mergeStyles(marginCustomProperties, style)}
       asChild={asChild}
       dir={dir}
+      type={type}
+      scrollHideDelay={scrollHideDelay}
     >
       {getSubtree({ asChild, children }, (children) => (
         <>

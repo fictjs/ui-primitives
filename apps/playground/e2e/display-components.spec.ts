@@ -290,7 +290,7 @@ test('scroll area viewport can scroll in both directions', async ({ page }) => {
     expect(result.scrollTop).toBeGreaterThan(0)
     expect(result.scrollLeft).toBeGreaterThan(0)
     await expect(horizontalScrollbar).toBeVisible()
-    expect(await horizontalScrollbar.getAttribute('data-state')).toBeNull()
+    await expect(horizontalScrollbar).toHaveAttribute('data-state', 'visible')
   })
 })
 

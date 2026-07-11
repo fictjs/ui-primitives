@@ -922,6 +922,33 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(container.querySelector('.rt-ScrollAreaRoot')?.getAttribute('dir')).toBe('rtl')
   })
 
+  it('forwards visibility settings to the themed scroll area root', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <ScrollArea type="always" scrollHideDelay={120} scrollbars="horizontal">
+            Scrollable content
+          </ScrollArea>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const viewport = container.querySelector('.rt-ScrollAreaViewport')
+    expect(viewport?.hasAttribute('type')).toBe(false)
+    expect(viewport?.hasAttribute('scrollhidedelay')).toBe(false)
+    expect(
+      container
+        .querySelector('.rt-ScrollAreaScrollbar[data-orientation="horizontal"]')
+        ?.getAttribute('data-state'),
+    ).toBe('visible')
+  })
+
   it('renders themed select default value while content is closed', async () => {
     const container = document.createElement('div')
     document.body.append(container)
