@@ -671,11 +671,11 @@ function MenuContentImpl(props: ScopedProps<MenuContentProps>): FictNode {
     </FocusScope>
   )
 
-  if (!menuContext.modal()) {
-    return contentNode
-  }
-
-  return <RemoveScroll>{contentNode}</RemoveScroll>
+  return (
+    <RemoveScroll enabled={prop(menuContext.modal)} forwardProps>
+      {contentNode}
+    </RemoveScroll>
+  )
 }
 
 function MenuGroup(props: ScopedProps<MenuGroupProps>): FictNode {

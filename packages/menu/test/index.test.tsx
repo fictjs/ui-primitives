@@ -173,6 +173,40 @@ describe('@fictjs/menu', () => {
     expect(hideOthersCleanup).toHaveBeenCalledOnce()
   })
 
+  it('updates modal effects without replacing open content', async () => {
+    const container = document.createElement('div')
+    const modal = createSignal(true)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Menu open modal={modal}>
+          <Content data-testid="content">
+            <Item>Item</Item>
+          </Content>
+        </Menu>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const content = container.querySelector('[data-testid="content"]')
+    expect(content).not.toBeNull()
+    expect(document.body.getAttribute('data-scroll-locked')).toBe('1')
+
+    modal(false)
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="content"]')).toBe(content)
+    expect(document.body.getAttribute('data-scroll-locked')).toBeNull()
+    expect(hideOthersCleanup).toHaveBeenCalledOnce()
+
+    modal(true)
+    await waitForEffects()
+    expect(container.querySelector('[data-testid="content"]')).toBe(content)
+    expect(document.body.getAttribute('data-scroll-locked')).toBe('1')
+    expect(hideOthersMock).toHaveBeenCalledTimes(2)
+  })
+
   it('supports checkbox and radio menu items with indicators', async () => {
     const container = document.createElement('div')
     document.body.append(container)
