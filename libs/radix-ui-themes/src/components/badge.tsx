@@ -5,6 +5,7 @@ import { Slot } from '@fictjs/radix-ui'
 import { badgePropDefs } from './badge.props.js'
 import { extractProps } from '../helpers/extract-props.js'
 import { renderChildren } from '../helpers/render-children.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
 import type { MarginProps } from '../props/margin.props.js'
@@ -17,25 +18,27 @@ interface BadgeProps
   extends ComponentPropsWithout<'span', RemovedProps>, MarginProps, BadgeOwnProps {}
 const Badge = React.forwardRef<BadgeElement, BadgeProps>((props, forwardedRef) => {
   const {
-    asChild,
-    children: _children,
+    asChild: _asChild,
+    children,
     className,
     color,
     radius,
     ...badgeProps
   } = extractProps(props, badgePropDefs, marginPropDefs)
-  const Comp = asChild ? Slot.Root : 'span'
-  return (
-    <Comp
-      data-accent-color={color}
-      data-radius={radius}
-      {...badgeProps}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-reset', 'rt-Badge', className)}
-    >
-      {renderChildren(props.children)}
-    </Comp>
-  )
+  return renderWithAsChild(props, (asChild) => {
+    const Comp = asChild ? Slot.Root : 'span'
+    return (
+      <Comp
+        data-accent-color={color}
+        data-radius={radius}
+        {...badgeProps}
+        ref={React.coerceRef(forwardedRef)}
+        class={classNames('rt-reset', 'rt-Badge', className)}
+      >
+        {renderChildren(children)}
+      </Comp>
+    )
+  })
 })
 Badge.displayName = 'Badge'
 

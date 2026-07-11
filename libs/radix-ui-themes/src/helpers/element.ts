@@ -70,7 +70,7 @@ function flattenChildren(children: ReactNode | undefined, result: FictNode[] = [
 }
 
 function isValidElement(value: unknown): value is ReactElement {
-  return !!value && typeof value === 'object' && 'type' in (value as FictVNode)
+  return Boolean(value && typeof value === 'object' && 'type' in value && 'props' in value)
 }
 
 function cloneElement<P extends Record<string, unknown>>(

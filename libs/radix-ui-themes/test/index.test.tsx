@@ -2,29 +2,37 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { prop, render } from 'fict'
+import { onMount, prop, render } from 'fict'
 import { createSignal } from 'fict/advanced'
 import * as PublicHelpers from '@fictjs/radix-ui-themes/helpers'
 
 import {
   Avatar,
   Badge,
+  Blockquote,
   Box,
   Button,
   Callout,
   Card,
   CheckboxGroup,
+  Code,
+  Container,
   ContextMenu,
   DropdownMenu,
+  Em,
   IconButton,
+  Inset,
   Kbd,
   Link,
   Popover,
   Progress,
+  Quote,
   ScrollArea,
   Select,
+  Section,
   Skeleton,
   Spinner,
+  Strong,
   TabNav,
   Table,
   Text,
@@ -565,7 +573,7 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(probe.classList.contains('sm:is-active')).toBe(false)
   })
 
-  it('reacts to structural as and asChild props without treating getters as tags', async () => {
+  it('resolves structural as and asChild accessors without treating getters as tags', async () => {
     const container = document.createElement('div')
     document.body.append(container)
     const tag = createSignal<'div' | 'span'>('div')
@@ -590,15 +598,17 @@ describe('@fictjs/radix-ui-themes', () => {
 
     await flushEffects()
 
-    expect(container.querySelector('[data-testid="reactive-tag"]')?.tagName).toBe('DIV')
-    expect(container.querySelector('[data-testid="reactive-as-child"]')?.tagName).toBe('DIV')
+    const tagRoot = container.querySelector('[data-testid="reactive-tag"]')
+    const asChildRoot = container.querySelector('[data-testid="reactive-as-child"]')
+    expect(tagRoot?.tagName).toBe('DIV')
+    expect(asChildRoot?.tagName).toBe('DIV')
 
     tag('span')
     asChild(true)
     await flushEffects()
 
-    expect(container.querySelector('[data-testid="reactive-tag"]')?.tagName).toBe('SPAN')
-    expect(container.querySelector('[data-testid="reactive-as-child"]')?.tagName).toBe('BUTTON')
+    expect(container.querySelector('[data-testid="reactive-tag"]')).toBe(tagRoot)
+    expect(container.querySelector('[data-testid="reactive-as-child"]')).toBe(asChildRoot)
   })
 
   it('invokes the latest getter-backed event handler', async () => {
@@ -1087,7 +1097,7 @@ describe('@fictjs/radix-ui-themes', () => {
     ).toBe('visible')
   })
 
-  it('updates themed scroll area presentation, structure, and root props', async () => {
+  it('updates themed scroll area presentation and root props without replacing its structure', async () => {
     const asChild = createSignal(false)
     const className = createSignal('scroll-first')
     const margin = createSignal<'1' | '3'>('1')
@@ -1126,7 +1136,7 @@ describe('@fictjs/radix-ui-themes', () => {
 
     await flushEffects()
 
-    let root = container.querySelector('.rt-ScrollAreaRoot') as HTMLElement
+    const root = container.querySelector('.rt-ScrollAreaRoot') as HTMLElement
     let viewport = root.querySelector('.rt-ScrollAreaViewport') as HTMLElement
     const verticalScrollbar = root.querySelector(
       '.rt-ScrollAreaScrollbar[data-orientation="vertical"]',
@@ -1180,15 +1190,15 @@ describe('@fictjs/radix-ui-themes', () => {
     asChild(true)
     await flushEffects()
 
-    root = container.querySelector('.rt-ScrollAreaRoot') as HTMLElement
+    expect(container.querySelector('.rt-ScrollAreaRoot')).toBe(root)
     viewport = root.querySelector('.rt-ScrollAreaViewport') as HTMLElement
-    expect(root.tagName).toBe('SECTION')
-    expect(root.getAttribute('data-testid')).toBe('scroll-area-child')
+    expect(root.tagName).toBe('DIV')
+    expect(viewport.querySelector('[data-testid="scroll-area-child"]')).not.toBeNull()
     expect(viewport.textContent).toContain('Scrollable content')
 
     asChild(false)
     await flushEffects()
-    expect(container.querySelector('.rt-ScrollAreaRoot')?.tagName).toBe('DIV')
+    expect(container.querySelector('.rt-ScrollAreaRoot')).toBe(root)
   })
 
   it('uses the latest themed scroll area hide delay', async () => {
@@ -1553,6 +1563,183 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(kbd?.className).toContain('rt-Kbd')
   })
 
+  it('resolves getter-backed asChild props synchronously across themed consumers', async () => {
+    const asChild = createSignal(true)
+    const dynamicAsChild = prop(() => asChild()) as unknown as boolean
+    const avatarRef = { current: null as Element | null }
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Badge asChild={dynamicAsChild}>
+            <button data-testid="dynamic-badge" type="button">
+              Badge
+            </button>
+          </Badge>
+          <Card asChild={dynamicAsChild}>
+            <article data-testid="dynamic-card">Card</article>
+          </Card>
+          <Callout.Root asChild={dynamicAsChild}>
+            <aside data-testid="dynamic-callout">
+              <Callout.Text>Callout</Callout.Text>
+            </aside>
+          </Callout.Root>
+          <Container asChild={dynamicAsChild}>
+            <main data-testid="dynamic-container">Container</main>
+          </Container>
+          <Code asChild={dynamicAsChild}>
+            <button data-testid="dynamic-code" type="button">
+              Code
+            </button>
+          </Code>
+          <Em asChild={dynamicAsChild}>
+            <span data-testid="dynamic-em">Em</span>
+          </Em>
+          <Inset asChild={dynamicAsChild}>
+            <article data-testid="dynamic-inset">Inset</article>
+          </Inset>
+          <Kbd asChild={dynamicAsChild}>
+            <button data-testid="dynamic-kbd" type="button">
+              Kbd
+            </button>
+          </Kbd>
+          <Quote asChild={dynamicAsChild}>
+            <span data-testid="dynamic-quote">Quote</span>
+          </Quote>
+          <Section asChild={dynamicAsChild}>
+            <article data-testid="dynamic-section">Section</article>
+          </Section>
+          <Strong asChild={dynamicAsChild}>
+            <span data-testid="dynamic-strong">Strong</span>
+          </Strong>
+          <Link asChild={dynamicAsChild}>
+            <button data-testid="dynamic-link" type="button">
+              Link
+            </button>
+          </Link>
+          <Avatar ref={avatarRef} asChild={dynamicAsChild} fallback="A">
+            <span data-testid="dynamic-avatar">Avatar</span>
+          </Avatar>
+          <Button asChild={dynamicAsChild}>
+            <a data-testid="dynamic-button" href="#dynamic-button">
+              Button
+            </a>
+          </Button>
+          <Blockquote asChild={dynamicAsChild}>
+            <div data-testid="dynamic-blockquote">Blockquote</div>
+          </Blockquote>
+          <TabNav.Root>
+            <TabNav.Link asChild={dynamicAsChild} active>
+              <button data-testid="dynamic-tab-nav" type="button">
+                Tab nav
+              </button>
+            </TabNav.Link>
+          </TabNav.Root>
+          <Theme asChild={dynamicAsChild} accentColor="blue">
+            <main data-testid="dynamic-theme">
+              <Badge>Nested theme</Badge>
+            </main>
+          </Theme>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const themedChildren = [
+      ['dynamic-badge', 'rt-Badge'],
+      ['dynamic-card', 'rt-Card'],
+      ['dynamic-callout', 'rt-CalloutRoot'],
+      ['dynamic-container', 'rt-Container'],
+      ['dynamic-code', 'rt-Code'],
+      ['dynamic-em', 'rt-Em'],
+      ['dynamic-inset', 'rt-Inset'],
+      ['dynamic-kbd', 'rt-Kbd'],
+      ['dynamic-quote', 'rt-Quote'],
+      ['dynamic-section', 'rt-Section'],
+      ['dynamic-strong', 'rt-Strong'],
+      ['dynamic-link', 'rt-Link'],
+      ['dynamic-avatar', 'rt-AvatarRoot'],
+      ['dynamic-button', 'rt-BaseButton'],
+      ['dynamic-blockquote', 'rt-Blockquote'],
+      ['dynamic-tab-nav', 'rt-TabNavLink'],
+      ['dynamic-theme', 'radix-themes'],
+    ] as const
+
+    const initialRoots = new Map<string, Element>()
+    for (const [testId, className] of themedChildren) {
+      const child = container.querySelector(`[data-testid="${testId}"]`)
+      expect(child, `${testId} should render as the slotted root`).not.toBeNull()
+      expect(
+        child?.classList.contains(className),
+        `${testId} should receive themed classes: ${child?.outerHTML}`,
+      ).toBe(true)
+      initialRoots.set(testId, child!)
+    }
+    expect(
+      container.querySelector('[data-testid="dynamic-theme"]')?.getAttribute('data-accent-color'),
+    ).toBe('blue')
+    expect(avatarRef.current).toBe(container.querySelector('[data-testid="dynamic-avatar"]'))
+
+    asChild(false)
+    await flushEffects()
+
+    for (const [testId, className] of themedChildren) {
+      const child = container.querySelector(`[data-testid="${testId}"]`)
+      expect(child, `${testId} should keep its initial root`).toBe(initialRoots.get(testId))
+      expect(child?.classList.contains(className), `${testId} should remain slotted`).toBe(true)
+    }
+    expect(avatarRef.current).toBe(initialRoots.get('dynamic-avatar'))
+  })
+
+  it('mounts accessor-backed asChild descendants after their wrapper is connected', async () => {
+    const asChild = createSignal(false)
+    const mountedWhileConnected: boolean[] = []
+    const container = document.createElement('div')
+    document.body.append(container)
+    let child: HTMLButtonElement | null = null
+
+    const Child = () => {
+      onMount(() => {
+        mountedWhileConnected.push(child?.isConnected ?? false)
+      })
+
+      return (
+        <button
+          ref={(node) => {
+            child = node
+          }}
+          type="button"
+        >
+          Child
+        </button>
+      )
+    }
+
+    mount(
+      () => (
+        <Card asChild={prop(() => asChild()) as unknown as boolean}>
+          <Child />
+        </Card>
+      ),
+      container,
+    )
+
+    const mountedChild = container.querySelector('button') as HTMLButtonElement
+    const wrapper = mountedChild.parentElement
+    expect(wrapper?.classList.contains('rt-Card')).toBe(true)
+    expect(mountedWhileConnected).toEqual([true])
+
+    asChild(true)
+    await flushEffects()
+
+    expect(mountedChild.parentElement).toBe(wrapper)
+    expect(mountedWhileConnected).toEqual([true])
+  })
+
   it('closes themed popover content when the trigger is pressed again', async () => {
     const container = document.createElement('div')
     document.body.append(container)
@@ -1696,23 +1883,32 @@ describe('@fictjs/radix-ui-themes', () => {
 
     await flushEffects()
 
-    let trigger = container.querySelector('[data-testid="dropdown-trigger"]') as HTMLButtonElement
+    const trigger = container.querySelector('[data-testid="dropdown-trigger"]') as HTMLButtonElement
     expect(trigger).not.toBeNull()
 
     click(trigger)
     await flushEffects()
     expect(document.body.querySelector('[data-testid="dropdown-content"]')).not.toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(trigger.getAttribute('data-state')).toBe('open')
 
     keydown(document, 'Escape')
     await flushEffects()
     expect(document.body.querySelector('[data-testid="dropdown-content"]')).toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(trigger.getAttribute('data-state')).toBe('closed')
 
-    trigger = container.querySelector('[data-testid="dropdown-trigger"]') as HTMLButtonElement
-    click(trigger)
+    const nextTrigger = container.querySelector(
+      '[data-testid="dropdown-trigger"]',
+    ) as HTMLButtonElement
+    expect(nextTrigger).toBe(trigger)
+    click(nextTrigger)
     await flushEffects()
 
     expect(document.body.querySelector('[data-testid="dropdown-content"]')).not.toBeNull()
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(trigger.getAttribute('data-state')).toBe('open')
+    expect(container.querySelector('[data-testid="dropdown-trigger"]')).toBe(trigger)
   })
 
   it('preserves themed menu radio group classes', async () => {

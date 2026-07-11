@@ -18,7 +18,7 @@ export function getSubtree(
   return React.cloneElement(firstChild, {
     children:
       typeof content === 'function'
-        ? content((firstChild.props as { children?: React.ReactNode }).children)
+        ? content((firstChild.props as { children?: React.ReactNode } | null | undefined)?.children)
         : content,
   })
 }

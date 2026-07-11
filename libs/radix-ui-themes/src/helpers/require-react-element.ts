@@ -1,7 +1,11 @@
 import * as React from './element.js'
 
+function isElementNode(value: unknown): value is Element {
+  return typeof Element !== 'undefined' && value instanceof Element
+}
+
 export const requireReactElement = <T extends React.ReactNode>(children: T): T => {
-  const isReactElement = React.isValidElement(children)
+  const isReactElement = React.isValidElement(children) || isElementNode(children)
 
   if (!isReactElement) {
     throw Error(

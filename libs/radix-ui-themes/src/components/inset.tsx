@@ -5,6 +5,7 @@ import { Slot } from '@fictjs/radix-ui'
 import { insetPropDefs } from './inset.props.js'
 import { extractProps } from '../helpers/extract-props.js'
 import { renderChildren } from '../helpers/render-children.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
 import type { MarginProps } from '../props/margin.props.js'
@@ -18,21 +19,23 @@ interface InsetProps
 
 const Inset = React.forwardRef<InsetElement, InsetProps>((props, forwardedRef) => {
   const {
-    asChild,
-    children: _children,
+    asChild: _asChild,
+    children,
     className,
     ...insetProps
   } = extractProps(props, insetPropDefs, marginPropDefs)
-  const Comp = asChild ? Slot.Root : 'div'
-  return (
-    <Comp
-      {...insetProps}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-Inset', className)}
-    >
-      {renderChildren(props.children)}
-    </Comp>
-  )
+  return renderWithAsChild(props, (asChild) => {
+    const Comp = asChild ? Slot.Root : 'div'
+    return (
+      <Comp
+        {...insetProps}
+        ref={React.coerceRef(forwardedRef)}
+        class={classNames('rt-Inset', className)}
+      >
+        {renderChildren(children)}
+      </Comp>
+    )
+  })
 })
 Inset.displayName = 'Inset'
 

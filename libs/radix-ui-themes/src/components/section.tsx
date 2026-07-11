@@ -5,6 +5,7 @@ import { Slot } from '@fictjs/radix-ui'
 import { sectionPropDefs } from './section.props.js'
 import { extractProps } from '../helpers/extract-props.js'
 import { renderChildren } from '../helpers/render-children.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { layoutPropDefs } from '../props/layout.props.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
@@ -18,21 +19,23 @@ interface SectionProps
   extends ComponentPropsWithout<'div', RemovedProps>, MarginProps, LayoutProps, SectionOwnProps {}
 const Section = React.forwardRef<SectionElement, SectionProps>((props, forwardedRef) => {
   const {
-    asChild,
-    children: _children,
+    asChild: _asChild,
+    children,
     className,
     ...sectionProps
   } = extractProps(props, sectionPropDefs, layoutPropDefs, marginPropDefs)
-  const Comp = asChild ? Slot.Root : 'section'
-  return (
-    <Comp
-      {...sectionProps}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-Section', className)}
-    >
-      {renderChildren(props.children)}
-    </Comp>
-  )
+  return renderWithAsChild(props, (asChild) => {
+    const Comp = asChild ? Slot.Root : 'section'
+    return (
+      <Comp
+        {...sectionProps}
+        ref={React.coerceRef(forwardedRef)}
+        class={classNames('rt-Section', className)}
+      >
+        {renderChildren(children)}
+      </Comp>
+    )
+  })
 })
 Section.displayName = 'Section'
 

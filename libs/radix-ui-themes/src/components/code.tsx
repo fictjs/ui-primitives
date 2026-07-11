@@ -6,6 +6,7 @@ import { Slot } from '@fictjs/radix-ui'
 import { codePropDefs } from './code.props.js'
 import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { renderChildren } from '../helpers/render-children.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
 import type { MarginProps } from '../props/margin.props.js'
@@ -18,8 +19,8 @@ interface CodeProps
   extends ComponentPropsWithout<'code', RemovedProps>, MarginProps, CodeOwnProps {}
 const Code = React.forwardRef<CodeElement, CodeProps>((props, forwardedRef) => {
   const {
-    asChild,
-    children: _children,
+    asChild: _asChild,
+    children,
     className,
     color,
     ...codeProps
@@ -29,17 +30,19 @@ const Code = React.forwardRef<CodeElement, CodeProps>((props, forwardedRef) => {
     const currentColor = readPropValue(color)
     return props.variant === 'ghost' ? currentColor || undefined : currentColor
   })
-  const Comp = asChild ? Slot.Root : 'code'
-  return (
-    <Comp
-      data-accent-color={resolvedColor}
-      {...codeProps}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-reset', 'rt-Code', className)}
-    >
-      {renderChildren(props.children)}
-    </Comp>
-  )
+  return renderWithAsChild(props, (asChild) => {
+    const Comp = asChild ? Slot.Root : 'code'
+    return (
+      <Comp
+        data-accent-color={resolvedColor}
+        {...codeProps}
+        ref={React.coerceRef(forwardedRef)}
+        class={classNames('rt-reset', 'rt-Code', className)}
+      >
+        {renderChildren(children)}
+      </Comp>
+    )
+  })
 })
 Code.displayName = 'Code'
 

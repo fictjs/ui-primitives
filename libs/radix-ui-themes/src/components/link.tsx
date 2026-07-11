@@ -2,7 +2,8 @@ import * as React from '../helpers/element.js'
 import { classNames } from '../helpers/reactive-class-names.js'
 
 import { Text } from './text.js'
-import { extractProps } from '../helpers/extract-props.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { linkPropDefs } from './link.props.js'
 
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
@@ -13,8 +14,14 @@ type LinkElement = React.ElementRef<'a'>
 type LinkOwnProps = GetPropDefTypes<typeof linkPropDefs>
 interface LinkProps extends ComponentPropsWithout<'a', RemovedProps>, MarginProps, LinkOwnProps {}
 const Link = React.forwardRef<LinkElement, LinkProps>((props, forwardedRef) => {
-  const { children, className, color, asChild, ...linkProps } = extractProps(props, linkPropDefs)
-  return (
+  const {
+    children,
+    className,
+    color,
+    asChild: _asChild,
+    ...linkProps
+  } = extractProps(props, linkPropDefs)
+  return renderWithAsChild(props, (asChild) => (
     <Text
       {...linkProps}
       data-accent-color={color}
@@ -22,9 +29,9 @@ const Link = React.forwardRef<LinkElement, LinkProps>((props, forwardedRef) => {
       asChild
       className={classNames('rt-reset', 'rt-Link', className)}
     >
-      {asChild ? children : <a>{children}</a>}
+      {asChild ? readPropValue(children) : <a>{children as unknown as React.ReactNode}</a>}
     </Text>
-  )
+  ))
 })
 Link.displayName = 'Link'
 

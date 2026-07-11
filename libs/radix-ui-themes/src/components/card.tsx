@@ -5,6 +5,7 @@ import { Slot } from '@fictjs/radix-ui'
 import { cardPropDefs } from './card.props.js'
 import { extractProps } from '../helpers/extract-props.js'
 import { renderChildren } from '../helpers/render-children.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
 import type { MarginProps } from '../props/margin.props.js'
@@ -16,21 +17,23 @@ type CardOwnProps = GetPropDefTypes<typeof cardPropDefs>
 interface CardProps extends ComponentPropsWithout<'div', RemovedProps>, MarginProps, CardOwnProps {}
 const Card = React.forwardRef<CardElement, CardProps>((props, forwardedRef) => {
   const {
-    asChild,
-    children: _children,
+    asChild: _asChild,
+    children,
     className,
     ...cardProps
   } = extractProps(props, cardPropDefs, marginPropDefs)
-  const Comp = asChild ? Slot.Root : 'div'
-  return (
-    <Comp
-      ref={React.coerceRef(forwardedRef)}
-      {...cardProps}
-      class={classNames('rt-reset', 'rt-BaseCard', 'rt-Card', className)}
-    >
-      {renderChildren(props.children)}
-    </Comp>
-  )
+  return renderWithAsChild(props, (asChild) => {
+    const Comp = asChild ? Slot.Root : 'div'
+    return (
+      <Comp
+        ref={React.coerceRef(forwardedRef)}
+        {...cardProps}
+        class={classNames('rt-reset', 'rt-BaseCard', 'rt-Card', className)}
+      >
+        {renderChildren(children)}
+      </Comp>
+    )
+  })
 })
 Card.displayName = 'Card'
 

@@ -33,4 +33,4 @@
 '@fictjs/visually-hidden': patch
 ---
 
-Preserve reactive component props and event handlers across primitive and theme wrapper boundaries.
+Preserve reactive non-structural component props and event handlers across primitive and theme wrapper boundaries.

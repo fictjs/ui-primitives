@@ -8,6 +8,7 @@ import { classNames } from '../helpers/reactive-class-names.js'
 import { avatarPropDefs } from './avatar.props.js'
 import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { getSubtree } from '../helpers/get-subtree.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
 import type { JSX } from 'fict'
@@ -28,7 +29,7 @@ interface AvatarProps extends MarginProps, AvatarOwnProps, AvatarImageProps {
 
 function Avatar(props: AvatarProps): React.ReactNode {
   const {
-    asChild,
+    asChild: _asChild,
     children,
     className,
     style,
@@ -85,33 +86,23 @@ function Avatar(props: AvatarProps): React.ReactNode {
     </>
   )
 
-  const subtree = getSubtree({ asChild, children }, content)
-
-  if (asChild) {
+  return renderWithAsChild(props, (asChild) => {
+    const subtree = asChild
+      ? getSubtree({ asChild, children: readPropValue(children) }, content)
+      : content
     return (
       <AvatarPrimitive.Root
         data-accent-color={color}
         data-radius={radius}
         class={classNames('rt-reset', 'rt-AvatarRoot', className)}
         style={style}
-        asChild
+        asChild={asChild}
+        ref={React.coerceRef(ref as React.PossibleRef<HTMLSpanElement>)}
       >
         {subtree}
       </AvatarPrimitive.Root>
     )
-  }
-
-  return (
-    <AvatarPrimitive.Root
-      data-accent-color={color}
-      data-radius={radius}
-      class={classNames('rt-reset', 'rt-AvatarRoot', className)}
-      style={style}
-      ref={React.coerceRef(ref as React.PossibleRef<HTMLSpanElement>)}
-    >
-      {subtree}
-    </AvatarPrimitive.Root>
-  )
+  })
 }
 
 Avatar.displayName = 'Avatar'

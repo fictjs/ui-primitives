@@ -5,6 +5,8 @@ import classNames from 'classnames'
 import { Direction, Slot, Tooltip as TooltipPrimitive } from '@fictjs/radix-ui'
 
 import { getMatchingGrayColor } from '../helpers/get-matching-gray-color.js'
+import { copyReactiveChildren } from '../helpers/render-children.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { themePropDefs } from './theme.props.js'
 
 import type { ThemeOwnProps } from './theme.props.js'
@@ -188,7 +190,6 @@ const ThemeImpl = React.forwardRef<ThemeImplElement, ThemeImplProps>((props, for
     onScalingChange: (value) => (props.onScalingChange ?? noop)(value),
   }
 
-  const asChild = props.asChild
   const isRoot = props.isRoot
   const themeProps = copyReactiveProps(
     props as unknown as Record<string, unknown>,
@@ -236,9 +237,9 @@ const ThemeImpl = React.forwardRef<ThemeImplElement, ThemeImplProps>((props, for
     ),
   }
 
-  return (
-    <ThemeContext.Provider value={themeContextValue}>
-      {asChild ? (
+  const ThemeStructure = () =>
+    renderWithAsChild(props, (asChild) =>
+      asChild ? (
         <Slot.Root
           {...(themeProps as Record<string, unknown>)}
           {...sharedProps}
@@ -250,7 +251,12 @@ const ThemeImpl = React.forwardRef<ThemeImplElement, ThemeImplProps>((props, for
           {...sharedProps}
           {...(forwardedDivRef ? { ref: forwardedDivRef } : {})}
         />
-      )}
+      ),
+    )
+
+  return (
+    <ThemeContext.Provider value={themeContextValue}>
+      <ThemeStructure />
     </ThemeContext.Provider>
   )
 })
@@ -283,6 +289,11 @@ function copyReactiveProps(
 
   for (const key of Reflect.ownKeys(source)) {
     if (typeof key !== 'string' || excluded.has(key)) {
+      continue
+    }
+
+    if (key === 'children') {
+      target[key] = copyReactiveChildren(() => source[key])
       continue
     }
 

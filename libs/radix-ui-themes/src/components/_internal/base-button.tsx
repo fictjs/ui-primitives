@@ -10,6 +10,8 @@ import { Spinner } from '../spinner.js'
 import { VisuallyHidden } from '../visually-hidden.js'
 import { extractProps, readPropValue } from '../../helpers/extract-props.js'
 import { mapResponsiveProp, mapButtonSizeToSpinnerSize } from '../../helpers/map-prop-values.js'
+import { renderChildren } from '../../helpers/render-children.js'
+import { renderWithAsChild } from '../../helpers/render-with-as-child.js'
 import { marginPropDefs } from '../../props/margin.props.js'
 
 import type { MarginProps } from '../../props/margin.props.js'
@@ -38,7 +40,6 @@ const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, 
   }
   const className = extractedProps.className
   const children = extractedProps.children
-  const asChild = extractedProps.asChild
   const color = extractedProps.color
   const radius = extractedProps.radius
   const disabled = prop(
@@ -51,52 +52,59 @@ const BaseButton = React.forwardRef<BaseButtonElement, BaseButtonProps>((props, 
   const ariaExpandedProps =
     'aria-expanded' in props
       ? {
-          'aria-expanded': prop(
-            () => props['aria-expanded'],
+          'aria-expanded': prop(() =>
+            readPropValue(props['aria-expanded']),
           ) as unknown as JSX.IntrinsicElements['button']['aria-expanded'],
         }
       : {}
-  const Comp = asChild ? Slot.Root : 'button'
-  const renderContents = () => {
+  return renderWithAsChild(props, (asChild) => {
+    const Comp = asChild ? Slot.Root : 'button'
+    const renderContents = () => {
+      const currentChildren = readPropValue(children)
+      const content =
+        asChild && React.isValidElement(currentChildren)
+          ? readPropValue(
+              (currentChildren.props as { children?: React.ReactNode } | null | undefined)
+                ?.children,
+            )
+          : currentChildren
+
+      if (!readPropValue(props.loading)) return content
+
+      return renderLoadingButtonContents(
+        content,
+        () => readPropValue(props.size) ?? baseButtonPropDefs.size.default,
+      )
+    }
     const currentChildren = readPropValue(children)
-    const content =
+    const liveContents = reactive(renderContents) as unknown as React.ReactNode
+    const contents = renderChildren(liveContents)
+    const child =
       asChild && React.isValidElement(currentChildren)
-        ? (currentChildren.props as { children?: React.ReactNode }).children
-        : currentChildren
+        ? React.cloneElement(currentChildren, {
+            ...((currentChildren.props as Record<string, unknown> | null | undefined) ?? {}),
+            children: contents,
+          })
+        : contents
 
-    if (!readPropValue(props.loading)) return content
-
-    return renderLoadingButtonContents(
-      content,
-      () => readPropValue(props.size) ?? baseButtonPropDefs.size.default,
+    return (
+      <Comp
+        // The `data-disabled` attribute enables correct styles for `<Button asChild disabled>`.
+        data-disabled={
+          prop(() => readPropValue(disabled) || undefined) as unknown as true | undefined
+        }
+        data-accent-color={color}
+        data-radius={radius}
+        {...baseButtonProps}
+        {...ariaExpandedProps}
+        ref={React.coerceRef(forwardedRef)}
+        class={classNames('rt-reset', 'rt-BaseButton', className)}
+        disabled={disabled}
+      >
+        {child}
+      </Comp>
     )
-  }
-  const currentChildren = readPropValue(children)
-  const child =
-    asChild && React.isValidElement(currentChildren)
-      ? React.cloneElement(currentChildren, {
-          ...(currentChildren.props as Record<string, unknown>),
-          children: reactive(renderContents) as unknown as React.ReactNode,
-        })
-      : (reactive(renderContents) as unknown as React.ReactNode)
-
-  return (
-    <Comp
-      // The `data-disabled` attribute enables correct styles when doing `<Button asChild disabled>`
-      data-disabled={
-        prop(() => readPropValue(disabled) || undefined) as unknown as true | undefined
-      }
-      data-accent-color={color}
-      data-radius={radius}
-      {...baseButtonProps}
-      {...ariaExpandedProps}
-      ref={React.coerceRef(forwardedRef)}
-      class={classNames('rt-reset', 'rt-BaseButton', className)}
-      disabled={disabled}
-    >
-      {child}
-    </Comp>
-  )
+  })
 })
 BaseButton.displayName = 'BaseButton'
 

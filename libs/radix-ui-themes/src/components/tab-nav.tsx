@@ -6,6 +6,7 @@ import { prop } from 'fict'
 import { tabNavRootPropDefs } from './tab-nav.props.js'
 import { extractProps } from '../helpers/extract-props.js'
 import { getSubtree } from '../helpers/get-subtree.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
 import type { tabNavLinkPropDefs } from './tab-nav.props.js'
@@ -17,7 +18,6 @@ type MaybeAccessor<T> = T | (() => T)
 type TabNavRootElement = React.ElementRef<typeof NavigationMenu.Root>
 type TabNavRootElementProps = ComponentPropsWithout<'nav', RemovedProps>
 type TabNavOwnProps = GetPropDefTypes<typeof tabNavRootPropDefs>
-type SlotRootProps = Parameters<typeof SlotPrimitive.Root>[0]
 interface TabNavRootProps
   extends
     Omit<TabNavRootElementProps, 'defaultValue' | 'dir' | 'color'>,
@@ -71,37 +71,42 @@ interface TabNavLinkProps
   active?: MaybeAccessor<boolean | undefined>
 }
 const TabNavLink = React.forwardRef<TabNavLinkElement, TabNavLinkProps>((props, forwardedRef) => {
-  const { asChild, active = false, children, className, ...linkProps } = props
+  const { asChild: _asChild, active = false, children, className, ...linkProps } = props
   const activeValue = () => Boolean(readValue(active) ?? false)
-  const content = getSubtree({ asChild, children }, (innerChildren) => (
-    <>
-      <span class="rt-BaseTabListTriggerInner rt-TabNavLinkInner">{innerChildren}</span>
-      <span class="rt-BaseTabListTriggerInnerHidden rt-TabNavLinkInnerHidden">{innerChildren}</span>
-    </>
-  ))
+  return renderWithAsChild(props, (asChild) => {
+    const content = getSubtree({ asChild, children }, (innerChildren) => (
+      <>
+        <span class="rt-BaseTabListTriggerInner rt-TabNavLinkInner">{innerChildren}</span>
+        <span class="rt-BaseTabListTriggerInnerHidden rt-TabNavLinkInnerHidden">
+          {innerChildren}
+        </span>
+      </>
+    ))
 
-  return (
-    <NavigationMenu.Item class="rt-TabNavItem">
-      {asChild ? (
-        SlotPrimitive.Root({
-          ...linkProps,
-          ref: React.coerceRef(forwardedRef),
-          'data-active': prop(() => (activeValue() ? '' : undefined)),
-          class: classNames('rt-reset', 'rt-BaseTabListTrigger', 'rt-TabNavLink', className),
-          children: content,
-        } as unknown as SlotRootProps)
-      ) : (
-        <a
-          {...linkProps}
-          ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLAnchorElement>)}
-          data-active={prop(() => (activeValue() ? '' : undefined))}
-          class={classNames('rt-reset', 'rt-BaseTabListTrigger', 'rt-TabNavLink', className)}
-        >
-          {content}
-        </a>
-      )}
-    </NavigationMenu.Item>
-  )
+    return (
+      <NavigationMenu.Item class="rt-TabNavItem">
+        {asChild ? (
+          <SlotPrimitive.Root
+            {...linkProps}
+            ref={React.coerceRef(forwardedRef)}
+            data-active={prop(() => (activeValue() ? '' : undefined)) as unknown as string}
+            class={classNames('rt-reset', 'rt-BaseTabListTrigger', 'rt-TabNavLink', className)}
+          >
+            {content}
+          </SlotPrimitive.Root>
+        ) : (
+          <a
+            {...linkProps}
+            ref={React.coerceRef(forwardedRef as React.PossibleRef<HTMLAnchorElement>)}
+            data-active={prop(() => (activeValue() ? '' : undefined))}
+            class={classNames('rt-reset', 'rt-BaseTabListTrigger', 'rt-TabNavLink', className)}
+          >
+            {content}
+          </a>
+        )}
+      </NavigationMenu.Item>
+    )
+  })
 })
 TabNavLink.displayName = 'TabNav.Link'
 

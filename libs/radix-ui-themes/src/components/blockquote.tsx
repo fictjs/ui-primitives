@@ -4,6 +4,7 @@ import { Slot } from '@fictjs/radix-ui'
 import { mergeProps, prop } from 'fict'
 
 import { Text } from './text.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 
 import type { blockquotePropDefs } from './blockquote.props.js'
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
@@ -23,17 +24,19 @@ const Blockquote = React.forwardRef<BlockquoteElement, BlockquoteProps>((props, 
       className: undefined,
     },
   )
-  const Comp = props.asChild ? Slot.Root : 'blockquote'
-  return (
-    <Text
-      asChild
-      {...blockquoteProps}
-      ref={React.coerceRef(forwardedRef)}
-      className={prop(() => classNames('rt-Blockquote', props.className)) as unknown as string}
-    >
-      <Comp>{props.children}</Comp>
-    </Text>
-  )
+  return renderWithAsChild(props, (asChild) => {
+    const Comp = asChild ? Slot.Root : 'blockquote'
+    return (
+      <Text
+        {...blockquoteProps}
+        asChild
+        ref={React.coerceRef(forwardedRef)}
+        className={prop(() => classNames('rt-Blockquote', props.className)) as unknown as string}
+      >
+        <Comp>{props.children}</Comp>
+      </Text>
+    )
+  })
 })
 Blockquote.displayName = 'Blockquote'
 

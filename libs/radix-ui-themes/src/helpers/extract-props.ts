@@ -5,6 +5,7 @@ import { breakpoints } from '../props/prop-def.js'
 import { getResponsiveClassNames, getResponsiveStyles } from './get-responsive-styles.js'
 import { hasOwnProperty } from './has-own-property.js'
 import { mergeStyles } from './merge-styles.js'
+import { copyReactiveChildren } from './render-children.js'
 
 import type { CSSProperties } from './element.js'
 import type { Breakpoint, PropDef } from '../props/prop-def.js'
@@ -98,7 +99,9 @@ function copyPropsPreservingGetters(source: PropsRecord): Record<string, unknown
     const isLocallyConsumedValue =
       LOCAL_VALUE_KEYS.has(key) || (typeof currentValue === 'function' && !isEventHandlerKey(key))
     const value = REACTIVE_LOCAL_VALUE_KEYS.has(key)
-      ? prop(() => readPropValue(source[key]), { unwrap: false })
+      ? key === 'children'
+        ? copyReactiveChildren(() => readPropValue(source[key]))
+        : prop(() => readPropValue(source[key]), { unwrap: false })
       : isLocallyConsumedValue
         ? readPropValue(currentValue)
         : prop(() => source[key])
@@ -276,9 +279,13 @@ function extractProps<
     }
 
     extractedProps[key] = REACTIVE_LOCAL_VALUE_KEYS.has(key)
-      ? prop(() => normalizeValue(readPropValue((props as PropsRecord)[key]), propDef), {
-          unwrap: false,
-        })
+      ? key === 'children'
+        ? copyReactiveChildren(() =>
+            normalizeValue(readPropValue((props as PropsRecord)[key]), propDef),
+          )
+        : prop(() => normalizeValue(readPropValue((props as PropsRecord)[key]), propDef), {
+            unwrap: false,
+          })
       : LOCAL_VALUE_KEYS.has(key)
         ? normalizeValue(readPropValue((props as PropsRecord)[key]), propDef)
         : prop(() => derivedProps().values[key])

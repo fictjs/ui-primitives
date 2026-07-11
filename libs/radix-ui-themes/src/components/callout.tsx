@@ -7,6 +7,7 @@ import { Text } from './text.js'
 import { calloutRootPropDefs } from './callout.props.js'
 import { extractProps } from '../helpers/extract-props.js'
 import { mapResponsiveProp, mapCalloutSizeToTextSize } from '../helpers/map-prop-values.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
 import { marginPropDefs } from '../props/margin.props.js'
 
 import type { MarginProps } from '../props/margin.props.js'
@@ -27,27 +28,33 @@ interface CalloutRootProps
   extends ComponentPropsWithout<'div', RemovedProps>, MarginProps, CalloutRootOwnProps {}
 const CalloutRoot = React.forwardRef<CalloutRootElement, CalloutRootProps>(
   (props, forwardedRef) => {
-    const { asChild, children, className, color, ...rootProps } = extractProps(
-      props,
-      calloutRootPropDefs,
-      marginPropDefs,
-    )
+    const {
+      asChild: _asChild,
+      children,
+      className,
+      color,
+      ...rootProps
+    } = extractProps(props, calloutRootPropDefs, marginPropDefs)
     const contextValue: CalloutContextValue = {
       get size() {
         return props.size ?? calloutRootPropDefs.size.default
       },
     }
-    const Comp = asChild ? Slot.Root : 'div'
-    return (
-      <Comp
-        data-accent-color={color}
-        {...rootProps}
-        class={classNames('rt-CalloutRoot', className)}
-        ref={React.coerceRef(forwardedRef)}
-      >
-        <CalloutContext.Provider value={contextValue}>{children}</CalloutContext.Provider>
-      </Comp>
-    )
+    return renderWithAsChild(props, (asChild) => {
+      const Comp = asChild ? Slot.Root : 'div'
+      return (
+        <CalloutContext.Provider value={contextValue}>
+          <Comp
+            data-accent-color={color}
+            {...rootProps}
+            class={classNames('rt-CalloutRoot', className)}
+            ref={React.coerceRef(forwardedRef)}
+          >
+            {children}
+          </Comp>
+        </CalloutContext.Provider>
+      )
+    })
   },
 )
 CalloutRoot.displayName = 'Callout.Root'
