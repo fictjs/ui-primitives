@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Corner, Root, Scrollbar, Thumb, Viewport } from '../src/index.js'
@@ -328,6 +328,47 @@ describe('@fictjs/scroll-area', () => {
     expect(scrollbar.getAttribute('data-state')).toBe('hidden')
     expect(scrollbar.style.left).toBe('0px')
     expect(scrollbar.style.right).toBe('')
+  })
+
+  it('updates getter-backed scrollbar and style metadata', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+    const orientation = createSignal<'horizontal' | 'vertical'>('vertical')
+    const nonce = createSignal('first-nonce')
+
+    mount(
+      () => (
+        <Root type="always">
+          <Viewport nonce={prop(() => nonce()) as unknown as string}>Content</Viewport>
+          <Scrollbar
+            data-testid="scrollbar"
+            orientation={prop(() => orientation()) as unknown as 'vertical'}
+            forceMount
+          >
+            <Thumb data-testid="thumb" forceMount />
+          </Scrollbar>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const style = container.querySelector('style') as HTMLStyleElement
+    const scrollbar = container.querySelector('[data-testid="scrollbar"]') as HTMLDivElement
+    const thumb = container.querySelector('[data-testid="thumb"]') as HTMLDivElement
+    expect(style.nonce).toBe('first-nonce')
+    expect(scrollbar.getAttribute('data-orientation')).toBe('vertical')
+    expect(thumb.getAttribute('data-orientation')).toBe('vertical')
+
+    orientation('horizontal')
+    nonce('second-nonce')
+    await waitForEffects()
+
+    expect(container.querySelector('style')).toBe(style)
+    expect(container.querySelector('[data-testid="scrollbar"]')).toBe(scrollbar)
+    expect(style.nonce).toBe('second-nonce')
+    expect(scrollbar.getAttribute('data-orientation')).toBe('horizontal')
+    expect(thumb.getAttribute('data-orientation')).toBe('horizontal')
   })
 
   it('uses overflow observation and the hover hide delay to mount the scrollbar', async () => {

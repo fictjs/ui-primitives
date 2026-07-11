@@ -236,7 +236,7 @@ function ScrollAreaViewport(props: ScopedProps<ScrollAreaViewportProps>): FictNo
 
   return (
     <>
-      <style {...(props.nonce === undefined ? {} : { nonce: props.nonce })}>{VIEWPORT_STYLE}</style>
+      <style nonce={prop(() => props.nonce) as unknown as string}>{VIEWPORT_STYLE}</style>
       {viewportNode}
     </>
   )
@@ -572,7 +572,7 @@ function ScrollAreaScrollbar(props: ScopedProps<ScrollAreaScrollbarProps>): Fict
       forceMount: undefined,
       orientation: undefined,
       ref: undefined,
-      'data-orientation': props.orientation,
+      'data-orientation': prop(() => props.orientation),
       'data-state': prop(() => (isVisible() ? 'visible' : 'hidden')),
       style: prop(scrollbarStyle),
       onPointerEnter: composeEventHandlers<PointerEvent>(
