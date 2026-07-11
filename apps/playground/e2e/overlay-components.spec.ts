@@ -99,6 +99,36 @@ async function expectSubmenuDoesNotFlickerWhileMovingWithinTrigger(
   ).toEqual([])
 }
 
+async function expectSubmenuAdjacentToTrigger(
+  subTrigger: Locator,
+  subContent: Locator,
+  label: string,
+) {
+  const subTriggerBox = await subTrigger.boundingBox()
+  const subContentBox = await subContent.boundingBox()
+  const side = await subContent.getAttribute('data-side')
+
+  expect(subTriggerBox, `${label} submenu trigger should be measurable`).not.toBeNull()
+  expect(subContentBox, `${label} submenu content should be measurable`).not.toBeNull()
+  expect(['left', 'right'], `${label} submenu should report its placed side`).toContain(side)
+
+  if (!subTriggerBox || !subContentBox || (side !== 'left' && side !== 'right')) {
+    throw new Error(`Unable to measure ${label} submenu geometry`)
+  }
+
+  const gap =
+    side === 'left'
+      ? subTriggerBox.x - (subContentBox.x + subContentBox.width)
+      : subContentBox.x - (subTriggerBox.x + subTriggerBox.width)
+
+  expect(gap, `${label} submenu should render on its reported side`).toBeGreaterThanOrEqual(0)
+  expect(gap, `${label} submenu should stay close to its trigger`).toBeLessThanOrEqual(8)
+  expect(
+    Math.abs(subContentBox.y - subTriggerBox.y),
+    `${label} submenu should align with its trigger top edge`,
+  ).toBeLessThanOrEqual(4)
+}
+
 test('dialog opens and closes from the cancel action', async ({ page }) => {
   const section = await gotoSinkSection(page, 'dialog')
   const tracker = trackBrowserErrors(page)
@@ -428,28 +458,7 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
   await developerToolsItem.hover()
   await expect(developerToolsItem).toHaveAttribute('data-highlighted', '')
 
-  const subTriggerBox = await subTrigger.boundingBox()
-  const subContentBox = await subContent.boundingBox()
-
-  expect(subTriggerBox, 'dropdown submenu trigger should be measurable').not.toBeNull()
-  expect(subContentBox, 'dropdown submenu content should be measurable').not.toBeNull()
-
-  if (!subTriggerBox || !subContentBox) {
-    throw new Error('Unable to measure dropdown submenu geometry')
-  }
-
-  expect(
-    subContentBox.x - (subTriggerBox.x + subTriggerBox.width),
-    'dropdown submenu should render to the right of its trigger',
-  ).toBeGreaterThanOrEqual(0)
-  expect(
-    subContentBox.x - (subTriggerBox.x + subTriggerBox.width),
-    'dropdown submenu should stay close to its trigger',
-  ).toBeLessThanOrEqual(8)
-  expect(
-    Math.abs(subContentBox.y - subTriggerBox.y),
-    'dropdown submenu should align with its trigger top edge',
-  ).toBeLessThanOrEqual(4)
+  await expectSubmenuAdjacentToTrigger(subTrigger, subContent, 'dropdown')
 
   await page.keyboard.press('Escape')
   await expect(subContent).toBeHidden()
@@ -573,28 +582,7 @@ test('context menu opens on right click and closes on escape', async ({ page }) 
   await developerToolsItem.hover()
   await expect(developerToolsItem).toHaveAttribute('data-highlighted', '')
 
-  const subTriggerBox = await subTrigger.boundingBox()
-  const subContentBox = await subContent.boundingBox()
-
-  expect(subTriggerBox, 'context submenu trigger should be measurable').not.toBeNull()
-  expect(subContentBox, 'context submenu content should be measurable').not.toBeNull()
-
-  if (!subTriggerBox || !subContentBox) {
-    throw new Error('Unable to measure context submenu geometry')
-  }
-
-  expect(
-    subContentBox.x - (subTriggerBox.x + subTriggerBox.width),
-    'context submenu should render to the right of its trigger',
-  ).toBeGreaterThanOrEqual(0)
-  expect(
-    subContentBox.x - (subTriggerBox.x + subTriggerBox.width),
-    'context submenu should stay close to its trigger',
-  ).toBeLessThanOrEqual(8)
-  expect(
-    Math.abs(subContentBox.y - subTriggerBox.y),
-    'context submenu should align with its trigger top edge',
-  ).toBeLessThanOrEqual(4)
+  await expectSubmenuAdjacentToTrigger(subTrigger, subContent, 'context')
 
   await page.keyboard.press('Escape')
   await expect(subContent).toBeHidden()
