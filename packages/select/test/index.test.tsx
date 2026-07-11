@@ -103,6 +103,46 @@ describe('@fictjs/select', () => {
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
   })
 
+  it('preserves open content identity when forceMount does not change presence', async () => {
+    const container = document.createElement('div')
+    const forceMount = createSignal(false)
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root open>
+          <Trigger>Choose</Trigger>
+          <Content forceMount={forceMount} data-testid="content">
+            <Item value="apple" data-testid="item">
+              <ItemText>Apple</ItemText>
+            </Item>
+          </Content>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    const content = container.querySelector('[data-testid="content"]') as HTMLDivElement
+    const item = container.querySelector('[data-testid="item"]') as HTMLDivElement
+    item.focus()
+    expect(document.activeElement).toBe(item)
+
+    forceMount(true)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="content"]')).toBe(content)
+    expect(container.querySelector('[data-testid="item"]')).toBe(item)
+    expect(document.activeElement).toBe(item)
+
+    forceMount(false)
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="content"]')).toBe(content)
+    expect(container.querySelector('[data-testid="item"]')).toBe(item)
+    expect(document.activeElement).toBe(item)
+  })
+
   it('updates the selected value when mounted item text changes', async () => {
     const container = document.createElement('div')
     const itemText = createSignal('Apple')

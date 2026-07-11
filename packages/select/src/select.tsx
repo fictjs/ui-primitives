@@ -2,6 +2,7 @@ import {
   createContext as createRuntimeContext,
   createElement,
   createEffect,
+  createMemo,
   createPortal as createFictPortal,
   mergeProps,
   prop,
@@ -764,6 +765,7 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     props.forceMount === undefined
       ? portalContext.forceMount()
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
+  const present = createMemo(() => Boolean(forceMount() || context.open()))
   const position = () =>
     props.position === undefined
       ? 'item-aligned'
@@ -835,7 +837,7 @@ function SelectContent(props: ScopedProps<SelectContentProps>): FictNode {
     />
   )
 
-  return <>{reactive(() => (forceMount() || context.open() ? contentNode : null))}</>
+  return <>{reactive(() => (present() ? contentNode : null))}</>
 }
 
 SelectContent.displayName = CONTENT_NAME
