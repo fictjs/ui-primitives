@@ -33,6 +33,8 @@ type RovingContextValue = {
   onFocusableItemRemove: () => void
 }
 type ItemData = { id: string; focusable: boolean; active: boolean }
+type RovingFocusItemState = { hasTabStop: boolean; isCurrentTabStop: boolean }
+type RovingFocusItemRenderer = (props: RovingFocusItemState) => FictNode
 
 const ENTRY_FOCUS = 'rovingFocusGroup.onEntryFocus'
 const EVENT_OPTIONS = { bubbles: false, cancelable: true }
@@ -70,10 +72,7 @@ type RovingFocusItemProps = Omit<JSX.IntrinsicElements['span'], 'children'> & {
   tabStopId?: MaybeAccessor<string | undefined>
   focusable?: MaybeAccessor<boolean | undefined>
   active?: MaybeAccessor<boolean | undefined>
-  children?:
-    | FictNode
-    | FictNode[]
-    | ((props: { hasTabStop: boolean; isCurrentTabStop: boolean }) => FictNode)
+  children?: FictNode | FictNode[] | MaybeAccessor<RovingFocusItemRenderer>
 }
 
 // prettier-ignore
@@ -104,6 +103,16 @@ function readStyle(value: unknown): StyleRecord {
   }
 
   return value as StyleRecord
+}
+
+function isTextLikeNode(value: unknown): boolean {
+  return (
+    value === null ||
+    value === undefined ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  )
 }
 
 function getDirectionAwareKey(key: string, dir?: Direction) {
@@ -405,6 +414,21 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
     },
   )
   const collectionItemData = { id, focusable, active } as unknown as ItemData
+  const initialChildren = untrack(() => props.children)
+  const renderedChildren =
+    typeof initialChildren === 'function'
+      ? (reactive(() => {
+          const currentChildren = props.children
+          return typeof currentChildren === 'function'
+            ? currentChildren({
+                hasTabStop: context.currentTabStopId() != null,
+                isCurrentTabStop: isCurrentTabStop(),
+              })
+            : currentChildren
+        }) as unknown as FictNode)
+      : isTextLikeNode(initialChildren)
+        ? (reactive(() => props.children) as unknown as FictNode)
+        : initialChildren
 
   return (
     <Collection.ItemSlot
@@ -412,19 +436,7 @@ function RovingFocusGroupItem(props: ScopedProps<RovingFocusItemProps>): FictNod
       {...collectionItemData}
       ref={props.ref as PossibleRef<HTMLSpanElement>}
     >
-      <Primitive.span {...primitiveProps}>
-        <>
-          {reactive(() => {
-            const children = props.children
-            return typeof children === 'function'
-              ? children({
-                  hasTabStop: context.currentTabStopId() != null,
-                  isCurrentTabStop: isCurrentTabStop(),
-                })
-              : children
-          })}
-        </>
-      </Primitive.span>
+      <Primitive.span {...primitiveProps}>{renderedChildren}</Primitive.span>
     </Collection.ItemSlot>
   )
 }

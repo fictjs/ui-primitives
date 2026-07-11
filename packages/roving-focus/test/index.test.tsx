@@ -335,6 +335,113 @@ describe('@fictjs/roving-focus', () => {
     expect(container.querySelector('[data-testid="state"]')?.textContent).toBe('false:false')
   })
 
+  it('uses the latest accessor-backed render-prop child', async () => {
+    const firstRenderer = vi.fn(({ isCurrentTabStop }: { isCurrentTabStop: boolean }) => (
+      <span data-testid="state">first:{String(isCurrentTabStop)}</span>
+    ))
+    const secondRenderer = vi.fn(({ isCurrentTabStop }: { isCurrentTabStop: boolean }) => (
+      <span data-testid="state">second:{String(isCurrentTabStop)}</span>
+    ))
+    const renderer = createSignal(firstRenderer)
+    const currentTabStopId = createSignal<string | null>('alpha')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root currentTabStopId={currentTabStopId}>
+          <Item tabStopId="alpha">{prop(() => renderer())}</Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    expect(container.querySelector('[data-testid="state"]')?.textContent).toBe('first:true')
+
+    firstRenderer.mockClear()
+    renderer(secondRenderer)
+    await flushEffects()
+    expect(container.querySelector('[data-testid="state"]')?.textContent).toBe('second:true')
+
+    currentTabStopId(null)
+    await flushEffects()
+    expect(container.querySelector('[data-testid="state"]')?.textContent).toBe('second:false')
+    expect(firstRenderer).not.toHaveBeenCalled()
+  })
+
+  it('keeps accessor-backed text children live without replacing the item', async () => {
+    const text = createSignal('Initial')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root>
+          <Item data-testid="item">{prop(() => text())}</Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    const item = getByTestId<HTMLSpanElement>(container, 'item')
+    expect(item.textContent).toBe('Initial')
+
+    text('Updated')
+    await flushEffects()
+    expect(getByTestId(container, 'item')).toBe(item)
+    expect(item.textContent).toBe('Updated')
+  })
+
+  it('snapshots the initial structure of accessor-backed vnode children', async () => {
+    const child = createSignal(<span data-testid="initial-child">Initial</span>)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root>
+          <Item>{prop(() => child())}</Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    const initialChild = getByTestId<HTMLSpanElement>(container, 'initial-child')
+
+    child(<span data-testid="replacement-child">Replacement</span>)
+    await flushEffects()
+    expect(getByTestId(container, 'initial-child')).toBe(initialChild)
+    expect(container.querySelector('[data-testid="replacement-child"]')).toBeNull()
+  })
+
+  it('preserves ordinary child structure while roving state changes', async () => {
+    const currentTabStopId = createSignal<string | null>('alpha')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root currentTabStopId={currentTabStopId}>
+          <Item tabStopId="alpha">
+            <span data-testid="static-child">Static child</span>
+          </Item>
+        </Root>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    const child = container.querySelector('[data-testid="static-child"]')
+
+    currentTabStopId(null)
+    await flushEffects()
+
+    expect(container.querySelector('[data-testid="static-child"]')).toBe(child)
+  })
+
   it('updates focusable item counts and collection metadata reactively', async () => {
     const firstFocusable = createSignal(true)
     const secondFocusable = createSignal(false)
