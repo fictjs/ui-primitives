@@ -50,7 +50,7 @@ This repository is a **faithful, behavior-compatible port**:
 - **Accessible by default** — keyboard interaction, focus trapping, collision-aware positioning, scroll locking, live-region announcements.
 - **Controlled or uncontrolled** — every stateful primitive supports both modes via `useControllableState`.
 - **Unstyled core, styled themes** — primitives ship zero styles; `@fictjs/radix-ui-themes` adds the full Radix Themes design system.
-- **Tree-shakeable ESM + CJS** — dual builds with `.d.ts` types and source maps produced by [tsup](https://tsup.egoist.dev/).
+- **Tree-shakeable ESM + CJS** — dual builds with `.d.ts` types produced by [tsup](https://tsup.egoist.dev/); packages include source maps except for the size-optimized Radix Themes bundle.
 - **Thoroughly tested** — unit tests in [Vitest](https://vitest.dev/) (jsdom) and end-to-end smoke tests in [Playwright](https://playwright.dev/).
 - **Modern toolchain** — pnpm workspaces, Turborepo task graph, Changesets releases, Conventional Commits.
 
@@ -325,7 +325,7 @@ pnpm --filter @fictjs/radix-ui-themes build
 
 - **Package manager:** pnpm workspaces with a **strict dependency catalog** in [`pnpm-workspace.yaml`](./pnpm-workspace.yaml) (`catalogMode: strict`). Third-party versions are declared once in the catalog and referenced as `catalog:`.
 - **Task runner:** [Turborepo](./turbo.json).
-- **Bundler:** [tsup](https://tsup.egoist.dev/) — ESM + CJS, `.d.ts`, source maps, `platform: neutral`, `target: es2022`, tree-shaking.
+- **Bundler:** [tsup](https://tsup.egoist.dev/) — ESM + CJS, `.d.ts`, `platform: neutral`, `target: es2022`, tree-shaking, and source maps except in the size-optimized Radix Themes bundle.
 - **TypeScript:** strict mode, `NodeNext` modules, `verbatimModuleSyntax` — see [`tsconfig.base.json`](./tsconfig.base.json).
 - **Lint/format:** ESLint flat config with `typescript-eslint` type-checked rules ([`eslint.config.mjs`](./eslint.config.mjs)); Prettier (no semicolons, single quotes, width 100, trailing commas).
 - **Git hooks:** Husky runs `lint-staged` on pre-commit and `commitlint` on commit-msg.
@@ -360,7 +360,7 @@ Releases are managed with [Changesets](https://github.com/changesets/changesets)
 2. Merge to `main`. When ready, apply version bumps: `pnpm version-packages` (runs `changeset version`).
 3. Pushing a git tag triggers [`.github/workflows/npm-publish.yml`](./.github/workflows/npm-publish.yml), which runs `pnpm verify` and then `pnpm release` (`changeset publish`).
 
-Publishing uses npm **trusted publishing (OIDC)** with provenance when `NPM_TOKEN` is not set, and falls back to token auth when it is. The [`CI` workflow](./.github/workflows/nodejs.yml) runs `pnpm verify` on every push and pull request.
+Publishing uses npm **trusted publishing (OIDC)** with provenance when `NPM_TOKEN` is not set, and falls back to token auth when it is. The [`CI` workflow](./.github/workflows/nodejs.yml) runs `pnpm verify`, metadata consumer validation, and Playwright browser tests on every push and pull request, plus changeset validation on pull requests.
 
 ## Contributing
 

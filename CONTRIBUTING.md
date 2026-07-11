@@ -191,6 +191,8 @@ Before opening a PR, make sure:
 - [ ] `pnpm test` passes
 - [ ] `pnpm build` passes
 - [ ] `pnpm metadata:verify` passes (if you touched metadata packages)
+- [ ] `pnpm metadata:e2e` passes (if you touched package metadata or consumer packaging)
+- [ ] Playground Playwright tests pass (if you touched rendered UI or interactions)
 - [ ] A changeset is included (`pnpm changeset`) for user-facing changes
 - [ ] Commits follow Conventional Commits
 - [ ] Tests were added/updated for the change

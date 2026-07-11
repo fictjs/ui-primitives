@@ -204,7 +204,7 @@ pnpm metadata:e2e                                              # standalone end-
 
 ## CI/CD
 
-- [`.github/workflows/nodejs.yml`](../.github/workflows/nodejs.yml) — runs `pnpm verify` on every push to `main` and every pull request (Node 22.21.1, pnpm 10.31.0, frozen lockfile).
+- [`.github/workflows/nodejs.yml`](../.github/workflows/nodejs.yml) — installs with the frozen lockfile, validates pull-request changesets, runs `pnpm verify` and the standalone metadata consumer, then exercises the built playground with Playwright on every push to `main` and every pull request (Node 22.21.1, pnpm 10.31.0).
 - [`.github/workflows/npm-publish.yml`](../.github/workflows/npm-publish.yml) — triggered by pushing a git tag. It runs `pnpm verify`, then `pnpm release` (`changeset publish`). It uses npm **trusted publishing (OIDC)** with provenance when `NPM_TOKEN` is absent, and token auth when present.
 
 Versioning is driven by [Changesets](https://github.com/changesets/changesets) ([`.changeset/config.json`](../.changeset/config.json)): `baseBranch: main`, `access: public`, internal dependency bumps applied as `patch`.
