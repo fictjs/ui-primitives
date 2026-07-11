@@ -1,5 +1,6 @@
 import { mergeProps, prop, untrack, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
+import { assign } from '@fictjs/runtime/internal'
 
 import { useComposedRefs, type PossibleRef } from '@fictjs/compose-refs'
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -24,6 +25,18 @@ const BUBBLE_INPUT_NAME = 'CheckboxBubbleInput'
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+const REACTIVE_FN_MARKER = Symbol.for('fict:reactive-fn')
+const CHECKBOX_ROOT_OMITTED_KEYS = new Set([
+  '__scopeCheckbox',
+  'checked',
+  'defaultChecked',
+  'disabled',
+  'form',
+  'name',
+  'onCheckedChange',
+  'required',
+  'value',
+])
 
 const [createCheckboxContext, createCheckboxScope] = createContextScope(CHECKBOX_NAME)
 
@@ -86,6 +99,14 @@ type CheckboxProps = Omit<JSX.IntrinsicElements['button'], 'checked' | 'defaultC
   onCheckedChange?: (checked: CheckedState) => void
 }
 
+type CheckboxTriggerInternalProps = CheckboxTriggerProps & {
+  __rootProps?: Record<string, unknown>
+}
+
+type CheckboxTriggerComponent = ((props: ScopedProps<CheckboxTriggerProps>) => FictNode) & {
+  displayName?: string
+}
+
 function readValue<T>(value: MaybeAccessor<T>): T {
   if (
     typeof value === 'function' &&
@@ -103,6 +124,24 @@ function readValue<T>(value: MaybeAccessor<T>): T {
 function readStyle(value: MaybeAccessor<CheckboxStyle> | undefined): StyleRecord {
   const resolved = value === undefined ? undefined : readValue(value)
   return typeof resolved === 'object' && resolved !== null ? (resolved as StyleRecord) : {}
+}
+
+function readReactivePropValue(value: unknown): unknown {
+  if (typeof value !== 'function') {
+    return value
+  }
+
+  const taggedValue = value as unknown as Record<symbol, unknown>
+  if (
+    taggedValue[SIGNAL_MARKER] === true ||
+    taggedValue[COMPUTED_MARKER] === true ||
+    taggedValue[PROP_GETTER_MARKER] === true ||
+    taggedValue[REACTIVE_FN_MARKER] === true
+  ) {
+    return (value as () => unknown)()
+  }
+
+  return value
 }
 
 function isIndeterminate(checked?: CheckedState): checked is 'indeterminate' {
@@ -229,9 +268,10 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
 
 CheckboxProvider.displayName = CHECKBOX_NAME + 'Provider'
 
-function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
+function CheckboxTriggerImpl(props: ScopedProps<CheckboxTriggerInternalProps>): FictNode {
   const { __scopeCheckbox } = props
   const context = useCheckboxContext(TRIGGER_NAME, __scopeCheckbox)
+  const forwardedProps = props.__rootProps ?? (props as unknown as Record<string, unknown>)
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLButtonElement>, (node) =>
     context.setControl(node),
   )
@@ -255,7 +295,12 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
   })
 
   const handleKeyDown = composeEventHandlers<KeyboardEvent>(
-    (event) => (props.onKeyDown as ((event: KeyboardEvent) => void) | undefined)?.(event),
+    (event) =>
+      (
+        readReactivePropValue(forwardedProps.onKeyDown) as
+          | ((event: KeyboardEvent) => void)
+          | undefined
+      )?.(event),
     (event) => {
       if (event.key === 'Enter') {
         event.preventDefault()
@@ -264,7 +309,10 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
   )
 
   const handleClick = composeEventHandlers<MouseEvent>(
-    (event) => (props.onClick as ((event: MouseEvent) => void) | undefined)?.(event),
+    (event) =>
+      (
+        readReactivePropValue(forwardedProps.onClick) as ((event: MouseEvent) => void) | undefined
+      )?.(event),
     (event) => {
       if (context.disabled()) {
         return
@@ -312,6 +360,7 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
     },
     prop(() => props as Record<string, unknown>),
     {
+      __rootProps: undefined,
       __scopeCheckbox: undefined,
       onClick: handleClick,
       onKeyDown: handleKeyDown,
@@ -319,9 +368,61 @@ function CheckboxTrigger(props: ScopedProps<CheckboxTriggerProps>): FictNode {
     },
   )
 
+  let assignedNode: HTMLButtonElement | null = null
+  let assignedProps: Record<string, unknown> = {}
+
+  useLayoutEffect(() => {
+    const node = context.control()
+    if (!node) {
+      return
+    }
+
+    if (node !== assignedNode) {
+      assignedNode = node
+      assignedProps = {}
+    }
+
+    const nextProps: Record<string, unknown> = {
+      type: 'button',
+      role: 'checkbox',
+      'aria-checked': isIndeterminate(context.checked()) ? 'mixed' : String(context.checked()),
+      'aria-required': context.required() ? 'true' : undefined,
+      'data-state': getState(context.checked()),
+      'data-disabled': context.disabled() ? '' : undefined,
+      disabled: context.disabled(),
+      value: context.value(),
+    }
+
+    for (const key of Object.keys(forwardedProps)) {
+      if (
+        CHECKBOX_ROOT_OMITTED_KEYS.has(key) ||
+        key === '__rootProps' ||
+        key === 'asChild' ||
+        key === 'children' ||
+        key === 'ref'
+      ) {
+        continue
+      }
+      nextProps[key] = readReactivePropValue(forwardedProps[key])
+    }
+
+    nextProps.onClick = handleClick
+    nextProps.onKeyDown = handleKeyDown
+
+    assign(
+      node,
+      nextProps,
+      node.namespaceURI === 'http://www.w3.org/2000/svg',
+      true,
+      assignedProps,
+      true,
+    )
+  })
+
   return <Primitive.button {...primitiveProps} ref={composedRefs} />
 }
 
+const CheckboxTrigger = CheckboxTriggerImpl as CheckboxTriggerComponent
 CheckboxTrigger.displayName = TRIGGER_NAME
 
 function CheckboxIndicator(props: ScopedProps<CheckboxIndicatorProps>): FictNode {
@@ -433,17 +534,8 @@ function CheckboxRootBubbleInput(props: {
 function Checkbox(props: ScopedProps<CheckboxProps>): FictNode {
   const checkboxProps = omitPropsPreservingValues(
     props as unknown as Record<string, unknown>,
-    new Set([
-      '__scopeCheckbox',
-      'checked',
-      'defaultChecked',
-      'disabled',
-      'form',
-      'name',
-      'onCheckedChange',
-      'required',
-      'value',
-    ]),
+    CHECKBOX_ROOT_OMITTED_KEYS,
+    Object.keys(props),
   )
 
   return (
@@ -464,7 +556,11 @@ function Checkbox(props: ScopedProps<CheckboxProps>): FictNode {
       )}
       value={prop(() => (props.value === undefined ? undefined : readValue(props.value)))}
     >
-      <CheckboxTrigger __scopeCheckbox={props.__scopeCheckbox} {...checkboxProps} />
+      <CheckboxTriggerImpl
+        __rootProps={props as unknown as Record<string, unknown>}
+        __scopeCheckbox={props.__scopeCheckbox}
+        {...checkboxProps}
+      />
       <CheckboxRootBubbleInput __scopeCheckbox={props.__scopeCheckbox} />
     </CheckboxProvider>
   )
@@ -475,10 +571,11 @@ Checkbox.displayName = CHECKBOX_NAME
 function omitPropsPreservingValues(
   source: Record<string, unknown>,
   omittedKeys: ReadonlySet<string>,
+  sourceKeys: readonly string[],
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
-  for (const key of Object.keys(source)) {
+  for (const key of sourceKeys) {
     if (!omittedKeys.has(key)) {
       result[key] = prop(() => source[key])
     }

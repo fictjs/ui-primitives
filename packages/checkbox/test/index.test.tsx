@@ -2,8 +2,9 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { render } from '@fictjs/runtime'
+import { mergeProps, prop, render } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
+import { jsx as createVNode } from '@fictjs/runtime/jsx-runtime'
 
 import {
   BubbleInput,
@@ -304,6 +305,66 @@ describe('@fictjs/checkbox', () => {
 
     await flushEffects()
     expect(calls).toEqual(['BUTTON', null])
+  })
+
+  it('syncs dynamic spread keys without replacing or blurring the trigger', async () => {
+    const container = document.createElement('div')
+    const rootProps = createSignal<Record<string, unknown>>({
+      'aria-label': 'dynamic props',
+      'data-mode': 'initial',
+    })
+    const dynamicProps = mergeProps(prop(() => rootProps()))
+    document.body.append(container)
+
+    render(
+      () =>
+        createVNode(
+          Root as unknown as (props: Record<string, unknown>) => ReturnType<typeof Root>,
+          dynamicProps,
+        ),
+      container,
+    )
+
+    await flushEffects()
+    const initialButton = container.querySelector('button') as HTMLButtonElement
+    initialButton.focus()
+
+    expect(document.activeElement).toBe(initialButton)
+
+    rootProps({
+      'aria-label': 'dynamic props',
+      'data-mode': 'updated',
+    })
+    await flushEffects()
+
+    expect(container.querySelector('button')).toBe(initialButton)
+    expect(document.activeElement).toBe(initialButton)
+    expect(initialButton.getAttribute('data-mode')).toBe('updated')
+
+    rootProps({
+      'aria-label': 'dynamic props',
+      'data-added': 'forwarded',
+      'data-mode': 'updated',
+      role: 'switch',
+    })
+    await flushEffects()
+
+    expect(container.querySelector('button')).toBe(initialButton)
+    expect(document.activeElement).toBe(initialButton)
+    expect(initialButton.getAttribute('data-added')).toBe('forwarded')
+    expect(initialButton.getAttribute('data-mode')).toBe('updated')
+    expect(initialButton.getAttribute('role')).toBe('switch')
+
+    rootProps({
+      'aria-label': 'dynamic props',
+    })
+    await flushEffects()
+
+    expect(container.querySelector('button')).toBe(initialButton)
+    expect(document.activeElement).toBe(initialButton)
+    expect(initialButton.hasAttribute('data-added')).toBe(false)
+    expect(initialButton.hasAttribute('data-mode')).toBe(false)
+    expect(initialButton.getAttribute('role')).toBe('checkbox')
   })
 })
 
