@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { createContext, createMemo, prop, render, type FictNode } from '@fictjs/runtime'
+import { createContext, createMemo, onMount, prop, render, type FictNode } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createContext as createScopedContext } from '../../context/src/index.js'
@@ -60,13 +60,67 @@ describe('@fictjs/portal', () => {
     )
 
     await flushMicrotasks()
-    expect(firstPortalRoot.querySelector('#moving-portal')).not.toBeNull()
+    const portalNode = firstPortalRoot.querySelector('#moving-portal')
+    expect(portalNode).not.toBeNull()
 
     portalRoot(secondPortalRoot)
     await flushMicrotasks()
 
     expect(firstPortalRoot.querySelector('#moving-portal')).toBeNull()
     expect(secondPortalRoot.querySelector('#moving-portal')?.textContent).toBe('Moving content')
+    expect(secondPortalRoot.querySelector('#moving-portal')).toBe(portalNode)
+  })
+
+  it('reuses one portal lifecycle across repeated retargets and cleans it up once', async () => {
+    const host = document.createElement('div')
+    const firstPortalRoot = document.createElement('div')
+    const secondPortalRoot = document.createElement('div')
+    const portalRoot = createSignal<Element | DocumentFragment | null>(firstPortalRoot)
+    let mounts = 0
+    let cleanups = 0
+    document.body.append(host, firstPortalRoot, secondPortalRoot)
+
+    function TrackedContent() {
+      onMount(() => {
+        mounts += 1
+        return () => {
+          cleanups += 1
+        }
+      })
+
+      return <span data-testid="tracked-portal-content">Tracked</span>
+    }
+
+    const dispose = render(
+      () => (
+        <Portal
+          container={prop(() => portalRoot()) as unknown as Element | DocumentFragment | null}
+          id="tracked-portal"
+        >
+          <TrackedContent />
+        </Portal>
+      ),
+      host,
+    )
+
+    await flushMicrotasks()
+    const portalNode = firstPortalRoot.querySelector('#tracked-portal')
+
+    for (let index = 0; index < 40; index++) {
+      const nextContainer = index % 2 === 0 ? secondPortalRoot : firstPortalRoot
+      portalRoot(nextContainer)
+      await flushMicrotasks()
+      expect(nextContainer.querySelector('#tracked-portal')).toBe(portalNode)
+    }
+
+    expect(mounts).toBe(1)
+    expect(cleanups).toBe(0)
+
+    dispose()
+
+    expect(firstPortalRoot.querySelector('#tracked-portal')).toBeNull()
+    expect(secondPortalRoot.querySelector('#tracked-portal')).toBeNull()
+    expect(cleanups).toBe(1)
   })
 
   it('defaults to document.body once mounted', async () => {

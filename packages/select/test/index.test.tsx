@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createElement, Fragment, onMount, render, type FictNode } from '@fictjs/runtime'
+import { createElement, Fragment, onMount, prop, render, type FictNode } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import {
@@ -750,6 +750,60 @@ describe('@fictjs/select', () => {
 
     expect(document.querySelector('[data-testid="content"]')).toBeNull()
     expect(container.querySelector('[data-testid="value"]')?.textContent).toBe('Orange')
+  })
+
+  it('reuses one portal lifecycle across repeated container changes', async () => {
+    const container = document.createElement('div')
+    const firstPortalRoot = document.createElement('div')
+    const secondPortalRoot = document.createElement('div')
+    const portalRoot = createSignal<Element | DocumentFragment | null>(firstPortalRoot)
+    let mounts = 0
+    let lifecycleCleanups = 0
+    document.body.append(container, firstPortalRoot, secondPortalRoot)
+
+    function TrackedContent() {
+      onMount(() => {
+        mounts += 1
+        return () => {
+          lifecycleCleanups += 1
+        }
+      })
+
+      return <div data-testid="tracked-select-portal">Tracked</div>
+    }
+
+    const dispose = render(
+      () => (
+        <Root>
+          <Portal
+            container={prop(() => portalRoot()) as unknown as Element | DocumentFragment | null}
+          >
+            <TrackedContent />
+          </Portal>
+        </Root>
+      ),
+      container,
+    )
+    cleanups.push(dispose)
+
+    await waitForEffects()
+    const portalNode = firstPortalRoot.querySelector('[data-testid="tracked-select-portal"]')
+
+    for (let index = 0; index < 40; index++) {
+      const nextContainer = index % 2 === 0 ? secondPortalRoot : firstPortalRoot
+      portalRoot(nextContainer)
+      await waitForEffects()
+      expect(nextContainer.querySelector('[data-testid="tracked-select-portal"]')).toBe(portalNode)
+    }
+
+    expect(mounts).toBe(1)
+    expect(lifecycleCleanups).toBe(0)
+
+    dispose()
+
+    expect(firstPortalRoot.querySelector('[data-testid="tracked-select-portal"]')).toBeNull()
+    expect(secondPortalRoot.querySelector('[data-testid="tracked-select-portal"]')).toBeNull()
+    expect(lifecycleCleanups).toBe(1)
   })
 
   it('wraps popper-positioned content in a popper content wrapper', async () => {

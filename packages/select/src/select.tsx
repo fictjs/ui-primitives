@@ -713,19 +713,32 @@ function SelectPortal(props: ScopedProps<SelectPortalProps>): FictNode {
       ? undefined
       : Boolean(readValue(props.forceMount as MaybeAccessor<boolean | undefined>) ?? false)
 
+  const initialContainer = props.container ?? globalThis.document?.body ?? null
+  if (!initialContainer) return null
+
+  const portal = createFictPortal(
+    initialContainer,
+    () => (
+      <div style={{ display: 'contents' }}>
+        <SelectPortalContext.Provider value={{ forceMount }}>
+          {props.children}
+        </SelectPortalContext.Provider>
+      </div>
+    ),
+    createElement,
+  )
+
   createEffect(() => {
     const container = props.container ?? globalThis.document?.body ?? null
-    if (!container) return
+    if (!container || portal.marker.parentNode === container) return
 
-    return createFictPortal(
-      container,
-      () => (
-        <SelectPortalContext.Provider value={{ forceMount }}>
-          <div style={{ display: 'contents' }}>{props.children}</div>
-        </SelectPortalContext.Provider>
-      ),
-      createElement,
-    ).dispose
+    // Keep a single wrapper immediately before the runtime marker so retargeting can
+    // move the existing portal lifecycle instead of registering another parent cleanup.
+    const portalNode = portal.marker.previousSibling
+    if (portalNode) {
+      container.appendChild(portalNode)
+    }
+    container.appendChild(portal.marker)
   })
 
   return null
