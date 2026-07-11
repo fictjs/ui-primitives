@@ -555,8 +555,8 @@ describe('@fictjs/toast', () => {
     expect(consoleError).toHaveBeenCalledOnce()
   })
 
-  it('adds and removes an action when reactive alt text changes validity', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+  it('keeps an action with initially invalid alt text absent for its lifetime', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     const container = document.createElement('div')
     const altText = createSignal('')
     document.body.append(container)
@@ -575,15 +575,79 @@ describe('@fictjs/toast', () => {
       container,
     )
 
+    expect(container.querySelector('[data-testid="action"]')).toBeNull()
     await waitForEffects()
     expect(container.querySelector('[data-testid="action"]')).toBeNull()
 
     altText('Undo the action')
     await waitForEffects()
-    expect(container.querySelector('[data-testid="action"]')).not.toBeNull()
-
-    altText('')
-    await waitForEffects()
     expect(container.querySelector('[data-testid="action"]')).toBeNull()
+    expect(consoleError).toHaveBeenCalledOnce()
+    expect(consoleError).toHaveBeenCalledWith(
+      'Invalid prop `altText` supplied to `ToastAction`. Expected non-empty `string`.',
+    )
+  })
+
+  it('preserves action identity, focus, and the latest valid alt text', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const container = document.createElement('div')
+    const altText = createSignal('Undo the action')
+    const actionLabel = createSignal('Undo')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Provider>
+          <Viewport />
+          <Root defaultOpen>
+            <Action
+              altText={prop(() => altText()) as unknown as string}
+              aria-label={prop(() => actionLabel()) as unknown as string}
+              data-testid="action"
+            >
+              Undo
+            </Action>
+          </Root>
+        </Provider>
+      ),
+      container,
+    )
+
+    const initialAction = container.querySelector('[data-testid="action"]')
+    expect(initialAction).not.toBeNull()
+
+    await waitForEffects()
+    const action = container.querySelector('[data-testid="action"]') as HTMLButtonElement
+    expect(action).toBe(initialAction)
+    action.focus()
+
+    altText('Revert the action')
+    await waitForEffects()
+
+    const updatedAction = container.querySelector('[data-testid="action"]') as HTMLButtonElement
+    expect(updatedAction).toBe(action)
+    expect(updatedAction.getAttribute('data-radix-toast-announce-alt')).toBe('Revert the action')
+    expect(document.activeElement).toBe(action)
+
+    actionLabel('Restore')
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="action"]')).toBe(action)
+    expect(action.getAttribute('aria-label')).toBe('Restore')
+
+    altText('   ')
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="action"]')).toBe(action)
+    expect(action.getAttribute('data-radix-toast-announce-alt')).toBe('Revert the action')
+    expect(document.activeElement).toBe(action)
+    expect(consoleError).toHaveBeenCalledOnce()
+
+    altText('Restore the action')
+    await waitForEffects()
+
+    expect(container.querySelector('[data-testid="action"]')).toBe(action)
+    expect(action.getAttribute('data-radix-toast-announce-alt')).toBe('Restore the action')
+    expect(document.activeElement).toBe(action)
   })
 })

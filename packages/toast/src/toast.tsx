@@ -1,8 +1,10 @@
 import {
   createElement,
   createPortal as createFictPortal,
+  createMemo,
   mergeProps,
   prop,
+  untrack,
   type FictNode,
   type JSX,
 } from '@fictjs/runtime'
@@ -1082,6 +1084,28 @@ function ToastDescription(props: ScopedProps<ToastDescriptionProps>): FictNode {
 ToastDescription.displayName = DESCRIPTION_NAME
 
 function ToastAction(props: ScopedProps<ToastActionProps>): FictNode {
+  // Renderability is structural: resolve it once so a reactive altText cannot remount the action.
+  const initialAltText = untrack(() => props.altText)
+
+  if (!initialAltText.trim()) {
+    console.error(
+      `Invalid prop \`altText\` supplied to \`${ACTION_NAME}\`. Expected non-empty \`string\`.`,
+    )
+    return null
+  }
+
+  let latestValidAltText = initialAltText
+  const announcementAltText = createMemo(() => {
+    const nextAltText = props.altText
+    if (nextAltText.trim()) latestValidAltText = nextAltText
+    else {
+      console.error(
+        `Invalid prop \`altText\` supplied to \`${ACTION_NAME}\`. Expected non-empty \`string\`.`,
+      )
+    }
+
+    return latestValidAltText
+  })
   const actionProps = mergeProps(
     prop(() => props as unknown as Record<string, unknown>),
     {
@@ -1090,24 +1114,11 @@ function ToastAction(props: ScopedProps<ToastActionProps>): FictNode {
   )
 
   return (
-    <>
-      {reactive(() => {
-        if (!props.altText.trim()) {
-          console.error(
-            `Invalid prop \`altText\` supplied to \`${ACTION_NAME}\`. Expected non-empty \`string\`.`,
-          )
-          return null
-        }
-
-        return (
-          <ToastClose
-            {...actionProps}
-            data-radix-toast-announce-exclude=""
-            data-radix-toast-announce-alt={prop(() => props.altText)}
-          />
-        )
-      })}
-    </>
+    <ToastClose
+      {...actionProps}
+      data-radix-toast-announce-exclude=""
+      data-radix-toast-announce-alt={prop(announcementAltText)}
+    />
   )
 }
 
