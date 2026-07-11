@@ -213,7 +213,8 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
   const updateChecked: SetStateFn<CheckedState> = (nextChecked) => {
     setChecked(nextChecked)
   }
-  const initialDefaultChecked = normalizeChecked(untrack(() => checked()))
+  const initialCheckedState = untrack(() => checked())
+  const initialDefaultChecked = normalizeChecked(initialCheckedState)
   let previousBubbleChecked = untrack(() => checked())
   let previousBubbleInput: HTMLInputElement | null = null
 
@@ -261,6 +262,59 @@ function CheckboxProvider(props: ScopedProps<CheckboxProviderProps>): FictNode {
     hasBubbleInputSyncRef.current = false
   })
 
+  useLayoutEffect(() => {
+    const input = bubbleInput()
+    if (!input) return
+
+    const document = input.ownerDocument
+    const form = input.form
+    let disposed = false
+    let pendingResetEvent: Event | null = null
+    const handleReset = (event: Event) => {
+      if (event.target !== input.form || event === pendingResetEvent) return
+
+      pendingResetEvent = event
+
+      // Run after native reset dispatch so consumers can cancel it anywhere in the
+      // propagation path and after the browser applies its default reset action.
+      queueMicrotask(() => {
+        if (pendingResetEvent === event) {
+          pendingResetEvent = null
+        }
+        if (disposed || event.defaultPrevented) return
+
+        const controlledChecked = checkedProp()
+        const nextChecked = controlledChecked ?? initialCheckedState
+
+        // Native form reset does not restore `indeterminate`, and a controlled
+        // checkbox must retain its current value. Synchronize without emitting
+        // input/change events before updating the provider state so the regular
+        // bubble-input effect cannot overwrite or rebroadcast the reset.
+        hasBubbleInputSyncRef.current = true
+        setNativeInputChecked(input, nextChecked)
+        previousBubbleInput = input
+        previousBubbleChecked = nextChecked
+
+        if (controlledChecked === undefined) {
+          setChecked(initialCheckedState)
+        }
+
+        hasBubbleInputSyncRef.current = false
+      })
+    }
+
+    // Reset is not composed, so a shadow-root form needs a direct listener. The
+    // document listener also observes light-DOM form ownership; `pendingResetEvent`
+    // deduplicates the two listeners when they both receive the same event.
+    document.addEventListener('reset', handleReset, true)
+    form?.addEventListener('reset', handleReset, true)
+    return () => {
+      disposed = true
+      document.removeEventListener('reset', handleReset, true)
+      form?.removeEventListener('reset', handleReset, true)
+    }
+  })
+
   return (
     <CheckboxProviderImpl
       scope={props.__scopeCheckbox}
@@ -298,24 +352,6 @@ function CheckboxTriggerImpl(props: ScopedProps<CheckboxTriggerInternalProps>): 
   const composedRefs = useComposedRefs(props.ref as PossibleRef<HTMLButtonElement>, (node) =>
     context.setControl(node),
   )
-  const initialCheckedState = untrack(() => context.checked())
-
-  useLayoutEffect(() => {
-    const formElement = context.control()?.form
-    if (!formElement) {
-      return
-    }
-
-    const reset = () => {
-      context.setChecked(initialCheckedState)
-    }
-
-    formElement.addEventListener('reset', reset)
-
-    return () => {
-      formElement.removeEventListener('reset', reset)
-    }
-  })
 
   const handleKeyDown = composeEventHandlers<KeyboardEvent>(
     (event) =>

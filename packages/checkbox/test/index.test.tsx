@@ -342,6 +342,254 @@ describe('@fictjs/checkbox', () => {
     expect(input.hasAttribute('required')).toBe(true)
   })
 
+  it('restores an indeterminate checkbox owned by an ancestor form without bubbling', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(
+      () => (
+        <form data-testid="form">
+          <Root defaultChecked="indeterminate" name="newsletter" value="weekly" />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const button = container.querySelector('button') as HTMLButtonElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    input.addEventListener('input', onInput)
+    input.addEventListener('change', onChange)
+
+    expect(button.getAttribute('aria-checked')).toBe('mixed')
+    expect(button.getAttribute('data-state')).toBe('indeterminate')
+    expect(input.checked).toBe(false)
+    expect(input.indeterminate).toBe(true)
+    expect(new FormData(form).get('newsletter')).toBeNull()
+
+    click(button)
+    await flushEffects()
+
+    expect(button.getAttribute('aria-checked')).toBe('true')
+    expect(button.getAttribute('data-state')).toBe('checked')
+    expect(input.checked).toBe(true)
+    expect(input.indeterminate).toBe(false)
+    expect(new FormData(form).get('newsletter')).toBe('weekly')
+    onInput.mockClear()
+    onChange.mockClear()
+
+    form.reset()
+    await flushEffects()
+
+    expect(button.getAttribute('aria-checked')).toBe('mixed')
+    expect(button.getAttribute('data-state')).toBe('indeterminate')
+    expect(input.checked).toBe(false)
+    expect(input.indeterminate).toBe(true)
+    expect(new FormData(form).get('newsletter')).toBeNull()
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('restores an indeterminate checkbox inside a shadow form without bubbling', async () => {
+    const host = document.createElement('div')
+    const container = document.createElement('div')
+    const shadowRoot = host.attachShadow({ mode: 'open' })
+    document.body.append(host)
+    shadowRoot.append(container)
+
+    render(
+      () => (
+        <form data-testid="form">
+          <Root defaultChecked="indeterminate" name="newsletter" value="weekly" />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const button = container.querySelector('button') as HTMLButtonElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    input.addEventListener('input', onInput)
+    input.addEventListener('change', onChange)
+
+    button.click()
+    await flushEffects()
+
+    expect(button.getAttribute('aria-checked')).toBe('true')
+    expect(button.getAttribute('data-state')).toBe('checked')
+    expect(input.checked).toBe(true)
+    expect(input.indeterminate).toBe(false)
+    expect(new FormData(form).get('newsletter')).toBe('weekly')
+    onInput.mockClear()
+    onChange.mockClear()
+
+    form.reset()
+    await flushEffects()
+
+    expect(button.getAttribute('aria-checked')).toBe('mixed')
+    expect(button.getAttribute('data-state')).toBe('indeterminate')
+    expect(input.checked).toBe(false)
+    expect(input.indeterminate).toBe(true)
+    expect(new FormData(form).get('newsletter')).toBeNull()
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('restores a checkbox explicitly associated with a form without bubbling', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(
+      () => (
+        <>
+          <form id="preferences-form" data-testid="form" />
+          <Root defaultChecked form="preferences-form" name="newsletter" value="weekly" />
+        </>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const button = container.querySelector('button') as HTMLButtonElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    input.addEventListener('input', onInput)
+    input.addEventListener('change', onChange)
+
+    click(button)
+    await flushEffects()
+
+    expect(button.getAttribute('aria-checked')).toBe('false')
+    expect(button.getAttribute('data-state')).toBe('unchecked')
+    expect(input.checked).toBe(false)
+    expect(input.indeterminate).toBe(false)
+    expect(new FormData(form).get('newsletter')).toBeNull()
+    onInput.mockClear()
+    onChange.mockClear()
+
+    form.reset()
+    await flushEffects()
+
+    expect(button.getAttribute('aria-checked')).toBe('true')
+    expect(button.getAttribute('data-state')).toBe('checked')
+    expect(input.checked).toBe(true)
+    expect(input.indeterminate).toBe(false)
+    expect(new FormData(form).get('newsletter')).toBe('weekly')
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('preserves checkbox state when form reset is canceled without bubbling', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(
+      () => (
+        <form
+          data-testid="form"
+          onReset={(event) => {
+            event.preventDefault()
+          }}
+        >
+          <Root name="newsletter" value="weekly" />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const button = container.querySelector('button') as HTMLButtonElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    input.addEventListener('input', onInput)
+    input.addEventListener('change', onChange)
+
+    click(button)
+    await flushEffects()
+    onInput.mockClear()
+    onChange.mockClear()
+
+    form.reset()
+    await flushEffects()
+
+    expect(button.getAttribute('aria-checked')).toBe('true')
+    expect(button.getAttribute('data-state')).toBe('checked')
+    expect(input.checked).toBe(true)
+    expect(input.indeterminate).toBe(false)
+    expect(new FormData(form).get('newsletter')).toBe('weekly')
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('retains controlled checkbox state across form reset without bubbling', async () => {
+    const checked = createSignal<CheckedState>('indeterminate')
+    const onCheckedChange = vi.fn()
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(
+      () => (
+        <form data-testid="form">
+          <Root
+            checked={checked}
+            name="newsletter"
+            onCheckedChange={onCheckedChange}
+            value="weekly"
+          />
+        </form>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const form = container.querySelector('[data-testid="form"]') as HTMLFormElement
+    const button = container.querySelector('button') as HTMLButtonElement
+    const input = container.querySelector('input[type="checkbox"]') as HTMLInputElement
+    const onInput = vi.fn()
+    const onChange = vi.fn()
+    input.addEventListener('input', onInput)
+    input.addEventListener('change', onChange)
+
+    checked(true)
+    await flushEffects()
+
+    expect(button.getAttribute('aria-checked')).toBe('true')
+    expect(button.getAttribute('data-state')).toBe('checked')
+    expect(input.checked).toBe(true)
+    expect(input.indeterminate).toBe(false)
+    expect(new FormData(form).get('newsletter')).toBe('weekly')
+    onInput.mockClear()
+    onChange.mockClear()
+
+    form.reset()
+    await flushEffects()
+
+    expect(checked()).toBe(true)
+    expect(onCheckedChange).not.toHaveBeenCalled()
+    expect(button.getAttribute('aria-checked')).toBe('true')
+    expect(button.getAttribute('data-state')).toBe('checked')
+    expect(input.checked).toBe(true)
+    expect(input.indeterminate).toBe(false)
+    expect(new FormData(form).get('newsletter')).toBe('weekly')
+    expect(onInput).not.toHaveBeenCalled()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   it('bubbles form click events through the hidden checkbox input', async () => {
     const formChanges = vi.fn((checked: boolean) => checked)
     const container = document.createElement('div')
