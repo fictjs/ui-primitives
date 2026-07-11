@@ -1,13 +1,15 @@
+import { prop } from 'fict'
+import { reactive } from 'fict/advanced'
 import * as React from '../helpers/element.js'
-import classNames from 'classnames'
 import { ScrollArea as ScrollAreaPrimitive } from '@fictjs/radix-ui'
 
 import { scrollAreaPropDefs } from './scroll-area.props.js'
-import { extractMarginProps } from '../helpers/extract-margin-props.js'
-import { getMarginStyles } from '../helpers/get-margin-styles.js'
+import { classNames } from '../helpers/reactive-class-names.js'
+import { extractProps, readPropValue } from '../helpers/extract-props.js'
 import { getResponsiveClassNames } from '../helpers/get-responsive-styles.js'
 import { getSubtree } from '../helpers/get-subtree.js'
-import { mergeStyles } from '../helpers/merge-styles.js'
+import { renderWithAsChild } from '../helpers/render-with-as-child.js'
+import { marginPropDefs } from '../props/margin.props.js'
 
 import type { ComponentPropsWithout, RemovedProps } from '../helpers/component-props.js'
 import type { MarginProps } from '../props/margin.props.js'
@@ -22,85 +24,92 @@ interface ScrollAreaProps
     MarginProps,
     ScrollAreaOwnProps {}
 const ScrollArea = React.forwardRef<ScrollAreaElement, ScrollAreaProps>((props, forwardedRef) => {
-  const { rest: marginRest, ...marginProps } = extractMarginProps(props)
-  const [marginClassNames, marginCustomProperties] = getMarginStyles(marginProps)
-
   const {
-    asChild,
+    asChild: _asChild,
     children,
     className,
     style,
     dir,
     type,
-    scrollHideDelay = type !== 'scroll' ? 0 : undefined,
-    size = scrollAreaPropDefs.size.default,
-    radius = scrollAreaPropDefs.radius.default,
-    scrollbars = scrollAreaPropDefs.scrollbars.default,
+    scrollHideDelay,
+    size,
+    radius,
+    scrollbars,
     ...viewportProps
-  } = marginRest
+  } = extractProps(props, marginPropDefs)
 
-  return (
+  const currentSize = prop(() => readPropValue(size) ?? scrollAreaPropDefs.size.default)
+  const sizeClassName = prop(() =>
+    getResponsiveClassNames({
+      className: 'rt-r-size',
+      value: currentSize(),
+      propValues: scrollAreaPropDefs.size.values,
+    }),
+  )
+  const currentRadius = prop(() => readPropValue(radius) ?? scrollAreaPropDefs.radius.default)
+  const currentScrollbars = prop(
+    () => readPropValue(scrollbars) ?? scrollAreaPropDefs.scrollbars.default,
+  )
+  const currentScrollHideDelay = prop(() => {
+    const explicitDelay = readPropValue(scrollHideDelay) as number | undefined
+    if (explicitDelay !== undefined) return explicitDelay
+    return (readPropValue(type) as string | undefined) !== 'scroll' ? 0 : undefined
+  })
+
+  const renderContent = (innerChildren: React.ReactNode) => [
+    <ScrollAreaPrimitive.Viewport
+      {...viewportProps}
+      ref={React.coerceRef(forwardedRef)}
+      class="rt-ScrollAreaViewport"
+    >
+      {innerChildren}
+    </ScrollAreaPrimitive.Viewport>,
+    <div class="rt-ScrollAreaViewportFocusRing" />,
+    reactive(() =>
+      currentScrollbars() !== 'vertical' ? (
+        <ScrollAreaPrimitive.Scrollbar
+          data-radius={currentRadius}
+          orientation="horizontal"
+          class={classNames('rt-ScrollAreaScrollbar', sizeClassName)}
+        >
+          <ScrollAreaPrimitive.Thumb class="rt-ScrollAreaThumb" />
+        </ScrollAreaPrimitive.Scrollbar>
+      ) : null,
+    ) as unknown as React.ReactNode,
+    reactive(() =>
+      currentScrollbars() !== 'horizontal' ? (
+        <ScrollAreaPrimitive.Scrollbar
+          data-radius={currentRadius}
+          orientation="vertical"
+          class={classNames('rt-ScrollAreaScrollbar', sizeClassName)}
+        >
+          <ScrollAreaPrimitive.Thumb class="rt-ScrollAreaThumb" />
+        </ScrollAreaPrimitive.Scrollbar>
+      ) : null,
+    ) as unknown as React.ReactNode,
+    reactive(() =>
+      currentScrollbars() === 'both' ? (
+        <ScrollAreaPrimitive.Corner class="rt-ScrollAreaCorner" />
+      ) : null,
+    ) as unknown as React.ReactNode,
+  ]
+
+  return renderWithAsChild(props, (asChild) => (
     <ScrollAreaPrimitive.Root
-      class={classNames('rt-ScrollAreaRoot', marginClassNames, className)}
-      style={mergeStyles(marginCustomProperties, style)}
+      class={classNames('rt-ScrollAreaRoot', className)}
+      style={style}
       asChild={asChild}
       dir={dir}
       type={type}
-      scrollHideDelay={scrollHideDelay}
+      scrollHideDelay={currentScrollHideDelay}
     >
-      {getSubtree({ asChild, children }, (children) => (
-        <>
-          <ScrollAreaPrimitive.Viewport
-            {...viewportProps}
-            ref={React.coerceRef(forwardedRef)}
-            class="rt-ScrollAreaViewport"
-          >
-            {children}
-          </ScrollAreaPrimitive.Viewport>
-
-          <div class="rt-ScrollAreaViewportFocusRing" />
-
-          {scrollbars !== 'vertical' ? (
-            <ScrollAreaPrimitive.Scrollbar
-              data-radius={radius}
-              orientation="horizontal"
-              class={classNames(
-                'rt-ScrollAreaScrollbar',
-                getResponsiveClassNames({
-                  className: 'rt-r-size',
-                  value: size,
-                  propValues: scrollAreaPropDefs.size.values,
-                }),
-              )}
-            >
-              <ScrollAreaPrimitive.Thumb class="rt-ScrollAreaThumb" />
-            </ScrollAreaPrimitive.Scrollbar>
-          ) : null}
-
-          {scrollbars !== 'horizontal' ? (
-            <ScrollAreaPrimitive.Scrollbar
-              data-radius={radius}
-              orientation="vertical"
-              class={classNames(
-                'rt-ScrollAreaScrollbar',
-                getResponsiveClassNames({
-                  className: 'rt-r-size',
-                  value: size,
-                  propValues: scrollAreaPropDefs.size.values,
-                }),
-              )}
-            >
-              <ScrollAreaPrimitive.Thumb class="rt-ScrollAreaThumb" />
-            </ScrollAreaPrimitive.Scrollbar>
-          ) : null}
-
-          {scrollbars === 'both' ? (
-            <ScrollAreaPrimitive.Corner class="rt-ScrollAreaCorner" />
-          ) : null}
-        </>
-      ))}
+      {asChild
+        ? getSubtree({ asChild, children: readPropValue(children) }, (innerChildren) =>
+            renderContent(innerChildren),
+          )
+        : renderContent(children as unknown as React.ReactNode)}
     </ScrollAreaPrimitive.Root>
-  )
+  ))
 })
 ScrollArea.displayName = 'ScrollArea'
 

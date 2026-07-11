@@ -1087,6 +1087,154 @@ describe('@fictjs/radix-ui-themes', () => {
     ).toBe('visible')
   })
 
+  it('updates themed scroll area presentation, structure, and root props', async () => {
+    const asChild = createSignal(false)
+    const className = createSignal('scroll-first')
+    const margin = createSignal<'1' | '3'>('1')
+    const style = createSignal<Record<string, string>>({ color: 'red' })
+    const size = createSignal<'1' | '3'>('1')
+    const radius = createSignal<'small' | 'large'>('small')
+    const scrollbars = createSignal<'vertical' | 'horizontal' | 'both'>('vertical')
+    const dir = createSignal<'ltr' | 'rtl'>('ltr')
+    const type = createSignal<'always' | 'hover'>('always')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <ScrollArea
+            asChild={prop(() => asChild()) as unknown as boolean}
+            aria-label="Reactive scroll area"
+            className={prop(() => className()) as unknown as string}
+            dir={prop(() => dir()) as unknown as 'ltr'}
+            m={prop(() => margin()) as unknown as '1'}
+            radius={prop(() => radius()) as unknown as 'small'}
+            scrollbars={prop(() => scrollbars()) as unknown as 'vertical'}
+            size={prop(() => size()) as unknown as '1'}
+            style={prop(() => style()) as unknown as Record<string, string>}
+            type={prop(() => type()) as unknown as 'always'}
+          >
+            <section data-testid="scroll-area-child">
+              <span>Scrollable content</span>
+            </section>
+          </ScrollArea>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    let root = container.querySelector('.rt-ScrollAreaRoot') as HTMLElement
+    let viewport = root.querySelector('.rt-ScrollAreaViewport') as HTMLElement
+    const verticalScrollbar = root.querySelector(
+      '.rt-ScrollAreaScrollbar[data-orientation="vertical"]',
+    ) as HTMLElement
+    expect(root.tagName).toBe('DIV')
+    expect(root.classList.contains('scroll-first')).toBe(true)
+    expect(root.classList.contains('rt-r-m-1')).toBe(true)
+    expect(root.style.color).toBe('red')
+    expect(root.getAttribute('dir')).toBe('ltr')
+    expect(verticalScrollbar.classList.contains('rt-r-size-1')).toBe(true)
+    expect(verticalScrollbar.getAttribute('data-radius')).toBe('small')
+    expect(root.querySelector('[data-orientation="horizontal"]')).toBeNull()
+    expect(viewport.getAttribute('aria-label')).toBe('Reactive scroll area')
+    expect(viewport.hasAttribute('dir')).toBe(false)
+    expect(viewport.hasAttribute('type')).toBe(false)
+
+    className('scroll-second')
+    margin('3')
+    style({ color: 'blue' })
+    size('3')
+    radius('large')
+    scrollbars('both')
+    dir('rtl')
+    await flushEffects()
+
+    expect(container.querySelector('.rt-ScrollAreaRoot')).toBe(root)
+    expect(root.classList.contains('scroll-first')).toBe(false)
+    expect(root.classList.contains('scroll-second')).toBe(true)
+    expect(root.classList.contains('rt-r-m-1')).toBe(false)
+    expect(root.classList.contains('rt-r-m-3')).toBe(true)
+    expect(root.style.color).toBe('blue')
+    expect(root.getAttribute('dir')).toBe('rtl')
+    const scrollbarsAfterUpdate = Array.from(
+      root.querySelectorAll('.rt-ScrollAreaScrollbar'),
+    ) as HTMLElement[]
+    expect(scrollbarsAfterUpdate).toHaveLength(2)
+    expect(scrollbarsAfterUpdate.every((node) => node.classList.contains('rt-r-size-3'))).toBe(true)
+    expect(
+      scrollbarsAfterUpdate.every((node) => node.getAttribute('data-radius') === 'large'),
+    ).toBe(true)
+    type('hover')
+    await flushEffects()
+    expect(root.querySelector('.rt-ScrollAreaScrollbar')).toBeNull()
+
+    type('always')
+    scrollbars('horizontal')
+    await flushEffects()
+    expect(root.querySelector('[data-orientation="vertical"]')).toBeNull()
+    expect(root.querySelector('[data-orientation="horizontal"]')).not.toBeNull()
+
+    asChild(true)
+    await flushEffects()
+
+    root = container.querySelector('.rt-ScrollAreaRoot') as HTMLElement
+    viewport = root.querySelector('.rt-ScrollAreaViewport') as HTMLElement
+    expect(root.tagName).toBe('SECTION')
+    expect(root.getAttribute('data-testid')).toBe('scroll-area-child')
+    expect(viewport.textContent).toContain('Scrollable content')
+
+    asChild(false)
+    await flushEffects()
+    expect(container.querySelector('.rt-ScrollAreaRoot')?.tagName).toBe('DIV')
+  })
+
+  it('uses the latest themed scroll area hide delay', async () => {
+    const delay = createSignal(120)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <ScrollArea
+            scrollHideDelay={prop(() => delay()) as unknown as number}
+            scrollbars="vertical"
+            type="scroll"
+          >
+            Scrollable content
+          </ScrollArea>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    const viewport = container.querySelector('.rt-ScrollAreaViewport') as HTMLElement
+    Object.defineProperties(viewport, {
+      clientHeight: { configurable: true, value: 100 },
+      scrollHeight: { configurable: true, value: 400 },
+      scrollTop: { configurable: true, value: 0, writable: true },
+    })
+    const timeoutSpy = vi
+      .spyOn(window, 'setTimeout')
+      .mockImplementation(() => 1 as unknown as ReturnType<typeof window.setTimeout>)
+
+    viewport.scrollTop = 1
+    viewport.dispatchEvent(new Event('scroll'))
+    expect(timeoutSpy).toHaveBeenCalledWith(expect.any(Function), 100)
+
+    delay(360)
+    const scrollEnd = timeoutSpy.mock.calls[0]?.[0]
+    expect(typeof scrollEnd).toBe('function')
+    if (typeof scrollEnd === 'function') scrollEnd()
+
+    expect(timeoutSpy).toHaveBeenLastCalledWith(expect.any(Function), 360)
+  })
+
   it('renders themed select default value while content is closed', async () => {
     const container = document.createElement('div')
     document.body.append(container)
