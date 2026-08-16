@@ -71,7 +71,7 @@
     "aria-hidden": "^1.2.4"
   },
   "peerDependencies": {
-    "@fictjs/runtime": ">=0.26.0"
+    "@fictjs/runtime": ">=0.32.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",

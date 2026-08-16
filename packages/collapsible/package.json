@@ -60,7 +60,7 @@
     "@fictjs/use-layout-effect": "workspace:*"
   },
   "peerDependencies": {
-    "@fictjs/runtime": ">=0.26.0"
+    "@fictjs/runtime": ">=0.32.0"
   },
   "devDependencies": {
     "@fictjs/runtime": "catalog:",

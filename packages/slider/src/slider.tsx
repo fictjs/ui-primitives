@@ -37,6 +37,7 @@ const BUBBLE_INPUT_NAME = 'SliderBubbleInput'
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+const FORM_PROP = new Set(['form'])
 
 const [Collection, , createCollectionScope] = createCollection<SliderThumbElement>(SLIDER_NAME)
 const [createSliderContext, createSliderScope] = createContextScope(SLIDER_NAME, [
@@ -301,19 +302,23 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
       props.onValueCommit?.(values())
     }
   }
+  const forwardedProps = omitPropsPreservingValues(
+    props as Record<string, unknown>,
+    FORM_PROP,
+    Object.keys(props),
+  )
 
   const sliderProps = mergeProps(
     {
       'aria-disabled': prop(() => (disabled() ? 'true' : undefined)),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
     },
-    prop(() => props as Record<string, unknown>),
+    forwardedProps,
     {
       __scopeSlider: undefined,
       defaultValue: undefined,
       dir: undefined,
       disabled: undefined,
-      form: undefined,
       inverted: undefined,
       max: undefined,
       min: undefined,
@@ -814,6 +819,11 @@ SliderThumb.displayName = THUMB_NAME
 function SliderBubbleInput(props: ScopedProps<SliderBubbleInputProps>): FictNode {
   const ref = createSignal<HTMLInputElement | null>(null)
   const previousValue = usePrevious(props.value)
+  const forwardedProps = omitPropsPreservingValues(
+    props as Record<string, unknown>,
+    FORM_PROP,
+    Object.keys(props),
+  )
 
   useLayoutEffect(() => {
     const input = ref()
@@ -838,33 +848,29 @@ function SliderBubbleInput(props: ScopedProps<SliderBubbleInputProps>): FictNode
     }
   })
 
-  const inputProps = mergeProps(
-    prop(() => props as Record<string, unknown>),
-    {
-      __scopeSlider: undefined,
-      defaultValue: undefined,
-      form: undefined,
-      'attr:form': prop(() =>
-        props.form === undefined
-          ? undefined
-          : readValue(props.form as MaybeAccessor<string | undefined>),
-      ),
-      name: prop(() =>
-        props.name === undefined
-          ? undefined
-          : readValue(props.name as MaybeAccessor<string | undefined>),
-      ),
-      ref: undefined,
-      style: prop(() => ({
-        display: 'none',
-        ...readStyle(props.style),
-      })),
-      value: prop(() => {
-        const nextValue = readValue(props.value)
-        return nextValue === undefined ? '' : String(nextValue)
-      }),
-    },
-  )
+  const inputProps = mergeProps(forwardedProps, {
+    __scopeSlider: undefined,
+    defaultValue: undefined,
+    'attr:form': prop(() =>
+      props.form === undefined
+        ? undefined
+        : readValue(props.form as MaybeAccessor<string | undefined>),
+    ),
+    name: prop(() =>
+      props.name === undefined
+        ? undefined
+        : readValue(props.name as MaybeAccessor<string | undefined>),
+    ),
+    ref: undefined,
+    style: prop(() => ({
+      display: 'none',
+      ...readStyle(props.style),
+    })),
+    value: prop(() => {
+      const nextValue = readValue(props.value)
+      return nextValue === undefined ? '' : String(nextValue)
+    }),
+  })
 
   return (
     <Primitive.input
@@ -874,6 +880,22 @@ function SliderBubbleInput(props: ScopedProps<SliderBubbleInputProps>): FictNode
       )}
     />
   )
+}
+
+function omitPropsPreservingValues(
+  source: Record<string, unknown>,
+  omittedKeys: ReadonlySet<string>,
+  sourceKeys: readonly string[],
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+
+  for (const key of sourceKeys) {
+    if (!omittedKeys.has(key)) {
+      result[key] = prop(() => source[key])
+    }
+  }
+
+  return result
 }
 
 SliderBubbleInput.displayName = BUBBLE_INPUT_NAME

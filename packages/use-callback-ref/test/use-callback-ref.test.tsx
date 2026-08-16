@@ -202,7 +202,11 @@ describe('@fictjs/use-callback-ref', () => {
       expect(stable).toBe(initialStable)
       expect(events).toEqual(['first:one', 'second:two'])
 
+      callback((value) => events.push(`third:${value}`))
       dispose()
+      stable?.('three')
+
+      expect(events).toEqual(['first:one', 'second:two', 'third:three'])
     })
 
     it('useMergeRefs forwards mount and cleanup to object refs and callback refs', () => {

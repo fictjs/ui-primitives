@@ -40,6 +40,7 @@ const ONE_TIME_PASSWORD_FIELD_NAME = 'OneTimePasswordField'
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+const FORM_PROP = new Set(['form'])
 
 const [createOneTimePasswordFieldContext, createOneTimePasswordFieldScope] = createContextScope(
   ONE_TIME_PASSWORD_FIELD_NAME,
@@ -155,6 +156,22 @@ function setRef<T>(ref: PossibleRef<T>, value: T | null): void {
   if (ref) {
     ref.current = value
   }
+}
+
+function omitPropsPreservingValues(
+  source: Record<string, unknown>,
+  omittedKeys: ReadonlySet<string>,
+  sourceKeys: readonly string[],
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+
+  for (const key of sourceKeys) {
+    if (!omittedKeys.has(key)) {
+      result[key] = prop(() => source[key])
+    }
+  }
+
+  return result
 }
 
 function removeWhitespace(value: string) {
@@ -362,13 +379,18 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
   const attemptSubmit = () => {
     locateForm()?.requestSubmit?.()
   }
+  const forwardedProps = omitPropsPreservingValues(
+    props as Record<string, unknown>,
+    FORM_PROP,
+    Object.keys(props),
+  )
 
   const primitiveProps = mergeProps(
     {
       role: 'group',
       dir: direction,
     },
-    prop(() => props as Record<string, unknown>),
+    forwardedProps,
     {
       __scopeOneTimePasswordField: undefined,
       autoComplete: undefined,
@@ -377,7 +399,6 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
       defaultValue: undefined,
       dir: prop(direction),
       disabled: undefined,
-      form: undefined,
       name: undefined,
       onAutoSubmit: undefined,
       onValueChange: undefined,
@@ -522,6 +543,11 @@ function OneTimePasswordFieldHiddenInput(
     'OneTimePasswordFieldHiddenInput',
     props.__scopeOneTimePasswordField as Scope<OneTimePasswordFieldContextValue | undefined>,
   )
+  const forwardedProps = omitPropsPreservingValues(
+    props as Record<string, unknown>,
+    FORM_PROP,
+    Object.keys(props),
+  )
   const primitiveProps = mergeProps(
     {
       type: 'hidden',
@@ -533,7 +559,7 @@ function OneTimePasswordFieldHiddenInput(
       spellCheck: false,
       readOnly: true,
     },
-    prop(() => props as Record<string, unknown>),
+    forwardedProps,
     {
       __scopeOneTimePasswordField: undefined,
       'attr:form': prop(() => props.form ?? context.form()),

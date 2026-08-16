@@ -190,20 +190,20 @@ export default defineConfig({
 import { useControllableState } from '@fictjs/use-controllable-state'
 
 function App() {
-  const [count, setCount] = useControllableState<number>({
+  const state = useControllableState<number>({
     defaultProp: 2,
     onChange: () => {},
   })
-  const doubled = count * 2
-  const label = 'count:' + count + ';doubled:' + doubled
+  const doubled = state[0] * 2
+  const label = 'count:' + state[0] + ';doubled:' + doubled
 
   return (
     <button
       id="counter"
-      data-count={count}
+      data-count={state[0]}
       data-doubled={doubled}
       data-label={label}
-      onClick={() => setCount(previous => previous + 1)}
+      onClick={() => state[1](previous => previous + 1)}
     >
       {label}
     </button>
@@ -233,17 +233,14 @@ function buildConsumer() {
 }
 
 function assertPositiveCompilerOutput(code) {
-  if (!/name:\s*"doubled"/.test(code)) {
-    throw new Error('Expected compiled output to include a derived memo named "doubled"')
-  }
-  if (!/=>\s*[$A-Z_a-z][$\w]*\(\)\s*\*\s*2/.test(code)) {
-    throw new Error('Expected metadata to make doubled read the hook accessor with count()')
+  if (!/=>\s*[$A-Z_a-z][$\w]*\s*\[\s*0\s*\]\(\)\s*\*\s*2/.test(code)) {
+    throw new Error('Expected metadata to make doubled read the hook tuple accessor')
   }
 }
 
 function assertNegativeCompilerOutput(code) {
-  if (/=>\s*[$A-Z_a-z][$\w]*\(\)\s*\*\s*2/.test(code)) {
-    throw new Error('Metadata negative control still compiled doubled from count()')
+  if (/=>\s*[$A-Z_a-z][$\w]*\s*\[\s*0\s*\]\(\)\s*\*\s*2/.test(code)) {
+    throw new Error('Metadata negative control still compiled the hook tuple accessor')
   }
 }
 

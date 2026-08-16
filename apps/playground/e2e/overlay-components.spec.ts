@@ -31,6 +31,12 @@ async function expectStableSubmenuMotion(subContent: Locator) {
   ).toBe('none')
 }
 
+async function waitForElementAnimations(element: Locator) {
+  await element.evaluate(async (node) => {
+    await Promise.allSettled(node.getAnimations().map((animation) => animation.finished))
+  })
+}
+
 async function expectSubmenuDoesNotFlickerWhileMovingWithinTrigger(
   page: Page,
   subTrigger: Locator,
@@ -406,6 +412,7 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
   await expect(menuItem).toBeVisible()
   await expect(popperWrapper).toBeVisible()
   await expect(menuContent).toBeVisible()
+  await waitForElementAnimations(menuContent)
 
   const triggerBox = await trigger.boundingBox()
   const wrapperBox = await popperWrapper.boundingBox()
@@ -489,7 +496,10 @@ test('dropdown menu opens from the trigger and closes on escape', async ({ page 
     .toEqual({ pointerEvents: '', scrollLocked: null })
 
   await trigger.evaluate((node) => {
-    node.scrollIntoView({ block: 'end', inline: 'nearest' })
+    node.style.position = 'fixed'
+    node.style.bottom = '2px'
+    node.style.left = '120px'
+    node.style.zIndex = '1'
   })
 
   const bottomTriggerBox = await trigger.boundingBox()
@@ -612,7 +622,10 @@ test('context menu opens on right click and closes on escape', async ({ page }) 
     .toEqual({ pointerEvents: '', scrollLocked: null })
 
   await trigger.evaluate((node) => {
-    node.scrollIntoView({ block: 'end', inline: 'nearest' })
+    node.style.position = 'fixed'
+    node.style.bottom = '2px'
+    node.style.left = '120px'
+    node.style.zIndex = '1'
   })
 
   const bottomContextTriggerBox = await trigger.boundingBox()
@@ -725,7 +738,10 @@ test('select opens and applies a new value', async ({ page }) => {
     .toBeNull()
 
   await trigger.evaluate((node) => {
-    node.scrollIntoView({ block: 'end', inline: 'nearest' })
+    node.style.position = 'fixed'
+    node.style.bottom = '2px'
+    node.style.left = '120px'
+    node.style.zIndex = '1'
   })
 
   const bottomTriggerBox = await trigger.boundingBox()
@@ -773,6 +789,7 @@ test('select opens and applies a new value', async ({ page }) => {
 
   await contentVariantTrigger.click()
   await expect(listbox).toBeVisible()
+  await waitForElementAnimations(listbox)
 
   const selectPopperWrapper = page.locator('[data-radix-popper-content-wrapper]').last()
   await expect(selectPopperWrapper).toBeVisible()

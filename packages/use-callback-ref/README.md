@@ -25,7 +25,7 @@ const ref = mergeRefs([localRef, props.ref])
 
 ## API
 
-- **`useCallbackRef(callback)`** — a stable function whose identity never changes. A direct callback is retained as provided; when a parent can replace it, pass a Fict signal, computed value, or `prop(() => callback)` so each invocation reads the current callback.
+- **`useCallbackRef(callback)`** — a stable function whose identity never changes. A direct callback is retained as provided; when a parent can replace it, pass a Fict signal, computed value, or `prop(() => callback)` so each invocation reads the current callback. The latest callback is snapshotted during cleanup so deferred unmount work can still invoke it safely.
 - **`createCallbackRef(cb)`** / **`assignRef(ref, value)`** — low-level callback-ref creation and assignment.
 - **`mergeRefs(refs)`** / **`useMergeRefs(refs)`** — combine multiple refs into one.
 - **`transformRef(ref, transform)`** / **`useTransformRef(...)`** — derive a ref whose value is a transform of another.

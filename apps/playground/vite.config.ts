@@ -102,7 +102,9 @@ export default defineConfig(() => {
       avatarApiFallback(),
       historyFallback(),
       fict({
-        exclude: useBuiltPackages ? ['**/dist/**'] : [],
+        // Fict 0.32 compiles every supported JS/TS extension by default. Keep the app
+        // boundary explicit so dependencies provide metadata instead of being recompiled.
+        include: [resolve(currentDir, './src/**/*.{js,jsx,ts,tsx}')],
       }),
     ],
     resolve: {

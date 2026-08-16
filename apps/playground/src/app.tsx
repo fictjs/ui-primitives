@@ -4,6 +4,17 @@ import { Theme, ThemePanel } from '@fictjs/radix-ui-themes'
 
 import Sink from './sink/page.js'
 import SinkLayout from './sink/layout.js'
+import { sinkRoutes } from './sink/routes.js'
+
+type SinkRoute = (typeof sinkRoutes)[number]['href']
+
+function readSinkRoute(): SinkRoute | undefined {
+  if (typeof window === 'undefined') return undefined
+
+  const match = window.location.hash.match(/^#\/sink\/([^/?#]+)$/)
+  const slug = match?.[1]
+  return sinkRoutes.find((route) => route.href === slug)?.href
+}
 
 function normalizeHeading(text: string) {
   return text
@@ -16,6 +27,8 @@ function normalizeHeading(text: string) {
 const SINK_SECTION_SCROLL_OFFSET = 96
 
 export default function App() {
+  const activeRoute = readSinkRoute()
+
   createEffect(() => {
     if (typeof window === 'undefined') return undefined
 
@@ -24,6 +37,11 @@ export default function App() {
     }
 
     const syncHash = () => {
+      if (readSinkRoute() !== activeRoute) {
+        window.location.reload()
+        return
+      }
+
       const targetHash = window.location.hash.replace(/^#/, '')
       if (targetHash === '' || targetHash === '/sink') {
         window.scrollTo({ top: 0, behavior: 'auto' })
@@ -80,7 +98,7 @@ export default function App() {
   return (
     <Theme appearance="dark" accentColor="violet">
       <SinkLayout>
-        <Sink />
+        <Sink activeRoute={activeRoute} />
       </SinkLayout>
       <ThemePanel defaultOpen={false} />
     </Theme>

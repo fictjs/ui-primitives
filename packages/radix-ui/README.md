@@ -10,7 +10,7 @@ Part of the [`ui-primitives`](https://github.com/fictjs/ui-primitives) monorepo 
 pnpm add @fictjs/radix-ui fict
 ```
 
-`@fictjs/runtime` (`>= 0.26.0`) is a peer dependency and comes with `fict`.
+`@fictjs/runtime` (`>= 0.32.0`) is a peer dependency and comes with `fict`.
 
 ## Entry points
 

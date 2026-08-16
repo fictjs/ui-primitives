@@ -69,6 +69,7 @@ export async function gotoSinkSection(page: Page, href: (typeof sinkRoutes)[numb
   }
 
   await expectNoBrowserErrors(page, `/#/sink/${href}`)
+  await expect(page.locator('main section')).toHaveCount(1)
 
   const sectionIndex = await page.evaluate((slug) => {
     const normalizeHeading = (text: string) =>

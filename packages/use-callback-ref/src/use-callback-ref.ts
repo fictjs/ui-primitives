@@ -1,3 +1,5 @@
+import { onCleanup } from '@fictjs/runtime'
+
 import { createRefFacade } from './ref-facade.js'
 import type { RefLifecycleCallback, RefObject } from './types.js'
 
@@ -40,5 +42,18 @@ export function useCallbackRef<T>(
   }
 
   const callbackSource = initialValueOrCallback as CallbackSource<AnyFunction>
-  return ((...args: never[]) => readCallback(callbackSource)?.(...args)) as AnyFunction
+  let disposed = false
+  let latestCallback = readCallback(callbackSource)
+
+  onCleanup(() => {
+    latestCallback = readCallback(callbackSource)
+    disposed = true
+  })
+
+  return ((...args: never[]) => {
+    if (!disposed) {
+      latestCallback = readCallback(callbackSource)
+    }
+    return latestCallback?.(...args)
+  }) as AnyFunction
 }

@@ -50,8 +50,68 @@ import TextFieldPage from './text-field/page'
 import TextPage from './text/page'
 import TooltipPage from './tooltip/page'
 import TypographyPage from './typography/page'
+import type { sinkRoutes } from './routes'
 
-export default function Sink() {
+type SinkRoute = (typeof sinkRoutes)[number]['href']
+
+type SinkProps = {
+  activeRoute: SinkRoute | undefined
+}
+
+const sinkPages = [
+  ['alert-dialog', AlertDialogPage],
+  ['aspect-ratio', AspectRatioPage],
+  ['avatar', AvatarPage],
+  ['badge', BadgePage],
+  ['blockquote', BlockquotePage],
+  ['button', ButtonPage],
+  ['callout', CalloutPage],
+  ['card', CardPage],
+  ['checkbox', CheckboxPage],
+  ['checkbox-cards', CheckboxCardsPage],
+  ['checkbox-group', CheckboxGroupPage],
+  ['code', CodePage],
+  ['container', ContainerPage],
+  ['context-menu', ContextMenuPage],
+  ['cursors', CursorsPage],
+  ['data-list', DataListPage],
+  ['dialog', DialogPage],
+  ['dropdown-menu', DropdownMenuPage],
+  ['grid', GridPage],
+  ['heading', HeadingPage],
+  ['hover-card', HoverCardPage],
+  ['icon-button', IconButtonPage],
+  ['kbd', KbdPage],
+  ['link', LinkPage],
+  ['mixed-nested-themes-test', MixedNestedThemesTestPage],
+  ['nested-appearances-test', NestedAppearancesTestPage],
+  ['nested-colors-test', NestedColorsTestPage],
+  ['playground', PlaygroundPage],
+  ['popover', PopoverPage],
+  ['progress', ProgressPage],
+  ['radio', RadioPage],
+  ['radio-cards', RadioCardsPage],
+  ['radio-group', RadioGroupPage],
+  ['scroll-area', ScrollAreaPage],
+  ['segmented-control', SegmentedControlPage],
+  ['select', SelectPage],
+  ['separator', SeparatorPage],
+  ['shadow-tokens', ShadowTokensPage],
+  ['skeleton', SkeletonPage],
+  ['slider', SliderPage],
+  ['spinner', SpinnerPage],
+  ['switch', SwitchPage],
+  ['tab-nav', TabNavPage],
+  ['table', TablePage],
+  ['tabs', TabsPage],
+  ['text', TextPage],
+  ['text-area', TextAreaPage],
+  ['text-field', TextFieldPage],
+  ['tooltip', TooltipPage],
+  ['typography', TypographyPage],
+] as const satisfies readonly (readonly [SinkRoute, () => unknown])[]
+
+export default function Sink(props: SinkProps) {
   return (
     <div id="root">
       <div
@@ -79,105 +139,111 @@ export default function Sink() {
       />
 
       <Flex direction="column" gap="6">
-        <DialogPage />
-        <Separator size="4" />
-        <HoverCardPage />
-        <Separator size="4" />
-        <TooltipPage />
-        <Separator size="4" />
-        <AlertDialogPage />
-        <Separator size="4" />
-        <PopoverPage />
-        <Separator size="4" />
-        <DropdownMenuPage />
-        <Separator size="4" />
-        <ContextMenuPage />
-        <Separator size="4" />
-        <SelectPage />
-        <Separator size="4" />
-        <SwitchPage />
-        <Separator size="4" />
-        <SliderPage />
-        <Separator size="4" />
-        <ProgressPage />
-        <Separator size="4" />
-        <SpinnerPage />
-        <Separator size="4" />
-        <CheckboxPage />
-        <Separator size="4" />
-        <CheckboxGroupPage />
-        <Separator size="4" />
-        <CheckboxCardsPage />
-        <Separator size="4" />
-        <RadioPage />
-        <Separator size="4" />
-        <RadioGroupPage />
-        <Separator size="4" />
-        <RadioCardsPage />
-        <Separator size="4" />
-        <ButtonPage />
-        <Separator size="4" />
-        <IconButtonPage />
-        <Separator size="4" />
-        <TextFieldPage />
-        <Separator size="4" />
-        <TextAreaPage />
-        <Separator size="4" />
-        <BadgePage />
-        <Separator size="4" />
-        <AvatarPage />
-        <Separator size="4" />
-        <CardPage />
-        <Separator size="4" />
-        <TablePage />
-        <Separator size="4" />
-        <TypographyPage />
-        <Separator size="4" />
-        <TextPage />
-        <Separator size="4" />
-        <CodePage />
-        <Separator size="4" />
-        <HeadingPage />
-        <Separator size="4" />
-        <LinkPage />
-        <Separator size="4" />
-        <BlockquotePage />
-        <Separator size="4" />
-        <CalloutPage />
-        <Separator size="4" />
-        <KbdPage />
-        <Separator size="4" />
-        <TabNavPage />
-        <Separator size="4" />
-        <TabsPage />
-        <Separator size="4" />
-        <AspectRatioPage />
-        <Separator size="4" />
-        <ScrollAreaPage />
-        <Separator size="4" />
-        <PlaygroundPage />
-        <Separator size="4" />
-        <NestedAppearancesTestPage />
-        <Separator size="4" />
-        <NestedColorsTestPage />
-        <Separator size="4" />
-        <MixedNestedThemesTestPage />
-        <Separator size="4" />
-        <ShadowTokensPage />
-        <Separator size="4" />
-        <GridPage />
-        <Separator size="4" />
-        <SeparatorPage />
-        <Separator size="4" />
-        <CursorsPage />
-        <Separator size="4" />
-        <SkeletonPage />
-        <Separator size="4" />
-        <DataListPage />
-        <Separator size="4" />
-        <SegmentedControlPage />
-        <Separator size="4" />
-        <ContainerPage />
+        {props.activeRoute === undefined ? (
+          <>
+            <DialogPage />
+            <Separator size="4" />
+            <HoverCardPage />
+            <Separator size="4" />
+            <TooltipPage />
+            <Separator size="4" />
+            <AlertDialogPage />
+            <Separator size="4" />
+            <PopoverPage />
+            <Separator size="4" />
+            <DropdownMenuPage />
+            <Separator size="4" />
+            <ContextMenuPage />
+            <Separator size="4" />
+            <SelectPage />
+            <Separator size="4" />
+            <SwitchPage />
+            <Separator size="4" />
+            <SliderPage />
+            <Separator size="4" />
+            <ProgressPage />
+            <Separator size="4" />
+            <SpinnerPage />
+            <Separator size="4" />
+            <CheckboxPage />
+            <Separator size="4" />
+            <CheckboxGroupPage />
+            <Separator size="4" />
+            <CheckboxCardsPage />
+            <Separator size="4" />
+            <RadioPage />
+            <Separator size="4" />
+            <RadioGroupPage />
+            <Separator size="4" />
+            <RadioCardsPage />
+            <Separator size="4" />
+            <ButtonPage />
+            <Separator size="4" />
+            <IconButtonPage />
+            <Separator size="4" />
+            <TextFieldPage />
+            <Separator size="4" />
+            <TextAreaPage />
+            <Separator size="4" />
+            <BadgePage />
+            <Separator size="4" />
+            <AvatarPage />
+            <Separator size="4" />
+            <CardPage />
+            <Separator size="4" />
+            <TablePage />
+            <Separator size="4" />
+            <TypographyPage />
+            <Separator size="4" />
+            <TextPage />
+            <Separator size="4" />
+            <CodePage />
+            <Separator size="4" />
+            <HeadingPage />
+            <Separator size="4" />
+            <LinkPage />
+            <Separator size="4" />
+            <BlockquotePage />
+            <Separator size="4" />
+            <CalloutPage />
+            <Separator size="4" />
+            <KbdPage />
+            <Separator size="4" />
+            <TabNavPage />
+            <Separator size="4" />
+            <TabsPage />
+            <Separator size="4" />
+            <AspectRatioPage />
+            <Separator size="4" />
+            <ScrollAreaPage />
+            <Separator size="4" />
+            <PlaygroundPage />
+            <Separator size="4" />
+            <NestedAppearancesTestPage />
+            <Separator size="4" />
+            <NestedColorsTestPage />
+            <Separator size="4" />
+            <MixedNestedThemesTestPage />
+            <Separator size="4" />
+            <ShadowTokensPage />
+            <Separator size="4" />
+            <GridPage />
+            <Separator size="4" />
+            <SeparatorPage />
+            <Separator size="4" />
+            <CursorsPage />
+            <Separator size="4" />
+            <SkeletonPage />
+            <Separator size="4" />
+            <DataListPage />
+            <Separator size="4" />
+            <SegmentedControlPage />
+            <Separator size="4" />
+            <ContainerPage />
+          </>
+        ) : (
+          sinkPages.map(([route, Page]) => (route === props.activeRoute ? <Page /> : null))
+        )}
       </Flex>
     </div>
   )

@@ -230,6 +230,8 @@ describe('@fictjs/floating-ui-dom', () => {
 
     expect(floating!.refs.reference.current).toBe(null)
     expect(floating!.refs.floating.current).toBe(null)
+    expect(floating!.elements.reference).toBe(null)
+    expect(floating!.elements.floating).toBe(null)
   })
 
   it('supports reactive middleware and open state without rerendering the component', async () => {

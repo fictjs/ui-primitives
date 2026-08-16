@@ -19,6 +19,7 @@ const THUMB_NAME = 'SwitchThumb'
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+const FORM_PROP = new Set(['form'])
 
 const [createSwitchContext, createSwitchScope] = createContextScope(SWITCH_NAME)
 
@@ -84,6 +85,11 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
   const button = createSignal<HTMLButtonElement | null>(null)
   const bubbleInput = createSignal<HTMLInputElement | null>(null)
   const isFormControl = createSignal(typeof document === 'undefined')
+  const forwardedProps = omitPropsPreservingValues(
+    props as Record<string, unknown>,
+    FORM_PROP,
+    Object.keys(props),
+  )
   const checkedProp = () =>
     props.checked === undefined
       ? undefined
@@ -202,12 +208,11 @@ function Switch(props: ScopedProps<SwitchProps>): FictNode {
       'data-state': prop(() => getState(checked())),
       'data-disabled': prop(() => (disabled() ? '' : undefined)),
     },
-    prop(() => props as Record<string, unknown>),
+    forwardedProps,
     {
       __scopeSwitch: undefined,
       checked: undefined,
       defaultChecked: undefined,
-      form: undefined,
       name: undefined,
       onCheckedChange: undefined,
       required: undefined,
@@ -280,69 +285,86 @@ SwitchThumb.displayName = THUMB_NAME
 
 function SwitchBubbleInput(props: SwitchBubbleInputProps): FictNode {
   const controlSize = useSize(props.control)
-
-  const inputProps = mergeProps(
-    prop(() => props as Record<string, unknown>),
-    {
-      'aria-hidden': true,
-      checked: prop(props.checked),
-      control: undefined,
-      bubbles: undefined,
-      children: undefined,
-      disabled: prop(() =>
-        props.disabled === undefined ? undefined : Boolean(readValue(props.disabled)),
-      ),
-      form: undefined,
-      'attr:form': prop(() =>
-        props.form === undefined
-          ? undefined
-          : readValue(props.form as MaybeAccessor<string | undefined>),
-      ),
-      name: prop(() =>
-        props.name === undefined
-          ? undefined
-          : readValue(props.name as MaybeAccessor<string | undefined>),
-      ),
-      inputRef: undefined,
-      ref: undefined,
-      required: prop(() =>
-        props.required === undefined
-          ? undefined
-          : Boolean(readValue(props.required as MaybeAccessor<unknown>)),
-      ),
-      style: prop(() => {
-        const nextControlSize = controlSize()
-        return {
-          ...readStyle(props.style),
-          ...(nextControlSize
-            ? {
-                height: `${nextControlSize.height}px`,
-                width: `${nextControlSize.width}px`,
-              }
-            : {}),
-          margin: 0,
-          opacity: 0,
-          pointerEvents: 'none',
-          position: 'absolute',
-        }
-      }),
-      tabIndex: -1,
-      type: 'checkbox',
-      value: prop(() =>
-        props.value === undefined
-          ? undefined
-          : readValue(
-              props.value as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
-            ),
-      ),
-    },
+  const forwardedProps = omitPropsPreservingValues(
+    props as Record<string, unknown>,
+    FORM_PROP,
+    Object.keys(props),
   )
+
+  const inputProps = mergeProps(forwardedProps, {
+    'aria-hidden': true,
+    checked: prop(props.checked),
+    control: undefined,
+    bubbles: undefined,
+    children: undefined,
+    disabled: prop(() =>
+      props.disabled === undefined ? undefined : Boolean(readValue(props.disabled)),
+    ),
+    'attr:form': prop(() =>
+      props.form === undefined
+        ? undefined
+        : readValue(props.form as MaybeAccessor<string | undefined>),
+    ),
+    name: prop(() =>
+      props.name === undefined
+        ? undefined
+        : readValue(props.name as MaybeAccessor<string | undefined>),
+    ),
+    inputRef: undefined,
+    ref: undefined,
+    required: prop(() =>
+      props.required === undefined
+        ? undefined
+        : Boolean(readValue(props.required as MaybeAccessor<unknown>)),
+    ),
+    style: prop(() => {
+      const nextControlSize = controlSize()
+      return {
+        ...readStyle(props.style),
+        ...(nextControlSize
+          ? {
+              height: `${nextControlSize.height}px`,
+              width: `${nextControlSize.width}px`,
+            }
+          : {}),
+        margin: 0,
+        opacity: 0,
+        pointerEvents: 'none',
+        position: 'absolute',
+      }
+    }),
+    tabIndex: -1,
+    type: 'checkbox',
+    value: prop(() =>
+      props.value === undefined
+        ? undefined
+        : readValue(
+            props.value as MaybeAccessor<JSX.IntrinsicElements['input']['value'] | undefined>,
+          ),
+    ),
+  })
 
   if (props.inputRef) {
     return <Primitive.input {...inputProps} ref={props.inputRef} />
   }
 
   return <Primitive.input {...inputProps} />
+}
+
+function omitPropsPreservingValues(
+  source: Record<string, unknown>,
+  omittedKeys: ReadonlySet<string>,
+  sourceKeys: readonly string[],
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+
+  for (const key of sourceKeys) {
+    if (!omittedKeys.has(key)) {
+      result[key] = prop(() => source[key])
+    }
+  }
+
+  return result
 }
 
 SwitchBubbleInput.displayName = 'SwitchBubbleInput'

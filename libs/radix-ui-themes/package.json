@@ -105,7 +105,7 @@
     "classnames": "^2.3.2"
   },
   "peerDependencies": {
-    "fict": "^0.26.0"
+    "fict": "^0.32.0"
   },
   "devDependencies": {
     "@radix-ui/themes": "catalog:",

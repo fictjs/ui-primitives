@@ -305,18 +305,20 @@ export function useFloating<RT extends ReferenceType = ReferenceType>(
   })
 
   const refs = {
-    reference: createManagedRef<RT>(setReference, referenceElement),
-    floating: createManagedRef<HTMLElement>(setFloating, floatingElement),
+    reference: createManagedRef<RT>(setReference, () => (disposed ? null : referenceElement())),
+    floating: createManagedRef<HTMLElement>(setFloating, () =>
+      disposed ? null : floatingElement(),
+    ),
     setReference,
     setFloating,
   }
 
   const elements = {
     get reference() {
-      return referenceElement()
+      return disposed ? null : referenceElement()
     },
     get floating() {
-      return floatingElement()
+      return disposed ? null : floatingElement()
     },
   }
 
