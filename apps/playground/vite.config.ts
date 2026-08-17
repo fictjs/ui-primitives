@@ -98,6 +98,7 @@ export default defineConfig(() => {
   const resolveImport = (id: string) => fileURLToPath(import.meta.resolve(id))
 
   return {
+    base: process.env.PLAYGROUND_BASE_PATH ?? '/',
     plugins: [
       avatarApiFallback(),
       historyFallback(),
