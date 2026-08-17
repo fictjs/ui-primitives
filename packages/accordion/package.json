@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/accordion",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Accordion primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

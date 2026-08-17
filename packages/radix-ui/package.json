@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/radix-ui",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Aggregate exports for Fict UI primitives.",
   "license": "MIT",
   "type": "module",
