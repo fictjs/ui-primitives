@@ -1,6 +1,7 @@
 name: Deploy playground to GitHub Pages
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - '*'
