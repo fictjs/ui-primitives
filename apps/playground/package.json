@@ -4,7 +4,7 @@
   "version": "0.2.3",
   "type": "module",
   "scripts": {
-    "build:deps": "pnpm --dir ../.. --filter @fictjs/radix-ui-themes... --filter '!@fictjs/one-time-password-field' --filter '!@fictjs/password-toggle-field' build",
+    "build:deps": "pnpm --dir ../.. --filter @fictjs/radix-ui-themes... build",
     "dev": "pnpm build:deps && vite --host 0.0.0.0 --port 3100",
     "dev:e2e": "pnpm build:deps && vite --host 127.0.0.1 --port 3110 --strictPort",
     "build": "pnpm build:deps && vite build",
