@@ -322,6 +322,31 @@ test('text area accepts typed input', async ({ page }) => {
 
   await textarea.fill('Looks good')
   await expect(textarea).toHaveValue('Looks good')
+  await expect(textarea).toHaveClass('rt-reset rt-TextAreaInput')
+  await expect
+    .poll(() =>
+      textarea.evaluate((element) => {
+        const root = element.parentElement
+        if (!root) return null
+
+        const inputBox = element.getBoundingClientRect()
+        const rootBox = root.getBoundingClientRect()
+        const styles = getComputedStyle(element)
+
+        return {
+          boxSizing: styles.boxSizing,
+          fillsRootHeight: Math.abs(inputBox.height - (rootBox.height - 2)) <= 0.5,
+          fillsRootWidth: Math.abs(inputBox.width - (rootBox.width - 2)) <= 0.5,
+          resize: styles.resize,
+        }
+      }),
+    )
+    .toEqual({
+      boxSizing: 'border-box',
+      fillsRootHeight: true,
+      fillsRootWidth: true,
+      resize: 'none',
+    })
   await expect(readonlyTextarea).toHaveJSProperty('readOnly', true)
 
   await colorCombinations.locator('summary').click()

@@ -49,9 +49,9 @@ const TextArea = React.forwardRef<TextAreaElement, TextAreaProps>((props, forwar
       style={extractedProps.style}
     >
       <textarea
+        {...textAreaProps}
         class="rt-reset rt-TextAreaInput"
         ref={React.coerceRef(forwardedRef)}
-        {...textAreaProps}
       />
     </div>
   )
