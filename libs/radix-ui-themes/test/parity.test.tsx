@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -17,19 +17,7 @@ const thisDir =
     : dirname(fileURLToPath(import.meta.url))
 const fictThemesSrcDir = join(thisDir, '..', 'src')
 const require = createRequire(import.meta.url)
-const reactThemesSiblingSrcDir = join(
-  thisDir,
-  '..',
-  '..',
-  '..',
-  'radix-ui-themes',
-  'packages',
-  'radix-ui-themes',
-  'src',
-)
-const reactThemesSrcDir = existsSync(reactThemesSiblingSrcDir)
-  ? reactThemesSiblingSrcDir
-  : join(dirname(require.resolve('@radix-ui/themes/package.json')), 'src')
+const reactThemesSrcDir = join(dirname(require.resolve('@radix-ui/themes/package.json')), 'src')
 
 function collectCssFiles(rootDir: string, currentDir = rootDir): string[] {
   return readdirSync(currentDir, { withFileTypes: true })
@@ -83,13 +71,21 @@ const fictCssNormalizers: Record<string, (contents: string) => string> = {
       .replace('  overflow: hidden;\n', '')
       .replace('  position: absolute;\n  inset: 0;\n  display: block;\n', '')
       .replace('  position: absolute;\n  inset: 0;\n', ''),
+  'components/_internal/base-button.css': (contents) =>
+    contents.replace(/, \.rt-variant-ghost-offset/g, ''),
   'components/_internal/base-checkbox.css': (contents) =>
     contents.replace(
       '\n\n  & :where(svg) {\n    display: block;\n    width: 100%;\n    height: 100%;\n  }',
       '',
     ),
+  'components/container.css': (contents) =>
+    contents.replace(
+      /:where\(\.rt-Container\.rt-r-size-(\d)\) > &/g,
+      ':where(.rt-Container.rt-r-size-$1) &',
+    ),
   'components/select.css': (contents) =>
     contents
+      .replace(/,\n\.rt-SelectTrigger:where\(\.rt-variant-ghost-offset\)/g, '')
       .replace('  width: 100%;\n', '')
       .replace(
         '\n.rt-SelectViewport > :where(.rt-SelectItem, .rt-SelectLabel) {\n  display: flex !important;\n}\n',
@@ -107,6 +103,20 @@ const fictCssNormalizers: Record<string, (contents: string) => string> = {
       .replace(
         '  /* Fict collapses ScrollArea tables when this is forced to zero. */\n  height: auto;',
         '  /* Makes "height: 100%" work on content inside cells */\n  height: 0;',
+      ),
+  'components/theme-panel.css': (contents) =>
+    contents
+      .replace(
+        '  border-radius: inherit;\n}',
+        '  border-radius: inherit;\n\n  /* iOS Safari */\n  width: 100%;\n  height: 100%;\n}',
+      )
+      .replace(
+        '  width: var(--space-4);\n  height: var(--space-4);\n  border-radius: 100%;\n\n  @media (--sm) {\n    width: var(--space-5);\n    height: var(--space-5);\n  }',
+        '  width: var(--space-5);\n  height: var(--space-5);\n  border-radius: 100%;',
+      )
+      .replace(
+        '  outline-offset: 2px;\n  &:where(:checked)',
+        '  outline-offset: 2px;\n\n  &:where(:checked)',
       ),
   'components/tooltip.css': (contents) =>
     contents.replace(
