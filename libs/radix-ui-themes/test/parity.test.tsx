@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 import { render } from 'fict'
 
-import { Button, Container, Theme, Tooltip } from '../src/index.js'
+import { Button, Container, Select, Theme, Tooltip } from '../src/index.js'
 
 const thisDir =
   typeof import.meta.dirname === 'string'
@@ -83,21 +83,13 @@ const fictCssNormalizers: Record<string, (contents: string) => string> = {
       .replace('  overflow: hidden;\n', '')
       .replace('  position: absolute;\n  inset: 0;\n  display: block;\n', '')
       .replace('  position: absolute;\n  inset: 0;\n', ''),
-  'components/_internal/base-button.css': (contents) =>
-    contents.replace(/, \.rt-variant-ghost-offset/g, ''),
   'components/_internal/base-checkbox.css': (contents) =>
     contents.replace(
       '\n\n  & :where(svg) {\n    display: block;\n    width: 100%;\n    height: 100%;\n  }',
       '',
     ),
-  'components/container.css': (contents) =>
-    contents.replace(
-      /:where\(\.rt-Container\.rt-r-size-(\d)\) > &/g,
-      ':where(.rt-Container.rt-r-size-$1) &',
-    ),
   'components/select.css': (contents) =>
     contents
-      .replace(/,\n\.rt-SelectTrigger:where\(\.rt-variant-ghost-offset\)/g, '')
       .replace('  width: 100%;\n', '')
       .replace(
         '\n.rt-SelectViewport > :where(.rt-SelectItem, .rt-SelectLabel) {\n  display: flex !important;\n}\n',
@@ -115,20 +107,6 @@ const fictCssNormalizers: Record<string, (contents: string) => string> = {
       .replace(
         '  /* Fict collapses ScrollArea tables when this is forced to zero. */\n  height: auto;',
         '  /* Makes "height: 100%" work on content inside cells */\n  height: 0;',
-      ),
-  'components/theme-panel.css': (contents) =>
-    contents
-      .replace(
-        '  border-radius: inherit;\n}',
-        '  border-radius: inherit;\n\n  /* iOS Safari */\n  width: 100%;\n  height: 100%;\n}',
-      )
-      .replace(
-        '  width: var(--space-4);\n  height: var(--space-4);\n  border-radius: 100%;\n\n  @media (--sm) {\n    width: var(--space-5);\n    height: var(--space-5);\n  }',
-        '  width: var(--space-5);\n  height: var(--space-5);\n  border-radius: 100%;',
-      )
-      .replace(
-        '  outline-offset: 2px;\n  &:where(:checked)',
-        '  outline-offset: 2px;\n\n  &:where(:checked)',
       ),
   'components/tooltip.css': (contents) =>
     contents.replace(
@@ -236,6 +214,33 @@ describe('@fictjs/radix-ui-themes parity', () => {
       'rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button',
     )
     expect(button?.getAttribute('style')).toBeNull()
+  })
+
+  it('retains ghost-offset classes for button and select trigger styling', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Theme>
+          <Button variant="ghost-offset">Action</Button>
+          <Select.Root defaultValue="one">
+            <Select.Trigger variant="ghost-offset" />
+            <Select.Content>
+              <Select.Item value="one">One</Select.Item>
+            </Select.Content>
+          </Select.Root>
+        </Theme>
+      ),
+      container,
+    )
+
+    await flushEffects()
+
+    expect(container.querySelector('.rt-Button')?.classList).toContain('rt-variant-ghost-offset')
+    expect(container.querySelector('.rt-SelectTrigger')?.classList).toContain(
+      'rt-variant-ghost-offset',
+    )
   })
 
   it('renders arbitrary layout values through the same class plus custom-property pattern as React', async () => {
