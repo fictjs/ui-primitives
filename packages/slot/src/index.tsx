@@ -89,6 +89,12 @@ function normalizePropName(name: string): string {
   return name
 }
 
+function normalizeComponentPropName(name: string): string {
+  if (name === 'class') return 'className'
+  if (name === 'for') return 'htmlFor'
+  return name
+}
+
 function isReactiveValue(value: unknown): value is () => unknown {
   if (typeof value !== 'function') {
     return false
@@ -115,6 +121,7 @@ function normalizeProps(
   source: Record<string, unknown> | null | undefined,
   excluded: Iterable<PropertyKey> = [],
   preserveProxyReads = false,
+  target: 'component' | 'dom' = 'dom',
 ): PropsRecord {
   const next: PropsRecord = {}
   if (!source) return next
@@ -123,7 +130,12 @@ function normalizeProps(
   for (const key of Reflect.ownKeys(source)) {
     if (excludedKeys.has(key)) continue
 
-    const normalizedKey = typeof key === 'string' ? normalizePropName(key) : key
+    const normalizedKey =
+      typeof key === 'string'
+        ? target === 'component'
+          ? normalizeComponentPropName(key)
+          : normalizePropName(key)
+        : key
     const descriptor = Object.getOwnPropertyDescriptor(source, key)
     if (!descriptor) continue
 
@@ -233,7 +245,7 @@ function mergeProps(slotProps: PropsRecord, childProps: PropsRecord): PropsRecor
           overrideProps[key] = mergedStyle
         }
       }
-    } else if (key === 'class') {
+    } else if (key === 'class' || key === 'className') {
       if (isReactiveValue(slotPropValue) || isReactiveValue(childPropValue)) {
         overrideProps[key] = prop(() =>
           [toClassName(readValue(slotPropValue)), toClassName(readValue(childPropValue))]
@@ -377,14 +389,21 @@ function createSlotClone(ownerName: string) {
   const SlotClone = (props: SlotCloneProps): FictNode => {
     const child = getSingleChild(props.children)
     const forwardedRef = props.ref
-    const slotProps = normalizeProps(props as Record<string, unknown>, ['children', 'ref'], true)
 
     if (!child) return null
     if (!isVNode(child)) return child
 
+    const target = typeof child.type === 'function' ? 'component' : 'dom'
+    const slotProps = normalizeProps(
+      props as Record<string, unknown>,
+      ['children', 'ref'],
+      true,
+      target,
+    )
+
     const mergedProps = mergeProps(
       slotProps,
-      normalizeProps(child.props as Record<string, unknown> | null | undefined),
+      normalizeProps(child.props as Record<string, unknown> | null | undefined, [], false, target),
     )
 
     if (child.type !== Fragment) {

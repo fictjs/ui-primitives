@@ -55,6 +55,40 @@ describe('@fictjs/slot', () => {
     dispose()
   })
 
+  it('preserves component prop aliases while slotting through a component child', () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const ComponentChild = (props: {
+      className?: string | (() => string)
+      style?: string | Record<string, string | number>
+    }) => (
+      <div
+        class={
+          prop(() => {
+            const className =
+              typeof props.className === 'function' ? props.className() : props.className
+            return ['component', className].filter(Boolean).join(' ')
+          }) as unknown as string
+        }
+        style={props.style ?? {}}
+      />
+    )
+
+    render(
+      () => (
+        <Slot class="slot" style={{ '--slot-width': '450px' }}>
+          <ComponentChild className="child" />
+        </Slot>
+      ),
+      container,
+    )
+
+    const child = container.firstElementChild as HTMLElement | null
+    expect(child?.className).toBe('component slot child')
+    expect(child?.style.getPropertyValue('--slot-width')).toBe('450px')
+  })
+
   it('uses Slottable children as the render target', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)

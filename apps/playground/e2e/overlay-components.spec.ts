@@ -147,6 +147,23 @@ test('dialog opens and closes from the cancel action', async ({ page }) => {
   const dialog = page.getByRole('dialog')
   const cancelButton = page.getByRole('button', { name: 'Cancel' })
   await expect(dialog).toBeVisible()
+  await expect(dialog).toHaveClass(/rt-BaseDialogContent/)
+  await expect
+    .poll(() =>
+      dialog.evaluate((element) => {
+        const styles = getComputedStyle(element)
+        const box = element.getBoundingClientRect()
+
+        return {
+          backgroundIsOpaque: styles.backgroundColor !== 'rgba(0, 0, 0, 0)',
+          width: Math.round(box.width),
+        }
+      }),
+    )
+    .toEqual({
+      backgroundIsOpaque: true,
+      width: 450,
+    })
   await expect(cancelButton).toHaveClass(/rt-Button/)
   await expect(cancelButton).not.toHaveAttribute('style', /.+/)
   await cancelButton.click()
