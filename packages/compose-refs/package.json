@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/compose-refs",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Ref composition helpers for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/use-sidecar",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Sidecar code-splitting utilities for Fict components.",
   "license": "MIT",
   "type": "module",

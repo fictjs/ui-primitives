@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/core-primitive",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Internal DOM and event utilities for Fict UI primitives.",
   "license": "MIT",
   "type": "module",
