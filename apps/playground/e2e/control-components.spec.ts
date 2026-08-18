@@ -276,7 +276,41 @@ test('segmented control updates the active item', async ({ page }) => {
   const demo = section.locator('.rt-SegmentedControlRoot').nth(1)
   const one = demo.getByRole('radio', { name: 'One' })
   const two = demo.getByRole('radio', { name: 'Two' })
+  const items = demo.locator('.rt-SegmentedControlItem')
 
+  await expect(items).toHaveCount(3)
+  await expect(one).toHaveClass('rt-reset rt-SegmentedControlItem')
+  await expect
+    .poll(() =>
+      demo.evaluate((root) => {
+        const rootBox = root.getBoundingClientRect()
+        const itemBoxes = [...root.querySelectorAll('.rt-SegmentedControlItem')].map((item) =>
+          item.getBoundingClientRect(),
+        )
+
+        return {
+          itemsFillRoot:
+            Math.abs(itemBoxes.reduce((width, item) => width + item.width, 0) - rootBox.width) <= 1,
+          itemsHaveEqualWidths:
+            itemBoxes.length > 0 &&
+            itemBoxes.every((item) => Math.abs(item.width - itemBoxes[0].width) <= 0.5),
+        }
+      }),
+    )
+    .toEqual({
+      itemsFillRoot: true,
+      itemsHaveEqualWidths: true,
+    })
+  await expect
+    .poll(() =>
+      section.evaluate((sectionElement) => {
+        const sectionBox = sectionElement.getBoundingClientRect()
+        return [...sectionElement.querySelectorAll('.rt-SegmentedControlRoot')].every(
+          (root) => root.getBoundingClientRect().left >= sectionBox.left - 1,
+        )
+      }),
+    )
+    .toBe(true)
   await expect(one).toHaveAttribute('data-state', 'on')
   await expect(two).toHaveAttribute('data-state', 'off')
   await two.evaluate((element: HTMLButtonElement) => {

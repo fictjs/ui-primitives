@@ -95,6 +95,7 @@ const SegmentedControlItem = React.forwardRef<HTMLButtonElement, SegmentedContro
 
     return (
       <ToggleGroupPrimitive.Item
+        {...itemProps}
         ref={React.coerceRef(forwardedRef)}
         class={
           prop(() =>
@@ -102,7 +103,6 @@ const SegmentedControlItem = React.forwardRef<HTMLButtonElement, SegmentedContro
           ) as unknown as string
         }
         aria-label={prop(() => props['aria-label'] ?? itemLabel()) as unknown as string | undefined}
-        {...itemProps}
         disabled={false}
       >
         <span class="rt-SegmentedControlItemSeparator" />
