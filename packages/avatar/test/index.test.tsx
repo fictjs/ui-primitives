@@ -14,9 +14,16 @@ const cache = new Set<string>()
 const OriginalImage = window.Image
 
 class MockImage extends EventTarget {
+  static instances: MockImage[] = []
+
   private currentSrc = ''
   crossOrigin: string | null = null
   referrerPolicy = ''
+
+  constructor() {
+    super()
+    MockImage.instances.push(this)
+  }
 
   get src(): string {
     return this.currentSrc
@@ -83,6 +90,7 @@ async function flushLoad(): Promise<void> {
 describe('@fictjs/avatar', () => {
   beforeEach(() => {
     cache.clear()
+    MockImage.instances = []
     vi.useFakeTimers()
     window.Image = MockImage as unknown as typeof window.Image
   })
@@ -195,6 +203,54 @@ describe('@fictjs/avatar', () => {
     await flushEffects()
 
     expect(second.container.querySelector('img')).not.toBeNull()
+  })
+
+  it('cancels an unfinished preload after its final subscriber unmounts', async () => {
+    const first = mount(() => (
+      <Root>
+        <AvatarImage alt={IMAGE_ALT_TEXT} src="/pending.png" />
+      </Root>
+    ))
+
+    await flushHydration()
+    expect(MockImage.instances).toHaveLength(1)
+
+    first.dispose()
+
+    const second = mount(() => (
+      <Root>
+        <AvatarImage alt={IMAGE_ALT_TEXT} src="/pending.png" />
+      </Root>
+    ))
+    await flushHydration()
+
+    expect(MockImage.instances).toHaveLength(2)
+    second.dispose()
+  })
+
+  it('bounds completed preload statuses with least-recently-used eviction', async () => {
+    for (let index = 0; index <= 100; index += 1) {
+      const avatar = mount(() => (
+        <Root>
+          <AvatarImage alt={IMAGE_ALT_TEXT} src={`/cached-${index}.png`} />
+        </Root>
+      ))
+      await flushHydration()
+      await flushLoad()
+      avatar.dispose()
+    }
+
+    expect(MockImage.instances).toHaveLength(101)
+
+    const evicted = mount(() => (
+      <Root>
+        <AvatarImage alt={IMAGE_ALT_TEXT} src="/cached-0.png" />
+      </Root>
+    ))
+    await flushHydration()
+
+    expect(MockImage.instances).toHaveLength(102)
+    evicted.dispose()
   })
 
   it('does not render an image when src is missing or empty', async () => {

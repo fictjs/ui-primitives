@@ -20,6 +20,11 @@ type ImageStatusSubscriber = {
   onError?: (event: Event) => void
   onStatusChange(status: ImageLoadingStatus): void
 }
+type PendingImageLoad = {
+  image: HTMLImageElement
+  onError: (event: Event) => void
+  onLoad: (event: Event) => void
+}
 
 const AVATAR_NAME = 'Avatar'
 const IMAGE_NAME = 'AvatarImage'
@@ -27,8 +32,9 @@ const FALLBACK_NAME = 'AvatarFallback'
 const SIGNAL_MARKER = Symbol.for('fict:signal')
 const COMPUTED_MARKER = Symbol.for('fict:computed')
 const PROP_GETTER_MARKER = Symbol.for('fict:prop-getter')
+const IMAGE_STATUS_CACHE_LIMIT = 100
 const imageStatusCache = new Map<string, ImageLoadingStatus>()
-const pendingImageLoads = new Map<string, HTMLImageElement>()
+const pendingImageLoads = new Map<string, PendingImageLoad>()
 const imageStatusSubscribers = new Map<string, Set<ImageStatusSubscriber>>()
 
 const [, createAvatarScope] = createContextScope(AVATAR_NAME)
@@ -75,6 +81,42 @@ function cloneVNode(node: FictVNode, props: Record<string, unknown>): FictVNode 
       ...props,
     },
   }
+}
+
+function readCachedImageStatus(key: string): ImageLoadingStatus | undefined {
+  const status = imageStatusCache.get(key)
+  if (status === undefined) {
+    return undefined
+  }
+
+  imageStatusCache.delete(key)
+  imageStatusCache.set(key, status)
+  return status
+}
+
+function cacheImageStatus(key: string, status: ImageLoadingStatus): void {
+  imageStatusCache.delete(key)
+  imageStatusCache.set(key, status)
+
+  while (imageStatusCache.size > IMAGE_STATUS_CACHE_LIMIT) {
+    const oldestKey = imageStatusCache.keys().next().value
+    if (oldestKey === undefined) {
+      break
+    }
+    imageStatusCache.delete(oldestKey)
+  }
+}
+
+function cancelPendingImageLoad(key: string): void {
+  const pendingLoad = pendingImageLoads.get(key)
+  if (!pendingLoad) {
+    return
+  }
+
+  pendingImageLoads.delete(key)
+  pendingLoad.image.removeEventListener('load', pendingLoad.onLoad)
+  pendingLoad.image.removeEventListener('error', pendingLoad.onError)
+  pendingLoad.image.src = ''
 }
 
 function injectAvatarState(
@@ -266,7 +308,7 @@ function useImageLoadingStatus(
       lastErrorNotificationKeyRef.current = undefined
     }
 
-    const cachedStatus = imageStatusCache.get(currentKey)
+    const cachedStatus = readCachedImageStatus(currentKey)
     if (cachedStatus === 'loaded' || cachedStatus === 'error') {
       loadingStatus(cachedStatus)
       if (cachedStatus === 'error' && lastErrorNotificationKeyRef.current !== currentKey) {
@@ -302,7 +344,6 @@ function useImageLoadingStatus(
 
     if (!pendingImageLoads.has(currentKey)) {
       const image = new window.Image()
-      pendingImageLoads.set(currentKey, image)
 
       if (nextReferrerPolicy) {
         image.referrerPolicy = nextReferrerPolicy
@@ -313,9 +354,10 @@ function useImageLoadingStatus(
       }
 
       const notify = (status: ImageLoadingStatus, event: Event) => {
-        imageStatusCache.set(currentKey, status)
-        pendingImageLoads.delete(currentKey)
+        cacheImageStatus(currentKey, status)
+        cancelPendingImageLoad(currentKey)
         const currentSubscribers = imageStatusSubscribers.get(currentKey)
+        imageStatusSubscribers.delete(currentKey)
         if (!currentSubscribers) {
           return
         }
@@ -328,24 +370,24 @@ function useImageLoadingStatus(
         }
       }
 
-      image.addEventListener('load', (event) => {
+      const onLoad = (event: Event) => {
         notify('loaded', event)
-      })
-      image.addEventListener('error', (event) => {
+      }
+      const onError = (event: Event) => {
         notify('error', event)
-      })
+      }
+      pendingImageLoads.set(currentKey, { image, onLoad, onError })
+      image.addEventListener('load', onLoad)
+      image.addEventListener('error', onError)
       image.src = currentSrc
     }
 
     return () => {
       const currentSubscribers = imageStatusSubscribers.get(currentKey)
       currentSubscribers?.delete(subscriber)
-      if (
-        currentSubscribers &&
-        currentSubscribers.size === 0 &&
-        !pendingImageLoads.has(currentKey)
-      ) {
+      if (currentSubscribers?.size === 0) {
         imageStatusSubscribers.delete(currentKey)
+        cancelPendingImageLoad(currentKey)
       }
     }
   })
