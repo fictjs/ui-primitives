@@ -381,17 +381,6 @@ function PopperContent(props: ScopedProps<PopperContentProps>): FictNode {
   })
 
   useLayoutEffect(() => {
-    arrow()
-    arrowSize()
-
-    if (!context.anchor() || !content() || !arrow()) {
-      return
-    }
-
-    floating.update()
-  })
-
-  useLayoutEffect(() => {
     floating.isPositioned()
     floating.x()
     floating.y()

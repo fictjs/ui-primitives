@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { mergeProps, prop, render, type JSX } from '@fictjs/runtime'
+import { createEffect, mergeProps, prop, render, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { Primitive } from '@fictjs/primitive'
@@ -325,6 +325,45 @@ describe('@fictjs/popper', () => {
       padding: 0,
       strategy: 'referenceHidden',
     })
+  })
+
+  it('requests one position update when the arrow size changes', async () => {
+    const arrowSize = createSignal({ width: 10, height: 5 })
+    useSizeMock.mockImplementation(() => arrowSize)
+    let floatingResult: ReturnType<typeof createFloatingResult> | undefined
+
+    floatingUiMocks.useFloating.mockImplementation((options) => {
+      const result = createFloatingResult()
+      floatingResult = result
+      createEffect(() => {
+        options.middleware?.()
+        result.update()
+      })
+      return result
+    })
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    render(
+      () => (
+        <Popper>
+          <PopperAnchor />
+          <PopperContent>
+            <PopperArrow />
+          </PopperContent>
+        </Popper>
+      ),
+      container,
+    )
+
+    await flushEffects()
+    floatingResult?.update.mockClear()
+
+    arrowSize({ width: 12, height: 6 })
+    await flushEffects()
+
+    expect(floatingResult?.update).toHaveBeenCalledTimes(1)
   })
 
   it('updates the active reference without remounting the initial anchor structure', async () => {
