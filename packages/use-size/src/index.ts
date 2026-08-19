@@ -45,10 +45,16 @@ function useSize(target: ElementTarget<HTMLElement>): () => Size | undefined {
   useLayoutEffect(() => {
     let cleanup: (() => void) | undefined
     let cancelled = false
+    let attachedElement: HTMLElement | null = null
 
     const attach = (element: HTMLElement | null) => {
+      if (attachedElement === element) {
+        return
+      }
+
       cleanup?.()
       cleanup = undefined
+      attachedElement = element
 
       if (!element || !isElement(element)) {
         size(undefined)

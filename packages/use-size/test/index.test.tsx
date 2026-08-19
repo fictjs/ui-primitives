@@ -142,4 +142,38 @@ describe('@fictjs/use-size', () => {
     expect(container.querySelector('output')?.textContent).toBe('none')
     expect(observe).not.toHaveBeenCalled()
   })
+
+  it('does not recreate an observer for an unchanged ref-object target', async () => {
+    const observe = vi.fn()
+    const unobserve = vi.fn()
+    let observerCount = 0
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor() {
+          observerCount += 1
+        }
+        observe = observe
+        unobserve = unobserve
+        disconnect(): void {}
+      },
+    )
+
+    function Test() {
+      const target = { current: null as HTMLDivElement | null }
+      useSize(target)
+
+      return <div ref={(node) => (target.current = node)} />
+    }
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    render(() => <Test />, container)
+    await flushMicrotasks()
+
+    expect(observerCount).toBe(1)
+    expect(observe).toHaveBeenCalledOnce()
+    expect(unobserve).not.toHaveBeenCalled()
+  })
 })
