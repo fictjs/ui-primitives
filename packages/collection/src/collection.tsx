@@ -151,11 +151,6 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
 
     useLayoutEffect(() => {
       const currentElement = element()
-      const nextItemData = resolveRecord(itemData) as AllItemData
-
-      if (!shallowEqual(memoizedItemData, nextItemData)) {
-        memoizedItemData = nextItemData
-      }
 
       context.setItemMap((map: ItemMap<ItemElement, AllItemData>) => {
         if (!currentElement) {
@@ -168,8 +163,6 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
         }
 
         return map
-          .set(currentElement, { ...memoizedItemData, element: currentElement })
-          .toSorted(sortByDocumentPosition)
       })
 
       return () => {
@@ -182,6 +175,25 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
           return new OrderedDict(map)
         })
       }
+    })
+
+    useLayoutEffect(() => {
+      const nextItemData = resolveRecord(itemData) as AllItemData
+      if (shallowEqual(memoizedItemData, nextItemData)) {
+        return
+      }
+
+      memoizedItemData = nextItemData
+      const currentElement = elementRefObject.current
+      context.setItemMap((map: ItemMap<ItemElement, AllItemData>) => {
+        if (!currentElement || !map.has(currentElement)) {
+          return map
+        }
+
+        const nextMap = new OrderedDict(map)
+        nextMap.set(currentElement, { ...memoizedItemData, element: currentElement })
+        return nextMap
+      })
     })
 
     return CollectionItemSlotRenderer({

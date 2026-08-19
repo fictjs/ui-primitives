@@ -97,6 +97,29 @@ function ModernHarness(props: { showMiddle: () => boolean }) {
   )
 }
 
+function ModernReactiveDataHarness(props: { firstText: () => string }) {
+  const state = useInitCollection()
+
+  return (
+    <ModernCollection.Provider scope={undefined} state={state}>
+      <ModernCollection.Slot scope={undefined}>
+        <div>
+          <ModernCollection.ItemSlot
+            scope={undefined}
+            textValue={props.firstText as unknown as string}
+          >
+            <div>First</div>
+          </ModernCollection.ItemSlot>
+          <ModernCollection.ItemSlot scope={undefined} textValue="last">
+            <div>Last</div>
+          </ModernCollection.ItemSlot>
+        </div>
+      </ModernCollection.Slot>
+      <ModernConsumer />
+    </ModernCollection.Provider>
+  )
+}
+
 async function flushEffects(cycles = 4): Promise<void> {
   for (let index = 0; index < cycles; index++) {
     await new Promise<void>((resolve) => {
@@ -191,5 +214,23 @@ describe('@fictjs/collection', () => {
       'first',
       'last',
     ])
+  })
+
+  it('updates modern item data without re-sorting unchanged elements', async () => {
+    const firstText = createSignal('first')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(() => <ModernReactiveDataHarness firstText={firstText} />, container)
+    await flushEffects()
+
+    const compareDocumentPosition = vi.spyOn(Element.prototype, 'compareDocumentPosition')
+    firstText('updated')
+    await flushEffects()
+
+    expect(
+      Array.from(readModernCollection?.().values() ?? []).map((item) => item.textValue),
+    ).toEqual(['updated', 'last'])
+    expect(compareDocumentPosition).not.toHaveBeenCalled()
   })
 })
