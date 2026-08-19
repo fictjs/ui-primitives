@@ -975,15 +975,16 @@ function getThumbInBoundsOffset(size: number, offset: number, direction: number)
   return (halfSize - offsetScale(offset) * direction) * direction
 }
 
-function getStepsBetweenValues(values: number[]) {
-  return values.slice(0, -1).map((value, index) => values[index + 1]! - value)
-}
-
 function hasMinStepsBetweenValues(values: number[], minStepsBetweenValues: number) {
   if (minStepsBetweenValues <= 0) return true
-  const stepsBetweenValues = getStepsBetweenValues(values)
-  const actualMinStepsBetweenValues = Math.min(...stepsBetweenValues)
-  return actualMinStepsBetweenValues >= minStepsBetweenValues
+
+  for (let index = 1; index < values.length; index++) {
+    if (values[index]! - values[index - 1]! < minStepsBetweenValues) {
+      return false
+    }
+  }
+
+  return true
 }
 
 function linearScale(input: readonly [number, number], output: readonly [number, number]) {
