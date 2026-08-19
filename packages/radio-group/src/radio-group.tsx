@@ -205,8 +205,11 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
   }
   const currentTabStop = createSignal<string | null>(null)
   const items: RadioGroupItemRecord[] = []
+  let orderedItems: RadioGroupItemRecord[] = []
+  let itemOrderDirty = true
+  let itemOrderObserver: MutationObserver | undefined
 
-  const getItems = () => {
+  const syncItemOrder = () => {
     const nextItems = new Map<string, RadioGroupItemRecord>()
 
     for (const item of items) {
@@ -215,7 +218,17 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
       }
     }
 
-    return sortItemsByDomOrder(Array.from(nextItems.values()))
+    orderedItems = sortItemsByDomOrder(Array.from(nextItems.values()))
+    itemOrderDirty = false
+  }
+  const getItems = () => {
+    if (itemOrderObserver?.takeRecords().length) {
+      itemOrderDirty = true
+    }
+    if (itemOrderDirty) {
+      syncItemOrder()
+    }
+    return orderedItems
   }
 
   const getEnabledItems = () => getItems().filter((item) => !item.disabled())
@@ -233,6 +246,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
 
   const registerItem = (item: RadioGroupItemRecord) => {
     items.push(item)
+    itemOrderDirty = true
 
     if (!item.disabled() && (item.checked() || currentTabStop() === null)) {
       currentTabStop(item.value)
@@ -242,6 +256,7 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
       const itemIndex = items.indexOf(item)
       if (itemIndex !== -1) {
         items.splice(itemIndex, 1)
+        itemOrderDirty = true
       }
 
       if (currentTabStop() === item.value) {
@@ -255,6 +270,11 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
     if (!element) return
 
     const document = element.ownerDocument
+    const observer = new MutationObserver(() => {
+      itemOrderDirty = true
+    })
+    observer.observe(element, { childList: true, subtree: true })
+    itemOrderObserver = observer
     let disposed = false
     const handleReset = (event: Event) => {
       const form = event.target
@@ -270,6 +290,10 @@ function RadioGroup(props: ScopedProps<RadioGroupProps>): FictNode {
     document.addEventListener('reset', handleReset)
     return () => {
       disposed = true
+      observer.disconnect()
+      if (itemOrderObserver === observer) {
+        itemOrderObserver = undefined
+      }
       document.removeEventListener('reset', handleReset)
     }
   })

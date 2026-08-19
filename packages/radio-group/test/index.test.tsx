@@ -63,6 +63,7 @@ describe('@fictjs/radio-group', () => {
     }
 
     document.body.innerHTML = ''
+    vi.restoreAllMocks()
   })
 
   it('renders a radiogroup and updates checked state on click', async () => {
@@ -152,6 +153,7 @@ describe('@fictjs/radio-group', () => {
       return [one, two] as const
     }
     const [one] = getButtons()
+    const compareDocumentPosition = vi.spyOn(Element.prototype, 'compareDocumentPosition')
     one.focus()
     pressKey(one, 'ArrowRight')
     await waitForUpdates()
@@ -159,6 +161,7 @@ describe('@fictjs/radio-group', () => {
     const [, two] = getButtons()
     expect(document.activeElement).toBe(two)
     expect(two.getAttribute('aria-checked')).toBe('true')
+    expect(compareDocumentPosition).not.toHaveBeenCalled()
   })
 
   it('keeps the root direction attribute and navigation context in sync', async () => {
