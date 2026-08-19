@@ -181,6 +181,30 @@ describe('@fictjs/toolbar', () => {
     expect(document.activeElement).toBe(buttons[1])
   })
 
+  it('scans toolbar items once when synchronizing tab stops', async () => {
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root>
+          <Button data-testid="one">One</Button>
+          <Button>Two</Button>
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForDeferredFocus()
+    const toolbar = container.querySelector('[role="toolbar"]') as HTMLDivElement
+    const querySelectorAll = vi.spyOn(toolbar, 'querySelectorAll')
+
+    ;(container.querySelector('[data-testid="one"]') as HTMLButtonElement).focus()
+    await waitForDeferredFocus()
+
+    expect(querySelectorAll).toHaveBeenCalledTimes(1)
+  })
+
   it('keeps the root direction attribute and navigation context in sync', async () => {
     const direction = createSignal<'ltr' | 'rtl'>('ltr')
     const container = document.createElement('div')

@@ -175,8 +175,8 @@ function Toolbar(props: ScopedProps<ToolbarProps>): FictNode {
   const currentTabStopRef = { current: null as ToolbarItemElement | null }
   const getItems = () =>
     Array.from(rootRef.current?.querySelectorAll<ToolbarItemElement>('[data-toolbar-item]') ?? [])
-  const getEntryItem = () => {
-    const enabledItems = getItems().filter((item) => !isToolbarItemDisabled(item))
+  const getEntryItem = (items = getItems()) => {
+    const enabledItems = items.filter((item) => !isToolbarItemDisabled(item))
     const currentElement = currentTabStopRef.current
 
     if (currentElement && enabledItems.includes(currentElement)) {
@@ -187,9 +187,10 @@ function Toolbar(props: ScopedProps<ToolbarProps>): FictNode {
   }
   let syncQueued = false
   const syncTabStops = () => {
-    const entryItem = getEntryItem()
+    const items = getItems()
+    const entryItem = getEntryItem(items)
 
-    for (const item of getItems()) {
+    for (const item of items) {
       item.tabIndex = !isToolbarItemDisabled(item) && entryItem === item ? 0 : -1
     }
   }
