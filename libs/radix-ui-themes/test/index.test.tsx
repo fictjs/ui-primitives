@@ -397,6 +397,23 @@ describe('@fictjs/radix-ui-themes', () => {
     expect(box.style.getPropertyValue('--m-md')).toBe('20px')
   })
 
+  it('generates each responsive custom property without dropping breakpoints', () => {
+    expect(
+      PublicHelpers.getResponsiveCustomProperties({
+        customProperties: ['--inset-inline-start', '--inset-inline-end'],
+        value: { initial: '1rem', sm: '2rem', xl: '4rem' },
+        propValues: [],
+      }),
+    ).toEqual({
+      '--inset-inline-start': '1rem',
+      '--inset-inline-end': '1rem',
+      '--inset-inline-start-sm': '2rem',
+      '--inset-inline-end-sm': '2rem',
+      '--inset-inline-start-xl': '4rem',
+      '--inset-inline-end-xl': '4rem',
+    })
+  })
+
   it('updates nested callout text and table layout classes', async () => {
     const container = document.createElement('div')
     document.body.append(container)
