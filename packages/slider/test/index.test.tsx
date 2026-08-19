@@ -319,6 +319,40 @@ describe('@fictjs/slider', () => {
     expect(querySelectorAll).not.toHaveBeenCalled()
   })
 
+  it('normalizes a controlled value only once per source change', async () => {
+    const values = createSignal([20, 80])
+    let valueReads = 0
+    const readValues = () => {
+      valueReads += 1
+      return values()
+    }
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root value={readValues}>
+          <Track>
+            <Range />
+          </Track>
+          <Thumb />
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    valueReads = 0
+
+    values([30, 70])
+    await waitForEffects()
+
+    const thumbs = Array.from(container.querySelectorAll<HTMLSpanElement>('[role="slider"]'))
+    expect(thumbs.map((thumb) => thumb.getAttribute('aria-valuenow'))).toEqual(['30', '70'])
+    expect(valueReads).toBe(1)
+  })
+
   it('renders a bubble input with the current value when the slider participates in a form', async () => {
     const container = document.createElement('div')
     document.body.append(container)

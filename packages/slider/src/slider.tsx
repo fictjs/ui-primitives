@@ -1,4 +1,12 @@
-import { mergeProps, prop, render, untrack, type FictNode, type JSX } from '@fictjs/runtime'
+import {
+  createMemo,
+  mergeProps,
+  prop,
+  render,
+  untrack,
+  type FictNode,
+  type JSX,
+} from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
 
 import { createCollection } from '@fictjs/collection'
@@ -219,14 +227,14 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
 
     return sortAndClampValues(nextDefaultValue, min(), max())
   }
-  const valueProp = () => {
+  const valueProp = createMemo<number[] | undefined>(() => {
     const nextValue =
       props.value === undefined
         ? undefined
         : readValue(props.value as MaybeAccessor<number[] | undefined>)
 
     return nextValue === undefined ? undefined : sortAndClampValues(nextValue, min(), max())
-  }
+  })
   const valueIndexToChangeRef = { current: 0 }
   let nextThumbIndex = 0
   const thumbs = new Set<SliderThumbElement>()
