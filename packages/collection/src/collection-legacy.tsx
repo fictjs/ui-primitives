@@ -116,12 +116,19 @@ function createCollection<ItemElement extends HTMLElement, ItemData extends obje
       if (!collectionNode) return []
 
       const orderedNodes = Array.from(collectionNode.querySelectorAll(`[${ITEM_DATA_ATTR}]`))
+      const nodeIndexes = new Map<Element, number>()
+      for (let index = 0; index < orderedNodes.length; index += 1) {
+        const node = orderedNodes[index]
+        if (node) {
+          nodeIndexes.set(node, index)
+        }
+      }
       const items = Array.from(context.itemMap.values())
 
       return items.sort(
         (a, b) =>
-          orderedNodes.indexOf(a.ref.current as Element) -
-          orderedNodes.indexOf(b.ref.current as Element),
+          (nodeIndexes.get(a.ref.current as Element) ?? -1) -
+          (nodeIndexes.get(b.ref.current as Element) ?? -1),
       )
     }
   }

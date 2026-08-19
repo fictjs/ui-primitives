@@ -1,6 +1,6 @@
 /** @jsxImportSource @fictjs/runtime */
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { render } from '@fictjs/runtime'
 import { createSignal, reactive } from '@fictjs/runtime/advanced'
@@ -115,6 +115,7 @@ describe('@fictjs/collection', () => {
     document.body.innerHTML = ''
     readLegacyItems = undefined
     readModernCollection = undefined
+    vi.restoreAllMocks()
   })
 
   it('orders legacy collection items and removes unmounted entries', async () => {
@@ -132,6 +133,32 @@ describe('@fictjs/collection', () => {
     await flushEffects()
 
     expect(readLegacyItems?.().map((item) => item.textValue)).toEqual(['first', 'last'])
+  })
+
+  it('indexes legacy DOM order once instead of scanning it for every comparison', async () => {
+    const showMiddle = createSignal(true)
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    render(() => <LegacyHarness showMiddle={showMiddle} />, container)
+    await flushEffects()
+
+    let domOrderScans = 0
+    const originalIndexOf = Array.prototype.indexOf
+    vi.spyOn(Array.prototype, 'indexOf').mockImplementation(function (
+      this: unknown[],
+      searchElement: unknown,
+      fromIndex?: number,
+    ) {
+      if (searchElement instanceof Element && this.some((item) => item instanceof Element)) {
+        domOrderScans += 1
+      }
+      return originalIndexOf.call(this, searchElement, fromIndex)
+    })
+    const items = readLegacyItems?.()
+
+    expect(items?.map((item) => item.textValue)).toEqual(['first', 'middle', 'last'])
+    expect(domOrderScans).toBe(0)
   })
 
   it('tracks ordered-dictionary collections with externally initialized state', async () => {
