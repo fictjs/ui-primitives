@@ -97,6 +97,37 @@ describe('@fictjs/one-time-password-field', () => {
     expect(hiddenInput.value).toBe('123')
   })
 
+  it('reuses the registered input order when a controlled value changes', async () => {
+    const value = createSignal('')
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root data-testid="root" value={value}>
+          <Input />
+          <Input />
+          <Input />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const root = container.querySelector('[data-testid="root"]') as HTMLDivElement
+    const querySelectorAll = vi.spyOn(root, 'querySelectorAll')
+
+    value('123')
+    await waitForEffects()
+
+    const inputs = Array.from(
+      container.querySelectorAll('input:not([type="hidden"])'),
+    ) as HTMLInputElement[]
+    expect(inputs.map((input) => input.value)).toEqual(['1', '2', '3'])
+    expect(querySelectorAll).not.toHaveBeenCalled()
+  })
+
   it('keeps the computed root direction attribute reactive', async () => {
     const direction = createSignal<'ltr' | 'rtl'>('ltr')
     const container = document.createElement('div')

@@ -240,6 +240,10 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
   const inputRegistry = new Map<HTMLInputElement, InputRegistration>()
   const inputsVersion = createSignal(0)
   let inputsVersionScheduled = false
+  let cachedInputsVersion = -1
+  let cachedInputsRoot: HTMLDivElement | null = null
+  let cachedInputs: HTMLInputElement[] = []
+  let cachedInputIndexes = new Map<HTMLInputElement, number>()
 
   const scheduleInputsVersionUpdate = () => {
     if (inputsVersionScheduled) return
@@ -281,22 +285,41 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
   })
 
   const getInputs = () => {
-    inputsVersion()
+    const currentInputsVersion = inputsVersion()
+    const currentRoot = rootRef.current
+    const nextInputIndexes = new Map<HTMLInputElement, number>()
+    let indexesChanged = inputRegistry.size !== cachedInputIndexes.size
+
+    for (const [node, registration] of inputRegistry) {
+      const index = registration.explicitIndex() ?? registration.implicitIndex
+      nextInputIndexes.set(node, index)
+      if (cachedInputIndexes.get(node) !== index) {
+        indexesChanged = true
+      }
+    }
+
+    if (
+      currentInputsVersion === cachedInputsVersion &&
+      currentRoot === cachedInputsRoot &&
+      !indexesChanged
+    ) {
+      return cachedInputs
+    }
+
     const nodes =
-      rootRef.current === null
+      currentRoot === null
         ? Array.from(inputRegistry.keys())
-        : Array.from(rootRef.current.querySelectorAll<HTMLInputElement>('[data-radix-otp-input]'))
+        : Array.from(currentRoot.querySelectorAll<HTMLInputElement>('[data-radix-otp-input]'))
 
-    return nodes.sort((a, b) => {
-      const aRegistration = inputRegistry.get(a)
-      const bRegistration = inputRegistry.get(b)
-      const aIndex =
-        aRegistration?.explicitIndex() ?? aRegistration?.implicitIndex ?? Number.POSITIVE_INFINITY
-      const bIndex =
-        bRegistration?.explicitIndex() ?? bRegistration?.implicitIndex ?? Number.POSITIVE_INFINITY
-
-      return aIndex - bIndex
-    })
+    cachedInputs = nodes.sort(
+      (a, b) =>
+        (nextInputIndexes.get(a) ?? Number.POSITIVE_INFINITY) -
+        (nextInputIndexes.get(b) ?? Number.POSITIVE_INFINITY),
+    )
+    cachedInputsVersion = currentInputsVersion
+    cachedInputsRoot = currentRoot
+    cachedInputIndexes = nextInputIndexes
+    return cachedInputs
   }
 
   const getIndex = (node: HTMLInputElement | null, fallback = -1) => {
