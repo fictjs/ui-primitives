@@ -179,11 +179,13 @@ describe('@fictjs/toggle-group', () => {
       expect(buttons).toHaveLength(3)
       return buttons as [HTMLButtonElement, HTMLButtonElement, HTMLButtonElement]
     }
+    const compareDocumentPosition = vi.spyOn(Element.prototype, 'compareDocumentPosition')
     getGroup().focus()
     await waitForUpdates()
     const two = getButtons()[1]
 
     expect(document.activeElement).toBe(two)
+    expect(compareDocumentPosition).not.toHaveBeenCalled()
   })
 
   it('preserves root focus entry while invoking the latest focus handler', async () => {

@@ -328,9 +328,13 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
       ? contextDirection()
       : (readValue(props.dir as MaybeAccessor<Direction | undefined>) ?? contextDirection())
   const currentTabStop = createSignal<string | null>(null)
+  const root = createSignal<HTMLDivElement | null>(null)
   const items: ToggleGroupItemRecord[] = []
+  let orderedItems: ToggleGroupItemRecord[] = []
+  let itemOrderDirty = true
+  let itemOrderObserver: MutationObserver | undefined
 
-  const getItems = () => {
+  const syncItemOrder = () => {
     const nextItems = new Map<string, ToggleGroupItemRecord>()
 
     for (const item of items) {
@@ -339,7 +343,17 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
       }
     }
 
-    return sortItemsByDomOrder(Array.from(nextItems.values()))
+    orderedItems = sortItemsByDomOrder(Array.from(nextItems.values()))
+    itemOrderDirty = false
+  }
+  const getItems = () => {
+    if (itemOrderObserver?.takeRecords().length) {
+      itemOrderDirty = true
+    }
+    if (itemOrderDirty) {
+      syncItemOrder()
+    }
+    return orderedItems
   }
   const getEnabledItems = () => getItems().filter((item) => !item.disabled())
   const getEntryValue = () => {
@@ -356,6 +370,7 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
 
   const registerItem = (item: ToggleGroupItemRecord) => {
     items.push(item)
+    itemOrderDirty = true
 
     if (!item.disabled() && (item.pressed() || currentTabStop() === null)) {
       currentTabStop(item.value)
@@ -365,6 +380,7 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
       const itemIndex = items.indexOf(item)
       if (itemIndex !== -1) {
         items.splice(itemIndex, 1)
+        itemOrderDirty = true
       }
 
       if (currentTabStop() === item.value) {
@@ -372,6 +388,24 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
       }
     }
   }
+
+  useLayoutEffect(() => {
+    const element = root()
+    if (!element) return
+
+    const observer = new MutationObserver(() => {
+      itemOrderDirty = true
+    })
+    observer.observe(element, { childList: true, subtree: true })
+    itemOrderObserver = observer
+
+    return () => {
+      observer.disconnect()
+      if (itemOrderObserver === observer) {
+        itemOrderObserver = undefined
+      }
+    }
+  })
 
   const commonProps = mergeProps(
     {
@@ -386,6 +420,10 @@ function ToggleGroupImpl(props: ScopedProps<ToggleGroupImplProps>): FictNode {
       disabled: undefined,
       loop: undefined,
       orientation: undefined,
+      ref: (node: HTMLDivElement | null) => {
+        root(node)
+        setRef(props.ref as PossibleRef<HTMLDivElement>, node)
+      },
       rovingFocus: undefined,
       onFocus: composeEventHandlers<FocusEvent>(
         (event) => (props.onFocus as ((event: FocusEvent) => void) | undefined)?.(event),
