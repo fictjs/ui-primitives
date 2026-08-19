@@ -1,4 +1,4 @@
-import { mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
+import { createMemo, mergeProps, prop, type FictNode, type JSX } from '@fictjs/runtime'
 import { createSignal } from '@fictjs/runtime/advanced'
 
 import { createContextScope, type Scope } from '@fictjs/context'
@@ -268,10 +268,11 @@ function OneTimePasswordField(props: ScopedProps<OneTimePasswordFieldProps>): Fi
     return nextValue.split('')
   }
 
-  const valueProp = () =>
+  const valueProp = createMemo<string[] | undefined>(() =>
     props.value === undefined
       ? undefined
-      : sanitizeValue(readValue(props.value as MaybeAccessor<string | undefined>) ?? '')
+      : sanitizeValue(readValue(props.value as MaybeAccessor<string | undefined>) ?? ''),
+  )
   const defaultValue = () =>
     props.defaultValue === undefined
       ? []

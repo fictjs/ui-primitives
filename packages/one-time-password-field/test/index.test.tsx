@@ -128,6 +128,40 @@ describe('@fictjs/one-time-password-field', () => {
     expect(querySelectorAll).not.toHaveBeenCalled()
   })
 
+  it('sanitizes a controlled value only once per source change', async () => {
+    const value = createSignal('')
+    let valueReads = 0
+    const readValue = () => {
+      valueReads += 1
+      return value()
+    }
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root value={readValue}>
+          <Input />
+          <Input />
+          <Input />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+    valueReads = 0
+
+    value('123')
+    await waitForEffects()
+
+    const inputs = Array.from(
+      container.querySelectorAll('input:not([type="hidden"])'),
+    ) as HTMLInputElement[]
+    expect(inputs.map((input) => input.value)).toEqual(['1', '2', '3'])
+    expect(valueReads).toBe(1)
+  })
+
   it('keeps the computed root direction attribute reactive', async () => {
     const direction = createSignal<'ltr' | 'rtl'>('ltr')
     const container = document.createElement('div')
