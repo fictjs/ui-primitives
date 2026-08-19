@@ -92,6 +92,27 @@ describe('@fictjs/use-controllable-state', () => {
     expect(onChange).toHaveBeenCalledWith('second')
   })
 
+  it('reads a controlled prop once per state update', () => {
+    let reads = 0
+    let setValue: ((next: string) => void) | undefined
+
+    render(() => {
+      ;[, setValue] = useControllableState({
+        prop: () => {
+          reads += 1
+          return 'first'
+        },
+        defaultProp: 'fallback',
+      })
+      return <div />
+    }, document.createElement('div'))
+
+    reads = 0
+    setValue?.('second')
+
+    expect(reads).toBe(1)
+  })
+
   it('treats prop getters as controlled values', () => {
     const controlled = createSignal('first')
     let value: (() => string) | undefined

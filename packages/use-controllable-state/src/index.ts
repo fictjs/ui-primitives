@@ -83,11 +83,12 @@ function useControllableState<T>({
   })
 
   const setValue: SetStateFn<T> = (nextValue) => {
-    const current = value()
+    const currentProp = controlledState()
+    const current = currentProp !== undefined ? currentProp : uncontrolled()
     const resolved =
       typeof nextValue === 'function' ? (nextValue as (prev: T) => T)(current) : nextValue
 
-    if (controlledState() !== undefined) {
+    if (currentProp !== undefined) {
       if (!Object.is(current, resolved)) {
         emitChange(resolved)
       }
