@@ -154,7 +154,7 @@ function Announce(props: AnnounceProps): FictNode {
 
   useLayoutEffect(() => {
     const currentOwnerDocument = ownerDocument()
-    const regionElement = getLiveRegionElement()
+    const regionElement = region()
 
     if (!currentOwnerDocument || !regionElement) return
 

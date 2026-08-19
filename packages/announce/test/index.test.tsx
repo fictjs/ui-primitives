@@ -18,9 +18,16 @@ describe('@fictjs/announce', () => {
   it('creates a live region and mirrors the announced content', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
+    const querySelector = vi.spyOn(document, 'querySelector')
 
     render(() => <Announce data-testid="announce">Saved</Announce>, container)
     await flushMicrotasks()
+
+    const liveRegionQueries = querySelector.mock.calls.filter(([selector]) =>
+      selector.startsWith('[data-radix-announce-region]'),
+    )
+    expect(liveRegionQueries).toHaveLength(1)
+    querySelector.mockRestore()
 
     const visible = container.querySelector('[data-testid="announce"]') as HTMLDivElement
     const liveRegion = document.body.querySelector('[data-radix-announce-region]') as HTMLDivElement
