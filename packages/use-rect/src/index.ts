@@ -29,10 +29,16 @@ function useRect(target: RectTarget<Measurable>): () => DOMRect | undefined {
   createEffect(() => {
     let cleanup: (() => void) | undefined
     let cancelled = false
+    let attachedTarget: Measurable | null = null
 
     const attach = (measurable: Measurable | null) => {
+      if (attachedTarget === measurable) {
+        return
+      }
+
       cleanup?.()
       cleanup = undefined
+      attachedTarget = measurable
 
       if (!measurable) {
         rect(undefined)

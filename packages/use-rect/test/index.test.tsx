@@ -100,7 +100,7 @@ describe('@fictjs/use-rect', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
-    render(() => <Test />, container)
+    const dispose = render(() => <Test />, container)
     await flushMicrotasks()
     flushAnimationFrames()
     await flushMicrotasks()
@@ -118,5 +118,32 @@ describe('@fictjs/use-rect', () => {
     await flushMicrotasks()
 
     expect(container.querySelector('output')?.textContent).toBe('160x96')
+    dispose()
+  })
+
+  it('does not resubscribe an unchanged ref-object target', async () => {
+    const requestFrame = vi.fn(() => 1)
+    const cancelFrame = vi.fn()
+    vi.stubGlobal('requestAnimationFrame', requestFrame)
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame)
+
+    function Test() {
+      const target = { current: null as HTMLDivElement | null }
+      useRect(target)
+
+      return <div ref={(node) => (target.current = node)} />
+    }
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const dispose = render(() => <Test />, container)
+    await flushMicrotasks()
+
+    expect(requestFrame).toHaveBeenCalledOnce()
+    expect(cancelFrame).not.toHaveBeenCalled()
+
+    dispose()
+    expect(cancelFrame).toHaveBeenCalledOnce()
   })
 })
