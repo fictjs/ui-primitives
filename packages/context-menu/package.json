@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/context-menu",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Context menu primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

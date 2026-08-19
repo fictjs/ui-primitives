@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/switch",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Switch primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

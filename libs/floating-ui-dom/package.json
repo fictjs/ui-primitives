@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/floating-ui-dom",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Floating UI bindings for Fict DOM.",
   "license": "MIT",
   "type": "module",

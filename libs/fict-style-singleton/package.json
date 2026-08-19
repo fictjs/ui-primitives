@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/fict-style-singleton",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Style singleton utilities for Fict components.",
   "keywords": [
     "fict",

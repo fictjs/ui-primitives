@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/visually-hidden",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Visually hidden content helper for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

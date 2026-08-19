@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/dialog",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Dialog primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",
