@@ -52,6 +52,9 @@ type SliderContextValue = {
   values: () => number[]
   valueIndexToChangeRef: { current: number }
   getNextThumbIndex(): number
+  getThumbAtIndex(index: number): SliderThumbElement | undefined
+  getThumbIndex(thumb: SliderThumbElement): number | undefined
+  registerThumb(thumb: SliderThumbElement): () => void
   thumbs: Set<SliderThumbElement>
   rootRef: { current: HTMLSpanElement | null }
   orientation: () => SliderOrientation
@@ -162,6 +165,17 @@ function sortAndClampValues(values: number[], min: number, max: number): number[
   return [...values].map((value) => clamp(value, [min, max])).sort((a, b) => a - b)
 }
 
+function sortThumbsByDomOrder(thumbs: SliderThumbElement[]): SliderThumbElement[] {
+  return thumbs.sort((first, second) => {
+    if (first === second) return 0
+
+    const position = first.compareDocumentPosition(second)
+    if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+    if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1
+    return 0
+  })
+}
+
 function Slider(props: ScopedProps<SliderProps>): FictNode {
   const inheritedDirection = useDirection()
   const direction = () =>
@@ -216,6 +230,31 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
   const valueIndexToChangeRef = { current: 0 }
   let nextThumbIndex = 0
   const thumbs = new Set<SliderThumbElement>()
+  const thumbOrderVersion = createSignal(0)
+  let nextThumbOrderVersion = 0
+  let orderedThumbs: SliderThumbElement[] = []
+  let thumbIndexes = new Map<SliderThumbElement, number>()
+  const syncThumbOrder = () => {
+    orderedThumbs = sortThumbsByDomOrder(Array.from(thumbs))
+    thumbIndexes = new Map(orderedThumbs.map((thumb, index) => [thumb, index]))
+    thumbOrderVersion(++nextThumbOrderVersion)
+  }
+  const registerThumb = (thumb: SliderThumbElement) => {
+    thumbs.add(thumb)
+    syncThumbOrder()
+    return () => {
+      thumbs.delete(thumb)
+      syncThumbOrder()
+    }
+  }
+  const getThumbIndex = (thumb: SliderThumbElement) => {
+    thumbOrderVersion()
+    return thumbIndexes.get(thumb)
+  }
+  const getThumbAtIndex = (index: number) => {
+    thumbOrderVersion()
+    return orderedThumbs[index]
+  }
   const rootRef = { current: null as HTMLSpanElement | null }
   const valuesBeforeSlideStartRef = { current: defaultValue() }
   const [values, setValues] = useControllableState<number[]>({
@@ -223,7 +262,7 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
     defaultProp: defaultValue,
     caller: SLIDER_NAME,
     onChange: (nextValues) => {
-      const thumb = Array.from(thumbs)[valueIndexToChangeRef.current]
+      const thumb = getThumbAtIndex(valueIndexToChangeRef.current)
       thumb?.focus()
       props.onValueChange?.(nextValues)
     },
@@ -387,6 +426,9 @@ function Slider(props: ScopedProps<SliderProps>): FictNode {
       values={values}
       valueIndexToChangeRef={valueIndexToChangeRef}
       getNextThumbIndex={() => nextThumbIndex++}
+      getThumbAtIndex={getThumbAtIndex}
+      getThumbIndex={getThumbIndex}
+      registerThumb={registerThumb}
       thumbs={thumbs}
       rootRef={rootRef}
       orientation={orientation}
@@ -686,15 +728,7 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
   const initialIndex = context.getNextThumbIndex()
   const index = () => {
     const thumbNode = thumb()
-    const rootNode = context.rootRef.current
-    if (!thumbNode || !rootNode) return initialIndex
-
-    const thumbNodes = Array.from(
-      rootNode.querySelectorAll<SliderThumbElement>('[data-radix-slider-thumb]'),
-    )
-    const currentIndex = thumbNodes.indexOf(thumbNode)
-
-    return currentIndex === -1 ? initialIndex : currentIndex
+    return thumbNode ? (context.getThumbIndex(thumbNode) ?? initialIndex) : initialIndex
   }
   const value = () => {
     const currentIndex = index()
@@ -754,10 +788,10 @@ function SliderThumb(props: ScopedProps<SliderThumbProps>): FictNode {
 
       isFormControl(Boolean(form || thumbNode.closest('form')))
     })
-    context.thumbs.add(thumbNode)
+    const unregisterThumb = context.registerThumb(thumbNode)
     return () => {
       disposeConnection()
-      context.thumbs.delete(thumbNode)
+      unregisterThumb()
     }
   })
 

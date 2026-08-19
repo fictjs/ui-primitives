@@ -288,6 +288,37 @@ describe('@fictjs/slider', () => {
     expect(thumbs.map((thumb) => thumb.getAttribute('aria-valuenow'))).toEqual(['20', '90'])
   })
 
+  it('does not rescan the thumb DOM order when controlled values change', async () => {
+    const values = createSignal([20, 80])
+    const container = document.createElement('div')
+    document.body.append(container)
+
+    mount(
+      () => (
+        <Root value={values}>
+          <Track>
+            <Range />
+          </Track>
+          <Thumb />
+          <Thumb />
+        </Root>
+      ),
+      container,
+    )
+
+    await waitForEffects()
+
+    const slider = container.querySelector('[data-orientation="horizontal"]') as HTMLSpanElement
+    const querySelectorAll = vi.spyOn(slider, 'querySelectorAll')
+
+    values([30, 70])
+    await waitForEffects()
+
+    const thumbs = Array.from(container.querySelectorAll<HTMLSpanElement>('[role="slider"]'))
+    expect(thumbs.map((thumb) => thumb.getAttribute('aria-valuenow'))).toEqual(['30', '70'])
+    expect(querySelectorAll).not.toHaveBeenCalled()
+  })
+
   it('renders a bubble input with the current value when the slider participates in a form', async () => {
     const container = document.createElement('div')
     document.body.append(container)
