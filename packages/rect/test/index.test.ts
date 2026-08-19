@@ -64,4 +64,70 @@ describe('@fictjs/rect', () => {
 
     expect(callback).toHaveBeenCalledTimes(2)
   })
+
+  it('stops polling when the final observer unsubscribes during delivery', () => {
+    vi.stubGlobal('requestAnimationFrame', ((callback: FrameRequestCallback) => {
+      const id = ++frameId
+      frameQueue.set(id, { callback, cancelled: false })
+      return id
+    }) as typeof requestAnimationFrame)
+    vi.stubGlobal('cancelAnimationFrame', ((id: number) => {
+      const entry = frameQueue.get(id)
+      if (entry) {
+        entry.cancelled = true
+      }
+    }) as typeof cancelAnimationFrame)
+
+    const measurable = {
+      getBoundingClientRect: () => new DOMRect(0, 0, 120, 40),
+    }
+    const callback = vi.fn()
+    let unobserve = () => {}
+    unobserve = observeElementRect(measurable, (rect) => {
+      callback(rect)
+      unobserve()
+    })
+
+    flushAnimationFrames()
+
+    expect(callback).toHaveBeenCalledTimes(1)
+    expect(frameQueue.size).toBe(0)
+
+    flushAnimationFrames()
+    expect(callback).toHaveBeenCalledTimes(1)
+  })
+
+  it('delivers a changed rect to every observer when one unsubscribes during delivery', () => {
+    vi.stubGlobal('requestAnimationFrame', ((callback: FrameRequestCallback) => {
+      const id = ++frameId
+      frameQueue.set(id, { callback, cancelled: false })
+      return id
+    }) as typeof requestAnimationFrame)
+    vi.stubGlobal('cancelAnimationFrame', ((id: number) => {
+      const entry = frameQueue.get(id)
+      if (entry) {
+        entry.cancelled = true
+      }
+    }) as typeof cancelAnimationFrame)
+
+    const measurable = {
+      getBoundingClientRect: () => new DOMRect(0, 0, 120, 40),
+    }
+    const firstCallback = vi.fn()
+    const secondCallback = vi.fn()
+    let unobserveFirst = () => {}
+    unobserveFirst = observeElementRect(measurable, (rect) => {
+      firstCallback(rect)
+      unobserveFirst()
+    })
+    const unobserveSecond = observeElementRect(measurable, secondCallback)
+
+    flushAnimationFrames()
+
+    expect(firstCallback).toHaveBeenCalledTimes(1)
+    expect(secondCallback).toHaveBeenCalledTimes(2)
+
+    unobserveSecond()
+    flushAnimationFrames()
+  })
 })

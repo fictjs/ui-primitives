@@ -38,14 +38,16 @@ function observeElementRect(elementToObserve: Measurable, callback: CallbackFn):
     if (nextObservedData.callbacks.length === 0) {
       observedElements.delete(elementToObserve)
 
-      if (observedElements.size === 0) {
+      if (observedElements.size === 0 && rafId !== 0) {
         cancelAnimationFrame(rafId)
+        rafId = 0
       }
     }
   }
 }
 
 function runLoop(): void {
+  rafId = 0
   const changedRectsData: ObservedData[] = []
 
   observedElements.forEach((data, element) => {
@@ -58,12 +60,14 @@ function runLoop(): void {
   })
 
   for (const data of changedRectsData) {
-    for (const callback of data.callbacks) {
+    for (const callback of [...data.callbacks]) {
       callback(data.rect)
     }
   }
 
-  rafId = requestAnimationFrame(runLoop)
+  if (observedElements.size > 0) {
+    rafId = requestAnimationFrame(runLoop)
+  }
 }
 
 function rectEquals(rect1: DOMRect, rect2: DOMRect): boolean {
