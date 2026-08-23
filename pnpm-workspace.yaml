@@ -8,7 +8,7 @@ catalog:
   '@commitlint/cli': 20.4.3
   '@commitlint/config-conventional': 20.4.3
   '@eslint/js': 10.0.1
-  '@fictjs/hooks': 0.29.0
+  '@fictjs/hooks': 0.30.0
   '@fictjs/runtime': 0.33.0
   '@fictjs/vite-plugin': 0.33.0
   '@playwright/test': 1.56.1
