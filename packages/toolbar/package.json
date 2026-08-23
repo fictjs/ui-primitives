@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/toolbar",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Toolbar primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

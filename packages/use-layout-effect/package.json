@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/use-layout-effect",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Layout-effect shim for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

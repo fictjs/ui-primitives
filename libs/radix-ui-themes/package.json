@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/radix-ui-themes",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Radix Themes port for Fict, built on top of @fictjs/radix-ui.",
   "keywords": [
     "fict",

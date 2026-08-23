@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/one-time-password-field",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "One-time password field primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

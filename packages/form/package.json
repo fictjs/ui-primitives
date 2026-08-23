@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/form",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Form primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

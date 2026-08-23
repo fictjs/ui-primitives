@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/use-escape-keydown",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Escape key listener hook for Fict UI primitives.",
   "license": "MIT",
   "type": "module",

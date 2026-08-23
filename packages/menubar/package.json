@@ -1,6 +1,6 @@
 {
   "name": "@fictjs/menubar",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Menubar primitives for Fict UI primitives.",
   "license": "MIT",
   "type": "module",
