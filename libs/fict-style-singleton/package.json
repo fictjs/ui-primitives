@@ -53,7 +53,7 @@
     "get-nonce": "^1.0.1"
   },
   "peerDependencies": {
-    "fict": "^0.32.0"
+    "fict": "^0.33.0"
   },
   "devDependencies": {
     "fict": "catalog:",

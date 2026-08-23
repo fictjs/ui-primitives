@@ -82,7 +82,7 @@ pnpm verify
 
 - Third-party versions are centralized in the **catalog** in [`pnpm-workspace.yaml`](./pnpm-workspace.yaml) (`catalogMode: strict`). Reference them as `"some-dep": "catalog:"` rather than hardcoding a version.
 - Internal packages use the workspace protocol: `"@fictjs/context": "workspace:*"`.
-- Runtime-backed packages declare `"@fictjs/runtime": ">=0.32.0"` as a **peer** dependency and use the `catalog:` version as a devDependency for local builds/tests. Pure DOM/type utilities and packages that intentionally peer-depend on `fict` instead should match their actual runtime imports.
+- Runtime-backed packages declare `"@fictjs/runtime": ">=0.33.0"` as a **peer** dependency and use the `catalog:` version as a devDependency for local builds/tests. Pure DOM/type utilities and packages that intentionally peer-depend on `fict` instead should match their actual runtime imports.
 
 ## Coding conventions
 

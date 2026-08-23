@@ -55,7 +55,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "peerDependencies": {
-    "@fictjs/runtime": ">=0.32.0"
+    "@fictjs/runtime": ">=0.33.0"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.6"

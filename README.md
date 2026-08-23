@@ -60,7 +60,7 @@ This repository is a **faithful, behavior-compatible port**:
 | ------------ | ----------------------------------------------------------------------------------------------------------------- |
 | Node.js      | `>= 22.13.0` (CI and local dev pin `22.21.1` via [`.nvmrc`](./.nvmrc))                                            |
 | pnpm         | `10.31.0` (declared as `packageManager`)                                                                          |
-| Fict runtime | `fict 0.32.x` brings `@fictjs/runtime 0.32.x`; runtime-backed packages peer-depend on `@fictjs/runtime >= 0.32.0` |
+| Fict runtime | `fict 0.33.x` brings `@fictjs/runtime 0.33.x`; runtime-backed packages peer-depend on `@fictjs/runtime >= 0.33.0` |
 
 Enable pnpm via Corepack:
 
